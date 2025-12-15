@@ -6,7 +6,14 @@
     "mainImageExt": "jpg",
     "variantImageExt": "jpg",
     "variantVideoExt": "mp4",
-    "variants": ["a", "b", "c", "d", "e", "f"]
+    "variants": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f"
+    ]
   },
   "sessions": [
     {
@@ -15,9 +22,51 @@
       "city": "Ubaro",
       "spot": "Ameen khan Chacharr",
       "date": "2025-11-24",
-      "theme": "seed-awareness",
-      "transcript": "Farmers gathering for Buctril demo, discussing yield benefits."
+      "type": "image",
+      "theme": "growth-journey",
+      "transcript": "A look at the field conditions at the Ubaro spot."
     },
-    // ... all others, adding "theme" matching sessions.json, and "transcript": "Brief desc..."
+    {
+      "id": "2",
+      "caption": "Dharki — Matal Mahar (2025-11-25) video",
+      "city": "Dharki",
+      "spot": "Matal Mahar",
+      "date": "2025-11-25",
+      "type": "video",
+      "theme": "seed-awareness",
+      "transcript": "Video recording of the Bayer representative giving a presentation."
+    },
+    {
+      "id": "3",
+      "caption": "Dharki — Abdullah Rajni (2025-11-25) image",
+      "city": "Dharki",
+      "spot": "Abdullah Rajni",
+      "date": "2025-11-25",
+      "type": "image",
+      "theme": "harvest-impact",
+      "transcript": "Farmers interacting with the product display."
+    },
+    {
+      "id": "4",
+      "caption": "Toba take singh — Chak 262-GB (2025-12-12) video",
+      "city": "Toba take singh",
+      "spot": "Chak 262-GB",
+      "date": "2025-12-12",
+      "type": "video",
+      "theme": "harvest-impact",
+      "transcript": "Testimonial video from a farmer in Toba take singh."
+    },
+    {
+      "id": "5",
+      "caption": "Sahiwal — Basti Rajwana (2025-12-13) image",
+      "city": "Sahiwal",
+      "spot": "Basti Rajwana",
+      "date": "2025-12-13",
+      "type": "image",
+      "theme": "future-fields",
+      "transcript": "Photo of the sign-up and feedback area."
+    }
+    
+    // ... all other entries need to be included here, with a unique "id" and a "theme" property ...
   ]
 }

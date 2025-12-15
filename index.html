@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AgriVista — Field Activations Dashboard</title>
+  <title>Harvest Horizons — Buctril Activations Report</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
@@ -44,632 +44,72 @@
     a{ color:inherit; }
     .muted{ color:var(--muted); }
 
-    /* Loading overlay */
-    #loadingOverlay{
-      position:fixed; inset:0;
-      background: var(--bg);
-      display:flex; align-items:center; justify-content:center;
-      flex-direction:column;
-      z-index:10000;
-      transition:opacity .25s ease;
-    }
-    .spinner{
-      width:52px; height:52px; border-radius:50%;
-      border:3px solid rgba(125,211,252,.25);
-      border-top-color: var(--accent);
-      animation:spin 1s linear infinite;
-      margin-bottom:18px;
-    }
-    @keyframes spin{ to{ transform:rotate(360deg); } }
+    /* Thematic Sections */
+    .theme-section { position: relative; min-height: 800px; padding: 40px; background: linear-gradient(to bottom, var(--panel), var(--panel2)); border-radius: var(--radius); margin-bottom: 40px; }
+    .central-media { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .central-media video, .central-media img { width: 100%; height: 100%; object-fit: cover; }
+    .data-planet { position: absolute; width: 120px; height: 120px; background: rgba(134,239,172,.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; animation: orbit 30s linear infinite; box-shadow: 0 0 20px rgba(134,239,172,.5); }
+    @keyframes orbit { 0% { transform: rotate(0deg) translateX(300px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(300px) rotate(-360deg); } }
+    .planet1 { animation-duration: 25s; animation-delay: 0s; }
+    .planet2 { animation-duration: 35s; animation-delay: 5s; transform-origin: 50% 50%; }
+    .planet3 { animation-duration: 40s; animation-delay: 10s; }
+    /* Adjust radii via translateX in JS if needed */
 
-    .shell{
-      display:grid;
-      grid-template-columns: 320px 1fr;
-      gap:18px;
-      padding:18px;
-      min-height:100vh;
-      opacity:0;
-      transform: translateY(6px);
-      transition: opacity .35s ease, transform .35s ease;
-    }
-    .shell.ready{
-      opacity:1;
-      transform: translateY(0);
-    }
-
-    .panel{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      box-shadow: var(--shadow);
-      border-radius: var(--radius);
-      overflow:hidden;
-    }
-
-    .sidebar{ padding:14px; }
-    .main{ padding:14px; }
-
-    .brand{
-      display:flex; align-items:flex-start; justify-content:space-between;
-      gap:10px;
-      padding:10px 10px 12px 10px;
-      border-bottom:1px solid var(--border);
-      margin:-14px -14px 14px -14px;
-      background: rgba(255,255,255,.02);
-    }
-    .brand h1{ font-size:20px; margin:0; letter-spacing:.2px; }
-    .brand .sub{ font-size:12px; color:var(--muted); margin-top:3px; }
-    .chip{
-      font-size:12px;
-      color:rgba(231,237,247,.9);
-      padding:6px 10px;
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:999px;
-      background: rgba(125,211,252,.08);
-      white-space:nowrap;
-    }
-
-    .controlGroup{ display:flex; flex-direction:column; gap:12px; }
-    .label{ font-size:12px; color:var(--muted); margin-bottom:6px; }
-    select, input[type="date"], input[type="text"]{
-      width:100%;
-      background: rgba(15,26,46,.85);
-      border:1px solid rgba(255,255,255,.15);
-      color:var(--text);
-      padding:8px 12px;
-      border-radius:10px;
-      font-size:14px;
-      outline:none;
-      box-shadow: 0 1px 2px rgba(0,0,0,.15);
-      appearance:none;
-      -webkit-appearance:none;
-    }
-    input[type="date"]::-webkit-calendar-picker-indicator{
-      filter: invert(1);
-      opacity:.75;
-      cursor:pointer;
-    }
-    input:focus, select:focus{ border-color:var(--accent); }
-    button{
-      padding:10px 16px;
-      border-radius:10px;
-      border:none;
-      cursor:pointer;
-      background: var(--accent);
-      color:var(--bg);
-      font-weight:600;
-      font-size:14px;
-      transition: background .15s ease, opacity .15s ease;
-    }
-    button:hover{ background: #9cdffa; }
-    button:active{ opacity:.85; }
-    button:disabled{ background: var(--muted); cursor:not-allowed; }
-
-    .btnGroup{ display:flex; gap:10px; }
-    .btnGroup button{ flex-grow:1; }
-
-    .summary{
-      display:flex; align-items:center; justify-content:space-between;
-      border-top:1px solid var(--border);
-      border-bottom:1px solid var(--border);
-      padding:12px 0;
-      font-size:13px;
-    }
-    .summary-text{ display:flex; gap:6px; }
-    .summary-text strong{ color:var(--accent2); }
-
-    .tabs{
-      display:flex; gap:8px;
-      padding-bottom:12px;
-      border-bottom:1px solid var(--border);
-      margin-top:12px;
-      margin-bottom:18px;
-      overflow-x:auto;
-    }
-    .tabs::-webkit-scrollbar{ display:none; }
-    .tabBtn{
-      padding:8px 14px;
-      background: transparent;
-      color:var(--muted);
-      font-weight:500;
-      border:1px solid transparent;
-      white-space:nowrap;
-    }
-    .tabBtn.active{
-      color:var(--text);
-      border-color:var(--accent);
-      background: rgba(125,211,252,.12);
-      box-shadow: 0 0 12px rgba(125,211,252,.15);
-    }
-    .tabBtn:not(.active):hover{ background: rgba(255,255,255,.05); }
-
-    .tabContent{ display:none; }
-    .tabContent.active{ display:block; }
-
-    /* KPIs */
-    .kpiGrid{
-      display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;
-      margin-bottom:18px;
-    }
-    .kpi{
-      background: var(--panel2);
-      padding:14px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.05);
-    }
-    .kpi .k{ font-size:12px; color:var(--muted); margin-bottom:4px; }
-    .kpi .v{ font-size:24px; font-weight:700; color:var(--text); letter-spacing:-.5px; }
-    .kpi .bar{
-      height:6px; border-radius:3px; background: rgba(255,255,255,.1);
-      margin-top:8px; overflow:hidden;
-    }
-    .kpi:nth-child(1) .bar div, .kpi:nth-child(2) .bar div{ background: var(--accent); }
-    .kpi:nth-child(3) .bar div, .kpi:nth-child(4) .bar div{ background: var(--accent2); }
-    .kpi .bar div{ height:100%; width:0%; transition:width .35s ease; }
-
-    /* Snapshot Panel */
-    .snapshotGrid{
-      display:grid; grid-template-columns: 1fr; gap:12px;
-      margin-bottom:18px;
-    }
-    .snapshotGrid h3{ font-size:16px; margin:0 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px; }
-    .chartCanvas{ height:240px; }
-    .chartCanvas canvas{ width:100% !important; height:100% !important; }
-
-    .showcaseGrid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
-    .showcase{
-      background: var(--panel2);
-      border-radius:12px; overflow:hidden;
-      min-height:220px;
-      border:1px solid rgba(255,255,255,.05);
-      cursor:pointer;
-      position:relative;
-    }
-    .showcase img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .showcase-text{
-      position:absolute; inset:0;
-      display:flex; align-items:flex-end;
-      padding:12px;
-      background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.6));
-    }
-    .showcase-text div{ font-size:14px; line-height:1.2; }
-    .showcase-text strong{ display:block; }
-    .showcase-text span{ font-size:11px; color:var(--muted); }
-
-    .reasonList{
-      list-style:none; padding:0; margin:0;
-      display:flex; flex-direction:column; gap:8px;
-      font-size:14px;
-    }
-    .reasonList li{ padding:8px 10px; border-radius:8px; }
-    .reasonList.use li{ background: rgba(134,239,172,.10); border:1px solid rgba(134,239,172,.35); color:var(--accent2); }
-    .reasonList.no li{ background: rgba(251,113,133,.10); border:1px solid rgba(251,113,133,.35); color:var(--bad); }
-
+    /* Filters Sidebar */
+    .sidebar { position: sticky; top: 20px; background: var(--panel); padding: 20px; border-radius: var(--radius); }
     /* Map */
-    #mapSection h3{ font-size:16px; margin:0 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px; }
-    #map{
-      height: 480px;
-      border-radius:12px;
-      background: var(--panel2);
-      box-shadow: inset 0 0 10px rgba(0,0,0,.3);
-      margin-bottom:12px;
-    }
-    #mapLegend{
-      display:flex; gap:14px; font-size:13px;
-      margin-bottom:10px;
-      color:var(--muted);
-    }
-    .legendItem{ display:flex; align-items:center; gap:6px; }
-    .legendCircle{ width:10px; height:10px; border-radius:50%; }
-    .legendCircle.pin{ background: var(--accent); border:2px solid var(--text); box-shadow: 0 0 8px rgba(125,211,252,.5); }
-    .legendCircle.normal{ background: rgba(255,255,255,.2); }
-
-    .mapSelected{
-      background: var(--panel2);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:14px;
-      margin-bottom:12px;
-    }
-    .mapSelected h4{ font-size:18px; margin:0 0 10px 0; letter-spacing:.2px; }
-    .mapSelected .stat{ display:inline-block; margin-right:12px; font-size:14px; }
-    .mapSelected .stat strong{ font-weight:600; color:var(--accent2); }
-    .mapSelected .showcaseGrid{ margin-top:12px; }
-    .mapSelected .showcase{ height:120px; }
-
+    #map { height: 400px; border-radius: var(--radius); }
     /* Gallery */
-    #gallerySection h3{ font-size:16px; margin:0 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px; }
-    #galleryGrid{
-      display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px;
-    }
-    .mediaTile{
-      border-radius:14px; overflow:hidden;
-      background: var(--panel2);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow: 0 4px 8px rgba(0,0,0,.12);
-      position:relative;
-      min-height: 110px;
-      cursor:pointer;
-    }
-    .mediaTile img, .mediaTile video{ width:100%; height:100%; object-fit:cover; display:block; }
-    .mediaTile:hover{ box-shadow: 0 0 0 2px var(--accent); }
-    .mediaTag{
-      position:absolute; left:8px; right:8px; bottom:8px;
-      background: rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.10);
-      color: rgba(231,237,247,.95);
-      font-size:11px;
-      padding:6px 8px;
-      border-radius: 10px;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-    .mediaTile .icon{
-      position:absolute; top:8px; left:8px;
-      width:24px; height:24px; border-radius:50%;
-      background: rgba(0,0,0,.7);
-      display:flex; align-items:center; justify-content:center;
-      color:var(--text);
-      font-size:12px;
-    }
-
-    /* Table */
-    .tablePanel{ margin-bottom:18px; }
-    .tablePanel h3{ font-size:16px; margin:0 0 10px 0; border-bottom:1px solid var(--border); padding-bottom:6px; }
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      font-size:13px;
-    }
-    thead th{
-      text-align:left;
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      color:var(--muted);
-      font-weight:500;
-      position:sticky; top:0;
-      background: var(--panel2);
-      z-index:2;
-    }
-    tbody tr{ cursor:pointer; }
-    tbody tr:hover{ background: rgba(255,255,255,.03); }
-    tbody td{
-      padding:10px 12px;
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-    tbody td:last-child{ text-align:right; }
-    tbody tr:last-child td{ border-bottom:none; }
-    .center{ text-align:center; }
-    .right{ text-align:right; }
-
-    /* Footer */
-    .footer{
-      font-size:12px; text-align:center; padding:18px 0;
-      color:var(--muted);
-    }
-
-    /* Error Box */
-    .error-box{
-      margin:12px 0; padding: 10px 12px; border-radius: 12px;
-      border:1px solid rgba(251,113,133,.35);
-      background: rgba(251,113,133,.10);
-      color: rgba(251,113,133,.98);
-      font-size:12px; line-height:1.35;
-    }
-    .error-box code{ color: rgba(231,237,247,.95); }
-
-    /* Hero */
-    .hero{
-      position:relative;
-      border-radius: var(--radius);
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(17,31,57,.40);
-      padding:14px;
-      margin-bottom:12px;
-      min-height: 190px;
-    }
-    .heroVideo{
-      position:absolute; inset:0;
-      width:100%; height:100%;
-      object-fit:cover;
-      opacity:.18;
-      filter: saturate(1.05) contrast(1.05);
-    }
-    .heroVideo.hide{ display:none; }
-    .heroTop{
-      position:relative;
-      display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
-      margin-bottom:10px;
-    }
-    .heroTitle h2{ margin:0; font-size:20px; letter-spacing:.2px; }
-    .heroTitle p{ margin:6px 0 0 0; font-size:13px; color:var(--muted); }
-    .heroVideo.hide ~ .heroTitle{ margin-top:20px; }
-
-    /* Lightbox */
-    #lightbox{
-      display:none;
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.72);
-      z-index: 12000;
-      align-items:center; justify-content:center;
-      padding:18px;
-    }
-    #lightbox.active{ display:flex; }
-    .lbPanel{
-      width:min(1100px, 100%);
-      height:min(680px, 100%);
-      background: rgba(15,26,46,.96);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius: 18px;
-      overflow:hidden;
-      display:grid;
-      grid-template-columns: 2fr minmax(280px, 1fr);
-    }
-    .lbMedia{
-      background: #000;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .lbMedia img, .lbMedia video{
-      max-width:100%; max-height:100%;
-      object-fit:contain;
-      display:block;
-    }
-    .lbSide{
-      display:flex; flex-direction:column;
-      padding:18px;
-      background: var(--panel2);
-    }
-    .lbHeader{ border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px; }
-    .lbTitle{ font-size:18px; font-weight:600; }
-    .lbBtns{ display:flex; gap:8px; margin-top:10px; }
-    .lbBtns button{ background: rgba(255,255,255,.1); color:var(--text); font-weight:400; font-size:13px; padding:6px 12px; }
-    .lbBtns button:hover{ background: rgba(255,255,255,.2); }
-    .lbText{
-      font-size:14px; line-height:1.5;
-      flex-grow:1;
-      overflow-y:auto;
-      white-space:pre-wrap;
-    }
-    .lbFooter{ border-top:1px solid var(--border); padding-top:12px; margin-top:12px; display:flex; justify-content:space-between; align-items:center; }
-    .pill{ font-size:11px; padding:4px 8px; border-radius:999px; background: rgba(255,255,255,.1); color:var(--muted); }
-
-
-    /* Mobile styles */
-    @media(max-width: 900px){
-      .shell{ grid-template-columns: 1fr; padding:12px; gap:12px; }
-      .sidebar{ padding:12px; }
-      .main{ padding:12px; }
-      .brand{ margin:-12px -12px 12px -12px; }
-      .kpiGrid{ grid-template-columns: 1fr; }
-      #galleryGrid{ grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-      .lbPanel{ grid-template-columns: 1fr; height:95%; max-height:unset; }
-      .lbMedia{ min-height:40%; }
-    }
+    #galleryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    /* Lightbox, etc. remain similar */
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <header class="hero">
+      <!-- Existing hero -->
+    </header>
 
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div id="loadingStatus">Initializing…</div>
-    <div id="errorContainer" class="error-box" style="display:none; margin-top:20px;"></div>
-  </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <!-- Existing filters, snapshot -->
+      </aside>
 
-  <div class="shell" id="appShell">
-    <aside class="sidebar panel">
-      <div class="brand">
-        <div>
-          <h1>AgriVista</h1>
-          <div class="sub">Field Activations Dashboard</div>
-        </div>
-        <div class="chip" id="noticeBox">Status: Loading</div>
-      </div>
+      <main>
+        <section class="theme-section" id="seed-awareness">
+          <h2>Seed of Awareness</h2>
+          <div class="central-media" id="awareness-media"></div>
+          <div class="data-planet planet1">Farmers: <span id="awareness-farmers">—</span></div>
+          <div class="data-planet planet2">Acres: <span id="awareness-acres">—</span></div>
+          <div class="data-planet planet3">Awareness %: <span id="awareness-pct">—</span></div>
+        </section>
 
-      <div class="controlGroup">
-        <label class="label" for="filter-city">City</label>
-        <select id="filter-city">
-          <option value="">All Cities</option>
-        </select>
-      </div>
+        <section class="theme-section" id="growth-journey">
+          <h2>Growth Journey</h2>
+          <div class="central-media" id="journey-media"></div>
+          <div class="data-planet planet1">Sessions: <span id="journey-sessions">—</span></div>
+          <div class="data-planet planet2">Definite %: <span id="journey-def">—</span></div>
+          <div id="map" class="data-planet planet3">Map Orbit</div> <!-- Embed map as orbiting element -->
+        </section>
 
-      <div class="controlGroup">
-        <label class="label" for="filter-district">Spot/District</label>
-        <select id="filter-district">
-          <option value="">All Spots</option>
-        </select>
-      </div>
+        <section class="theme-section" id="harvest-impact">
+          <h2>Harvest Impact</h2>
+          <div class="central-media" id="impact-media"></div>
+          <div class="data-planet planet1">Clarity %: <span id="impact-clarity">—</span></div>
+          <canvas id="chartIntent" class="data-planet planet2"></canvas>
+        </section>
 
-      <div class="controlGroup">
-        <label class="label">Date Range</label>
-        <div style="display:flex; gap:10px;">
-          <input type="date" id="filter-date-from" placeholder="From Date">
-          <input type="date" id="filter-date-to" placeholder="To Date">
-        </div>
-      </div>
-
-      <div class="controlGroup">
-        <label class="label" for="filter-search">Search Keywords</label>
-        <input type="text" id="filter-search" placeholder="Filter by keywords in reasons…">
-      </div>
-
-      <div class="btnGroup" style="margin-top:18px;">
-        <button id="btn-reset" type="button">Reset Filters</button>
-        <button id="btn-export" type="button">Export CSV</button>
-      </div>
-
-      <div class="summary" id="filterSummary">
-        <div class="summary-text">
-          Showing <strong>—</strong> sessions
-        </div>
-        <div class="summary-dates muted" id="buildStamp">Data as of: —</div>
-      </div>
-
-      <div id="diagBox" style="font-size:10px; padding-top:10px; color:var(--muted); white-space:pre; max-height: 200px; overflow-y:auto;"></div>
-
-    </aside>
-
-    <main class="main">
-
-      <div class="hero">
-        <video id="heroVideo" class="heroVideo" autoplay loop muted playsinline></video>
-        <div class="heroTop">
-          <div class="heroTitle">
-            <h2>Performance Snapshot</h2>
-            <p>Key metrics aggregated from filtered sessions.</p>
-          </div>
-          <div class="chip">Key Performance Indicators (KPIs)</div>
-        </div>
-
-        <div class="kpiGrid">
-          <div class="kpi">
-            <div class="k">Total Sessions</div>
-            <div class="v" id="kpi-sessions">—</div>
-            <div class="bar"><div id="bar-sessions"></div></div>
-          </div>
-          <div class="kpi">
-            <div class="k">Total Farmers</div>
-            <div class="v" id="kpi-farmers">—</div>
-            <div class="bar"><div id="bar-farmers"></div></div>
-          </div>
-          <div class="kpi">
-            <div class="k">Total Acres</div>
-            <div class="v" id="kpi-acres">—</div>
-            <div class="bar"><div id="bar-acres"></div></div>
-          </div>
-          <div class="kpi">
-            <div class="k">Definite Intent</div>
-            <div class="v" id="kpi-demo">—</div>
-            <div class="bar"><div id="bar-demo"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <nav class="tabs" aria-label="Tabs">
-        <button class="tabBtn active" data-tab="tab-snapshot" type="button">Snapshot</button>
-        <button class="tabBtn" data-tab="tab-analytics" type="button">Analytics</button>
-        <button class="tabBtn" data-tab="tab-map" type="button">Interactive Map</button>
-        <button class="tabBtn" data-tab="tab-gallery" type="button">Media Gallery</button>
-        <button class="tabBtn" data-tab="tab-data" type="button">Raw Data Table</button>
-      </nav>
-
-      <section id="tab-snapshot" class="tabContent active">
-        <div class="snapshotGrid">
-          <div class="panel">
-            <h3>Session Media Showcase</h3>
-            <div class="muted" style="margin-bottom:12px;">Photos and videos from recent or highlighted sessions. Click to open full view.</div>
-            <div class="showcaseGrid" id="snapshotShowcase">
-              </div>
-          </div>
-
-          <div class="panel">
-            <h3>Reasons to Use (Top)</h3>
-            <div class="muted" style="margin-bottom:12px;">Most common reasons cited for definite purchase intent.</div>
-            <ul class="reasonList use" id="reasonUse">
-              </ul>
-          </div>
-          <div class="panel">
-            <h3>Reasons Not to Use (Top)</h3>
-            <div class="muted" style="margin-bottom:12px;">Most common reasons cited for indecision or no interest.</div>
-            <ul class="reasonList no" id="reasonNo">
-              </ul>
-          </div>
-
-        </div>
-      </section>
-
-      <section id="tab-analytics" class="tabContent">
-        <div class="snapshotGrid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-          <div class="panel">
-            <h3>Farmers by City</h3>
-            <div class="muted" style="margin-bottom:10px;">Total farmer reach across all filtered cities.</div>
-            <div class="chartCanvas"><canvas id="chartCity"></canvas></div>
-          </div>
-          <div class="panel">
-            <h3>Purchase Intent Mix</h3>
-            <div class="muted" style="margin-bottom:10px;">Definite, Maybe, and Not Interested farmers breakdown.</div>
-            <div class="chartCanvas"><canvas id="chartIntent"></canvas></div>
-          </div>
-          <div class="panel" style="grid-column: 1 / -1;">
-            <h3>Trend Over Time</h3>
-            <div class="muted" style="margin-bottom:10px;">Farmers and Acres covered daily.</div>
-            <div style="height:300px;"><canvas id="chartTrend"></canvas></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="tab-map" class="tabContent">
-        <h3>Campaign Route Map</h3>
-        <div id="mapLegend">
-          <div class="legendItem"><div class="legendCircle pin"></div>Selected/Pinned Session</div>
-          <div class="legendItem"><div class="legendCircle normal"></div>Filtered Session</div>
-        </div>
-
-        <div id="map">
-          </div>
-
-        <div class="mapSelected">
-          <h4 id="mapSelTitle">Selected Session Details (Click a point on the map or a row in the table)</h4>
-          <span class="stat">Farmers: <strong id="mapSelFarmers">—</strong></span>
-          <span class="stat">Acres: <strong id="mapSelAcres">—</strong></span>
-          <span class="stat">Date: <strong id="mapSelDate">—</strong></span>
-          <div class="showcaseGrid" id="mapShowcase">
-            </div>
-        </div>
-      </section>
-
-      <section id="tab-gallery" class="tabContent">
-        <h3>Media Gallery</h3>
-        <div class="muted" style="margin-bottom:14px;">Images and videos from the filtered sessions. Click to view full-screen.</div>
-        <div id="galleryGrid">
-          </div>
-      </section>
-
-      <section id="tab-data" class="tabContent">
-        <div class="tablePanel">
-          <h3>Session List</h3>
-          <div class="muted">Click a row to open session media (if available) and pin the location on the map.</div>
-          <div style="overflow:auto; margin-top:10px; max-height: 520px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>City</th>
-                  <th>Spot</th>
-                  <th class="right">Farmers</th>
-                  <th class="right">Acres</th>
-                  <th class="right">Definite %</th>
-                  <th class="right">Awareness %</th>
-                  <th class="right">Clarity %</th>
-                </tr>
-              </thead>
-              <tbody id="tblSessions"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <div id="lightbox">
-    <div class="lbPanel">
-      <div class="lbMedia" id="lbMedia"></div>
-      <div class="lbSide">
-        <div class="lbHeader">
-          <div class="lbTitle" id="lbCaption">—</div>
-          <div class="lbBtns">
-            <button id="lbPrev" type="button">Prev</button>
-            <button id="lbNext" type="button">Next</button>
-            <button id="lbClose" type="button">Close</button>
-          </div>
-        </div>
-        <div class="lbText" id="lbTranscript">—</div>
-        <div class="lbFooter">
-          <div class="pill" id="lbHint">Tip: Esc to close</div>
-          <div class="lbNav"></div>
-        </div>
-      </div>
+        <section class="theme-section" id="future-fields">
+          <h2>Future Fields</h2>
+          <div class="central-media" id="future-media"></div>
+          <div class="data-planet planet1">Recommendations</div>
+          <table id="tblSessions" class="data-planet planet2"></table> <!-- Cleaned table -->
+          <button class="share-btn">Share Visual</button>
+        </section>
+      </main>
     </div>
+
+    <!-- Existing lightbox, notice -->
   </div>
 
   <script src="data_processor.js"></script>

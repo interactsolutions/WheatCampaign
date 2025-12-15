@@ -72,7 +72,6 @@
     mapShowcase: $('#mapShowcase'),
 
     gallery: $('#galleryGrid'),
-    gallerySummary: $('#gallerySummary'),
     tbl: $('#tblSessions'),
 
     heroVideo: $('#heroVideo'),
@@ -85,8 +84,6 @@
     lbPrev: $('#lbPrev'),
     lbNext: $('#lbNext'),
     lbClose: $('#lbClose'),
-    lbNav: $('.lbNav'),
-    lbHint: $('#lbHint')
   };
 
   function setLoadingStatus(msg) {
@@ -97,7 +94,11 @@
     el.notice.innerHTML = html;
   }
   function setDiag(lines) {
-    if (el.diag) el.diag.textContent = lines.join('\n');
+    if (!el.diag) return;
+    el.diag.textContent = lines.join('\n');
+  }
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
   function showError(html) {
     if (!el.err) return;
@@ -109,10 +110,6 @@
     el.err.style.display = 'none';
     el.err.innerHTML = '';
   }
-
-  const escapeHtml = (unsafe) => {
-    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  };
 
   const fmt = {
     int: (n) => (n === null || n === undefined || isNaN(n)) ? '—' : Math.round(n).toLocaleString(),
@@ -135,9 +132,6 @@
     mediaItems: [],
     mediaBySessionId: new Map(), // sessionId -> media[]
     pinnedSession: null,
-    uniqueCities: [],
-    uniqueSpots: [],
-    uniqueDates: [],
 
     map: null,
     circles: [],
@@ -154,8 +148,7 @@
   function parseISO(d) {
     if (!d) return null;
     const dt = new Date(d);
-    // Check if valid date and not just "Invalid Date" from a non-date string
-    return isNaN(dt.getTime()) || String(d).length < 8 ? null : dt;
+    return isNaN(dt.getTime()) ? null : dt;
   }
 
   function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
@@ -204,17 +197,25 @@
   async function fetchArrayBuffer(url) {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return res.arrayBuffer();
+    const buf = await res.arrayBuffer();
+    // LFS pointer detection: if the payload is small and looks like text
+    if (buf.byteLength < 5000) {
+      const txt = new TextDecoder().decode(new Uint8Array(buf));
+      if (txt.includes('version https://git-lfs.github.com/spec/v1')) {
+        const e = new Error(`Git LFS pointer detected for ${url}.`);
+        e.code = 'LFS_POINTER';
+        throw e;
+      }
+    }
+    return buf;
   }
 
   // ---------------------------
-  // Data Loading & Processing
+  // Data loading
   // ---------------------------
-
-  function transformSession(s) {
-    // Clean up and standardize the session object
-    const sn = safeStr(s.sn);
-    const id = safeStr(s.id || sn);
+  function normalizeSession(s) {
+    const sn = (s.sn !== null && s.sn !== undefined && s.sn !== '') ? String(s.sn) : '';
+    const date = safeStr(s.date);
     const city = safeStr(s.city);
     const spot = safeStr(s.spot);
     const farmers = (s.farmers === '' ? null : Number(s.farmers));
@@ -222,211 +223,456 @@
     const definite = (s.definite === '' ? null : Number(s.definite));
     const maybe = (s.maybe === '' ? null : Number(s.maybe));
     const notInterested = (s.notInterested === '' ? null : Number(s.notInterested));
-    const reasonsUse = safeStr(s.reasonsUse);
-    const reasonsNo = safeStr(s.reasonsNo);
+    const definitePct = (s.definitePct !== null && s.definitePct !== undefined) ? Number(s.definitePct) :
+      (farmers && definite !== null && !isNaN(farmers) && farmers > 0) ? (definite / farmers * 100) : null;
+    const awarenessPct = (s.awarenessPct !== null && s.awarenessPct !== undefined) ? Number(s.awarenessPct) : null;
+    const clarityPct = (s.clarityPct !== null && s.clarityPct !== undefined) ? Number(s.clarityPct) : null;
 
-    // Standardize percentage calculations (if they weren't pre-calculated)
-    const definitePct = s.definitePct !== undefined ? Number(s.definitePct) : (farmers > 0 ? (definite / farmers * 100) : null);
-    const awarenessPct = s.awarenessPct !== undefined ? Number(s.awarenessPct) : null;
-    const clarityPct = s.clarityPct !== undefined ? Number(s.clarityPct) : null;
-
-    let lat = Number(s.lat);
-    let lon = Number(s.lon);
-    if (isNaN(lat) || isNaN(lon)) {
-      lat = null;
-      lon = null;
-    }
+    const lat = (s.lat === '' ? null : Number(s.lat));
+    const lon = (s.lon === '' ? null : Number(s.lon));
 
     return {
-      sn: sn, // Session Number (for grouping media/sessions)
-      id: id, // Unique Session ID (if different from SN)
-      date: safeStr(s.date),
-      city: city,
-      spot: spot,
-      farmers: farmers,
-      acres: acres,
-      definite: definite,
-      maybe: maybe,
-      notInterested: notInterested,
-      definitePct: definitePct,
-      awarenessPct: awarenessPct,
-      clarityPct: clarityPct,
-      lat: lat,
-      lon: lon,
-      reasonsUse: reasonsUse,
-      reasonsNo: reasonsNo,
+      id: sn || `${date}|${city}|${spot}`,
+      sn,
+      date,
+      city,
+      spot,
+      farmers: isNaN(farmers) ? null : farmers,
+      acres: isNaN(acres) ? null : acres,
+      definite: isNaN(definite) ? null : definite,
+      maybe: isNaN(maybe) ? null : maybe,
+      notInterested: isNaN(notInterested) ? null : notInterested,
+      definitePct: isNaN(definitePct) ? null : definitePct,
+      awarenessPct: isNaN(awarenessPct) ? null : awarenessPct,
+      clarityPct: isNaN(clarityPct) ? null : clarityPct,
+      lat: isNaN(lat) ? null : lat,
+      lon: isNaN(lon) ? null : lon,
+      reasonsUse: safeStr(s.reasonsUse),
+      reasonsNo: safeStr(s.reasonsNo),
     };
   }
 
-  async function loadSessionsJson(url) {
-    setLoadingStatus(`Loading ${CONFIG.sessionsJson}...`);
-    logDiag(`Attempting to fetch ${url}`);
-    const data = await fetchJson(url);
-    if (!data.sessions || !Array.isArray(data.sessions)) {
-      throw new Error(`Invalid format in ${CONFIG.sessionsJson}. Expected array 'sessions'.`);
+  async function loadSessionsPreferred() {
+    // 1) sessions.json
+    try {
+      setLoadingStatus('Loading sessions.json…');
+      const payload = await fetchJson(CONFIG.sessionsJson);
+      const sessions = (payload.sessions || payload.data || payload || []);
+      if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('sessions.json is empty or invalid.');
+      return sessions.map(normalizeSession);
+    } catch (e) {
+      // keep error; fallback to xlsx
+      logDiag(`sessions.json failed: ${e.message}`);
+      return null;
     }
-
-    return data.sessions.map(transformSession).filter(s => s.date && s.sn);
   }
 
-  async function loadSessionsXlsx(url) {
-    if (typeof XLSX === 'undefined') {
-      throw new Error('SheetJS (XLSX) library not loaded. Cannot use XLSX fallback.');
+  function getSheetCell(sheet, r, c) {
+    const addr = XLSX.utils.encode_cell({ r, c });
+    const cell = sheet[addr];
+    return cell ? cell.v : undefined;
+  }
+
+  function bestHeaderIndex(headers, patterns) {
+    const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
+    const hs = headers.map(h => norm(h));
+    for (const p of patterns) {
+      const re = new RegExp(p, 'i');
+      const idx = hs.findIndex(h => re.test(h));
+      if (idx >= 0) return idx;
     }
-    setLoadingStatus(`Loading ${CONFIG.xlsxFallback} (large file, may take time)...`);
-    logDiag(`Attempting to fetch ${url}`);
-    const arrayBuffer = await fetchArrayBuffer(url);
-    const data = new Uint8Array(arrayBuffer);
-    const wb = XLSX.read(data, { type: 'array' });
+    return -1;
+  }
 
-    // Try to find sheet named 'SUM' or just use the first one
-    const sheetName = wb.SheetNames.find(n => String(n).toLowerCase() === 'sum') || wb.SheetNames[0];
-    const sheet = wb.Sheets[sheetName];
-    if (!sheet) throw new Error('XLSX: SUM sheet not found.');
+  function parseDmsToDd(s) {
+    if (!s) return null;
+    const str = String(s).trim();
+    if (!str) return null;
 
-    // Convert sheet to JSON array of arrays
-    const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
+    // decimals like "31.123, 73.456"
+    const m = str.match(/-?\d+(\.\d+)?/g);
+    if (m && m.length === 1 && !/[NSEW]/i.test(str)) {
+      const v = parseFloat(m[0]);
+      return isNaN(v) ? null : v;
+    }
 
-    if (!rawData || rawData.length < 2) throw new Error('XLSX sheet is empty.');
+    // DMS like 31°23'28.5"N
+    const mm = str.match(/(\d+(?:\.\d+)?)\D+(\d+(?:\.\d+)?)?\D*(\d+(?:\.\d+)?)?\D*([NSEW])/i);
+    if (!mm) return null;
 
-    // Standardize headers (assuming the 2nd row is the header)
-    const headers = rawData[1].map(h => String(h || '').trim());
-    const headerMap = {
-      'SN': 'sn',
-      'Activity Date': 'date',
-      'City': 'city',
-      'Village / Mauza': 'spot',
-      'No. of Farmers': 'farmers',
-      'Total Acres (in 000)': 'acres',
-      'Definite to Use': 'definite',
-      'May Use': 'maybe',
-      'Not Interested': 'notInterested',
-      'Reasons to Use': 'reasonsUse',
-      'Reasons Not to Use': 'reasonsNo',
-      'Lat (Decimal)': 'lat',
-      'Long (Decimal)': 'lon',
-      // Include any other keys needed from the sheet and map them to standard session properties
-    };
+    const deg = parseFloat(mm[1]);
+    const min = parseFloat(mm[2] || '0');
+    const sec = parseFloat(mm[3] || '0');
+    let dd = deg + min/60 + sec/3600;
+    const dir = (mm[4] || '').toUpperCase();
+    if (dir === 'S' || dir === 'W') dd *= -1;
 
-    const sessions = [];
-    // Start from the third row (index 2)
-    for (let i = 2; i < rawData.length; i++) {
-      const row = rawData[i];
-      if (!row || !row.length) continue;
+    return isNaN(dd) ? null : dd;
+  }
 
-      const session = {};
-      let hasData = false;
-      for (let j = 0; j < headers.length; j++) {
-        const key = headers[j];
-        const prop = headerMap[key];
-        if (prop) {
-          const val = row[j];
-          session[prop] = val;
-          if (val) hasData = true;
+  async function loadSessionsXlsx() {
+    if (typeof XLSX === 'undefined') return null;
+
+    try {
+      setLoadingStatus(`Loading XLSX fallback: ${CONFIG.xlsxFallback}…`);
+      const buf = await fetchArrayBuffer(CONFIG.xlsxFallback);
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true, cellNF: false, cellText: false });
+      
+      const sheetName = wb.SheetNames.find(n => String(n).toLowerCase() === 'sum') || wb.SheetNames[0];
+      const sheet = wb.Sheets[sheetName];
+      if (!sheet) throw new Error('XLSX: SUM sheet not found.');
+
+      // Build header row (assume row index 1 in 0-based == row 2 in Excel)
+      const headerRow = 1;
+      const headers = [];
+      for (let c = 0; c < 220; c++) {
+        const v = getSheetCell(sheet, headerRow, c);
+        if (v === undefined) break;
+        headers.push(v);
+      }
+      
+      const idx = {
+        sn: bestHeaderIndex(headers, ['^sn$','^s\\.?n\\.?$']),
+        city: bestHeaderIndex(headers, ['^city$','^district$']),
+        spot: bestHeaderIndex(headers, ['^spot$','^location$']),
+        date: bestHeaderIndex(headers, ['^date$','^session\\s*date$']),
+        farmers: bestHeaderIndex(headers, ['^farmers$','^total\\s*farmers$']),
+        acres: bestHeaderIndex(headers, ['^acres$','^total\\s*acres$']),
+        def: bestHeaderIndex(headers, ['definite', 'def\\.?']),
+        may: bestHeaderIndex(headers, ['maybe', 'may\\.?']),
+        no: bestHeaderIndex(headers, ['not\\s*interested', 'no\\s*int\\.?']),
+        know: bestHeaderIndex(headers, ['awareness', 'know', 'heard\\s*before']),
+        lat: bestHeaderIndex(headers, ['lat\\.?']),
+        lon: bestHeaderIndex(headers, ['lon\\.?']),
+        reasonsUse: bestHeaderIndex(headers, ['reason.*use', 'positive\\s*feedback']),
+        reasonsNo: bestHeaderIndex(headers, ['reason.*no', 'negative\\s*feedback']),
+      };
+      
+      // Look for clarity/score columns
+      const scorePatterns = ['score', 'clarity', 'understood'];
+      const scoreIdxs = [];
+      for (let c = 0; c < headers.length; c++) {
+        const h = String(headers[c] || '').toLowerCase();
+        if (scorePatterns.some(p => h.includes(p))) {
+          scoreIdxs.push(c);
         }
       }
 
-      if (hasData) {
-        sessions.push(transformSession(session));
+      const sessions = [];
+      const dataStartRow = 2; // Data starts at row 3 (index 2)
+      for (let r = dataStartRow; ; r++) {
+        const row = headers.map((_, c) => getSheetCell(sheet, r, c));
+        const sn = idx.sn >= 0 ? row[idx.sn] : null;
+        const dateRaw = idx.date >= 0 ? row[idx.date] : null;
+
+        // Stop if essential row data is missing (assuming SN and Date are required)
+        if (!sn && !dateRaw) break;
+        if (r > 5000) break; // Safety break
+
+        const farmers = idx.farmers >= 0 ? Number(row[idx.farmers]) : null;
+        const definite = idx.def >= 0 ? Number(row[idx.def]) : null;
+        const maybe = idx.may >= 0 ? Number(row[idx.may]) : null;
+        const no = idx.no >= 0 ? Number(row[idx.no]) : null;
+        const know = idx.know >= 0 ? Number(row[idx.know]) : null;
+
+        // Calculate awarenessPct (if 'know' is a count)
+        let awarenessPct = null;
+        if (farmers && !isNaN(farmers) && farmers > 0 && know !== null && !isNaN(know)) {
+          awarenessPct = (know <= farmers) ? (know / farmers * 100) : (know <= 100 ? know : null);
+        }
+        
+        // Calculate clarityPct: average score understood columns; if 1..5 convert to %
+        let clarityPct = null;
+        const scores = scoreIdxs.map(i => Number(row[i])).filter(v => !isNaN(v));
+        if (scores.length) {
+          const avg = scores.reduce((a,b)=>a+b,0) / scores.length;
+          // Assume 1-5 scale -> 20-100%
+          if (avg > 0 && avg <= 5) clarityPct = (avg / 5) * 100;
+          // Otherwise, assume it's already a percentage (e.g. 55.0)
+          else if (avg > 0 && avg <= 100) clarityPct = avg;
+        }
+
+
+        let date = null;
+        if (dateRaw instanceof Date) {
+          date = dateRaw.toISOString().substring(0, 10);
+        } else if (typeof dateRaw === 'number' && dateRaw > 10000) { // Excel date number
+          date = XLSX.SSF.parse_date_code(dateRaw).toISOString().substring(0, 10);
+        } else {
+          date = String(dateRaw || '').trim();
+        }
+
+        const latRaw = idx.lat >= 0 ? row[idx.lat] : null;
+        const lonRaw = idx.lon >= 0 ? row[idx.lon] : null;
+
+        const session = {
+          sn: sn,
+          city: idx.city >= 0 ? safeStr(row[idx.city]) : '',
+          spot: idx.spot >= 0 ? safeStr(row[idx.spot]) : '',
+          date: date,
+          farmers: farmers,
+          acres: idx.acres >= 0 ? Number(row[idx.acres]) : null,
+          definite: definite,
+          maybe: maybe,
+          notInterested: no,
+          // definitePct will be calculated in normalizeSession if missing
+          // awarenessPct is calculated above
+          awarenessPct: awarenessPct, 
+          // clarityPct is calculated above
+          clarityPct: clarityPct,
+          lat: parseDmsToDd(latRaw),
+          lon: parseDmsToDd(lonRaw),
+          reasonsUse: idx.reasonsUse >= 0 ? safeStr(row[idx.reasonsUse]) : '',
+          reasonsNo: idx.reasonsNo >= 0 ? safeStr(row[idx.reasonsNo]) : '',
+        };
+        sessions.push(normalizeSession(session));
+      }
+
+      if (sessions.length === 0) throw new Error('XLSX parsed but contained no valid sessions.');
+      return sessions;
+
+    } catch (e) {
+      logDiag(`XLSX failed: ${e.message}`);
+      throw new Error(`Failed to load data from both sessions.json and the XLSX fallback. Error: ${e.message}`);
+    }
+  }
+
+
+  async function loadSessions() {
+    let sessions = await loadSessionsPreferred();
+    if (!sessions) {
+      if (typeof XLSX !== 'undefined') {
+        sessions = await loadSessionsXlsx();
+      } else {
+        throw new Error('sessions.json failed to load, and SheetJS (XLSX) library is missing for the XLSX fallback.');
       }
     }
+    
+    // Sort by date ascending (or SN if date missing)
+    sessions.sort((a,b) => {
+      const da = parseISO(a.date), db = parseISO(b.date);
+      const ta = da ? da.getTime() : (a.sn || 0);
+      const tb = db ? db.getTime() : (b.sn || 0);
+      return ta - tb;
+    });
 
-    if (!sessions.length) throw new Error('XLSX: Could not extract any valid sessions.');
-
-    logDiag(`XLSX loaded: ${sessions.length} sessions`);
     return sessions;
   }
 
   async function loadMedia(sessions) {
-    setLoadingStatus(`Loading ${CONFIG.mediaJson}...`);
-    logDiag(`Attempting to fetch ${CONFIG.mediaJson}`);
-
-    const basePath = inferBasePath();
-    const mediaPath = `${basePath}${CONFIG.mediaJson}`;
-
     try {
-      const data = await fetchJson(mediaPath);
+      setLoadingStatus('Loading media.json…');
+      const mediaData = await fetchJson(CONFIG.mediaJson);
+      
+      const basePath = mediaData.basePath || CONFIG.basePath || '';
+      const defaults = mediaData.defaults || {};
+      const mainVideoExt = defaults.mainVideoExt || 'mp4';
+      const mainImageExt = defaults.mainImageExt || 'jpg';
+      const variantImageExt = defaults.variantImageExt || 'jpg';
+      const variantVideoExt = defaults.variantVideoExt || 'mp4';
+      const variants = defaults.variants || [];
 
-      if (data.format !== 'A_compact') {
-        throw new Error(`media.json has unsupported format: ${data.format}`);
-      }
+      const items = [];
+      const sessionMap = new Map(sessions.map(s => [String(s.sn), s]));
 
-      const mediaItems = [];
-      const mediaBasePath = `${basePath}${data.basePath}`;
-      const defaults = data.defaults;
+      for (const s of (mediaData.sessions || [])) {
+        const id = String(s.id || s.sn || '').trim();
+        if (!id) continue;
 
-      // Ensure sessions are unique by 'id' to avoid media duplication
-      const uniqueSessions = new Set();
-      for (const s of sessions) {
-        uniqueSessions.add(s.sn);
-      }
-
-      for (const s of data.sessions) {
-        const id = safeStr(s.id);
-        if (!id || !uniqueSessions.has(id)) continue;
-
+        // Skip if session doesn't exist in sessions data (or has no SN)
+        if (!sessionMap.has(id)) continue;
+        
         const caption = safeStr(s.caption) || `Session ${id}`;
         const transcript = safeStr(s.transcript);
         const city = safeStr(s.city);
         const spot = safeStr(s.spot);
         const date = safeStr(s.date);
 
-        // 1. Main video + image
-        const mainVideoExt = safeStr(s.mainVideoExt || defaults.mainVideoExt);
-        const mainImageExt = safeStr(s.mainImageExt || defaults.mainImageExt);
-
-        mediaItems.push({
+        // main video + image
+        items.push({
           sessionId: id, type: 'video',
-          src: `${mediaBasePath}${id}.${mainVideoExt}`, caption, transcript, city, spot, date
+          src: `${basePath}${id}.${mainVideoExt}`,
+          caption, transcript, city, spot, date
         });
-        mediaItems.push({
+        items.push({
           sessionId: id, type: 'image',
-          src: `${mediaBasePath}${id}.${mainImageExt}`, caption, transcript, city, spot, date
+          src: `${basePath}${id}.${mainImageExt}`,
+          caption, transcript, city, spot, date
         });
-
-        // 2. Variant images/videos
-        const variants = s.variants || defaults.variants || [];
-        const variantImageExt = safeStr(s.variantImageExt || defaults.variantImageExt);
-        const variantVideoExt = safeStr(s.variantVideoExt || defaults.variantVideoExt);
-
+        
+        // variants (images first)
         for (const v of variants) {
-          mediaItems.push({
-            sessionId: id, type: 'image', variant: v,
-            src: `${mediaBasePath}${id}-${v}.${variantImageExt}`, caption: `${caption} (${v.toUpperCase()})`, transcript: '', city, spot, date
-          });
-          mediaItems.push({
-            sessionId: id, type: 'video', variant: v,
-            src: `${mediaBasePath}${id}-${v}.${variantVideoExt}`, caption: `${caption} (${v.toUpperCase()})`, transcript: '', city, spot, date
+          items.push({
+            sessionId: id, type: 'image',
+            src: `${basePath}${id}_${v}.${variantImageExt}`,
+            caption: `${caption} (${v})`, transcript, city, spot, date
           });
         }
-      }
-
-      // Group media items by session ID
-      const mediaBySessionId = new Map();
-      for (const item of mediaItems) {
-        if (!mediaBySessionId.has(item.sessionId)) {
-          mediaBySessionId.set(item.sessionId, []);
+        
+        // optional variant videos
+        if (defaults.hasVariantVideos) {
+            for (const v of variants) {
+                items.push({
+                    sessionId: id, type: 'video',
+                    src: `${basePath}${id}_${v}.${variantVideoExt}`,
+                    caption: `${caption} (${v})`, transcript, city, spot, date
+                });
+            }
         }
-        mediaBySessionId.get(item.sessionId).push(item);
       }
-
-      state.mediaBySessionId = mediaBySessionId;
-      return mediaItems.filter(item => item.src);
+      
+      // Map media by session ID
+      for (const it of items) {
+        const arr = state.mediaBySessionId.get(it.sessionId) || [];
+        arr.push(it);
+        state.mediaBySessionId.set(it.sessionId, arr);
+      }
+      
+      return items;
 
     } catch (e) {
-      logDiag(`Media load error: ${e.message}`);
-      setNotice(`<strong>Status:</strong> Media index load error. Gallery/Showcase disabled. (${e.code || e.name})`);
+      // Media is optional/secondary, so we log and proceed
+      logDiag(`media.json failed: ${e.message}`);
+      setNotice('<strong>Status:</strong> Data OK, Media Missing');
       return [];
     }
   }
 
   // ---------------------------
-  // Calculations
+  // Filters and Data Processing
   // ---------------------------
+
+  function populateFilters() {
+    const cities = uniq(state.sessions.map(r => r.city)).sort();
+    const spots = uniq(state.sessions.map(r => r.spot)).sort();
+
+    const createOption = (v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`;
+
+    // City Filter
+    el.filterCity.innerHTML = '<option value="">All Cities</option>' + cities.map(createOption).join('');
+    
+    // Spot Filter
+    el.filterSpot.innerHTML = '<option value="">All Spots</option>' + spots.map(createOption).join('');
+
+    // Date Range (default to full range)
+    if (state.sessions.length) {
+      el.filterFrom.value = state.sessions[0].date;
+      el.filterTo.value = state.sessions[state.sessions.length - 1].date;
+    }
+
+    el.filterCity.addEventListener('change', () => applyFilters(50));
+    el.filterSpot.addEventListener('change', () => applyFilters(50));
+    el.filterFrom.addEventListener('change', () => applyFilters(50));
+    el.filterTo.addEventListener('change', () => applyFilters(50));
+    el.filterSearch.addEventListener('input', debounce(() => applyFilters(0), 400));
+    
+    el.btnReset.addEventListener('click', () => {
+      el.filterCity.value = '';
+      el.filterSpot.value = '';
+      el.filterSearch.value = '';
+      if (state.sessions.length) {
+        el.filterFrom.value = state.sessions[0].date;
+        el.filterTo.value = state.sessions[state.sessions.length - 1].date;
+      }
+      applyFilters();
+    });
+    
+    el.btnExport.addEventListener('click', () => exportCsv());
+
+    // Tabs
+    $$('.tabBtn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tabId = e.target.getAttribute('data-tab');
+        $$('.tabBtn').forEach(b => b.classList.remove('active'));
+        $$('.tabContent').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        $(`#${tabId}`).classList.add('active');
+        
+        if (tabId === 'tab-map') invalidateMapSoon();
+      });
+    });
+
+    // Lightbox events
+    el.lbClose.addEventListener('click', closeLightbox);
+    el.lbPrev.addEventListener('click', () => changeLightboxItem(-1));
+    el.lbNext.addEventListener('click', () => changeLightboxItem(1));
+    document.addEventListener('keydown', (e) => {
+      if (el.lb.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') changeLightboxItem(-1);
+        if (e.key === 'ArrowRight') changeLightboxItem(1);
+      }
+    });
+
+  }
+
+  function applyFilters(delay=0) {
+    if (delay) return setTimeout(applyFilters, delay);
+
+    const city = el.filterCity.value;
+    const spot = el.filterSpot.value;
+    const from = el.filterFrom.value;
+    const to = el.filterTo.value;
+    const q = safeStr(el.filterSearch.value).toLowerCase();
+
+    const fromDt = parseISO(from);
+    const toDt = parseISO(to);
+
+    let rows = state.sessions.slice();
+
+    // 1. City/Spot Filters
+    if (city) {
+      rows = rows.filter(r => r.city === city);
+    }
+    if (spot) {
+      rows = rows.filter(r => r.spot === spot);
+    }
+
+    // 2. Date Filters
+    if (fromDt && !isNaN(fromDt.getTime())) {
+      rows = rows.filter(r => {
+        const d = parseISO(r.date);
+        return d ? (d >= fromDt) : true;
+      });
+    }
+    if (toDt && !isNaN(toDt.getTime())) {
+      // inclusive end
+      const end = new Date(toDt.getTime() + 24*3600*1000 - 1);
+      rows = rows.filter(r => {
+        const d = parseISO(r.date);
+        return d ? (d <= end) : true;
+      });
+    }
+
+    // 3. Search Filter
+    if (q) {
+      rows = rows.filter(r => {
+        const hay = `${r.city} ${r.spot} ${r.reasonsUse} ${r.reasonsNo}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    
+    // Sort by date desc then sn
+    rows.sort((a,b) => {
+      const da = parseISO(a.date), db = parseISO(b.date);
+      const ta = da ? da.getTime() : 0;
+      const tb = db ? db.getTime() : 0;
+      
+      // Sort by date descending
+      if (tb !== ta) return tb - ta;
+
+      // Secondary sort by SN descending (for same-day sessions)
+      return (b.sn || 0) - (a.sn || 0);
+    });
+
+    state.filtered = rows;
+    updateDashboard(rows);
+  }
+
   function sum(arr, fn) {
-    return arr.reduce((acc, curr) => {
-      const v = fn(curr);
-      return acc + (typeof v === 'number' && !isNaN(v) ? v : 0);
+    return arr.reduce((a, r) => {
+      const v = fn(r);
+      return a + (typeof v === 'number' && !isNaN(v) ? v : 0);
     }, 0);
   }
 
@@ -443,372 +689,95 @@
   }
 
   function computeKpis(rows) {
-    const totalSessions = new Set(rows.map(r => r.sn).filter(Boolean)).size;
-    const totalFarmers = sum(rows, r => r.farmers);
-    const totalAcres = sum(rows, r => r.acres);
-    const definiteIntent = sum(rows, r => r.definite);
-    const definiteIntentPct = totalFarmers > 0 ? (definiteIntent / totalFarmers * 100) : null;
-
-    const definitePctMean = mean(rows, r => r.definitePct);
-    const awarenessPctMean = mean(rows, r => r.awarenessPct);
-    const clarityPctMean = mean(rows, r => r.clarityPct);
-
-    if (el.kpiSessions) el.kpiSessions.textContent = fmt.int(totalSessions);
-    if (el.kpiFarmers) el.kpiFarmers.textContent = fmt.int(totalFarmers);
-    if (el.kpiAcres) el.kpiAcres.textContent = fmt.int(totalAcres);
-    if (el.kpiDemo) el.kpiDemo.textContent = definiteIntentPct !== null ? fmt.pct(definiteIntentPct) : '—';
-
-    // Set bar widths (compared to the max of all sessions)
-    const maxSessions = new Set(state.sessions.map(r => r.sn).filter(Boolean)).size;
-    const maxFarmers = sum(state.sessions, r => r.farmers);
-    const maxAcres = sum(state.sessions, r => r.acres);
-
-    setBar(el.barSessions, maxSessions > 0 ? (totalSessions / maxSessions * 100) : 0);
-    setBar(el.barFarmers, maxFarmers > 0 ? (totalFarmers / maxFarmers * 100) : 0);
-    setBar(el.barAcres, maxAcres > 0 ? (totalAcres / maxAcres * 100) : 0);
-    setBar(el.barDemo, definiteIntentPct); // Relative to 100%
+    const sessions = rows.length;
+    const farmers = sum(rows, r => r.farmers);
+    const acres = sum(rows, r => r.acres);
+    // Average definite percentage weighted by number of farmers (if available)
+    const totalDefinite = sum(rows, r => r.definite);
+    const definiteTotalFarmers = sum(rows.filter(r => typeof r.definite === 'number' && r.definite !== null), r => r.farmers);
+    const defPct = (definiteTotalFarmers > 0) ? (totalDefinite / definiteTotalFarmers) * 100 : mean(rows, r => r.definitePct);
+    
+    return { sessions, farmers, acres, defPct };
   }
 
-  function computeReasons(rows) {
-    const reasonUseMap = new Map();
-    const reasonNoMap = new Map();
+  function updateKpis(rows) {
+    const k = computeKpis(rows);
+    el.kpiSessions.textContent = fmt.int(k.sessions);
+    el.kpiFarmers.textContent = fmt.int(k.farmers);
+    el.kpiAcres.textContent = fmt.int(k.acres);
+    el.kpiDemo.textContent = fmt.pct(k.defPct);
 
-    for (const r of rows) {
-      if (r.reasonsUse) {
-        r.reasonsUse.split(';').map(s => safeStr(s)).filter(Boolean).forEach(reason => {
-          reasonUseMap.set(reason, (reasonUseMap.get(reason) || 0) + 1);
-        });
-      }
-      if (r.reasonsNo) {
-        r.reasonsNo.split(';').map(s => safeStr(s)).filter(Boolean).forEach(reason => {
-          reasonNoMap.set(reason, (reasonNoMap.get(reason) || 0) + 1);
-        });
-      }
-    }
+    // Assuming max values for bars are based on total data, but as a shortcut we'll use a fixed number or the max of the filtered set
+    const totalFarmers = sum(state.sessions, r => r.farmers);
+    const maxFarmers = totalFarmers || 1000;
+    const maxAcres = sum(state.sessions, r => r.acres) || 10000;
 
-    const sortAndTake = (map) => Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([reason, count]) => `<li>${reason} (${count} sessions)</li>`).join('');
-
-    if (el.reasonUse) el.reasonUse.innerHTML = sortAndTake(reasonUseMap) || '<li>No data in filter.</li>';
-    if (el.reasonNo) el.reasonNo.innerHTML = sortAndTake(reasonNoMap) || '<li>No data in filter.</li>';
-  }
-
-  // ---------------------------
-  // Filtering & UI Updates
-  // ---------------------------
-
-  function populateFilters() {
-    state.uniqueCities = uniq(state.sessions.map(s => s.city)).sort();
-    state.uniqueDates = uniq(state.sessions.map(s => s.date)).map(parseISO).filter(Boolean).sort((a,b) => a.getTime() - b.getTime());
-
-    const cityOptions = state.uniqueCities.map(c => `<option value="${c}">${c}</option>`).join('');
-    if (el.filterCity) el.filterCity.innerHTML = `<option value="">All Cities (${state.uniqueCities.length})</option>${cityOptions}`;
-
-    // Spot/District options will be dynamically populated upon city selection
-  }
-
-  function handleCityFilterChange() {
-    const selectedCity = el.filterCity.value;
-    const spots = selectedCity
-      ? uniq(state.sessions.filter(s => s.city === selectedCity).map(s => s.spot)).sort()
-      : [];
-
-    state.uniqueSpots = spots;
-    const spotOptions = spots.map(s => `<option value="${s}">${s}</option>`).join('');
-    if (el.filterSpot) el.filterSpot.innerHTML = `<option value="">All Spots (${spots.length})</option>${spotOptions}`;
-    applyFilters();
-  }
-
-  function applyFilters() {
-    let rows = state.sessions;
-
-    const city = el.filterCity?.value;
-    const spot = el.filterSpot?.value;
-    const from = el.filterFrom?.value;
-    const to = el.filterTo?.value;
-    const q = el.filterSearch?.value.toLowerCase().trim();
-
-    if (city) {
-      rows = rows.filter(r => r.city === city);
-    }
-    if (spot) {
-      rows = rows.filter(r => r.spot === spot);
-    }
-
-    const fromDt = parseISO(from);
-    const toDt = parseISO(to);
-
-    if (fromDt && !isNaN(fromDt.getTime())) {
-      rows = rows.filter(r => {
-        const d = parseISO(r.date);
-        return d ? (d.getTime() >= fromDt.getTime()) : true;
-      });
-    }
-    if (toDt && !isNaN(toDt.getTime())) {
-      // inclusive end (end of day)
-      const end = new Date(toDt.getTime() + 24*3600*1000 - 1);
-      rows = rows.filter(r => {
-        const d = parseISO(r.date);
-        return d ? (d.getTime() <= end.getTime()) : true;
-      });
-    }
-
-    if (q) {
-      rows = rows.filter(r => {
-        return (r.city?.toLowerCase().includes(q) ||
-                r.spot?.toLowerCase().includes(q) ||
-                r.date?.toLowerCase().includes(q) ||
-                r.reasonsUse?.toLowerCase().includes(q) ||
-                r.reasonsNo?.toLowerCase().includes(q));
-      });
-    }
-
-    state.filtered = rows;
-
-    // Update UI components
-    updateSummary(rows);
-    computeKpis(rows);
-    computeReasons(rows);
-    renderCharts(rows);
-    updateMapMarkers(rows);
-    updateSessionTable(rows);
-    buildGallery(rows);
-
-    // If pinned session is filtered out, unpin it
-    if (state.pinnedSession && !rows.includes(state.pinnedSession)) {
-      unpinSession();
-    }
+    setBar(el.barSessions, k.sessions / state.sessions.length * 100);
+    setBar(el.barFarmers, k.farmers / maxFarmers * 100);
+    setBar(el.barAcres, k.acres / maxAcres * 100);
+    setBar(el.barDemo, k.defPct);
   }
 
   function updateSummary(rows) {
-    if (!el.summary) return;
-    const city = el.filterCity?.value;
-    const spot = el.filterSpot?.value;
-    const from = el.filterFrom?.value;
-    const to = el.filterTo?.value;
-    const q = el.filterSearch?.value;
+    if (el.summary) {
+      el.summary.querySelector('.summary-text strong').textContent = fmt.int(rows.length);
+    }
+    // Update build stamp if sessions.json was used
+    if (state.sessions[0]?.date) {
+        el.buildStamp.textContent = `Data from ${fmt.date(state.sessions[0].date)} to ${fmt.date(state.sessions[state.sessions.length - 1].date)}`;
+    }
+  }
 
-    let summary = 'All Sessions';
-    const parts = [];
-    if (city) parts.push(city);
-    if (spot) parts.push(spot);
-    if (from && to) parts.push(`${fmt.date(from)} - ${fmt.date(to)}`);
-    else if (from) parts.push(`From ${fmt.date(from)}`);
-    else if (to) parts.push(`Up to ${fmt.date(to)}`);
-    if (q) parts.push(`Search: "${q}"`);
+  function renderReasons(rows) {
+    const useMap = new Map();
+    const noMap = new Map();
 
-    if (parts.length > 0) {
-      summary = parts.join(' • ');
+    const split = (s) => (s || '').split(/[;,\n]/).map(x => safeStr(x).replace(/^reason\s*(to\s*use|not\s*to\s*use|:)\s*/i, '').trim()).filter(Boolean);
+
+    for (const r of rows) {
+      if (r.definite > 0 || (r.definite === null && r.definitePct > 50)) {
+        for (const reason of split(r.reasonsUse)) {
+          useMap.set(reason, (useMap.get(reason) || 0) + 1);
+        }
+      } else if (r.notInterested > 0 || r.maybe > 0 || (r.definitePct !== null && r.definitePct <= 50)) {
+        for (const reason of split(r.reasonsNo)) {
+          noMap.set(reason, (noMap.get(reason) || 0) + 1);
+        }
+      }
     }
 
-    el.summary.textContent = `${rows.length} Sessions | ${summary}`;
+    const use = Array.from(useMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const no = Array.from(noMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    el.reasonUse.innerHTML = use.map(([r, c]) => `<li>${escapeHtml(r)} (${c})</li>`).join('');
+    el.reasonNo.innerHTML = no.map(([r, c]) => `<li>${escapeHtml(r)} (${c})</li>`).join('');
   }
 
-  function resetFilters() {
-    el.filterCity.value = '';
-    if (el.filterSpot) el.filterSpot.innerHTML = '<option value="">All Spots</option>';
-    if (el.filterFrom) el.filterFrom.value = '';
-    if (el.filterTo) el.filterTo.value = '';
-    if (el.filterSearch) el.filterSearch.value = '';
-    handleCityFilterChange(); // Will also call applyFilters()
-  }
 
-  function setupEventListeners() {
-    el.filterCity?.addEventListener('change', handleCityFilterChange);
-    el.filterSpot?.addEventListener('change', applyFilters);
-    el.filterFrom?.addEventListener('change', applyFilters);
-    el.filterTo?.addEventListener('change', applyFilters);
-    el.filterSearch?.addEventListener('input', debounce(applyFilters, 300));
+  function renderTable(rows) {
+    if (!el.tbl) return;
+    const html = rows.map(r => `
+      <tr data-sn="${escapeHtml(r.sn)}" title="Click to view media and map location">
+        <td>${fmt.date(r.date)}</td>
+        <td>${escapeHtml(r.city)}</td>
+        <td>${escapeHtml(r.spot)}</td>
+        <td class="right">${fmt.int(r.farmers)}</td>
+        <td class="right">${fmt.int(r.acres)}</td>
+        <td class="right">${fmt.pct(r.definitePct)}</td>
+        <td class="right">${fmt.pct(r.awarenessPct)}</td>
+        <td class="right">${fmt.pct(r.clarityPct)}</td>
+      </tr>
+    `).join('');
+    el.tbl.innerHTML = html;
 
-    el.btnReset?.addEventListener('click', resetFilters);
-    el.btnExport?.addEventListener('click', exportFilteredData);
-
-    $$('.tabs button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tabName = btn.getAttribute('data-tab');
-        $$('.tabs button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        $$('.tab-content').forEach(c => c.style.display = 'none');
-        $(`#tab-${tabName}`).style.display = 'block';
-        if (tabName === 'map') {
-          invalidateMapSoon();
-          if (!state.map) initMap();
-        }
+    // Attach click handlers
+    $$('#tblSessions tr').forEach(tr => {
+      tr.addEventListener('click', () => {
+        const sn = tr.getAttribute('data-sn');
+        const session = state.filtered.find(x => String(x.sn) === String(sn)) || state.sessions.find(x => String(x.sn) === String(sn));
+        if (session) pinSession(session, { openMedia:true, focusMap:true });
       });
     });
-
-    // Lightbox controls
-    el.lbClose?.addEventListener('click', closeLightbox);
-    el.lbPrev?.addEventListener('click', () => changeLightboxIndex(-1));
-    el.lbNext?.addEventListener('click', () => changeLightboxIndex(1));
-    document.addEventListener('keydown', (e) => {
-      if (el.lb.style.display === 'block') {
-        if (e.key === 'Escape') closeLightbox();
-        else if (e.key === 'ArrowLeft') changeLightboxIndex(-1);
-        else if (e.key === 'ArrowRight') changeLightboxIndex(1);
-      }
-    });
-
-    if (el.heroVideo) {
-      el.heroVideo.src = CONFIG.heroVideo;
-    }
-
-    if (el.buildStamp) {
-      el.buildStamp.textContent = `Build: ${new Date().toISOString().slice(0, 19)}`;
-    }
-  }
-
-  function exportFilteredData() {
-    const cols = [
-      { label: 'Session Number', get: r => r.sn },
-      { label: 'Date', get: r => r.date },
-      { label: 'City', get: r => r.city },
-      { label: 'Spot/Village', get: r => r.spot },
-      { label: 'Farmers', get: r => fmt.int(r.farmers) },
-      { label: 'Acres', get: r => fmt.int(r.acres) },
-      { label: 'Definite Intent', get: r => fmt.int(r.definite) },
-      { label: 'Maybe Intent', get: r => fmt.int(r.maybe) },
-      { label: 'Not Interested', get: r => fmt.int(r.notInterested) },
-      { label: 'Definite %', get: r => fmt.num(r.definitePct, 2) },
-      { label: 'Awareness %', get: r => fmt.num(r.awarenessPct, 2) },
-      { label: 'Clarity %', get: r => fmt.num(r.clarityPct, 2) },
-      { label: 'Latitude', get: r => r.lat },
-      { label: 'Longitude', get: r => r.lon },
-      { label: 'Reasons to Use', get: r => r.reasonsUse },
-      { label: 'Reasons Not to Use', get: r => r.reasonsNo },
-    ];
-    const csv = toCsv(state.filtered, cols);
-    const filename = `agrivista_sessions_${new Date().toISOString().slice(0, 10)}.csv`;
-    downloadText(filename, csv, 'text/csv');
-  }
-
-  // ---------------------------
-  // Session Pinning
-  // ---------------------------
-
-  function pinSession(session, opts={}) {
-    state.pinnedSession = session;
-    const { openMedia, focusMap } = opts;
-
-    if (!session) return unpinSession();
-
-    // 1. Update UI
-    if (el.snapshot) el.snapshot.style.display = 'block';
-
-    // 2. Map info panel
-    if (el.mapSelTitle) el.mapSelTitle.textContent = `${session.city} — ${session.spot} (SN: ${session.sn})`;
-    if (el.mapSelFarmers) el.mapSelFarmers.textContent = `${fmt.int(session.farmers)} Farmers | ${fmt.num(session.definitePct, 1)}% Definite Intent`;
-    if (el.mapSelAcres) el.mapSelAcres.textContent = `${fmt.int(session.acres)} Acres Covered`;
-    if (el.mapSelDate) el.mapSelDate.textContent = fmt.date(session.date);
-
-    // 3. Showcase media
-    renderShowcase(el.snapShowcase, [session.sn]);
-
-    // 4. Map focus
-    if (focusMap && state.map && session.lat && session.lon) {
-      state.map.setView([session.lat, session.lon], 10);
-    }
-
-    // 5. Table highlight
-    $$('#tblSessions tr').forEach(tr => tr.classList.remove('pinned'));
-    $(`#tblSessions tr[data-sn="${session.sn}"]`)?.classList.add('pinned');
-
-    // 6. Open media/lightbox
-    if (openMedia) {
-      openLightboxForSession(session.sn);
-    }
-  }
-
-  function unpinSession() {
-    state.pinnedSession = null;
-    if (el.snapshot) el.snapshot.style.display = 'none';
-
-    if (el.mapSelTitle) el.mapSelTitle.textContent = 'Select a session on the map or in the table.';
-    if (el.mapSelFarmers) el.mapSelFarmers.textContent = '—';
-    if (el.mapSelAcres) el.mapSelAcres.textContent = '—';
-    if (el.mapSelDate) el.mapSelDate.textContent = '—';
-    if (el.snapShowcase) el.snapShowcase.innerHTML = '';
-    $$('#tblSessions tr').forEach(tr => tr.classList.remove('pinned'));
-  }
-
-  // ---------------------------
-  // Charts
-  // ---------------------------
-  function destroyChart(ch) { try { ch?.destroy(); } catch(_) {} }
-
-  function renderCharts(rows) {
-    if (typeof Chart === 'undefined') return;
-
-    // City mix (doughnut)
-    const byCity = new Map();
-    for (const r of rows) {
-      if (r.city) {
-        byCity.set(r.city, (byCity.get(r.city) || 0) + (r.farmers || 0));
-      }
-    }
-    const cityLabels = Array.from(byCity.keys());
-    const cityData = Array.from(byCity.values());
-    const cityBg = cityLabels.map(() => `hsl(${Math.random() * 360}, 70%, 50%)`);
-
-    destroyChart(state.charts.city);
-    if (el.chartCity) {
-      state.charts.city = new Chart(el.chartCity, {
-        type: 'doughnut', data: { labels: cityLabels, datasets: [{ data: cityData, backgroundColor: cityBg }] },
-        options: { responsive: true, plugins: { legend: { position: 'right' } } }
-      });
-    }
-
-    // Purchase Intent Mix (doughnut)
-    const totalFarmers = sum(rows, r => r.farmers);
-    const definite = sum(rows, r => r.definite);
-    const maybe = sum(rows, r => r.maybe);
-    const notInterested = sum(rows, r => r.notInterested);
-    const other = totalFarmers - definite - maybe - notInterested;
-
-    const intentData = [definite, maybe, notInterested, other].filter(n => n > 0);
-    const intentLabels = ['Definite', 'Maybe', 'Not Interested', 'Other'];
-    const intentBg = ['#86efac', '#7dd3fc', '#fb7185', '#9fb0ca'];
-
-    destroyChart(state.charts.intent);
-    if (el.chartIntent) {
-      state.charts.intent = new Chart(el.chartIntent, {
-        type: 'doughnut', data: {
-          labels: intentLabels.filter((_, i) => [definite, maybe, notInterested, other][i] > 0),
-          datasets: [{
-            data: intentData,
-            backgroundColor: intentBg.filter((_, i) => [definite, maybe, notInterested, other][i] > 0)
-          }]
-        },
-        options: { responsive: true, plugins: { legend: { position: 'right' } } }
-      });
-    }
-
-    // Sessions Trend (bar)
-    const byDate = new Map();
-    for (const r of rows) {
-      if (r.date) {
-        byDate.set(r.date, (byDate.get(r.date) || 0) + 1);
-      }
-    }
-    const trendLabels = Array.from(byDate.keys()).sort();
-    const trendData = trendLabels.map(d => byDate.get(d));
-
-    destroyChart(state.charts.trend);
-    if (el.chartTrend) {
-      state.charts.trend = new Chart(el.chartTrend, {
-        type: 'bar', data: {
-          labels: trendLabels.map(fmt.date),
-          datasets: [{ label: 'Sessions', data: trendData, backgroundColor: '#7dd3fc' }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { x: { ticks: { autoSkip: false } }, y: { beginAtZero: true } }
-        }
-      });
-    }
   }
 
   // ---------------------------
@@ -820,111 +789,157 @@
       showError('Leaflet did not load. Check your network and script tags.');
       return;
     }
-
-    // Set initial view (a general center for the data, e.g., Pakistan)
-    const initialLat = 30.3753;
-    const initialLon = 69.3451;
-    const initialZoom = 6;
-
-    state.map = L.map(el.mapWrap).setView([initialLat, initialLon], initialZoom);
-
-    // Dark tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
+    state.map = L.map(el.mapWrap, { preferCanvas:true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap'
     }).addTo(state.map);
 
-    // Initial marker render
-    updateMapMarkers(state.filtered);
-  }
+    // Default view Pakistan (approximate center)
+    state.map.setView([30.3753, 69.3451], 5);
+    logDiag('Map initialized.');
 
-  function getCircleRadius(farmers) {
-    // Scaling function for radius based on farmer count
-    // Base radius: 5px, Max radius: 40px
-    if (farmers === null || isNaN(farmers)) return 5;
-    const minFarmers = 10; // Assuming minimal session size
-    const maxFarmers = sum(state.sessions, r => r.farmers);
-    const range = maxFarmers - minFarmers;
-
-    if (range <= 0) return 15; // Default if all sessions are the same size
-
-    const normalized = (farmers - minFarmers) / range;
-    return 8 + (normalized * 28); // Radius from 8 to 36
-  }
-
-  function updateMapMarkers(rows) {
-    if (!state.map) return;
-
-    // Clear existing circles
-    state.circles.forEach(c => state.map.removeLayer(c));
-    state.circles = [];
-
-    // Group rows by city for a single marker per lat/lon pair (sn)
-    const mapData = new Map();
-    for (const r of rows) {
-      if (r.lat && r.lon && r.sn) {
-        if (!mapData.has(r.sn)) {
-          mapData.set(r.sn, {
-            lat: r.lat, lon: r.lon, sn: r.sn,
-            farmers: 0, acres: 0, definitePct: mean(rows.filter(x => x.sn === r.sn), x => x.definitePct),
-            date: fmt.date(r.date),
-            title: `${r.city} — ${r.spot}`
-          });
+    // Event handler to pick session on map click
+    state.map.on('click', (e) => {
+        // Find the closest marker, but for now we rely only on the markers already rendered
+        const closest = state.circles.map(c => ({
+            dist: e.latlng.distanceTo(c.getLatLng()),
+            session: c.session
+        })).sort((a, b) => a.dist - b.dist).filter(d => d.dist < 50000)[0]; // 50km radius
+        
+        if (closest) {
+            pinSession(closest.session, { openMedia: false, focusMap: true });
         }
-        const item = mapData.get(r.sn);
-        item.farmers += (r.farmers || 0);
-        item.acres += (r.acres || 0);
+    });
+
+    invalidateMapSoon();
+  }
+
+  function renderMap(rows) {
+    if (!state.map) return;
+    
+    // Clear existing markers
+    for (const circle of state.circles) {
+      state.map.removeLayer(circle);
+    }
+    state.circles = [];
+    
+    // Default to initial view
+    let bounds = [[30.3753, 69.3451], [30.3753, 69.3451]]; // Pakistan
+
+    // Add new markers
+    const sessionIds = uniq(rows.map(r => r.sn).filter(Boolean).map(String));
+    
+    for (const id of sessionIds) {
+      const sessionGroup = rows.filter(r => String(r.sn) === id);
+      const first = sessionGroup.find(r => r.lat && r.lon) || sessionGroup[0];
+      
+      if (first.lat && first.lon) {
+        const totalFarmers = sum(sessionGroup, r => r.farmers);
+        const definitePct = mean(sessionGroup, r => r.definitePct);
+        const radius = Math.max(8000, Math.sqrt(totalFarmers) * 50); // Scale radius by sqrt of farmers
+        
+        // Pin color (blue/accent) or normal color (white/muted)
+        const isPinned = state.pinnedSession && String(state.pinnedSession.sn) === id;
+        const color = isPinned ? '#7dd3fc' : 'white';
+        const fillColor = isPinned ? '#7dd3fc' : 'white';
+        const opacity = isPinned ? 1.0 : 0.8;
+
+        const circle = L.circle([first.lat, first.lon], {
+          color: color,
+          fillColor: fillColor,
+          fillOpacity: opacity * 0.35,
+          radius: radius,
+          weight: isPinned ? 3 : 1,
+        });
+
+        // Add metadata for click handling
+        circle.session = first;
+        circle.isPinned = isPinned;
+
+        circle.on('click', () => {
+          pinSession(first, { openMedia:false, focusMap:false });
+        });
+
+        const tooltipContent = `
+          <strong>Session ${id}</strong><br/>
+          ${first.city} - ${first.spot}<br/>
+          Farmers: ${fmt.int(totalFarmers)}<br/>
+          Definite: ${fmt.pct(definitePct)}
+        `;
+        circle.bindTooltip(tooltipContent);
+        
+        circle.addTo(state.map);
+        state.circles.push(circle);
+
+        // Update bounds
+        bounds.push([first.lat, first.lon]);
+      }
+    }
+    
+    // Fit map to bounds if markers exist
+    if (state.circles.length > 0) {
+      try {
+        state.map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 8 });
+      } catch (e) {
+        logDiag(`Error fitting map bounds: ${e.message}`);
       }
     }
 
-    const maxDefinitePct = 100;
-    const maxFarmers = sum(state.sessions, r => r.farmers);
-    const avgFarmers = maxFarmers / new Set(state.sessions.map(r => r.sn).filter(Boolean)).size;
+    // Re-render map selection panel
+    renderMapSelectionPanel(state.pinnedSession);
+  }
 
-    let totalMarkers = 0;
-    for (const item of mapData.values()) {
-      totalMarkers++;
-      const radius = getCircleRadius(item.farmers);
-      const definitePct = item.definitePct !== null ? item.definitePct : 0;
-      const colorIntensity = definitePct / maxDefinitePct;
+  function pinSession(session, options={openMedia:false, focusMap:false}) {
+    if (!session || !session.sn) {
+      state.pinnedSession = null;
+    } else {
+      state.pinnedSession = session;
+    }
+    
+    // Re-render map to update pin/circle style
+    renderMap(state.filtered); 
+    
+    if (state.map && state.pinnedSession && state.pinnedSession.lat && state.pinnedSession.lon && options.focusMap) {
+      state.map.setView([state.pinnedSession.lat, state.pinnedSession.lon], 12);
+    }
+    
+    if (options.openMedia) {
+      openLightboxForSession(state.pinnedSession.sn);
+    }
+    
+    // Scroll to map
+    if (state.pinnedSession) {
+      const mapTab = $('[data-tab="tab-map"]');
+      if (mapTab) mapTab.click(); // Switch to map tab
+      el.mapWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
-      // Color from red (low intent) to green (high intent)
-      // hsl(h, s, l): 120 (green) to 0 (red)
-      const hue = colorIntensity * 120;
-      const fillColor = `hsl(${hue}, 80%, 45%)`;
+  function renderMapSelectionPanel(session) {
+    if (!el.mapSelTitle) return;
 
-      const circle = L.circleMarker([item.lat, item.lon], {
-        radius: radius,
-        fillColor: fillColor,
-        color: '#fff',
-        weight: 1.5,
-        opacity: 1,
-        fillOpacity: 0.8
-      }).addTo(state.map);
-
-      // Popup content
-      const popupContent = `
-        <strong>${item.title} (SN: ${item.sn})</strong><br/>
-        Date: ${item.date}<br/>
-        Farmers: ${fmt.int(item.farmers)}<br/>
-        Acres: ${fmt.int(item.acres)}<br/>
-        Definite Intent: ${item.definitePct !== null ? fmt.pct(item.definitePct) : '—'}
-      `;
-      circle.bindPopup(popupContent);
-
-      circle.on('click', () => {
-        const session = state.sessions.find(s => String(s.sn) === String(item.sn));
-        if (session) pinSession(session, { openMedia: true, focusMap: false });
-        // The Leaflet event handles map focus itself
-      });
-
-      state.circles.push(circle);
+    if (!session) {
+      el.mapSelTitle.textContent = 'Selected Session Details (Click a point on the map or a row in the table)';
+      el.mapSelFarmers.textContent = '—';
+      el.mapSelAcres.textContent = '—';
+      el.mapSelDate.textContent = '—';
+      renderShowcase(el.mapShowcase, []);
+      return;
     }
 
-    if (el.mapLegend) {
-      el.mapLegend.textContent = `Showing ${totalMarkers} unique sessions. Marker size ~ Farmers. Color: Red (low intent) to Green (high intent).`;
-    }
+    const sessionGroup = state.sessions.filter(r => String(r.sn) === String(session.sn));
+    const totalFarmers = sum(sessionGroup, r => r.farmers);
+    const totalAcres = sum(sessionGroup, r => r.acres);
+    const dateSpan = sessionGroup.map(r => r.date).filter(Boolean).sort().map(fmt.date).join(' & ');
+    
+    el.mapSelTitle.textContent = `Session ${session.sn}: ${session.city} - ${session.spot}`;
+    el.mapSelFarmers.textContent = fmt.int(totalFarmers);
+    el.mapSelAcres.textContent = fmt.int(totalAcres);
+    el.mapSelDate.textContent = dateSpan;
+
+    const ids = sessionGroup.map(r => r.sn).filter(Boolean).map(String);
+    renderShowcase(el.mapShowcase, ids);
   }
 
   function invalidateMapSoon() {
@@ -935,111 +950,137 @@
   // ---------------------------
   // Media / Showcase / Lightbox
   // ---------------------------
-  function renderMediaItem(item, isLarge=false) {
-    const isVideo = item.type === 'video' && item.src.endsWith('mp4'); // simple check
-
-    return `
-      <div class="mediaTile" data-session-id="${item.sessionId}" data-type="${item.type}" onclick="app.openLightboxForSession('${item.sessionId}')">
-        ${isVideo ?
-          `<video preload="metadata" muted playsinline poster="${item.src.replace(/\.(mp4|mov)/i, '.jpg')}" onerror="this.onerror=null; this.src='${item.src.replace(/\.(mp4|mov)/i, '.png')}'">
-            <source src="${item.src}" type="video/mp4" onerror="this.parentNode.remove()">
-          </video>` :
-          `<img src="${item.src}" alt="${item.caption}" onerror="this.onerror=null; this.src='${CONFIG.placeholder}'">`
-        }
-        <div class="mediaTag">${item.caption}</div>
-      </div>
-    `;
-  }
-
-  function renderShowcase(container, sessionIds) {
-    if (!container) return;
-    container.innerHTML = '';
-    if (!sessionIds || !sessionIds.length) return;
-
-    const uniqueMedia = new Map(); // Use Map to ensure unique items based on src
-    let count = 0;
-
-    for (const sn of sessionIds) {
-      const media = state.mediaBySessionId.get(String(sn)) || [];
-      for (const item of media) {
-        if (!item.src) continue;
-        if (uniqueMedia.has(item.src)) continue;
-        if (item.type === 'video' && item.variant) continue; // Only show main video/image in showcase
-
-        uniqueMedia.set(item.src, item);
-        container.insertAdjacentHTML('beforeend', renderMediaItem(item, true));
-        count++;
-        if (count >= CONFIG.maxShowcase) break;
-      }
-      if (count >= CONFIG.maxShowcase) break;
-    }
-
-    if (count === 0) {
-      container.innerHTML = `<div class="muted" style="font-size:12px; padding: 10px;">No media available for selected session(s).</div>`;
-    }
-  }
-
-  function buildGallery(rows) {
-    if (!el.gallery) return;
-    el.gallery.innerHTML = '';
-
-    const ids = new Set(rows.map(r => String(r.sn)).filter(Boolean));
+  
+  function renderShowcase(targetEl, sessionIds) {
+    targetEl.innerHTML = '';
+    
     const items = [];
+    for (const id of sessionIds) {
+      const arr = state.mediaBySessionId.get(String(id)) || [];
+      // Only take the first image or video (prioritize image if both exist)
+      const image = arr.find(it => it.type === 'image' && it.src);
+      const video = arr.find(it => it.type === 'video' && it.src);
+      if (image) items.push(image);
+      else if (video) items.push(video);
+      
+      // Stop after 5 items total
+      if (items.length >= CONFIG.maxShowcase) break;
+    }
+    
+    if (!items.length) {
+      targetEl.innerHTML = '<div class="muted" style="padding:10px;">No media available for these sessions.</div>';
+      return;
+    }
+
+    items.forEach((it, index) => {
+      const isVideo = it.type === 'video';
+      const card = document.createElement('div');
+      card.className = 'showcase';
+      card.title = isVideo ? 'Click to play video' : 'Click to view image';
+      card.innerHTML = `
+        ${isVideo 
+            ? `<video muted loop playsinline src="${it.src}"></video>` 
+            : `<img src="${it.src}" alt="${escapeHtml(it.caption)}" onerror="this.onerror=null;this.src='${CONFIG.placeholder}';">`
+        }
+        <div class="showcase-text">
+          <div>
+            <strong>Session ${escapeHtml(it.sessionId)}</strong>
+            <span>${escapeHtml(it.city)} - ${escapeHtml(it.date)}</span>
+          </div>
+        </div>
+      `;
+      
+      card.addEventListener('click', () => {
+        openLightboxForSession(it.sessionId);
+      });
+      targetEl.appendChild(card);
+    });
+  }
+  
+  function buildGalleryList(rows) {
+    // Choose media items for the filtered sessions; keep a max
+    const ids = rows.map(r => r.sn).filter(Boolean).map(String);
+    const items = [];
+    const usedSrcs = new Set();
+    
     for (const id of ids) {
       const arr = state.mediaBySessionId.get(id) || [];
-      items.push(...arr.filter(item => item.src && !item.variant)); // Only main media for gallery
+      for (const it of arr) {
+        if (it.src && !usedSrcs.has(it.src)) {
+            items.push(it);
+            usedSrcs.add(it.src);
+        }
+      }
+      if (items.length >= CONFIG.maxGallery) break;
     }
-
-    items.sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()); // Newest first
-
-    if (el.gallerySummary) {
-      el.gallerySummary.textContent = `Showing ${Math.min(items.length, CONFIG.maxGallery)} of ${items.length} total media items for the filtered sessions. Click to open full view.`;
+    
+    // If empty, show placeholders derived from sessions
+    if (!items.length && rows.length) {
+      for (const id of ids.slice(0, Math.min(CONFIG.maxGallery, 12))) {
+        items.push({ sessionId: id, type:'image', src: CONFIG.placeholder, caption:`Session ${id}`, transcript:'' });
+      }
     }
-
-    let count = 0;
-    for (const item of items) {
-      if (count >= CONFIG.maxGallery) break;
-      el.gallery.insertAdjacentHTML('beforeend', renderMediaItem(item));
-      count++;
-    }
-
-    if (count === 0) {
-      el.gallery.innerHTML = `<div class="muted" style="font-size:12px; padding: 10px;">No media available for the current filters.</div>`;
-    }
+    
+    return items.slice(0, CONFIG.maxGallery);
   }
 
-  function openLightbox(items, startIndex) {
-    if (!el.lb) return;
-    state.lightbox.items = items;
-    state.lightbox.index = clamp(startIndex, 0, items.length - 1);
+  function renderGallery(rows) {
+    if (!el.gallery) return;
+    el.gallery.innerHTML = '';
+    
+    const items = buildGalleryList(rows);
+    state.lightbox.items = items; // Update the list of items for the lightbox
 
-    el.lb.style.display = 'block';
+    items.forEach((it, index) => {
+      const isVideo = it.type === 'video';
+      const card = document.createElement('div');
+      card.className = 'mediaTile';
+      card.title = it.caption;
+      
+      const mediaHtml = isVideo 
+        ? `<video muted loop playsinline src="${it.src}"></video><div class="icon">▶</div>` 
+        : `<img src="${it.src}" alt="${escapeHtml(it.caption)}" onerror="this.onerror=null;this.src='${CONFIG.placeholder}';">`;
+      
+      card.innerHTML = `
+        ${mediaHtml}
+        <div class="mediaTag">${escapeHtml(it.caption)}</div>
+      `;
+      
+      card.addEventListener('click', () => {
+        openLightbox(items, index);
+      });
+      el.gallery.appendChild(card);
+    });
+    
+  }
+
+  function openLightbox(items, index) {
+    if (!el.lb) return;
+    
+    state.lightbox.items = items;
+    state.lightbox.index = index;
+    
     renderLightbox();
+    el.lb.classList.add('active');
   }
 
   function openLightboxForSession(sessionId) {
-    const items = (state.mediaBySessionId.get(String(sessionId)) || [])
-      .filter(it => it.src && it.type === 'image' || it.type === 'video' && it.src.endsWith('.mp4')); // Only valid media
+    const items = (state.mediaBySessionId.get(String(sessionId)) || []).filter(it => it.src);
     if (!items.length) {
-      openLightbox([{ sessionId, type:'image', src: CONFIG.placeholder, caption:`Session ${sessionId}`, transcript:'No media found.' }], 0);
+      openLightbox([{ sessionId, type:'image', src: CONFIG.placeholder, caption:`Session ${sessionId}`, transcript:'' }], 0);
       return;
     }
-    // Filter out redundant non-main items for simplicity in lightbox nav
-    const uniqueItems = items.filter(it => it.type !== 'video' || it.variant);
-
-    openLightbox(uniqueItems.slice(0, 50), 0);
+    openLightbox(items.slice(0, 50), 0);
   }
 
   function closeLightbox() {
-    el.lb.style.display = 'none';
+    el.lb.classList.remove('active');
     el.lbMedia.innerHTML = '';
-    state.lightbox.items = [];
-    state.lightbox.index = 0;
   }
 
-  function changeLightboxIndex(delta) {
-    const newIndex = state.lightbox.index + delta;
-    if (newIndex >= 0 && newIndex < state.lightbox.items.length) {
+  function changeLightboxItem(direction) {
+    const newIndex = clamp(state.lightbox.index + direction, 0, Math.max(0, state.lightbox.items.length - 1));
+    if (newIndex !== state.lightbox.index) {
       state.lightbox.index = newIndex;
       renderLightbox();
     }
@@ -1047,149 +1088,108 @@
 
   function renderLightbox() {
     const items = state.lightbox.items || [];
-    const index = state.lightbox.index;
-    const item = items[index];
+    const idx = clamp(state.lightbox.index || 0, 0, Math.max(0, items.length - 1));
+    state.lightbox.index = idx;
+    const it = items[idx] || null;
+    
+    if (!it) return;
 
-    if (!item) {
-      closeLightbox();
-      return;
-    }
-
-    el.lbCaption.textContent = item.caption || `Session ${item.sessionId}`;
-    el.lbTranscript.textContent = item.transcript || 'No transcript or detailed information available.';
-    el.lbPrev.disabled = index === 0;
-    el.lbNext.disabled = index === items.length - 1;
-
+    el.lbCaption.textContent = it.caption || `Session ${it.sessionId || ''}`;
+    el.lbTranscript.textContent = it.transcript || '—';
     el.lbMedia.innerHTML = '';
-    if (item.type === 'video') {
-      el.lbMedia.innerHTML = `
-        <video controls autoplay loop playsinline>
-          <source src="${item.src}" type="video/mp4" onerror="this.parentNode.remove();">
-          Your browser does not support the video tag.
-        </video>
-      `;
+    
+    if (it.type === 'video') {
+      const vid = document.createElement('video');
+      vid.setAttribute('controls', '');
+      vid.setAttribute('autoplay', '');
+      vid.setAttribute('playsinline', '');
+      vid.src = it.src;
+      el.lbMedia.appendChild(vid);
     } else {
-      el.lbMedia.innerHTML = `<img src="${item.src}" alt="${item.caption}" onerror="this.onerror=null; this.src='${CONFIG.placeholder}'">`;
+      const img = document.createElement('img');
+      img.src = it.src;
+      img.alt = it.caption;
+      el.lbMedia.appendChild(img);
     }
+    
+    // Update navigation buttons
+    el.lbPrev.disabled = idx === 0;
+    el.lbNext.disabled = idx >= items.length - 1;
+    
+    // Update footer
+    const navDiv = el.lb.querySelector('.lbNav');
+    navDiv.textContent = `Item ${idx + 1} of ${items.length}`;
   }
 
+
   // ---------------------------
-  // Table
+  // Charts
   // ---------------------------
-  function updateSessionTable(rows) {
-    if (!el.tbl) return;
-    el.tbl.innerHTML = '';
 
-    rows.sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()); // Newest first
-
-    for (const r of rows) {
-      const tr = document.createElement('tr');
-      tr.setAttribute('data-sn', r.sn);
-      if (state.pinnedSession?.sn === r.sn) tr.classList.add('pinned');
-
-      tr.innerHTML = `
-        <td>${fmt.date(r.date)}</td>
-        <td>${r.city}</td>
-        <td>${r.spot}</td>
-        <td>${fmt.int(r.farmers)}</td>
-        <td>${fmt.int(r.acres)}</td>
-        <td>${fmt.pct(r.definitePct, 0)}</td>
-        <td>${fmt.pct(r.awarenessPct, 0)}</td>
-        <td>${fmt.pct(r.clarityPct, 0)}</td>
-      `;
-      tr.addEventListener('click', () => {
-        const sn = tr.getAttribute('data-sn');
-        const session = state.filtered.find(x => String(x.sn) === String(sn)) || state.sessions.find(x => String(x.sn) === String(sn));
-        if (session) pinSession(session, { openMedia:true, focusMap:true });
-      });
-
-      el.tbl.appendChild(tr);
-    }
+  function destroyChart(ch) {
+    try { ch?.destroy(); } catch(_) {}
   }
 
-  // ---------------------------
-  // Diagnostics / logging
-  // ---------------------------
-  const diagLines = [];
-  function logDiag(line) {
-    diagLines.push(`[${new Date().toISOString()}] ${line}`);
-    if (diagLines.length > 200) diagLines.shift();
-    setDiag(diagLines.slice(-40));
-  }
+  function renderCharts(rows) {
+    if (typeof Chart === 'undefined') return;
 
-  // ---------------------------
-  // Initialization
-  // ---------------------------
-
-  async function boot() {
-    logDiag('Dashboard starting...');
-    setLoadingStatus('Initializing application...');
-    clearError();
-    setupEventListeners();
-
-    // Expose utility functions for inline HTML calls (like media tiles)
-    window.app = { openLightboxForSession, pinSession };
-
-    try {
-      // 1. Load Sessions Data
-      let sessions = [];
-      try {
-        sessions = await loadSessionsJson(CONFIG.sessionsJson);
-        logDiag(`sessions.json loaded: ${sessions.length} sessions`);
-        setNotice(`<strong>Status:</strong> Data loaded from <code>${CONFIG.sessionsJson}</code>`);
-      } catch (e) {
-        logDiag(`sessions.json error: ${e.message}. Falling back to XLSX.`);
-        setNotice(`<strong>Status:</strong> Falling back to <code>${CONFIG.xlsxFallback}</code> due to error with <code>${CONFIG.sessionsJson}</code>.`);
-        sessions = await loadSessionsXlsx(CONFIG.xlsxFallback);
+    // --- City mix (doughnut) ---
+    const byCity = new Map();
+    for (const r of rows) byCity.set(r.city, (byCity.get(r.city) || 0) + (r.farmers || 0));
+    const cityLabels = Array.from(byCity.keys());
+    const cityVals = Array.from(byCity.values());
+    
+    destroyChart(state.charts.city);
+    state.charts.city = new Chart(el.chartCity, {
+      type: 'doughnut',
+      data: {
+        labels: cityLabels,
+        datasets: [{
+          data: cityVals,
+          backgroundColor: ['#7dd3fc', '#86efac', '#fbbf24', '#e879f9', '#f87171', '#34d399', '#f97316', '#22d3ee', '#c084fc', '#f472b6'],
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: '#e7edf7' } } }
       }
+    });
 
-      state.sessions = sessions;
 
-      // 2. Load Media Index
-      state.mediaItems = await loadMedia(sessions);
-      logDiag(`media items loaded: ${state.mediaItems.length}`);
+    // --- Intent mix (pie) ---
+    const totalFarmers = sum(rows, r => r.farmers);
+    const definite = sum(rows, r => r.definite);
+    const maybe = sum(rows, r => r.maybe);
+    const notInterested = sum(rows, r => r.notInterested);
+    const remaining = totalFarmers - (definite + maybe + notInterested);
 
-      // 3. Populate filters and initial render
-      populateFilters();
-      applyFilters(); // Initial render based on all sessions
-
-      // 4. Initialize Map (do last to allow Leaflet a moment to load)
-      initMap();
-
-      // 5. Done
-      setLoadingStatus('Ready');
-      if (el.overlay) el.overlay.style.opacity = '0';
-      if (el.shell) {
-        el.shell.style.display = 'grid';
-        el.shell.classList.add('ready');
-      }
-      setTimeout(() => { if (el.overlay) el.overlay.style.display = 'none'; }, 250);
-
-    } catch (e) {
-      const msg = (e && e.message) ? e.message : String(e);
-      showError(`<b>Dashboard failed to load.</b><br/><br/>${escapeHtml(msg)}<br/><br/>
-        <b>Quick checks:</b><br/>
-        1) Verify all files exist: <code>index.html</code>, <code>data_processor.js</code>, <code>sessions.json</code>, <code>media.json</code> (or <code>${CONFIG.xlsxFallback}</code>)<br/>
-        2) If using Git LFS, ensure media is hosted correctly.<br/>
-        3) Check browser DevTools → Console/Network for specific 404/blocked errors.`);
-      setNotice('<strong>Status:</strong> Error');
-      logDiag(`boot error: ${msg}`);
-
-      if (el.shell) {
-        el.shell.style.display = 'grid';
-        el.shell.classList.add('ready');
-      }
-      if (el.overlay) el.overlay.style.display = 'none';
-    }
-  }
-
-  function debounce(fn, ms) {
-    let t = null;
-    return (...args) => {
-      if (t) clearTimeout(t);
-      t = setTimeout(() => fn(...args), ms);
+    const intentData = {
+        labels: ['Definite', 'Maybe', 'Not Interested', 'No Data'],
+        values: [definite, maybe, notInterested, remaining],
+        colors: ['#86efac', '#fbbf24', '#fb7185', '#9fb0ca']
     };
-  }
 
-  boot();
-})();
+    destroyChart(state.charts.intent);
+    state.charts.intent = new Chart(el.chartIntent, {
+      type: 'pie',
+      data: {
+        labels: intentData.labels,
+        datasets: [{
+          data: intentData.values,
+          backgroundColor: intentData.colors,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: '#e7edf7' } } }
+      }
+    });
+
+    // --- Trend Over Time (line) ---
+    const byDate = new Map();
+    for (const r of rows) {
+      if (r.date

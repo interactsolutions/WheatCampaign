@@ -19,6 +19,16 @@
     maxShowcase: 5,
     maxGallery: 48
   };
+// Fetch and display media
+fetch("media.json")
+  .then((r) => r.json())
+  .then((media) => {
+    window.__media = media; // debug
+    // Add logic to render media here
+  })
+  .catch((err) => {
+    console.error("Failed to load media.json", err);
+  });
 
   // ---------------------------
   // DOM helpers

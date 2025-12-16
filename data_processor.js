@@ -1,4 +1,8 @@
-/* Harvest Horizons Dashboard */
+/* AgriVista Dashboard - single file controller
+   - Prefers sessions.json (fast, small; no Git LFS issues)
+   - Falls back to XLSX parsing (Buctril_Super_Activations.xlsx) if sessions.json missing
+   - Media reads media.json (A_compact format) and auto-falls back to placeholder when assets are missing
+*/
 
 (() => {
   'use strict';
@@ -10,8 +14,8 @@
     sessionsJson: 'sessions.json',
     mediaJson: 'media.json',
     xlsxFallback: 'Buctril_Super_Activations.xlsx',
-    heroVideoCandidates: ['assets/bg.mp4','tmp.mp4'],
-    placeholderCandidates: ['assets/placeholder.svg','placeholder.svg'],
+    heroVideo: 'assets/bg.mp4',
+    placeholder: 'assets/placeholder.svg',
     maxShowcase: 5,
     maxGallery: 48
   };
@@ -22,33 +26,7 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  
-  // ---------------------------
-  // Placeholders / media fallbacks
-  // ---------------------------
-  const INLINE_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
-      <defs>
-        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stop-color="#0b1220"/>
-          <stop offset="1" stop-color="#111f39"/>
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="800" fill="url(#g)"/>
-      <text x="50%" y="48%" text-anchor="middle" fill="rgba(231,237,247,.70)" font-size="44" font-family="system-ui, -apple-system, Segoe UI, Roboto">
-        Media missing
-      </text>
-      <text x="50%" y="56%" text-anchor="middle" fill="rgba(159,176,202,.75)" font-size="22" font-family="system-ui, -apple-system, Segoe UI, Roboto">
-        Add assets under /assets and /assets/gallery
-      </text>
-    </svg>`
-  );
-
-  function placeholderCandidate(i) {
-    const c = Array.isArray(CONFIG.placeholderCandidates) ? CONFIG.placeholderCandidates : [];
-    return c[i] || '';
-  }
-const el = {
+  const el = {
     shell: $('#appShell'),
     overlay: $('#loadingOverlay'),
     status: $('#loadingStatus'),
@@ -97,25 +75,6 @@ const el = {
     tbl: $('#tblSessions'),
 
     heroVideo: $('#heroVideo'),
-
-    // Hero donuts
-    clarityDonut: $('#clarityDonut'),
-    definiteDonut: $('#definiteDonut'),
-    clarityMain: $('#clarity-main'),
-    definiteMain: $('#definite-main'),
-
-    // Themes
-    awarenessMedia: $('#awareness-media'),
-    journeyMedia: $('#journey-media'),
-    impactMedia: $('#impact-media'),
-    futureMedia: $('#future-media'),
-    awarenessFarmers: $('#awareness-farmers'),
-    awarenessAcres: $('#awareness-acres'),
-    awarenessPct: $('#awareness-pct'),
-    journeySessions: $('#journey-sessions'),
-    journeyDef: $('#journey-def'),
-    impactClarity: $('#impact-clarity'),
-    btnReset2: $('#btn-reset-2'),
 
     // Lightbox
     lb: $('#lightbox'),
@@ -167,16 +126,13 @@ const el = {
   const state = {
     sessions: [],
     filtered: [],
-    filteredSessions: [],
     mediaItems: [],
-    mediaBySessionId: new Map(), // sn -> media[]
-    mediaByKey: new Map(),       // date|city|spot -> media[]
+    mediaBySessionId: new Map(), // sessionId -> media[]
     pinnedSession: null,
 
     map: null,
     circles: [],
-    totals: { sessions:0, farmers:0, acres:0, defPct:null, awarenessPct:null, clarityPct:null },
-    charts: { city:null, intent:null, trend:null, clarityDonut:null, definiteDonut:null },
+    charts: { city:null, intent:null, trend:null },
     lightbox: { items: [], index: 0 }
   };
 
@@ -249,7 +205,7 @@ const el = {
       }
     }
     return buf;
-  };
+  }
 
   // ---------------------------
   // Data loading
@@ -259,28 +215,23 @@ const el = {
     const date = safeStr(s.date);
     const city = safeStr(s.city);
     const spot = safeStr(s.spot);
-
     const farmers = (s.farmers === '' ? null : Number(s.farmers));
     const acres = (s.acres === '' ? null : Number(s.acres));
     const definite = (s.definite === '' ? null : Number(s.definite));
     const maybe = (s.maybe === '' ? null : Number(s.maybe));
     const notInterested = (s.notInterested === '' ? null : Number(s.notInterested));
-
     const definitePct = (s.definitePct !== null && s.definitePct !== undefined) ? Number(s.definitePct) :
-      (farmers !== null && definite !== null && !isNaN(farmers) && farmers > 0) ? (definite / farmers * 100) : null;
-
+      (farmers && definite !== null && !isNaN(farmers) && farmers > 0) ? (definite / farmers * 100) : null;
     const awarenessPct = (s.awarenessPct !== null && s.awarenessPct !== undefined) ? Number(s.awarenessPct) : null;
     const clarityPct = (s.clarityPct !== null && s.clarityPct !== undefined) ? Number(s.clarityPct) : null;
 
-    const lat = (s.lat === '' ? null : Number(s.lat));
-    const lon = (s.lon === '' ? null : Number(s.lon));
-
-    const key = `${date}|${city}|${spot}`;
-    const id = `${sn || 'NA'}|${key}`;
+    const latRaw = (s.lat ?? s.Lat ?? s.latitude ?? s.Latitude ?? '');
+    const lonRaw = (s.lon ?? s.lng ?? s.long ?? s.longitude ?? s.Lon ?? s.Lng ?? s.Long ?? s.Longitude ?? '');
+    const lat = (latRaw === '' || latRaw === null || latRaw === undefined) ? null : Number(latRaw);
+    const lon = (lonRaw === '' || lonRaw === null || lonRaw === undefined) ? null : Number(lonRaw);
 
     return {
-      id,
-      key,
+      id: sn || `${date}|${city}|${spot}`,
       sn,
       date,
       city,
@@ -297,36 +248,25 @@ const el = {
       lon: isNaN(lon) ? null : lon,
       reasonsUse: safeStr(s.reasonsUse),
       reasonsNo: safeStr(s.reasonsNo),
-      theme: safeStr(s.theme)
     };
   }
 
   async function loadSessionsPreferred() {
-    // 1) sessions.json (repo root)
+    // 1) sessions.json
     try {
       setLoadingStatus('Loading sessions.json…');
       const payload = await fetchJson(CONFIG.sessionsJson);
       const sessions = (payload.sessions || payload.data || payload || []);
       if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('sessions.json is empty or invalid.');
       return sessions.map(normalizeSession);
-    } catch (e1) {
-      logDiag(`sessions.json failed: ${e1.message}`);
-
-      // 2) assets/sessions.json (common alternate placement)
-      try {
-        setLoadingStatus('Loading assets/sessions.json…');
-        const payload = await fetchJson('assets/sessions.json');
-        const sessions = (payload.sessions || payload.data || payload || []);
-        if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('assets/sessions.json is empty or invalid.');
-        return sessions.map(normalizeSession);
-      } catch (e2) {
-        logDiag(`assets/sessions.json failed: ${e2.message}`);
-        return null;
-      }
+    } catch (e) {
+      // keep error; fallback to xlsx
+      logDiag(`sessions.json failed: ${e.message}`);
+      return null;
     }
   }
 
-function getSheetCell(sheet, r, c) {
+  function getSheetCell(sheet, r, c) {
     const addr = XLSX.utils.encode_cell({ r, c });
     const cell = sheet[addr];
     return cell ? cell.v : undefined;
@@ -567,114 +507,119 @@ function getSheetCell(sheet, r, c) {
   // Media loading
   // ---------------------------
   function expandMediaCompact(payload) {
-    const basePath = safeStr(payload.basePath || '');
-    const d = payload.defaults || {};
-    const mainVideoExt = d.mainVideoExt || 'mp4';
-    const mainImageExt = d.mainImageExt || 'jpg';
-    const variantImageExt = d.variantImageExt || 'jpg';
-    const variantVideoExt = d.variantVideoExt || 'mp4';
-    const variants = Array.isArray(d.variants) ? d.variants : ['a','b','c','d','e','f'];
-    const includeVariantVideos = !!d.includeVariantVideos;
+  // Supports multiple naming conventions:
+  // A)  1.mp4, 1.jpg, 1_a.jpg
+  // B)  1a.mp4, 1a.jpeg, 1_a.mp4
+  // Also supports assets living either in basePath (from media.json) or repo root.
+  const basePath = safeStr(payload.basePath || '');
+  const d = payload.defaults || {};
+  const mainVideoExt = safeStr(d.mainVideoExt || 'mp4');
+  const mainImageExt = safeStr(d.mainImageExt || 'jpg');
+  const variantImageExt = safeStr(d.variantImageExt || mainImageExt);
+  const variantVideoExt = safeStr(d.variantVideoExt || mainVideoExt);
+  const variants = Array.isArray(d.variants) ? d.variants : ['a','b','c','d','e','f'];
 
-    const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
-    const items = [];
+  const imageExts = uniq([mainImageExt, variantImageExt, 'jpeg', 'jpg', 'png', 'webp']);
+  const videoExts = uniq([mainVideoExt, variantVideoExt, 'mp4', 'webm', 'mov']);
 
-    for (const s of sessions) {
-      const id = safeStr(s.id);
-      if (!id) continue;
+  const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
+  const items = [];
 
-      const caption = safeStr(s.caption) || `Session ${id}`;
-      const transcript = safeStr(s.transcript);
-      const city = safeStr(s.city);
-      const spot = safeStr(s.spot);
-      const date = safeStr(s.date);
-      const theme = safeStr(s.theme);
+  function mkCandidates(id, v, kind) {
+    const out = [];
+    const add = (p) => { if (p) out.push(p); };
+    // paths: prefer media.json basePath, but also allow root files (common in GH Pages)
+    const paths = uniq([basePath, '', 'assets/gallery/', 'assets/', 'gallery/']).map(p => safeStr(p));
+    const fnBase = (stem, ext) => `${stem}.${ext}`;
 
-      // Main video + main image (emitted with multi-candidate fallbacks to match common GitHub naming)
-      const key = `${date}|${city}|${spot}`;
-
-      const imgExts = uniq([String(mainImageExt || 'jpg').toLowerCase(), 'jpeg', 'jpg', 'png']);
-      const vidExts = uniq([String(mainVideoExt || 'mp4').toLowerCase(), 'mp4']);
-
-      // Many repos store files as 1a.jpeg / 1a.mp4 (no underscore) OR 1_a.jpg; try both, then plain 1.jpg
-      const mainSuffixes = ['a', '_a', ''];
-
-      const buildCandidates = (suffixes, exts) => {
-        const out = [];
-        for (const suf of suffixes) {
-          for (const ext of exts) out.push(`${basePath}${id}${suf}.${ext}`);
+    for (const p of paths) {
+      const prefix = p;
+      if (kind === 'video') {
+        for (const ext of videoExts) {
+          // Pattern B: 1a.mp4
+          if (v) add(`${prefix}${fnBase(`${id}${v}`, ext)}`);
+          // Pattern A: 1_a.mp4
+          if (v) add(`${prefix}${fnBase(`${id}_${v}`, ext)}`);
+          // Main: 1.mp4
+          add(`${prefix}${fnBase(`${id}`, ext)}`);
         }
-        return out;
-      };
-
-      const mainVideoCandidates = buildCandidates(mainSuffixes, vidExts);
-      const mainImageCandidates = buildCandidates(mainSuffixes, imgExts);
-
-      items.push({
-        sessionId: id,
-        key,
-        type: 'video',
-        srcCandidates: mainVideoCandidates,
-        src: mainVideoCandidates[0],
-        caption,
-        transcript,
-        theme,
-        city, spot, date
-      });
-
-      items.push({
-        sessionId: id,
-        key,
-        type: 'image',
-        srcCandidates: mainImageCandidates,
-        src: mainImageCandidates[0],
-        caption,
-        transcript,
-        theme,
-        city, spot, date
-      });
-// Variant images (only if provided in media.json; keep this list small to avoid placeholders)
-      if (variants.length) {
-        const vImgExts = uniq([String(variantImageExt || mainImageExt || 'jpg').toLowerCase(), ...imgExts]);
-        for (const v of variants) {
-          const vSuffixes = [String(v), `_${String(v)}`];
-          const vCandidates = buildCandidates(vSuffixes, vImgExts);
-
-          items.push({
-            sessionId: id,
-            key: `${date}|${city}|${spot}`,
-            type: 'image',
-            srcCandidates: vCandidates,
-            src: vCandidates[0],
-            caption: `${caption} (Variant ${v})`,
-            transcript,
-            theme,
-            city, spot, date
-          });
-        }
-      }
-
-      // Optional variant videos (often missing; disabled by default)
-      if (includeVariantVideos) {
-        for (const v of variants) {
-          items.push({
-            sessionId: id,
-            key: `${date}|${city}|${spot}`,
-            type: 'video',
-            src: `${basePath}${id}_${v}.${variantVideoExt}`,
-            caption: `${caption} (Variant ${v} video)`,
-            transcript,
-            theme,
-            city, spot, date
-          });
+      } else {
+        for (const ext of imageExts) {
+          if (v) add(`${prefix}${fnBase(`${id}${v}`, ext)}`);
+          if (v) add(`${prefix}${fnBase(`${id}_${v}`, ext)}`);
+          add(`${prefix}${fnBase(`${id}`, ext)}`);
         }
       }
     }
-    return items;
+    // De-dupe while preserving order
+    return uniq(out);
   }
 
+  for (const s of sessions) {
+    const id = safeStr(s.id);
+    if (!id) continue;
+
+    const caption = safeStr(s.caption) || `Session ${id}`;
+    const transcript = safeStr(s.transcript);
+    const city = safeStr(s.city);
+    const spot = safeStr(s.spot);
+    const date = safeStr(s.date);
+    const theme = safeStr(s.theme);
+
+    // Prefer "a" (most common) as the first media candidate when available
+    items.push({
+      sessionId: id,
+      type: 'video',
+      src: '',
+      srcCandidates: mkCandidates(id, 'a', 'video'),
+      caption,
+      transcript,
+      city, spot, date,
+      theme
+    });
+    items.push({
+      sessionId: id,
+      type: 'image',
+      src: '',
+      srcCandidates: mkCandidates(id, 'a', 'image'),
+      caption,
+      transcript,
+      city, spot, date,
+      theme
+    });
+
+    // Variants
+    for (const v of variants) {
+      items.push({
+        sessionId: id,
+        type: 'image',
+        src: '',
+        srcCandidates: mkCandidates(id, v, 'image'),
+        caption: `${caption} (${v})`,
+        transcript,
+        city, spot, date,
+        theme
+      });
+    }
+    for (const v of variants) {
+      items.push({
+        sessionId: id,
+        type: 'video',
+        src: '',
+        srcCandidates: mkCandidates(id, v, 'video'),
+        caption: `${caption} (${v} video)`,
+        transcript,
+        city, spot, date,
+        theme
+      });
+    }
+  }
+  return items;
+}
   async function loadMedia(sessions) {
-    const parsePayload = (payload) => {
+    try {
+      setLoadingStatus('Loading media.json…');
+      const payload = await fetchJson(CONFIG.mediaJson);
       let items = [];
       if (payload && payload.format === 'A_compact') {
         items = expandMediaCompact(payload);
@@ -684,10 +629,8 @@ function getSheetCell(sheet, r, c) {
           sessionId: safeStr(x.sessionId || x.session || ''),
           type: safeStr(x.type || 'image'),
           src: safeStr(x.src || ''),
-          srcCandidates: Array.isArray(x.srcCandidates) ? x.srcCandidates : undefined,
           caption: safeStr(x.caption || ''),
           transcript: safeStr(x.transcript || ''),
-          theme: safeStr(x.theme || ''),
           city: safeStr(x.city || ''),
           spot: safeStr(x.spot || ''),
           date: safeStr(x.date || '')
@@ -695,29 +638,45 @@ function getSheetCell(sheet, r, c) {
       } else if (payload && Array.isArray(payload.items)) {
         items = payload.items;
       }
-      return items;
-    };
 
-    const attempt = async (url, label) => {
-      setLoadingStatus(`Loading ${label}…`);
-      const payload = await fetchJson(url);
-      return parsePayload(payload);
-    };
-
-    try {
-      return await attempt(CONFIG.mediaJson, 'media.json');
-    } catch (e1) {
-      logDiag(`media.json failed: ${e1.message}`);
-      try {
-        return await attempt('assets/media.json', 'assets/media.json');
-      } catch (e2) {
-        logDiag(`assets/media.json failed: ${e2.message}`);
-        return [];
+      // If sessionId missing, infer from filename prefix (e.g., "11_a.jpg" -> "11")
+      for (const it of items) {
+        if (!it.sessionId && it.src) {
+          const m = it.src.match(/\/(\d+)[._]/) || it.src.match(/^(\d+)[._]/);
+          if (m) it.sessionId = m[1];
+        }
+        if (!it.caption) it.caption = it.sessionId ? `Session ${it.sessionId}` : 'Media';
       }
+
+      // Build lookup
+      const by = new Map();
+      for (const it of items) {
+        const k = it.sessionId || '';
+        if (!k) continue;
+        if (!by.has(k)) by.set(k, []);
+        by.get(k).push(it);
+      }
+
+      // Keep only sessions that exist in data OR have identifiable fields
+      const knownSessionIds = new Set(sessions.map(s => String(s.sn)).filter(Boolean));
+      const filteredItems = items.filter(it => it.sessionId && knownSessionIds.has(String(it.sessionId)));
+
+
+      state.mediaItems = filteredItems;
+      state.mediaBySessionId = by;
+
+      return filteredItems;
+    } catch (e) {
+      logDiag(`media.json failed: ${e.message}`);
+      state.mediaItems = [];
+      state.mediaBySessionId = new Map();
+      return [];
     }
   }
 
-
+  // ---------------------------
+  // Rendering: KPIs, charts, table
+  // ---------------------------
   function sum(arr, fn) {
     return arr.reduce((acc, x) => {
       const v = fn(x);
@@ -760,224 +719,6 @@ function getSheetCell(sheet, r, c) {
     setBar(el.barAcres, clamp((k.acres / Math.max(1e-9, totAcres)) * 100, 0, 100));
     setBar(el.barDemo, clamp(k.defPct || 0, 0, 100));
   }
-
-  // ---------------------------
-  // Hero donuts (Clarity + Definite)
-  // ---------------------------
-  function updateHeroDonuts(rows) {
-    const clarity = mean(rows, r => r.clarityPct);
-    const definite = mean(rows, r => r.definitePct);
-
-    state.totals = {
-      ...state.totals,
-      sessions: rows.length,
-      farmers: sum(rows, r => r.farmers),
-      acres: sum(rows, r => r.acres),
-      defPct: definite,
-      awarenessPct: mean(rows, r => r.awarenessPct),
-      clarityPct: clarity
-    };
-
-    if (el.clarityMain) el.clarityMain.textContent = `${fmt.pct(clarity, 0)}`;
-    if (el.definiteMain) el.definiteMain.textContent = `${fmt.pct(definite, 0)}`;
-
-    if (typeof Chart === 'undefined') return;
-
-    const makeDonut = (canvas, value) => {
-      if (!canvas) return null;
-      const ctx = canvas.getContext('2d');
-      return new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Value', 'Remaining'],
-          datasets: [{
-            data: [clamp(value || 0, 0, 100), clamp(100 - (value || 0), 0, 100)],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-          },
-          cutout: '75%'
-        }
-      });
-    };
-
-    // Create or update donuts
-    if (el.clarityDonut) {
-      if (!state.charts.clarityDonut) state.charts.clarityDonut = makeDonut(el.clarityDonut, clarity || 0);
-      else {
-        state.charts.clarityDonut.data.datasets[0].data = [clamp(clarity || 0,0,100), clamp(100-(clarity||0),0,100)];
-        state.charts.clarityDonut.update();
-      }
-    }
-    if (el.definiteDonut) {
-      if (!state.charts.definiteDonut) state.charts.definiteDonut = makeDonut(el.definiteDonut, definite || 0);
-      else {
-        state.charts.definiteDonut.data.datasets[0].data = [clamp(definite || 0,0,100), clamp(100-(definite||0),0,100)];
-        state.charts.definiteDonut.update();
-      }
-    }
-  }
-
-  // ---------------------------
-  // Harvest Horizons themes
-  // ---------------------------
-  function pickMediaForSessions(rows, preferType='video') {
-    if (!rows.length) return null;
-    // prefer exact key matches (date|city|spot), then fall back to sn mapping
-    const pool = [];
-    for (const r of rows) {
-      const key = r.key || `${safeStr(r.date)}|${safeStr(r.city)}|${safeStr(r.spot)}`;
-      const arr = (state.mediaByKey.get(key) || state.mediaBySessionId.get(String(r.sn)) || []);
-      for (const it of arr) pool.push(it);
-    }
-    if (!pool.length) return null;
-
-    const preferred = pool.filter(it => it.type === preferType);
-    const candidates = preferred.length ? preferred : pool;
-
-    return candidates[Math.floor(Math.random() * candidates.length)];
-  }
-
-  function renderCentral(containerEl, it, opts={ controls:true }) {
-    if (!containerEl) return;
-    containerEl.innerHTML = '';
-    if (!it) {
-      const img = makeImageNode(placeholderCandidate(0) || placeholderCandidate(1) || INLINE_PLACEHOLDER, 'Media missing');
-      containerEl.appendChild(img);
-      return;
-    }
-    const node = makeMediaNode(it, false, { controls: it.type === 'video' ? !!opts.controls : false });
-    if (it.type === 'video') {
-      node.muted = false; // central video is user-controlled
-      node.loop = false;
-      node.autoplay = false;
-      node.controls = true;
-    }
-    containerEl.appendChild(node);
-  }
-
-  function renderThemes() {
-    const rows = state.filteredSessions || state.filtered || [];
-
-    // Seed: high-awareness sessions
-    const seedRows = rows.filter(s => (s.awarenessPct || 0) >= 80);
-    const seedPick = pickMediaForSessions(seedRows.length ? seedRows : rows, 'video');
-    renderCentral(el.awarenessMedia, seedPick, { controls:true });
-    if (el.awarenessFarmers) el.awarenessFarmers.textContent = fmt.int(sum(rows, r => r.farmers));
-    if (el.awarenessAcres) el.awarenessAcres.textContent = fmt.num(sum(rows, r => r.acres), 1);
-    if (el.awarenessPct) el.awarenessPct.textContent = fmt.pct(mean(rows, r => r.awarenessPct), 0);
-
-    // Growth: wider selection (images often more available)
-    const growthPick = pickMediaForSessions(rows, 'image');
-    renderCentral(el.journeyMedia, growthPick, { controls:false });
-    if (el.journeySessions) el.journeySessions.textContent = fmt.int(rows.length);
-    if (el.journeyDef) el.journeyDef.textContent = fmt.pct(mean(rows, r => r.definitePct), 0);
-
-    // Harvest: impact-oriented pick
-    const harvestRows = rows.filter(s => (s.definitePct || 0) >= 92 || (s.theme || '') === 'harvest-impact');
-    const harvestPick = pickMediaForSessions(harvestRows.length ? harvestRows : rows, 'video');
-    renderCentral(el.impactMedia, harvestPick, { controls:true });
-    if (el.impactClarity) el.impactClarity.textContent = fmt.pct(mean(rows, r => r.clarityPct), 0);
-
-    // Future: objections / recommendations
-    const futureRows = rows.filter(s => ((s.reasonsNo || '').toLowerCase().includes('price') || (s.theme || '') === 'future-fields'));
-    const futurePick = pickMediaForSessions(futureRows.length ? futureRows : rows, 'image');
-    renderCentral(el.futureMedia, futurePick, { controls:false });
-  }
-
-  async function shareVisual() {
-    // Generates a simple 800x600 share image using the first available image media
-    try {
-      const rows = state.filteredSessions || state.filtered || [];
-      const pick = pickMediaForSessions(rows, 'image') || pickMediaForSessions(rows, 'video');
-      const canvas = document.createElement('canvas');
-      canvas.width = 800; canvas.height = 600;
-      const ctx = canvas.getContext('2d');
-
-      // background
-      ctx.fillStyle = '#0b1220';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      const drawOverlay = () => {
-        ctx.fillStyle = 'rgba(0,0,0,.42)';
-        ctx.fillRect(0, 0, canvas.width, 92);
-
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 28px system-ui, -apple-system, Segoe UI, Roboto';
-        ctx.fillText('Harvest Horizons', 20, 38);
-
-        ctx.font = '600 16px system-ui, -apple-system, Segoe UI, Roboto';
-        ctx.fillStyle = 'rgba(231,237,247,.95)';
-        ctx.fillText(`Sessions: ${fmt.int(rows.length)}   Farmers: ${fmt.int(sum(rows, r=>r.farmers))}   Acres: ${fmt.num(sum(rows,r=>r.acres),1)}`, 20, 66);
-
-        ctx.font = '600 16px system-ui, -apple-system, Segoe UI, Roboto';
-        ctx.fillStyle = 'rgba(159,176,202,.95)';
-        ctx.fillText(`Definite: ${fmt.pct(mean(rows, r=>r.definitePct),0)}   Awareness: ${fmt.pct(mean(rows, r=>r.awarenessPct),0)}   Clarity: ${fmt.pct(mean(rows, r=>r.clarityPct),0)}`, 20, 88);
-      };
-
-      const finalize = () => {
-        drawOverlay();
-        const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'harvest-horizons.png';
-        a.click();
-      };
-
-      if (!pick || !pick.src) {
-        finalize();
-        return;
-      }
-
-      if (pick.type === 'video') {
-        // Use poster-like placeholder if video; still include stats
-        finalize();
-        return;
-      }
-
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = pick.src;
-
-      img.onload = () => {
-        // cover crop
-        const iw = img.width, ih = img.height;
-        const cw = canvas.width, ch = canvas.height;
-        const s = Math.max(cw/iw, ch/ih);
-        const nw = iw*s, nh=ih*s;
-        const dx=(cw-nw)/2, dy=(ch-nh)/2;
-        ctx.drawImage(img, dx, dy, nw, nh);
-        finalize();
-      };
-      img.onerror = () => finalize();
-    } catch (e) {
-      logDiag(`shareVisual failed: ${e.message}`);
-      setNotice(`<strong>Status:</strong> Unable to generate image. (${escapeHtml(e.message)})`);
-    }
-  }
-
-  function bindThemeControls() {
-    // Secondary reset button inside themes
-    if (el.btnReset2) el.btnReset2.addEventListener('click', resetFilters);
-
-    // Open-tab buttons
-    $$('[data-open-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-open-tab');
-        if (tab) activateTab(tab);
-      });
-    });
-
-    // Share buttons
-    $$('.share-btn').forEach(btn => btn.addEventListener('click', shareVisual));
-  }
-
 
   function renderReasons(rows) {
     const splitReasons = (txt) => {
@@ -1111,7 +852,7 @@ function getSheetCell(sheet, r, c) {
       const defP = r.definitePct;
       const aw = r.awarenessPct;
       const cl = r.clarityPct;
-      return `<tr data-id="${escapeHtml(r.id || '')}" data-sn="${escapeHtml(r.sn || '')}">
+      return `<tr data-sn="${escapeHtml(r.sn || '')}">
         <td>${escapeHtml(fmt.date(r.date))}</td>
         <td>${escapeHtml(r.city || '—')}</td>
         <td>${escapeHtml(r.spot || '—')}</td>
@@ -1126,8 +867,8 @@ function getSheetCell(sheet, r, c) {
     // row click
     el.tbl.querySelectorAll('tr[data-sn]').forEach(tr => {
       tr.addEventListener('click', () => {
-        const id = tr.getAttribute('data-id');
-        const session = state.filtered.find(x => String(x.id) === String(id)) || state.sessions.find(x => String(x.id) === String(id));
+        const sn = tr.getAttribute('data-sn');
+        const session = state.filtered.find(x => String(x.sn) === String(sn)) || state.sessions.find(x => String(x.sn) === String(sn));
         if (session) pinSession(session, { openMedia:true, focusMap:true });
       });
     });
@@ -1243,20 +984,17 @@ function getSheetCell(sheet, r, c) {
   // ---------------------------
   function buildGalleryList(rows) {
     // Choose media items for the filtered sessions; keep a max
+    const ids = rows.map(r => r.sn).filter(Boolean).map(String);
     const items = [];
-    for (const r of rows) {
-      const key = r.key || `${safeStr(r.date)}|${safeStr(r.city)}|${safeStr(r.spot)}`;
-      const arr = (state.mediaByKey.get(key) || state.mediaBySessionId.get(String(r.sn)) || []);
+    for (const id of ids) {
+      const arr = state.mediaBySessionId.get(id) || [];
       for (const it of arr) items.push(it);
       if (items.length >= CONFIG.maxGallery) break;
     }
-
     // If empty, show placeholders derived from sessions
     if (!items.length) {
-      const top = rows.slice(0, Math.min(CONFIG.maxGallery, 12));
-      for (const r of top) {
-        const label = `${safeStr(r.city)} — ${safeStr(r.spot)}`.trim() || `Session ${r.sn || ''}`;
-        items.push({ sessionId: String(r.sn || ''), type:'image', src: placeholderCandidate(0) || INLINE_PLACEHOLDER, caption: label, transcript:'' });
+      for (const id of ids.slice(0, Math.min(CONFIG.maxGallery, 12))) {
+        items.push({ sessionId: id, type:'image', src: CONFIG.placeholder, caption:`Session ${id}`, transcript:'' });
       }
     }
     return items.slice(0, CONFIG.maxGallery);
@@ -1274,7 +1012,7 @@ function getSheetCell(sheet, r, c) {
 
     for (const id of ids) {
       const items = (state.mediaBySessionId.get(String(id)) || []).slice(0, 1);
-      const it = items[0] || { sessionId: id, type:'image', src: (placeholderCandidate(0) || placeholderCandidate(1) || INLINE_PLACEHOLDER), caption:`Session ${id}` };
+      const it = items[0] || { sessionId: id, type:'image', src: CONFIG.placeholder, caption:`Session ${id}` };
 
       const tile = document.createElement('div');
       tile.className = 'showItem';
@@ -1289,32 +1027,120 @@ function getSheetCell(sheet, r, c) {
     }
   }
 
-  function makeMediaNode(it, mute=false, opts={ controls:false }) {
-    const candidates = normalizeCandidates((it && (it.srcCandidates || it.src)) || []);
-    const caption = (it && it.caption) ? it.caption : '';
+  function resolveAssetUrl(u) {
+  const s = safeStr(u);
+  if (!s) return '';
+  if (/^https?:\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return s;
+  if (s.startsWith('/')) return s; // absolute from site root
+  // relative to project base
+  const bp = inferBasePath();
+  return `${bp}${s.replace(/^\/+/, '')}`;
+}
 
-    if (it && it.type === 'video') {
-      const v = document.createElement('video');
-      v.muted = true;
-      v.loop = true;
-      v.playsInline = true;
-      v.autoplay = !!mute;
-      v.controls = !!opts.controls;
-      v.preload = 'metadata';
-
-      // Try candidate video paths; if all fail, fall back to an image placeholder
-      tryNextSrc(v, candidates, () => {
-        v.replaceWith(makeImageNode([placeholderCandidate(0), placeholderCandidate(1), INLINE_PLACEHOLDER], caption));
-      });
-
-      return v;
+async function diagnoseLfsPointer(url) {
+  try {
+    // Fetch a small chunk; if Git LFS pointer, response is text and contains spec URL
+    const res = await fetch(url, { method:'GET' });
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (!res.ok) return null;
+    if (ct.includes('text')) {
+      const txt = await res.text();
+      if (txt.includes('git-lfs.github.com/spec')) return 'Git LFS pointer detected (GitHub Pages cannot serve LFS objects).';
     }
+    return null;
+  } catch(_) {
+    return null;
+  }
+}
 
-    // Image
-    return makeImageNode(candidates.length ? candidates : (it ? it.src : ''), caption);
+function makeMediaNode(it, mute=false) {
+  const raw = [];
+  if (Array.isArray(it.srcCandidates) && it.srcCandidates.length) raw.push(...it.srcCandidates);
+  if (it.src) raw.push(it.src);
+  if (!raw.length) raw.push(CONFIG.placeholder);
+
+  const candidates = uniq(raw.map(resolveAssetUrl).filter(Boolean));
+  let i = 0;
+
+  function nextSrc(node, isVideo) {
+    if (i >= candidates.length) {
+      if (isVideo) node.replaceWith(makeImageNode(CONFIG.placeholder, it.caption));
+      else node.src = CONFIG.placeholder;
+      return;
+    }
+    const url = candidates[i++];
+    if (isVideo) node.src = url;
+    else node.src = url;
   }
 
-function openLightbox(items, index) {
+  if (it.type === 'video') {
+    const v = document.createElement('video');
+    v.muted = !!mute;
+    v.loop = true;
+    v.playsInline = true;
+    v.autoplay = !!mute;
+    v.controls = false;
+
+    nextSrc(v, true);
+
+    v.addEventListener('error', async () => {
+      const url = v.currentSrc || v.src || '';
+      const hint = url ? await diagnoseLfsPointer(url) : null;
+      if (hint) logDiag(`Media failed: ${hint} (${url})`);
+      nextSrc(v, true);
+    });
+    return v;
+  }
+
+  const img = document.createElement('img');
+  img.alt = it.caption || '';
+  img.loading = 'lazy';
+
+  nextSrc(img, false);
+
+  img.addEventListener('error', async () => {
+    const url = img.currentSrc || img.src || '';
+    const hint = url ? await diagnoseLfsPointer(url) : null;
+    if (hint) logDiag(`Image failed: ${hint} (${url})`);
+    nextSrc(img, false);
+  });
+  return img;
+}
+
+  function makeImageNode(src, alt='') {
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = alt || '';
+    img.loading = 'lazy';
+    img.addEventListener('error', () => {
+      if (img.src.endsWith(CONFIG.placeholder)) return;
+      img.src = CONFIG.placeholder;
+    });
+    return img;
+  }
+
+  function renderGallery(rows) {
+    if (!el.gallery) return;
+    const items = buildGalleryList(rows);
+    el.gallery.innerHTML = '';
+
+    items.forEach((it, idx) => {
+      const tile = document.createElement('div');
+      tile.className = 'mediaTile';
+      tile.dataset.index = String(idx);
+      tile.appendChild(makeMediaNode(it, false));
+
+      const tag = document.createElement('div');
+      tag.className = 'mediaTag';
+      tag.textContent = it.caption || `Session ${it.sessionId || ''}`;
+      tile.appendChild(tag);
+
+      tile.addEventListener('click', () => openLightbox(items, idx));
+      el.gallery.appendChild(tile);
+    });
+  }
+
+  function openLightbox(items, index) {
     state.lightbox.items = items;
     state.lightbox.index = index;
     renderLightbox();
@@ -1324,7 +1150,7 @@ function openLightbox(items, index) {
   function openLightboxForSession(sessionId) {
     const items = (state.mediaBySessionId.get(String(sessionId)) || []).filter(it => it.src);
     if (!items.length) {
-      openLightbox([{ sessionId, type:'image', src: (placeholderCandidate(0) || placeholderCandidate(1) || INLINE_PLACEHOLDER), caption:`Session ${sessionId}`, transcript:'' }], 0);
+      openLightbox([{ sessionId, type:'image', src: CONFIG.placeholder, caption:`Session ${sessionId}`, transcript:'' }], 0);
       return;
     }
     openLightbox(items.slice(0, 50), 0);
@@ -1451,18 +1277,15 @@ function openLightbox(items, index) {
     });
 
     state.filtered = rows;
-    state.filteredSessions = rows;
 
     updateSummary(rows);
     updateKpis(rows);
-    updateHeroDonuts(rows);
     renderSnapshot(rows);
     renderCharts(rows);
     renderTable(rows);
     renderMap(rows);
     updateMapBanner(rows);
     renderGallery(rows);
-    renderThemes();
 
     // note: keep pinned session only if still in scope; else clear
     if (state.pinnedSession) {
@@ -1547,29 +1370,12 @@ function openLightbox(items, index) {
   // ---------------------------
   function initHeroVideo() {
     if (!el.heroVideo) return;
-
-    const candidates = Array.isArray(CONFIG.heroVideoCandidates) ? CONFIG.heroVideoCandidates : [];
-    let idx = 0;
-
-    const tryNext = () => {
-      const src = candidates[idx] || '';
-      idx += 1;
-      if (!src) {
-        el.heroVideo.classList.add('hide');
-        return;
-      }
-      el.heroVideo.src = src;
-      // attempt play (autoplay might be blocked; keep muted)
-      el.heroVideo.load();
-      try { el.heroVideo.play(); } catch(_) {}
-    };
-
-    el.heroVideo.addEventListener('error', () => tryNext());
+    el.heroVideo.src = CONFIG.heroVideo;
+    el.heroVideo.addEventListener('error', () => el.heroVideo.classList.add('hide'));
+    // If it loads, play (autoplay might be blocked; keep muted)
     el.heroVideo.addEventListener('canplay', () => {
       try { el.heroVideo.play(); } catch(_) {}
     });
-
-    tryNext();
   }
 
   // ---------------------------
@@ -1591,7 +1397,6 @@ function openLightbox(items, index) {
       clearError();
       bindTabs();
       bindLightbox();
-      bindThemeControls();
 
       el.shell.style.display = 'grid';
       el.shell.classList.add('ready');

@@ -3,11 +3,17 @@
   "basePath": "assets/gallery/",
   "defaults": {
     "mainVideoExt": "mp4",
-    "mainImageExt": "jpeg",
+    "mainImageExt": "jpg",
     "variantImageExt": "jpg",
     "variantVideoExt": "mp4",
-    "variants": [],
-    "includeVariantVideos": false
+    "variants": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f"
+    ]
   },
   "sessions": [
     {
@@ -15,360 +21,301 @@
       "caption": "Ubaro — Ameen khan Chacharr (2025-11-24)",
       "city": "Ubaro",
       "spot": "Ameen khan Chacharr",
-      "date": "2025-11-24",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 29 | Acres: 1002.0 | Definite: 89.7% | Awareness: 75.9% | Clarity: 60.0%"
+      "date": "2025-11-24"
     },
     {
       "id": "1",
       "caption": "Ubaro — Naseer Dhondo (2025-11-24)",
       "city": "Ubaro",
       "spot": "Naseer Dhondo",
-      "date": "2025-11-24",
-      "theme": "seed-awareness",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 41 | Acres: 1414.0 | Definite: 80.5% | Awareness: 85.4% | Clarity: 60.0%"
+      "date": "2025-11-24"
     },
     {
       "id": "2",
       "caption": "Dharki — Matal Mahar (2025-11-25)",
       "city": "Dharki",
       "spot": "Matal Mahar",
-      "date": "2025-11-25",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 30 | Acres: 750.0 | Definite: 90.0% | Awareness: 70.0% | Clarity: 60.0%"
+      "date": "2025-11-25"
     },
     {
       "id": "2",
       "caption": "Dharki — Abdullah Rajni (2025-11-25)",
       "city": "Dharki",
       "spot": "Abdullah Rajni",
-      "date": "2025-11-25",
-      "theme": "seed-awareness",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 37 | Acres: 447.0 | Definite: 89.2% | Awareness: 86.5% | Clarity: 60.0%"
+      "date": "2025-11-25"
     },
     {
       "id": "3",
       "caption": "Ghotki — Abdullah Laakhan (2025-11-26)",
       "city": "Ghotki",
       "spot": "Abdullah Laakhan",
-      "date": "2025-11-26",
-      "theme": "seed-awareness",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 39 | Acres: 1075.0 | Definite: 89.7% | Awareness: 84.6% | Clarity: 55.0%"
+      "date": "2025-11-26"
     },
     {
       "id": "3",
       "caption": "Ghotki — M. Qasim Ghooto (2025-11-26)",
       "city": "Ghotki",
       "spot": "M. Qasim Ghooto",
-      "date": "2025-11-26",
-      "theme": "seed-awareness",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 29 | Acres: 459.0 | Definite: 89.7% | Awareness: 93.1% | Clarity: 55.0%"
+      "date": "2025-11-26"
     },
     {
       "id": "4",
       "caption": "Ghotki — Darri Chachar (2025-11-27)",
       "city": "Ghotki",
       "spot": "Darri Chachar",
-      "date": "2025-11-27",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 33 | Acres: 245.0 | Definite: 97.0% | Awareness: 93.9% | Clarity: 55.0%"
+      "date": "2025-11-27"
     },
     {
       "id": "4",
       "caption": "Ghotki — Kalati Gabol (2025-11-27)",
       "city": "Ghotki",
       "spot": "Kalati Gabol",
-      "date": "2025-11-27",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 35 | Acres: 1063.0 | Definite: 94.3% | Awareness: 88.6% | Clarity: 55.0%"
+      "date": "2025-11-27"
     },
     {
       "id": "5",
       "caption": "Jaferabad — Haji Darya Khan (2025-11-28)",
       "city": "Jaferabad",
       "spot": "Haji Darya Khan",
-      "date": "2025-11-28",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 34 | Acres: 625.0 | Definite: 76.5% | Awareness: 67.6% | Clarity: 55.0%"
+      "date": "2025-11-28"
     },
     {
       "id": "5",
       "caption": "Jaferabad — Qaeim Khan Khossa 2 (2025-11-28)",
       "city": "Jaferabad",
       "spot": "Qaeim Khan Khossa 2",
-      "date": "2025-11-28",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 33 | Acres: 641.0 | Definite: 75.8% | Awareness: 60.6% | Clarity: 50.0%"
+      "date": "2025-11-28"
     },
     {
       "id": "6",
       "caption": "Ranipur — Allah Wadhayo (2025-11-29)",
       "city": "Ranipur",
       "spot": "Allah Wadhayo",
-      "date": "2025-11-29",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 59 | Acres: 1871.0 | Definite: 76.3% | Awareness: 33.9% | Clarity: 60.0%"
+      "date": "2025-11-29"
     },
     {
       "id": "6",
       "caption": "Ranipur — Haji Khabar Malaha (2025-11-29)",
       "city": "Ranipur",
       "spot": "Haji Khabar Malaha",
-      "date": "2025-11-29",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 33 | Acres: 582.0 | Definite: 97.0% | Awareness: 84.8% | Clarity: 55.0%"
+      "date": "2025-11-29"
     },
     {
       "id": "7",
       "caption": "Mehrabpur — Saein Daad Marri (2025-12-01)",
       "city": "Mehrabpur",
       "spot": "Saein Daad Marri",
-      "date": "2025-12-01",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 34 | Acres: 1158.0 | Definite: 79.4% | Awareness: 64.7% | Clarity: 60.0%"
+      "date": "2025-12-01"
     },
     {
       "id": "7",
       "caption": "Mehrabpur — Pir Watiyo (2025-12-01)",
       "city": "Mehrabpur",
       "spot": "Pir Watiyo",
-      "date": "2025-12-01",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 36 | Acres: 411.0 | Definite: 80.6% | Awareness: 55.6% | Clarity: 60.0%"
+      "date": "2025-12-01"
     },
     {
       "id": "8",
       "caption": "Dadu — Manali (2025-12-02)",
       "city": "Dadu",
       "spot": "Manali",
-      "date": "2025-12-02",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 49 | Acres: 857.0 | Definite: 93.9% | Awareness: 81.6% | Clarity: 60.0%"
+      "date": "2025-12-02"
     },
     {
       "id": "8",
       "caption": "Dadu — Golo Potho (2025-12-02)",
       "city": "Dadu",
       "spot": "Golo Potho",
-      "date": "2025-12-02",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 43 | Acres: 899.0 | Definite: 93.0% | Awareness: 69.8% | Clarity: 55.0%"
+      "date": "2025-12-02"
     },
     {
       "id": "9",
       "caption": "Muzaffar Ghar — Bassti Seerein (2025-12-03)",
       "city": "Muzaffar Ghar",
       "spot": "Bassti Seerein",
-      "date": "2025-12-03",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 28 | Acres: 320.0 | Definite: 92.9% | Awareness: 89.3% | Clarity: 55.0%"
+      "date": "2025-12-03"
     },
     {
       "id": "9",
       "caption": "Muzaffar Ghar — Topi Maanay wali (2025-12-03)",
       "city": "Muzaffar Ghar",
       "spot": "Topi Maanay wali",
-      "date": "2025-12-03",
-      "theme": "seed-awareness",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 42 | Acres: 410.0 | Definite: 90.5% | Awareness: 83.3% | Clarity: 60.0%"
+      "date": "2025-12-03"
     },
     {
       "id": "9",
       "caption": "Muzaffar Ghar — Phaty wala (2025-12-03)",
       "city": "Muzaffar Ghar",
       "spot": "Phaty wala",
-      "date": "2025-12-03",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 54 | Acres: 337.0 | Definite: 92.6% | Awareness: 74.1% | Clarity: 60.0%"
+      "date": "2025-12-03"
     },
     {
       "id": "10",
       "caption": "Kot Adu — Basti Haider Ghazi (2025-12-04)",
       "city": "Kot Adu",
       "spot": "Basti Haider Ghazi",
-      "date": "2025-12-04",
-      "theme": "harvest-impact",
-      "transcript": "Reason to Use: Good Past Experience — Farmers: 37 | Acres: 376.0 | Definite: 94.6% | Awareness: 73.0% | Clarity: 55.0%"
+      "date": "2025-12-04"
     },
     {
       "id": "10",
       "caption": "Kot Adu — Hanjrai Bangla Chaah Phaati wala (2025-12-04)",
       "city": "Kot Adu",
       "spot": "Hanjrai Bangla Chaah Phaati wala",
-      "date": "2025-12-04",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 34 | Acres: 275.0 | Definite: 88.2% | Awareness: 70.6% | Clarity: 50.0%"
+      "date": "2025-12-04"
     },
     {
       "id": "11",
       "caption": "Karor Lal esan — Basti joya (2025-12-05)",
       "city": "Karor Lal esan",
       "spot": "Basti joya",
-      "date": "2025-12-05",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 32 | Acres: 256.0 | Definite: 93.8% | Awareness: 78.1% | Clarity: 50.0%"
+      "date": "2025-12-05"
     },
     {
       "id": "11",
       "caption": "Karor Lal esan — Chak 106 TDA (2025-12-05)",
       "city": "Karor Lal esan",
       "spot": "Chak 106 TDA",
-      "date": "2025-12-05",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 51 | Acres: 335.0 | Definite: 90.2% | Awareness: 78.4% | Clarity: 55.0%"
+      "date": "2025-12-05"
     },
     {
       "id": "11",
       "caption": "Karor Lal esan — Bassti Maachi Buchi wala (2025-12-05)",
       "city": "Karor Lal esan",
       "spot": "Bassti Maachi Buchi wala",
-      "date": "2025-12-05",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 66 | Acres: 675.0 | Definite: 90.9% | Awareness: 75.8% | Clarity: 55.0%"
+      "date": "2025-12-05"
     },
     {
       "id": "12",
       "caption": "Bhakkar — Kandani (2025-12-06)",
       "city": "Bhakkar",
       "spot": "Kandani",
-      "date": "2025-12-06",
-      "theme": "seed-awareness",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 34 | Acres: 631.0 | Definite: 85.3% | Awareness: 88.2% | Clarity: 55.0%"
+      "date": "2025-12-06"
     },
     {
       "id": "12",
       "caption": "Bhakkar — 54-ML (2025-12-06)",
       "city": "Bhakkar",
       "spot": "54-ML",
-      "date": "2025-12-06",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 27 | Acres: 535.0 | Definite: 88.9% | Awareness: 74.1% | Clarity: 50.0%"
+      "date": "2025-12-06"
     },
     {
       "id": "12",
       "caption": "Bhakkar — Majoka (2025-12-06)",
       "city": "Bhakkar",
       "spot": "Majoka",
-      "date": "2025-12-06",
-      "theme": "growth-journey",
-      "transcript": "Reason to use: Have Trust in Bayer — Farmers: 35 | Acres: 290.0 | Definite: 88.6% | Awareness: 74.3% | Clarity: 55.0%"
+      "date": "2025-12-06"
     },
     {
       "id": "13",
       "caption": "Mianwali — Kalor Sharif Kacha (2025-12-08)",
       "city": "Mianwali",
       "spot": "Kalor Sharif Kacha",
-      "date": "2025-12-08",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 32 | Acres: 441.0 | Definite: 96.9% | Awareness: 90.6% | Clarity: 55.0%"
+      "date": "2025-12-08"
     },
     {
       "id": "13",
       "caption": "Mianwali — Kamar Mashaani Gulshan Colony (2025-12-08)",
       "city": "Mianwali",
       "spot": "Kamar Mashaani Gulshan Colony",
-      "date": "2025-12-08",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Fear of Burn — Farmers: 30 | Acres: 267.0 | Definite: 90.0% | Awareness: 86.7% | Clarity: 55.0%"
+      "date": "2025-12-08"
     },
     {
       "id": "13",
       "caption": "Mianwali — Daud KhaiL kacha (2025-12-08)",
       "city": "Mianwali",
       "spot": "Daud KhaiL kacha",
-      "date": "2025-12-08",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 39 | Acres: 378.0 | Definite: 94.9% | Awareness: 92.3% | Clarity: 50.0%"
+      "date": "2025-12-08"
     },
     {
       "id": "14",
       "caption": "Sargodha — Jharoola (2025-12-09)",
       "city": "Sargodha",
       "spot": "Jharoola",
-      "date": "2025-12-09",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 44 | Acres: 336.0 | Definite: 93.2% | Awareness: 75.0% | Clarity: 55.0%"
+      "date": "2025-12-09"
     },
     {
       "id": "14",
       "caption": "Sargodha — Habib pur Kangrra (2025-12-09)",
       "city": "Sargodha",
       "spot": "Habib pur Kangrra",
-      "date": "2025-12-09",
-      "theme": "future-fields",
-      "transcript": "Reason to Use: Safe on Crop — Reason Not to Use: Price Too High — Farmers: 41 | Acres: 239.0 | Definite: 97.6% | Awareness: 85.4% | Clarity: 55.0%"
+      "date": "2025-12-09"
     },
     {
       "id": "14",
       "caption": "Sargodha — ChakrraLa (2025-12-09)",
       "city": "Sargodha",
       "spot": "ChakrraLa",
-      "date": "2025-12-09",
-      "theme": "future-fields",
-      "transcript": "Reason to Use: Safe on Crop — Reason Not to Use: Price Too High — Farmers: 31 | Acres: 945.0 | Definite: 80.6% | Awareness: 48.4% | Clarity: 50.0%"
+      "date": "2025-12-09"
     },
     {
       "id": "15",
       "caption": "Phalia — Machyana (2025-12-10)",
       "city": "Phalia",
       "spot": "Machyana",
-      "date": "2025-12-10",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 28 | Acres: 157.0 | Definite: 89.3% | Awareness: 82.1% | Clarity: 55.0%"
+      "date": "2025-12-10"
     },
     {
       "id": "15",
       "caption": "Phalia — Sheikh Pur (2025-12-10)",
       "city": "Phalia",
       "spot": "Sheikh Pur",
-      "date": "2025-12-10",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 29 | Acres: 246.0 | Definite: 93.1% | Awareness: 86.2% | Clarity: 50.0%"
+      "date": "2025-12-10"
     },
     {
       "id": "15",
       "caption": "Phalia — Baghwal (2025-12-10)",
       "city": "Phalia",
       "spot": "Baghwal",
-      "date": "2025-12-10",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 14 | Acres: 139.0 | Definite: 100.0% | Awareness: 85.7% | Clarity: 45.0%"
+      "date": "2025-12-10"
     },
     {
       "id": "16",
       "caption": "Chakwal — Daleel Pur Khokhar Baala (2025-12-11)",
       "city": "Chakwal",
       "spot": "Daleel Pur Khokhar Baala",
-      "date": "2025-12-11",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 28 | Acres: 245.0 | Definite: 96.4% | Awareness: 85.7% | Clarity: 50.0%"
+      "date": "2025-12-11"
     },
     {
       "id": "16",
       "caption": "Chakwal — DawaalmiaaL (2025-12-11)",
       "city": "Chakwal",
       "spot": "DawaalmiaaL",
-      "date": "2025-12-11",
-      "theme": "future-fields",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 29 | Acres: 246.0 | Definite: 86.2% | Awareness: 79.3% | Clarity: 55.0%"
+      "date": "2025-12-11"
     },
     {
       "id": "17",
       "caption": "Toba take singh — Chak 262-GB (2025-12-12)",
       "city": "Toba take singh",
       "spot": "Chak 262-GB",
-      "date": "2025-12-12",
-      "theme": "harvest-impact",
-      "transcript": "Reason to use: Have Trust in Bayer — Reason Not to Use: Price Too High — Farmers: 42 | Acres: 303.0 | Definite: 95.2% | Awareness: 83.3% | Clarity: 55.0%"
+      "date": "2025-12-12"
     },
     {
       "id": "17",
       "caption": "Toba take singh — Chak 338 GB (2025-12-12)",
       "city": "Toba take singh",
       "spot": "Chak 338 GB",
-      "date": "2025-12-12",
-      "theme": "harvest-impact",
-      "transcript": "Reason to Use: Good Past Experience — Reason Not to Use: Price Too High — Farmers: 33 | Acres: 247.0 | Definite: 90.9% | Awareness: 81.8% | Clarity: 50.0%"
+      "date": "2025-12-12"
+    },
+    {
+      "id": "17",
+      "caption": "Toba take singh —  (2025-12-12)",
+      "city": "Toba take singh",
+      "spot": "",
+      "date": "2025-12-12"
+    },
+    {
+      "id": "17",
+      "caption": "Toba take singh —  (2025-12-12)",
+      "city": "Toba take singh",
+      "spot": "",
+      "date": "2025-12-12"
+    },
+    {
+      "id": "17",
+      "caption": "Toba take singh —  (2025-12-12)",
+      "city": "Toba take singh",
+      "spot": "",
+      "date": "2025-12-12"
     }
   ]
 }

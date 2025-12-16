@@ -1,6 +1,6 @@
 {
   "format": "sessions_v1",
-  "generatedAt": "2025-12-15T06:43:04.149509Z",
+  "generatedAt": "2025-12-16T15:40:28.493831Z",
   "sessions": [
     {
       "sn": 1,
@@ -18,7 +18,10 @@
       "lat": 28.153666666666666,
       "lon": 69.81658333333333,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.81658333333333,
+      "longitude": 69.81658333333333,
+      "latitude": 28.153666666666666
     },
     {
       "sn": 1,
@@ -36,7 +39,10 @@
       "lat": 28.134666666666668,
       "lon": 69.83669444444443,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.83669444444443,
+      "longitude": 69.83669444444443,
+      "latitude": 28.134666666666668
     },
     {
       "sn": 2,
@@ -54,7 +60,10 @@
       "lat": 28.032833333333333,
       "lon": 69.70408333333333,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.70408333333333,
+      "longitude": 69.70408333333333,
+      "latitude": 28.032833333333333
     },
     {
       "sn": 2,
@@ -72,7 +81,10 @@
       "lat": 28.008222222222223,
       "lon": 69.7261388888889,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.7261388888889,
+      "longitude": 69.7261388888889,
+      "latitude": 28.008222222222223
     },
     {
       "sn": 3,
@@ -90,7 +102,10 @@
       "lat": 28.032944444444443,
       "lon": 69.38183333333333,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.38183333333333,
+      "longitude": 69.38183333333333,
+      "latitude": 28.032944444444443
     },
     {
       "sn": 3,
@@ -108,7 +123,10 @@
       "lat": 28.03502777777778,
       "lon": 69.26463888888888,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.26463888888888,
+      "longitude": 69.26463888888888,
+      "latitude": 28.03502777777778
     },
     {
       "sn": 4,
@@ -126,7 +144,10 @@
       "lat": 27.87852777777778,
       "lon": 69.26241666666667,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.26241666666667,
+      "longitude": 69.26241666666667,
+      "latitude": 27.87852777777778
     },
     {
       "sn": 4,
@@ -144,7 +165,10 @@
       "lat": 27.84861111111111,
       "lon": 69.43611111111112,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 69.43611111111112,
+      "longitude": 69.43611111111112,
+      "latitude": 27.84861111111111
     },
     {
       "sn": 5,
@@ -162,7 +186,10 @@
       "lat": 28.209527777777776,
       "lon": 68.57619444444444,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.57619444444444,
+      "longitude": 68.57619444444444,
+      "latitude": 28.209527777777776
     },
     {
       "sn": 5,
@@ -180,7 +207,10 @@
       "lat": 28.18947222222222,
       "lon": 68.58833333333332,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.58833333333332,
+      "longitude": 68.58833333333332,
+      "latitude": 28.18947222222222
     },
     {
       "sn": 6,
@@ -198,7 +228,10 @@
       "lat": 27.094777777777775,
       "lon": 68.58969444444443,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.58969444444443,
+      "longitude": 68.58969444444443,
+      "latitude": 27.094777777777775
     },
     {
       "sn": 6,
@@ -216,7 +249,10 @@
       "lat": 27.04061111111111,
       "lon": 68.56322222222222,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.56322222222222,
+      "longitude": 68.56322222222222,
+      "latitude": 27.04061111111111
     },
     {
       "sn": 7,
@@ -234,7 +270,10 @@
       "lat": 27.16038888888889,
       "lon": 68.33008333333333,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.33008333333333,
+      "longitude": 68.33008333333333,
+      "latitude": 27.16038888888889
     },
     {
       "sn": 7,
@@ -252,7 +291,10 @@
       "lat": 27.12163888888889,
       "lon": 68.33311111111111,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.33311111111111,
+      "longitude": 68.33311111111111,
+      "latitude": 27.12163888888889
     },
     {
       "sn": 8,
@@ -270,7 +312,10 @@
       "lat": 26.735777777777777,
       "lon": 68.01047222222222,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 68.01047222222222,
+      "longitude": 68.01047222222222,
+      "latitude": 26.735777777777777
     },
     {
       "sn": 8,
@@ -288,7 +333,10 @@
       "lat": 26.721833333333333,
       "lon": 67.98611111111111,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 67.98611111111111,
+      "longitude": 67.98611111111111,
+      "latitude": 26.721833333333333
     },
     {
       "sn": 9,
@@ -306,7 +354,10 @@
       "lat": 30.01861111111111,
       "lon": 71.11963888888889,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 71.11963888888889,
+      "longitude": 71.11963888888889,
+      "latitude": 30.01861111111111
     },
     {
       "sn": 9,
@@ -324,7 +375,10 @@
       "lat": 29.990055555555557,
       "lon": 71.11030555555556,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 71.11030555555556,
+      "longitude": 71.11030555555556,
+      "latitude": 29.990055555555557
     },
     {
       "sn": 9,
@@ -342,7 +396,10 @@
       "lat": 30.175,
       "lon": 71.06375,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 71.06375,
+      "longitude": 71.06375,
+      "latitude": 30.175
     },
     {
       "sn": 10,
@@ -360,7 +417,10 @@
       "lat": 30.538944444444446,
       "lon": 70.97586111111112,
       "reasonsUse": "Reason to Use: Good Past Experience",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 70.97586111111112,
+      "longitude": 70.97586111111112,
+      "latitude": 30.538944444444446
     },
     {
       "sn": 10,
@@ -378,7 +438,10 @@
       "lat": 30.611972222222224,
       "lon": 70.91716666666667,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 70.91716666666667,
+      "longitude": 70.91716666666667,
+      "latitude": 30.611972222222224
     },
     {
       "sn": 11,
@@ -396,7 +459,10 @@
       "lat": 31.16097222222222,
       "lon": 70.94111111111111,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 70.94111111111111,
+      "longitude": 70.94111111111111,
+      "latitude": 31.16097222222222
     },
     {
       "sn": 11,
@@ -414,7 +480,10 @@
       "lat": 31.14525,
       "lon": 71.03133333333334,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 71.03133333333334,
+      "longitude": 71.03133333333334,
+      "latitude": 31.14525
     },
     {
       "sn": 11,
@@ -432,7 +501,10 @@
       "lat": 31.35575,
       "lon": 70.95108333333333,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 70.95108333333333,
+      "longitude": 70.95108333333333,
+      "latitude": 31.35575
     },
     {
       "sn": 12,
@@ -450,7 +522,10 @@
       "lat": 31.480666666666664,
       "lon": 70.99277777777777,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 70.99277777777777,
+      "longitude": 70.99277777777777,
+      "latitude": 31.480666666666664
     },
     {
       "sn": 12,
@@ -468,7 +543,10 @@
       "lat": 31.733027777777775,
       "lon": 71.3073611111111,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 71.3073611111111,
+      "longitude": 71.3073611111111,
+      "latitude": 31.733027777777775
     },
     {
       "sn": 12,
@@ -486,7 +564,10 @@
       "lat": 31.775944444444445,
       "lon": 71.02986111111112,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": ""
+      "reasonsNo": "",
+      "lng": 71.02986111111112,
+      "longitude": 71.02986111111112,
+      "latitude": 31.775944444444445
     },
     {
       "sn": 13,
@@ -504,7 +585,10 @@
       "lat": 32.73430555555556,
       "lon": 71.27775,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 71.27775,
+      "longitude": 71.27775,
+      "latitude": 32.73430555555556
     },
     {
       "sn": 13,
@@ -522,7 +606,10 @@
       "lat": 32.86472222222223,
       "lon": 71.33972222222222,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Fear of Burn"
+      "reasonsNo": "Reason Not to Use: Fear of Burn",
+      "lng": 71.33972222222222,
+      "longitude": 71.33972222222222,
+      "latitude": 32.86472222222223
     },
     {
       "sn": 13,
@@ -540,7 +627,10 @@
       "lat": 32.84722222222222,
       "lon": 71.55402777777778,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 71.55402777777778,
+      "longitude": 71.55402777777778,
+      "latitude": 32.84722222222222
     },
     {
       "sn": 14,
@@ -558,7 +648,10 @@
       "lat": 31.917333333333335,
       "lon": 72.3633611111111,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.3633611111111,
+      "longitude": 72.3633611111111,
+      "latitude": 31.917333333333335
     },
     {
       "sn": 14,
@@ -576,7 +669,10 @@
       "lat": 31.980805555555555,
       "lon": 72.46394444444445,
       "reasonsUse": "Reason to Use: Safe on Crop",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.46394444444445,
+      "longitude": 72.46394444444445,
+      "latitude": 31.980805555555555
     },
     {
       "sn": 14,
@@ -594,7 +690,10 @@
       "lat": 32.09686111111111,
       "lon": 72.37241666666667,
       "reasonsUse": "Reason to Use: Safe on Crop",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.37241666666667,
+      "longitude": 72.37241666666667,
+      "latitude": 32.09686111111111
     },
     {
       "sn": 15,
@@ -612,7 +711,10 @@
       "lat": 32.56891666666667,
       "lon": 73.95258333333334,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 73.95258333333334,
+      "longitude": 73.95258333333334,
+      "latitude": 32.56891666666667
     },
     {
       "sn": 15,
@@ -630,7 +732,10 @@
       "lat": 32.56711111111112,
       "lon": 74.15591666666667,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 74.15591666666667,
+      "longitude": 74.15591666666667,
+      "latitude": 32.56711111111112
     },
     {
       "sn": 15,
@@ -648,7 +753,10 @@
       "lat": 32.60413888888889,
       "lon": 74.1583888888889,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 74.1583888888889,
+      "longitude": 74.1583888888889,
+      "latitude": 32.60413888888889
     },
     {
       "sn": 16,
@@ -666,7 +774,10 @@
       "lat": 32.73544444444445,
       "lon": 72.83874999999999,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.83874999999999,
+      "longitude": 72.83874999999999,
+      "latitude": 32.73544444444445
     },
     {
       "sn": 16,
@@ -684,7 +795,10 @@
       "lat": 32.72888888888889,
       "lon": 72.91519444444445,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.91519444444445,
+      "longitude": 72.91519444444445,
+      "latitude": 32.72888888888889
     },
     {
       "sn": 17,
@@ -702,7 +816,10 @@
       "lat": 30.828333333333333,
       "lon": 72.5971111111111,
       "reasonsUse": "Reason to use: Have Trust in Bayer",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.5971111111111,
+      "longitude": 72.5971111111111,
+      "latitude": 30.828333333333333
     },
     {
       "sn": 17,
@@ -720,7 +837,10 @@
       "lat": 30.870583333333332,
       "lon": 72.47413888888889,
       "reasonsUse": "Reason to Use: Good Past Experience",
-      "reasonsNo": "Reason Not to Use: Price Too High"
+      "reasonsNo": "Reason Not to Use: Price Too High",
+      "lng": 72.47413888888889,
+      "longitude": 72.47413888888889,
+      "latitude": 30.870583333333332
     },
     {
       "sn": 17,

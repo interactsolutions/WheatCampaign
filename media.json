@@ -3,17 +3,13 @@
   "basePath": "assets/gallery/",
   "defaults": {
     "mainVideoExt": "mp4",
-    "mainImageExt": "jpg",
-    "variantImageExt": "jpg",
+    "mainImageExt": "jpeg",
+    "variantImageExt": "jpeg",
     "variantVideoExt": "mp4",
     "variants": [
-      "a",
-      "b",
-      "c",
-      "d",
-      "e",
-      "f"
-    ]
+      "a"
+    ],
+    "primaryVariant": "a"
   },
   "sessions": [
     {

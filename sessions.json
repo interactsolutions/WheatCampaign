@@ -22,7 +22,15 @@
       "lng": 69.81658333333333,
       "longitude": 69.81658333333333,
       "latitude": 28.153666666666666
-    },
+    }, {
+  "sn": 17,
+  "city": "Toba Tek Singh",
+  "spot": "Village A",
+  "lat": 30.9716,
+  "lng": 72.4827,
+  "acres": 120
+}
+
     {
       "sn": 1,
       "city": "Ubaro",

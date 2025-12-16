@@ -302,21 +302,31 @@ const el = {
   }
 
   async function loadSessionsPreferred() {
-    // 1) sessions.json
+    // 1) sessions.json (repo root)
     try {
       setLoadingStatus('Loading sessions.json…');
       const payload = await fetchJson(CONFIG.sessionsJson);
       const sessions = (payload.sessions || payload.data || payload || []);
       if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('sessions.json is empty or invalid.');
       return sessions.map(normalizeSession);
-    } catch (e) {
-      // keep error; fallback to xlsx
-      logDiag(`sessions.json failed: ${e.message}`);
-      return null;
+    } catch (e1) {
+      logDiag(`sessions.json failed: ${e1.message}`);
+
+      // 2) assets/sessions.json (common alternate placement)
+      try {
+        setLoadingStatus('Loading assets/sessions.json…');
+        const payload = await fetchJson('assets/sessions.json');
+        const sessions = (payload.sessions || payload.data || payload || []);
+        if (!Array.isArray(sessions) || sessions.length === 0) throw new Error('assets/sessions.json is empty or invalid.');
+        return sessions.map(normalizeSession);
+      } catch (e2) {
+        logDiag(`assets/sessions.json failed: ${e2.message}`);
+        return null;
+      }
     }
   }
 
-  function getSheetCell(sheet, r, c) {
+function getSheetCell(sheet, r, c) {
     const addr = XLSX.utils.encode_cell({ r, c });
     const cell = sheet[addr];
     return cell ? cell.v : undefined;
@@ -580,40 +590,68 @@ const el = {
       const date = safeStr(s.date);
       const theme = safeStr(s.theme);
 
-      // Main video + main image (always emitted; UI will gracefully fall back when assets are missing)
+      // Main video + main image (emitted with multi-candidate fallbacks to match common GitHub naming)
+      const key = `${date}|${city}|${spot}`;
+
+      const imgExts = uniq([String(mainImageExt || 'jpg').toLowerCase(), 'jpeg', 'jpg', 'png']);
+      const vidExts = uniq([String(mainVideoExt || 'mp4').toLowerCase(), 'mp4']);
+
+      // Many repos store files as 1a.jpeg / 1a.mp4 (no underscore) OR 1_a.jpg; try both, then plain 1.jpg
+      const mainSuffixes = ['a', '_a', ''];
+
+      const buildCandidates = (suffixes, exts) => {
+        const out = [];
+        for (const suf of suffixes) {
+          for (const ext of exts) out.push(`${basePath}${id}${suf}.${ext}`);
+        }
+        return out;
+      };
+
+      const mainVideoCandidates = buildCandidates(mainSuffixes, vidExts);
+      const mainImageCandidates = buildCandidates(mainSuffixes, imgExts);
+
       items.push({
         sessionId: id,
-        key: `${date}|${city}|${spot}`,
+        key,
         type: 'video',
-        src: `${basePath}${id}.${mainVideoExt}`,
-        caption,
-        transcript,
-        theme,
-        city, spot, date
-      });
-      items.push({
-        sessionId: id,
-        key: `${date}|${city}|${spot}`,
-        type: 'image',
-        src: `${basePath}${id}.${mainImageExt}`,
+        srcCandidates: mainVideoCandidates,
+        src: mainVideoCandidates[0],
         caption,
         transcript,
         theme,
         city, spot, date
       });
 
-      // Variant images (cheap + useful)
-      for (const v of variants) {
-        items.push({
-          sessionId: id,
-          key: `${date}|${city}|${spot}`,
-          type: 'image',
-          src: `${basePath}${id}_${v}.${variantImageExt}`,
-          caption: `${caption} (Variant ${v})`,
-          transcript,
-          theme,
-          city, spot, date
-        });
+      items.push({
+        sessionId: id,
+        key,
+        type: 'image',
+        srcCandidates: mainImageCandidates,
+        src: mainImageCandidates[0],
+        caption,
+        transcript,
+        theme,
+        city, spot, date
+      });
+// Variant images (only if provided in media.json; keep this list small to avoid placeholders)
+      if (variants.length) {
+        const vImgExts = uniq([String(variantImageExt || mainImageExt || 'jpg').toLowerCase(), ...imgExts]);
+        for (const v of variants) {
+          const vSuffixes = [String(v), `_${String(v)}`];
+          const vCandidates = buildCandidates(vSuffixes, vImgExts);
+
+          items.push({
+            sessionId: id,
+            key: `${date}|${city}|${spot}`,
+            type: 'image',
+            srcCandidates: vCandidates,
+            src: vCandidates[0],
+            caption: `${caption} (Variant ${v})`,
+            transcript,
+            theme,
+            city, spot, date
+          });
+        }
       }
 
       // Optional variant videos (often missing; disabled by default)
@@ -636,9 +674,7 @@ const el = {
   }
 
   async function loadMedia(sessions) {
-    try {
-      setLoadingStatus('Loading media.json…');
-      const payload = await fetchJson(CONFIG.mediaJson);
+    const parsePayload = (payload) => {
       let items = [];
       if (payload && payload.format === 'A_compact') {
         items = expandMediaCompact(payload);
@@ -648,8 +684,10 @@ const el = {
           sessionId: safeStr(x.sessionId || x.session || ''),
           type: safeStr(x.type || 'image'),
           src: safeStr(x.src || ''),
+          srcCandidates: Array.isArray(x.srcCandidates) ? x.srcCandidates : undefined,
           caption: safeStr(x.caption || ''),
           transcript: safeStr(x.transcript || ''),
+          theme: safeStr(x.theme || ''),
           city: safeStr(x.city || ''),
           spot: safeStr(x.spot || ''),
           date: safeStr(x.date || '')
@@ -657,52 +695,29 @@ const el = {
       } else if (payload && Array.isArray(payload.items)) {
         items = payload.items;
       }
+      return items;
+    };
 
-      // If sessionId missing, infer from filename prefix (e.g., "11_a.jpg" -> "11")
-      for (const it of items) {
-        if (!it.sessionId && it.src) {
-          const m = it.src.match(/\/(\d+)[._]/) || it.src.match(/^(\d+)[._]/);
-          if (m) it.sessionId = m[1];
-        }
-        if (!it.caption) it.caption = it.sessionId ? `Session ${it.sessionId}` : 'Media';
+    const attempt = async (url, label) => {
+      setLoadingStatus(`Loading ${label}…`);
+      const payload = await fetchJson(url);
+      return parsePayload(payload);
+    };
+
+    try {
+      return await attempt(CONFIG.mediaJson, 'media.json');
+    } catch (e1) {
+      logDiag(`media.json failed: ${e1.message}`);
+      try {
+        return await attempt('assets/media.json', 'assets/media.json');
+      } catch (e2) {
+        logDiag(`assets/media.json failed: ${e2.message}`);
+        return [];
       }
-
-      // Build lookup
-      const by = new Map();
-      for (const it of items) {
-        const k = it.sessionId || '';
-        if (!k) continue;
-        if (!by.has(k)) by.set(k, []);
-        by.get(k).push(it);
-      }
-
-      // Keep only sessions that exist in data OR have identifiable fields
-      const knownSessionIds = new Set(sessions.map(s => s.sn).filter(Boolean));
-      const filteredItems = items.filter(it => it.sessionId && knownSessionIds.has(String(it.sessionId)));
-
-      state.mediaItems = filteredItems;
-      state.mediaBySessionId = by;
-      // Secondary index for exact (date|city|spot) matching
-      const byKey = new Map();
-      for (const it of filteredItems) {
-        const k = it.key || `${safeStr(it.date)}|${safeStr(it.city)}|${safeStr(it.spot)}`;
-        if (!byKey.has(k)) byKey.set(k, []);
-        byKey.get(k).push(it);
-      }
-      state.mediaByKey = byKey;
-
-      return filteredItems;
-    } catch (e) {
-      logDiag(`media.json failed: ${e.message}`);
-      state.mediaItems = [];
-      state.mediaBySessionId = new Map();
-      return [];
     }
   }
 
-  // ---------------------------
-  // Rendering: KPIs, charts, table
-  // ---------------------------
+
   function sum(arr, fn) {
     return arr.reduce((acc, x) => {
       const v = fn(x);
@@ -1275,68 +1290,31 @@ const el = {
   }
 
   function makeMediaNode(it, mute=false, opts={ controls:false }) {
-    const src = it.src || placeholderCandidate(0) || INLINE_PLACEHOLDER;
+    const candidates = normalizeCandidates((it && (it.srcCandidates || it.src)) || []);
+    const caption = (it && it.caption) ? it.caption : '';
 
-    if (it.type === 'video') {
+    if (it && it.type === 'video') {
       const v = document.createElement('video');
-      v.src = src;
       v.muted = true;
       v.loop = true;
       v.playsInline = true;
-      v.autoplay = mute;
+      v.autoplay = !!mute;
       v.controls = !!opts.controls;
+      v.preload = 'metadata';
 
-      v.addEventListener('error', () => {
-        // fallback to image placeholder
-        v.replaceWith(makeImageNode(placeholderCandidate(0) || placeholderCandidate(1) || INLINE_PLACEHOLDER, it.caption));
+      // Try candidate video paths; if all fail, fall back to an image placeholder
+      tryNextSrc(v, candidates, () => {
+        v.replaceWith(makeImageNode([placeholderCandidate(0), placeholderCandidate(1), INLINE_PLACEHOLDER], caption));
       });
+
       return v;
     }
-    return makeImageNode(src, it.caption);
+
+    // Image
+    return makeImageNode(candidates.length ? candidates : (it ? it.src : ''), caption);
   }
 
-  function makeImageNode(src, alt='') {
-    const img = document.createElement('img');
-    img.src = src || placeholderCandidate(0) || INLINE_PLACEHOLDER;
-    img.alt = alt || '';
-    img.loading = 'lazy';
-
-    img.addEventListener('error', () => {
-      const p0 = placeholderCandidate(0);
-      const p1 = placeholderCandidate(1);
-
-      if (img.src.endsWith(p0) && p1) { img.src = p1; return; }
-      if (p1 && img.src.endsWith(p1)) { img.src = INLINE_PLACEHOLDER; return; }
-
-      // fallback path for any failing media
-      img.src = p0 || p1 || INLINE_PLACEHOLDER;
-    });
-
-    return img;
-  }
-
-  function renderGallery(rows) {
-    if (!el.gallery) return;
-    const items = buildGalleryList(rows);
-    el.gallery.innerHTML = '';
-
-    items.forEach((it, idx) => {
-      const tile = document.createElement('div');
-      tile.className = 'mediaTile';
-      tile.dataset.index = String(idx);
-      tile.appendChild(makeMediaNode(it, false));
-
-      const tag = document.createElement('div');
-      tag.className = 'mediaTag';
-      tag.textContent = it.caption || `Session ${it.sessionId || ''}`;
-      tile.appendChild(tag);
-
-      tile.addEventListener('click', () => openLightbox(items, idx));
-      el.gallery.appendChild(tile);
-    });
-  }
-
-  function openLightbox(items, index) {
+function openLightbox(items, index) {
     state.lightbox.items = items;
     state.lightbox.index = index;
     renderLightbox();

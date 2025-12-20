@@ -7,36 +7,18 @@
 (() => {
   'use strict';
 
-/* --- Fix 1: Remove the loose fetch at the top and replace with a unified init --- */
-
-// ---------------------------
-// Media Parsing Logic (Crucial for A_compact format)
-// ---------------------------
-function expandMediaCompact(payload) {
-    const basePath = payload.basePath || '';
-    const items = [];
-    
-    if (!payload.sessions) return [];
-
-    payload.sessions.forEach(s => {
-        const id = String(s.id);
-        // AgriVista specific naming: {id}a.jpeg and {id}a.mp4
-        // Logic to handle the "A_compact" mapping
-        items.push({
-            sessionId: id,
-            type: 'video',
-            src: `${basePath}${id}a.mp4`,
-            caption: s.caption || `Session ${id}`
-        });
-        items.push({
-            sessionId: id,
-            type: 'image',
-            src: `${basePath}${id}a.jpeg`,
-            caption: s.caption || `Session ${id}`
-        });
-    });
-    return items;
-}
+  // ---------------------------
+  // Config (you can edit safely)
+  // ---------------------------
+  const CONFIG = {
+    sessionsJson: 'sessions.json',
+    mediaJson: 'media.json',
+    xlsxFallback: 'Buctril_Super_Activations.xlsx',
+    heroVideo: 'assets/bg.mp4',
+    placeholder: 'assets/placeholder.svg',
+    maxShowcase: 5,
+    maxGallery: 48
+  };
 
   // ---------------------------
   // DOM helpers
@@ -55,7 +37,7 @@ function expandMediaCompact(payload) {
     summary: $('#filterSummary'),
 
     filterCity: $('#filter-city'),
-    filterSpot: $('#filter-district') || $('#filter-spot'),
+    filterSpot: $('#filter-spot'),
     filterFrom: $('#filter-date-from'),
     filterTo: $('#filter-date-to'),
     filterSearch: $('#filter-search'),
@@ -757,7 +739,7 @@ function expandMediaCompact(payload) {
 
     renderReasons(rows);
 
-    // Showcase: attempt to show pinned session media, else first sessions’ media
+    // Showcase: attempt to show pinned session media, else first sessions' media
     const ids = [];
     if (state.pinnedSession?.sn) ids.push(String(state.pinnedSession.sn));
     for (const r of rows) {
@@ -783,7 +765,7 @@ function expandMediaCompact(payload) {
     destroyChart(state.charts.city);
     state.charts.city = new Chart(el.chartCity, {
       type: 'doughnut',
-      data: { labels: cityLabels, datasets: [{ data: cityVals }] },
+      data: { labels: cityLabels, datasets: [{ data: cityVals, backgroundColor: ['#7dd3fc', '#86efac', '#fbbf24', '#a78bfa', '#f472b6'] }] },
       options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ color:'#e7edf7' } } } }
     });
 
@@ -795,7 +777,7 @@ function expandMediaCompact(payload) {
     destroyChart(state.charts.intent);
     state.charts.intent = new Chart(el.chartIntent, {
       type: 'pie',
-      data: { labels: ['Definite','Maybe','Not Interested'], datasets: [{ data: [sumDef, sumMay, sumNo] }] },
+      data: { labels: ['Definite','Maybe','Not Interested'], datasets: [{ data: [sumDef, sumMay, sumNo], backgroundColor: ['#86efac', '#fbbf24', '#fb7185'] }] },
       options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ color:'#e7edf7' } } } }
     });
 
@@ -819,8 +801,8 @@ function expandMediaCompact(payload) {
       data: {
         labels: dates.map(d => fmt.date(d)),
         datasets: [
-          { label:'Farmers', data: farmersSeries, tension:.25 },
-          { label:'Wheat Acres', data: acresSeries, tension:.25 }
+          { label:'Farmers', data: farmersSeries, tension:.25, borderColor: '#7dd3fc', backgroundColor: 'rgba(125,211,252,0.1)' },
+          { label:'Wheat Acres', data: acresSeries, tension:.25, borderColor: '#86efac', backgroundColor: 'rgba(134,239,172,0.1)' }
         ]
       },
       options: {
@@ -933,8 +915,7 @@ function expandMediaCompact(payload) {
       }).addTo(state.map);
 
       c.on('click', () => {
-        state.pinned = r;
-        renderPinned(r);
+        pinSession(r, { openMedia:true, focusMap:true });
       });
 
       const html = `<div class="popup">

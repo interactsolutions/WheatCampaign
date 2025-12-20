@@ -7,28 +7,36 @@
 (() => {
   'use strict';
 
-  // ---------------------------
-  // Config (you can edit safely)
-  // ---------------------------
-  const CONFIG = {
-    sessionsJson: 'sessions.json',
-    mediaJson: 'media.json',
-    xlsxFallback: 'Buctril_Super_Activations.xlsx',
-    heroVideo: 'assets/bg.mp4',
-    placeholder: 'assets/placeholder.svg',
-    maxShowcase: 5,
-    maxGallery: 48
-  };
-// Fetch and display media
-fetch("media.json")
-  .then((r) => r.json())
-  .then((media) => {
-    window.__media = media; // debug
-    // Add logic to render media here
-  })
-  .catch((err) => {
-    console.error("Failed to load media.json", err);
-  });
+/* --- Fix 1: Remove the loose fetch at the top and replace with a unified init --- */
+
+// ---------------------------
+// Media Parsing Logic (Crucial for A_compact format)
+// ---------------------------
+function expandMediaCompact(payload) {
+    const basePath = payload.basePath || '';
+    const items = [];
+    
+    if (!payload.sessions) return [];
+
+    payload.sessions.forEach(s => {
+        const id = String(s.id);
+        // AgriVista specific naming: {id}a.jpeg and {id}a.mp4
+        // Logic to handle the "A_compact" mapping
+        items.push({
+            sessionId: id,
+            type: 'video',
+            src: `${basePath}${id}a.mp4`,
+            caption: s.caption || `Session ${id}`
+        });
+        items.push({
+            sessionId: id,
+            type: 'image',
+            src: `${basePath}${id}a.jpeg`,
+            caption: s.caption || `Session ${id}`
+        });
+    });
+    return items;
+}
 
   // ---------------------------
   // DOM helpers

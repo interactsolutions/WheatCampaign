@@ -3,7 +3,6 @@
    - Falls back to XLSX parsing (Buctril_Super_Activations.xlsx) if sessions.json missing
    - Media reads media.json (A_compact format) and auto-falls back to placeholder when assets are missing
 */
-
 (() => {
   'use strict';
 
@@ -19,6 +18,7 @@
     maxShowcase: 5,
     maxGallery: 48
   };
+
 
   // ---------------------------
   // DOM helpers

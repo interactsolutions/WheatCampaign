@@ -14,280 +14,153 @@
       "caption": "Ubaro — Ameen khan Chacharr (2025-11-24)",
       "city": "Ubaro",
       "spot": "Ameen khan Chacharr",
-      "date": "2025-11-24"
-    },
-    {
-      "id": "1",
-      "caption": "Ubaro — Naseer Dhondo (2025-11-24)",
-      "city": "Ubaro",
-      "spot": "Naseer Dhondo",
-      "date": "2025-11-24"
+      "date": "2025-11-24",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "2",
       "caption": "Dharki — Matal Mahar (2025-11-25)",
       "city": "Dharki",
       "spot": "Matal Mahar",
-      "date": "2025-11-25"
-    },
-    {
-      "id": "2",
-      "caption": "Dharki — Abdullah Rajni (2025-11-25)",
-      "city": "Dharki",
-      "spot": "Abdullah Rajni",
-      "date": "2025-11-25"
+      "date": "2025-11-25",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "3",
       "caption": "Ghotki — Abdullah Laakhan (2025-11-26)",
       "city": "Ghotki",
       "spot": "Abdullah Laakhan",
-      "date": "2025-11-26"
-    },
-    {
-      "id": "3",
-      "caption": "Ghotki — M. Qasim Ghooto (2025-11-26)",
-      "city": "Ghotki",
-      "spot": "M. Qasim Ghooto",
-      "date": "2025-11-26"
+      "date": "2025-11-26",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "4",
       "caption": "Ghotki — Darri Chachar (2025-11-27)",
       "city": "Ghotki",
       "spot": "Darri Chachar",
-      "date": "2025-11-27"
-    },
-    {
-      "id": "4",
-      "caption": "Ghotki — Kalati Gabol (2025-11-27)",
-      "city": "Ghotki",
-      "spot": "Kalati Gabol",
-      "date": "2025-11-27"
+      "date": "2025-11-27",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "5",
       "caption": "Jaferabad — Haji Darya Khan (2025-11-28)",
       "city": "Jaferabad",
       "spot": "Haji Darya Khan",
-      "date": "2025-11-28"
-    },
-    {
-      "id": "5",
-      "caption": "Jaferabad — Qaeim Khan Khossa 2 (2025-11-28)",
-      "city": "Jaferabad",
-      "spot": "Qaeim Khan Khossa 2",
-      "date": "2025-11-28"
+      "date": "2025-11-28",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "6",
       "caption": "Ranipur — Allah Wadhayo (2025-11-29)",
       "city": "Ranipur",
       "spot": "Allah Wadhayo",
-      "date": "2025-11-29"
-    },
-    {
-      "id": "6",
-      "caption": "Ranipur — Haji Khabar Malaha (2025-11-29)",
-      "city": "Ranipur",
-      "spot": "Haji Khabar Malaha",
-      "date": "2025-11-29"
+      "date": "2025-11-29",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "7",
       "caption": "Mehrabpur — Saein Daad Marri (2025-12-01)",
       "city": "Mehrabpur",
       "spot": "Saein Daad Marri",
-      "date": "2025-12-01"
-    },
-    {
-      "id": "7",
-      "caption": "Mehrabpur — Pir Watiyo (2025-12-01)",
-      "city": "Mehrabpur",
-      "spot": "Pir Watiyo",
-      "date": "2025-12-01"
+      "date": "2025-12-01",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "8",
       "caption": "Dadu — Manali (2025-12-02)",
       "city": "Dadu",
       "spot": "Manali",
-      "date": "2025-12-02"
-    },
-    {
-      "id": "8",
-      "caption": "Dadu — Golo Potho (2025-12-02)",
-      "city": "Dadu",
-      "spot": "Golo Potho",
-      "date": "2025-12-02"
+      "date": "2025-12-02",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "9",
       "caption": "Muzaffar Ghar — Bassti Seerein (2025-12-03)",
       "city": "Muzaffar Ghar",
       "spot": "Bassti Seerein",
-      "date": "2025-12-03"
-    },
-    {
-      "id": "9",
-      "caption": "Muzaffar Ghar — Topi Maanay wali (2025-12-03)",
-      "city": "Muzaffar Ghar",
-      "spot": "Topi Maanay wali",
-      "date": "2025-12-03"
-    },
-    {
-      "id": "9",
-      "caption": "Muzaffar Ghar — Phaty wala (2025-12-03)",
-      "city": "Muzaffar Ghar",
-      "spot": "Phaty wala",
-      "date": "2025-12-03"
+      "date": "2025-12-03",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "10",
       "caption": "Kot Adu — Basti Haider Ghazi (2025-12-04)",
       "city": "Kot Adu",
       "spot": "Basti Haider Ghazi",
-      "date": "2025-12-04"
-    },
-    {
-      "id": "10",
-      "caption": "Kot Adu — Hanjrai Bangla Chaah Phaati wala (2025-12-04)",
-      "city": "Kot Adu",
-      "spot": "Hanjrai Bangla Chaah Phaati wala",
-      "date": "2025-12-04"
+      "date": "2025-12-04",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "11",
       "caption": "Karor Lal esan — Basti joya (2025-12-05)",
       "city": "Karor Lal esan",
       "spot": "Basti joya",
-      "date": "2025-12-05"
-    },
-    {
-      "id": "11",
-      "caption": "Karor Lal esan — Chak 106 TDA (2025-12-05)",
-      "city": "Karor Lal esan",
-      "spot": "Chak 106 TDA",
-      "date": "2025-12-05"
-    },
-    {
-      "id": "11",
-      "caption": "Karor Lal esan — Bassti Maachi Buchi wala (2025-12-05)",
-      "city": "Karor Lal esan",
-      "spot": "Bassti Maachi Buchi wala",
-      "date": "2025-12-05"
+      "date": "2025-12-05",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "12",
       "caption": "Bhakkar — Kandani (2025-12-06)",
       "city": "Bhakkar",
       "spot": "Kandani",
-      "date": "2025-12-06"
-    },
-    {
-      "id": "12",
-      "caption": "Bhakkar — 54-ML (2025-12-06)",
-      "city": "Bhakkar",
-      "spot": "54-ML",
-      "date": "2025-12-06"
-    },
-    {
-      "id": "12",
-      "caption": "Bhakkar — Majoka (2025-12-06)",
-      "city": "Bhakkar",
-      "spot": "Majoka",
-      "date": "2025-12-06"
+      "date": "2025-12-06",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "13",
       "caption": "Mianwali — Kalor Sharif Kacha (2025-12-08)",
       "city": "Mianwali",
       "spot": "Kalor Sharif Kacha",
-      "date": "2025-12-08"
-    },
-    {
-      "id": "13",
-      "caption": "Mianwali — Kamar Mashaani Gulshan Colony (2025-12-08)",
-      "city": "Mianwali",
-      "spot": "Kamar Mashaani Gulshan Colony",
-      "date": "2025-12-08"
-    },
-    {
-      "id": "13",
-      "caption": "Mianwali — Daud KhaiL kacha (2025-12-08)",
-      "city": "Mianwali",
-      "spot": "Daud KhaiL kacha",
-      "date": "2025-12-08"
+      "date": "2025-12-08",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "14",
       "caption": "Sargodha — Jharoola (2025-12-09)",
       "city": "Sargodha",
       "spot": "Jharoola",
-      "date": "2025-12-09"
-    },
-    {
-      "id": "14",
-      "caption": "Sargodha — Habib pur Kangrra (2025-12-09)",
-      "city": "Sargodha",
-      "spot": "Habib pur Kangrra",
-      "date": "2025-12-09"
-    },
-    {
-      "id": "14",
-      "caption": "Sargodha — ChakrraLa (2025-12-09)",
-      "city": "Sargodha",
-      "spot": "ChakrraLa",
-      "date": "2025-12-09"
+      "date": "2025-12-09",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "15",
       "caption": "Phalia — Machyana (2025-12-10)",
       "city": "Phalia",
       "spot": "Machyana",
-      "date": "2025-12-10"
-    },
-    {
-      "id": "15",
-      "caption": "Phalia — Sheikh Pur (2025-12-10)",
-      "city": "Phalia",
-      "spot": "Sheikh Pur",
-      "date": "2025-12-10"
-    },
-    {
-      "id": "15",
-      "caption": "Phalia — Baghwal (2025-12-10)",
-      "city": "Phalia",
-      "spot": "Baghwal",
-      "date": "2025-12-10"
+      "date": "2025-12-10",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "16",
       "caption": "Chakwal — Daleel Pur Khokhar Baala (2025-12-11)",
       "city": "Chakwal",
       "spot": "Daleel Pur Khokhar Baala",
-      "date": "2025-12-11"
-    },
-    {
-      "id": "16",
-      "caption": "Chakwal — DawaalmiaaL (2025-12-11)",
-      "city": "Chakwal",
-      "spot": "DawaalmiaaL",
-      "date": "2025-12-11"
+      "date": "2025-12-11",
+      "hasVideo": true,
+      "hasImages": true
     },
     {
       "id": "17",
       "caption": "Toba take singh — Chak 262-GB (2025-12-12)",
       "city": "Toba take singh",
       "spot": "Chak 262-GB",
-      "date": "2025-12-12"
-    },
-    {
-      "id": "17",
-      "caption": "Toba take singh — Chak 338 GB (2025-12-12)",
-      "city": "Toba take singh",
-      "spot": "Chak 338 GB",
-      "date": "2025-12-12"
+      "date": "2025-12-12",
+      "hasVideo": true,
+      "hasImages": true
     }
   ]
 }

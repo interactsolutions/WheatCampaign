@@ -2,55 +2,65 @@
   "campaign": "Buttril Super Field Activations",
   "totalMedia": 48,
   "mediaItems": [
+    // --- ASSETS FOR HEADER/FOOTER/BACKGROUND ---
     {
       "id": 1,
       "filename": "assets/Bayer.png",
       "caption": "Bayer Logo",
       "type": "logo",
-      "category": "brand"
+      "category": "brand",
+      "displayIn": "header"
     },
     {
       "id": 2,
       "filename": "assets/Buctril.jpg",
       "caption": "Buttril Super Product",
       "type": "product",
-      "category": "brand"
+      "category": "brand",
+      "displayIn": "header"
     },
     {
       "id": 3,
       "filename": "assets/Interact.gif",
       "caption": "Interact Solutions Animation",
       "type": "animation",
-      "category": "brand"
+      "category": "brand",
+      "displayIn": "header"
     },
     {
       "id": 4,
       "filename": "assets/poductts.jpg",
       "caption": "Product Range Display",
       "type": "product",
-      "category": "brand"
+      "category": "brand",
+      "displayIn": "header"
     },
     {
       "id": 5,
       "filename": "assets/Atlantis.jpg",
       "caption": "Atlantis Herbicide Reference",
       "type": "reference",
-      "category": "brand"
+      "category": "brand",
+      "displayIn": "header"
     },
     {
       "id": 6,
       "filename": "assets/bg.mp4",
       "caption": "Campaign Background Video",
       "type": "video",
-      "category": "background"
+      "category": "background",
+      "displayIn": "background"
     },
     {
       "id": 7,
       "filename": "assets/placeholder.svg",
       "caption": "Default Placeholder Image",
       "type": "placeholder",
-      "category": "utility"
+      "category": "utility",
+      "displayIn": "fallback"
     },
+
+    // --- GALLERY IMAGES - SUKKUR REGION ---
     {
       "id": 8,
       "filename": "gallery/sukkur_session1_1.jpg",
@@ -58,7 +68,8 @@
       "date": "2025-11-24",
       "city": "sukkur",
       "sessionId": 1,
-      "type": "event"
+      "type": "event",
+      "displayIn": "gallery"
     },
     {
       "id": 9,
@@ -67,340 +78,407 @@
       "date": "2025-11-24",
       "city": "sukkur",
       "sessionId": 1,
-      "type": "demonstration"
+      "type": "demonstration",
+      "displayIn": "gallery"
     },
     {
       "id": 10,
       "filename": "gallery/sukkur_session2_1.jpg",
-      "caption": "Field visit with farmers",
+      "caption": "Field visit with farmers in Pano Aqil",
       "date": "2025-11-25",
       "city": "sukkur",
       "sessionId": 2,
-      "type": "field"
+      "type": "field",
+      "displayIn": "gallery"
     },
     {
       "id": 11,
       "filename": "gallery/sukkur_session3_1.jpg",
-      "caption": "Group discussion session",
+      "caption": "Group discussion session in Rohri",
       "date": "2025-11-26",
       "city": "sukkur",
       "sessionId": 3,
-      "type": "discussion"
+      "type": "discussion",
+      "displayIn": "gallery"
     },
     {
       "id": 12,
       "filename": "gallery/sukkur_session4_1.jpg",
-      "caption": "Training workshop in progress",
+      "caption": "Training workshop in Salehpat",
       "date": "2025-11-27",
       "city": "sukkur",
       "sessionId": 4,
-      "type": "training"
+      "type": "training",
+      "displayIn": "gallery"
     },
     {
       "id": 13,
       "filename": "gallery/sukkur_session5_1.jpg",
-      "caption": "Crop inspection with experts",
+      "caption": "Crop inspection in Kot Diji",
       "date": "2025-11-28",
       "city": "sukkur",
       "sessionId": 5,
-      "type": "inspection"
+      "type": "inspection",
+      "displayIn": "gallery"
     },
     {
       "id": 14,
       "filename": "gallery/sukkur_session6_1.jpg",
-      "caption": "Distribution of product samples",
+      "caption": "Distribution in Khairpur",
       "date": "2025-11-29",
       "city": "sukkur",
       "sessionId": 6,
-      "type": "distribution"
+      "type": "distribution",
+      "displayIn": "gallery"
     },
     {
       "id": 15,
       "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
+      "caption": "Q&A session in Gambat",
       "date": "2025-11-30",
       "city": "sukkur",
       "sessionId": 7,
-      "type": "interaction"
-    },  {
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
       "id": 16,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session8_1.jpg",
+      "caption": "Expert consultation in Sobho Dero",
+      "date": "2025-12-01",
       "city": "sukkur",
       "sessionId": 8,
-      "type": "interaction"
-    },  {
+      "type": "consultation",
+      "displayIn": "gallery"
+    },
+    {
       "id": 17,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session9_1.jpg",
+      "caption": "Field demo in Khanpur",
+      "date": "2025-12-02",
       "city": "sukkur",
       "sessionId": 9,
-      "type": "interaction"
-    },  {
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
       "id": 18,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session10_1.jpg",
+      "caption": "Farmers taking notes in Naudero",
+      "date": "2025-12-03",
       "city": "sukkur",
       "sessionId": 10,
-      "type": "interaction"
-    },  {
+      "type": "education",
+      "displayIn": "gallery"
+    },
+    {
       "id": 19,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session11_1.jpg",
+      "caption": "Soil analysis in Larkana",
+      "date": "2025-12-04",
       "city": "sukkur",
       "sessionId": 11,
-      "type": "interaction"
-    },  {
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
       "id": 20,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session12_1.jpg",
+      "caption": "Group photo in Shikarpur",
+      "date": "2025-12-05",
       "city": "sukkur",
       "sessionId": 12,
-      "type": "interaction"
-    },  {
+      "type": "group",
+      "displayIn": "gallery"
+    },
+    {
       "id": 21,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session13_1.jpg",
+      "caption": "Seasonal planning in Jacobabad",
+      "date": "2025-12-06",
       "city": "sukkur",
       "sessionId": 13,
-      "type": "interaction"
-    },  {
+      "type": "planning",
+      "displayIn": "gallery"
+    },
+    {
       "id": 22,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session14_1.jpg",
+      "caption": "Resource management in Kashmore",
+      "date": "2025-12-07",
       "city": "sukkur",
       "sessionId": 14,
-      "type": "interaction"
-    },  {
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
       "id": 23,
-      "filename": "gallery/sukkur_session7_1.jpg",
-      "caption": "Q&A session with farmers",
-      "date": "2025-11-30",
+      "filename": "gallery/sukkur_session15_1.jpg",
+      "caption": "Closing session in Thull",
+      "date": "2025-12-08",
       "city": "sukkur",
       "sessionId": 15,
-      "type": "interaction"
+      "type": "closing",
+      "displayIn": "gallery"
     },
+
+    // --- GALLERY IMAGES - DERA GHAZI KHAN REGION ---
     {
       "id": 24,
       "filename": "gallery/dgk_session1_1.jpg",
-      "caption": "DGK farmer education drive",
+      "caption": "DGK farmer education drive in Taunsa",
       "date": "2025-12-01",
       "city": "dgk",
       "sessionId": 16,
-      "type": "event"
+      "type": "event",
+      "displayIn": "gallery"
     },
     {
       "id": 25,
       "filename": "gallery/dgk_session2_1.jpg",
-      "caption": "Practical field demonstration",
+      "caption": "Practical demo in Kot Chutta",
       "date": "2025-12-02",
       "city": "dgk",
       "sessionId": 17,
-      "type": "demonstration"
+      "type": "demonstration",
+      "displayIn": "gallery"
     },
     {
       "id": 26,
       "filename": "gallery/dgk_session3_1.jpg",
-      "caption": "Expert addressing farmers",
+      "caption": "Expert talk in DG Khan City",
       "date": "2025-12-03",
       "city": "dgk",
       "sessionId": 18,
-      "type": "presentation"
+      "type": "presentation",
+      "displayIn": "gallery"
     },
     {
       "id": 27,
       "filename": "gallery/dgk_session4_1.jpg",
-      "caption": "Farmers taking notes",
+      "caption": "High altitude farming in Fort Munro",
       "date": "2025-12-04",
       "city": "dgk",
       "sessionId": 19,
-      "type": "training"
+      "type": "field",
+      "displayIn": "gallery"
     },
     {
       "id": 28,
       "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
+      "caption": "Irrigation methods in Jampur",
       "date": "2025-12-05",
       "city": "dgk",
       "sessionId": 20,
-      "type": "group"
-    },     {
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
       "id": 29,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-05",
+      "filename": "gallery/dgk_session6_1.jpg",
+      "caption": "Large scale farming in Kot Addu",
+      "date": "2025-12-06",
       "city": "dgk",
       "sessionId": 21,
-      "type": "group"
-    },     {
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
       "id": 30,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-05",
+      "filename": "gallery/dgk_session7_1.jpg",
+      "caption": "Soil management in Layyah",
+      "date": "2025-12-07",
       "city": "dgk",
       "sessionId": 22,
-      "type": "group"
-    },     {
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
       "id": 31,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-05",
+      "filename": "gallery/dgk_session8_1.jpg",
+      "caption": "Pest control in Muzaffargarh",
+      "date": "2025-12-08",
       "city": "dgk",
       "sessionId": 23,
-      "type": "group"
-    },     {
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
       "id": 32,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-05",
+      "filename": "gallery/dgk_session9_1.jpg",
+      "caption": "Border area farming in Rajanpur",
+      "date": "2025-12-09",
       "city": "dgk",
       "sessionId": 24,
-      "type": "group"
-    },     {
-      "id": 33,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-11-24",
-      "city": "Ubaro",
-      "sessionId": 25,
-      "type": "group"
+      "type": "field",
+      "displayIn": "gallery"
     },
+    {
+      "id": 33,
+      "filename": "gallery/dgk_session10_1.jpg",
+      "caption": "Community engagement in Tribal Area",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 25,
+      "type": "community",
+      "displayIn": "gallery"
+    },
+
+    // --- GALLERY IMAGES - FAISALABAD REGION ---
     {
       "id": 34,
       "filename": "gallery/fsd_session1_1.jpg",
-      "caption": "FSD campaign launch event",
-      "date": "2025-11-25",
-      "city": "Dharki",
+      "caption": "Urban farming in Jhang Road",
+      "date": "2025-12-06",
+      "city": "faisalabad",
       "sessionId": 26,
-      "type": "event"
+      "type": "event",
+      "displayIn": "gallery"
     },
     {
       "id": 35,
       "filename": "gallery/fsd_session2_1.jpg",
-      "caption": "Product efficacy demonstration",
-      "date": "2025-11-27",
-      "city": "Ghotki",
+      "caption": "Commercial farming in Samundri",
+      "date": "2025-12-07",
+      "city": "faisalabad",
       "sessionId": 27,
-      "type": "demonstration"
+      "type": "field",
+      "displayIn": "gallery"
     },
     {
       "id": 36,
       "filename": "gallery/fsd_session3_1.jpg",
-      "caption": "Interactive farmer session",
-      "date": "2025-12-28",
-      "city": "Jaferabad",
+      "caption": "Modern techniques in Tandlianwala",
+      "date": "2025-12-08",
+      "city": "faisalabad",
       "sessionId": 28,
-      "type": "interaction"
+      "type": "demonstration",
+      "displayIn": "gallery"
     },
     {
       "id": 37,
       "filename": "gallery/fsd_session4_1.jpg",
-      "caption": "Field problem diagnosis",
-      "date": "2025-11-29",
-      "city": "Ranipur",
+      "caption": "Small landholders in Chak Jhumra",
+      "date": "2025-12-09",
+      "city": "faisalabad",
       "sessionId": 29,
-      "type": "diagnosis"
-    },     {
-      "id": 38,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-01",
-      "city": "Mehrabpur",
-      "sessionId": 30,
-      "type": "group"
-    },    {
-      "id": 39,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-02",
-      "city": "Dadu",
-      "sessionId": 31,
-      "type": "group"
-    },    {
-      "id": 40,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-03",
-      "city": "Muzaffar Garh",
-      "sessionId": 32,
-      "type": "group"
-    },  {
-      "id": 41,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-04",
-      "city": "Kot Addu",
-      "sessionId": 33,
-      "type": "group"
+      "type": "training",
+      "displayIn": "gallery"
     },
+    {
+      "id": 38,
+      "filename": "gallery/fsd_session5_1.jpg",
+      "caption": "Technology integration in Sargodha Road",
+      "date": "2025-12-10",
+      "city": "faisalabad",
+      "sessionId": 30,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 39,
+      "filename": "gallery/fsd_session6_1.jpg",
+      "caption": "Export quality in Jaranwala",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 31,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 40,
+      "filename": "gallery/fsd_session7_1.jpg",
+      "caption": "Organic alternatives in Gojra",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 32,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 41,
+      "filename": "gallery/fsd_session8_1.jpg",
+      "caption": "Sustainable farming in Toba Tek Singh",
+      "date": "2025-12-12",
+      "city": "faisalabad",
+      "sessionId": 33,
+      "type": "sustainable",
+      "displayIn": "gallery"
+    },
+
+    // --- GALLERY IMAGES - GUJRANWALA REGION ---
     {
       "id": 42,
       "filename": "gallery/gsm_session1_1.jpg",
-      "caption": "awareness session",
-      "date": "2025-12-05",
-      "city": "Karor lal Esan",
+      "caption": "Traditional methods in Wazirabad",
+      "date": "2025-12-10",
+      "city": "gujranwala",
       "sessionId": 34,
-      "type": "awareness"
+      "type": "event",
+      "displayIn": "gallery"
     },
     {
       "id": 43,
       "filename": "gallery/gsm_session2_1.jpg",
-      "caption": "Practical application demo",
-      "date": "2025-12-06",
-      "city": "Bhakkar",
-      "sessionId": 35,
-      "type": "application"
-    }, {
-      "id": 44,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-08",
-      "city": "Mianwali",
-      "sessionId": 36,
-      "type": "group"
-    }, {
-      "id": 45,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-09",
-      "city": "Sargoda",
-      "sessionId": 37,
-      "type": "group"
-    },  {
-      "id": 46,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
-      "date": "2025-12-10",
-      "city": "Phalia",
-      "sessionId": 38,
-      "type": "group"
-    },  {
-      "id": 47,
-      "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Group photo with participants",
+      "caption": "Hybrid solutions in Kamoke",
       "date": "2025-12-11",
-      "city": "Chakwal",
+      "city": "gujranwala",
+      "sessionId": 35,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 44,
+      "filename": "gallery/gsm_session3_1.jpg",
+      "caption": "Water conservation in Nowshera Virkan",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 36,
+      "type": "conservation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 45,
+      "filename": "gallery/gsm_session4_1.jpg",
+      "caption": "Market linkages in Gujranwala City",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 37,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 46,
+      "filename": "gallery/gsm_session5_1.jpg",
+      "caption": "Quality standards in Eminabad",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 38,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 47,
+      "filename": "gallery/gsm_session6_1.jpg",
+      "caption": "Post-harvest management in Qila Didar Singh",
+      "date": "2025-12-12",
+      "city": "gujranwala",
       "sessionId": 39,
-      "type": "group"
+      "type": "management",
+      "displayIn": "gallery"
     },
     {
       "id": 48,
-      "filename": "gallery/gsm_session3_1.jpg",
-      "caption": "Final session group photo",
+      "filename": "gallery/gsm_session7_1.jpg",
+      "caption": "Campaign summary in Alipur Chatha",
       "date": "2025-12-12",
-      "city": "Tota Tek Singh",
+      "city": "gujranwala",
       "sessionId": 40,
-      "type": "closing"
+      "type": "closing",
+      "displayIn": "gallery"
     }
   ],
-  "cities": ["Ubaro", "Dharki", "Ghotki","Jaffarabad", "Ranipur","Mehrabpur", "Dadu","Muzaffar Garh","Kot Addu","Karor lal Esan", "Bhakkar","Mianwali", "Sargoda", "Phalia","Chakwal", "Tota Tek Singh", ],
-  "mediaTypes": ["event", "demonstration", "field", "training", "distribution", "presentation", "results"],
+  "cities": ["sukkur", "dgk", "faisalabad", "gujranwala"],
+  "mediaTypes": ["event", "demonstration", "field", "training", "distribution", "presentation", "group", "closing"],
   "lastUpdated": "2025-12-22"
 }

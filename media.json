@@ -2,7 +2,6 @@
   "campaign": "Buttril Super Field Activations",
   "totalMedia": 48,
   "mediaItems": [
-    // --- ASSETS FOR HEADER/FOOTER/BACKGROUND ---
     {
       "id": 1,
       "filename": "assets/Bayer.png",
@@ -59,11 +58,9 @@
       "category": "utility",
       "displayIn": "fallback"
     },
-
-    // --- GALLERY IMAGES - SUKKUR REGION ---
     {
       "id": 8,
-      "filename": "gallery/sukkur_session1_1.jpg",
+      "filename": "gallery/1.jpeg",
       "caption": "Farmer gathering in Sukkur - Session 1",
       "date": "2025-11-24",
       "city": "sukkur",
@@ -194,40 +191,38 @@
     {
       "id": 21,
       "filename": "gallery/sukkur_session13_1.jpg",
-      "caption": "Seasonal planning in Jacobabad",
+      "caption": "Interactive session in Taunsa",
       "date": "2025-12-06",
       "city": "sukkur",
       "sessionId": 13,
-      "type": "planning",
+      "type": "interaction",
       "displayIn": "gallery"
     },
     {
       "id": 22,
       "filename": "gallery/sukkur_session14_1.jpg",
-      "caption": "Resource management in Kashmore",
+      "caption": "Product showcase in Kot Addu",
       "date": "2025-12-07",
       "city": "sukkur",
       "sessionId": 14,
-      "type": "management",
+      "type": "presentation",
       "displayIn": "gallery"
     },
     {
       "id": 23,
       "filename": "gallery/sukkur_session15_1.jpg",
-      "caption": "Closing session in Thull",
+      "caption": "Closing ceremony in Layyah",
       "date": "2025-12-08",
       "city": "sukkur",
       "sessionId": 15,
       "type": "closing",
       "displayIn": "gallery"
     },
-
-    // --- GALLERY IMAGES - DERA GHAZI KHAN REGION ---
     {
       "id": 24,
       "filename": "gallery/dgk_session1_1.jpg",
-      "caption": "DGK farmer education drive in Taunsa",
-      "date": "2025-12-01",
+      "caption": "Farmer education in Dera Ghazi Khan - Session 1",
+      "date": "2025-12-09",
       "city": "dgk",
       "sessionId": 16,
       "type": "event",
@@ -236,8 +231,8 @@
     {
       "id": 25,
       "filename": "gallery/dgk_session2_1.jpg",
-      "caption": "Practical demo in Kot Chutta",
-      "date": "2025-12-02",
+      "caption": "Demonstration in Taunsa",
+      "date": "2025-12-09",
       "city": "dgk",
       "sessionId": 17,
       "type": "demonstration",
@@ -246,58 +241,58 @@
     {
       "id": 26,
       "filename": "gallery/dgk_session3_1.jpg",
-      "caption": "Expert talk in DG Khan City",
-      "date": "2025-12-03",
+      "caption": "Field visit in Kot Addu",
+      "date": "2025-12-10",
       "city": "dgk",
       "sessionId": 18,
-      "type": "presentation",
+      "type": "field",
       "displayIn": "gallery"
     },
     {
       "id": 27,
       "filename": "gallery/dgk_session4_1.jpg",
-      "caption": "High altitude farming in Fort Munro",
-      "date": "2025-12-04",
+      "caption": "Training in Layyah",
+      "date": "2025-12-10",
       "city": "dgk",
       "sessionId": 19,
-      "type": "field",
+      "type": "training",
       "displayIn": "gallery"
     },
     {
       "id": 28,
       "filename": "gallery/dgk_session5_1.jpg",
-      "caption": "Irrigation methods in Jampur",
-      "date": "2025-12-05",
+      "caption": "Distribution in Chowk Azam",
+      "date": "2025-12-11",
       "city": "dgk",
       "sessionId": 20,
-      "type": "demonstration",
+      "type": "distribution",
       "displayIn": "gallery"
     },
     {
       "id": 29,
       "filename": "gallery/dgk_session6_1.jpg",
-      "caption": "Large scale farming in Kot Addu",
-      "date": "2025-12-06",
+      "caption": "Q&A in Jatoi",
+      "date": "2025-12-11",
       "city": "dgk",
       "sessionId": 21,
-      "type": "field",
+      "type": "interaction",
       "displayIn": "gallery"
     },
     {
       "id": 30,
       "filename": "gallery/dgk_session7_1.jpg",
-      "caption": "Soil management in Layyah",
-      "date": "2025-12-07",
+      "caption": "Consultation in Alipur",
+      "date": "2025-12-11",
       "city": "dgk",
       "sessionId": 22,
-      "type": "management",
+      "type": "consultation",
       "displayIn": "gallery"
     },
     {
       "id": 31,
       "filename": "gallery/dgk_session8_1.jpg",
-      "caption": "Pest control in Muzaffargarh",
-      "date": "2025-12-08",
+      "caption": "Demo in Kot Sultan",
+      "date": "2025-12-12",
       "city": "dgk",
       "sessionId": 23,
       "type": "demonstration",
@@ -323,8 +318,6 @@
       "type": "community",
       "displayIn": "gallery"
     },
-
-    // --- GALLERY IMAGES - FAISALABAD REGION ---
     {
       "id": 34,
       "filename": "gallery/fsd_session1_1.jpg",
@@ -405,8 +398,6 @@
       "type": "sustainable",
       "displayIn": "gallery"
     },
-
-    // --- GALLERY IMAGES - GUJRANWALA REGION ---
     {
       "id": 42,
       "filename": "gallery/gsm_session1_1.jpg",

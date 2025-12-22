@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AgriVista — Field Activations Dashboard</title>
+  <title>AgriVista — Buctril Super Field Activations Dashboard</title>
 
-  <!-- Leaflet with Routing Plugin -->
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- Leaflet Polyline for route drawing -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.css" />
+  
+  <!-- Leaflet Polyline Decorator for route arrows -->
   <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin></script>
 
-  <!-- SheetJS (XLSX) -->
+  <!-- SheetJS (XLSX) - fallback -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin></script>
 
   <style>
@@ -32,6 +32,10 @@
       --accent2:#86efac;
       --warn:#fbbf24;
       --bad:#fb7185;
+      --region-skr:#3b82f6;
+      --region-dgk:#10b981;
+      --region-fsd:#f59e0b;
+      --region-guj:#8b5cf6;
     }
 
     *{ box-sizing:border-box; }
@@ -150,27 +154,6 @@
       font-weight:600;
     }
     button:hover{ background: rgba(125,211,252,.18); }
-    button:disabled{ opacity:0.5; cursor:not-allowed; }
-
-    /* Map Controls */
-    .mapControls{
-      display:flex; gap:8px; margin:10px 0;
-      flex-wrap:wrap;
-    }
-    .mapControlBtn{
-      font-size:11px;
-      padding:6px 10px;
-      border-radius:8px;
-      background: rgba(15,26,46,.7);
-      border:1px solid rgba(255,255,255,.14);
-      color:var(--muted);
-      cursor:pointer;
-    }
-    .mapControlBtn.active{
-      background: rgba(125,211,252,.15);
-      border-color: rgba(125,211,252,.4);
-      color:var(--accent);
-    }
 
     .notice, .diag{
       margin-top:12px;
@@ -221,7 +204,6 @@
       opacity:.18;
       filter: saturate(1.05) contrast(1.05);
     }
-
     .heroVideo.hide{ display:none; }
 
     .heroTop{
@@ -250,6 +232,122 @@
     .kpi .v{ font-size:18px; font-weight:800; margin-top:4px; }
     .bar{ height:6px; border-radius:999px; background: rgba(255,255,255,.10); margin-top:8px; overflow:hidden; }
     .bar > div{ height:100%; width:0%; background: linear-gradient(90deg, rgba(125,211,252,.85), rgba(134,239,172,.85)); }
+
+    /* Campaign Overview */
+    .summary-card {
+      background: linear-gradient(135deg, rgba(125,211,252,0.1), rgba(134,239,172,0.05));
+      border: 1px solid rgba(125,211,252,0.2);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .summary-card h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 16px;
+      color: var(--accent);
+    }
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .summary-stat {
+      text-align: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .summary-stat .value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+    .summary-stat .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Day Navigation */
+    .day-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 12px 0;
+      margin: 12px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) transparent;
+    }
+    .day-nav::-webkit-scrollbar {
+      height: 6px;
+    }
+    .day-nav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .day-nav::-webkit-scrollbar-thumb {
+      background-color: var(--accent);
+      border-radius: 3px;
+    }
+    .day-btn {
+      min-width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .day-btn:hover {
+      background: rgba(125,211,252,0.1);
+      border-color: rgba(125,211,252,0.3);
+    }
+    .day-btn.active {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+
+    /* Region Legend */
+    .region-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .region-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .region-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .region-color.skr { background: var(--region-skr); }
+    .region-color.dgk { background: var(--region-dgk); }
+    .region-color.fsd { background: var(--region-fsd); }
+    .region-color.guj { background: var(--region-guj); }
 
     /* Tabs */
     .tabs{
@@ -325,6 +423,74 @@
     .mapChip{ min-width: 170px; }
     .mapChip .k{ font-size:11px; color:var(--muted); }
     .mapChip .v{ font-size:13px; font-weight:800; margin-top:2px; }
+
+    /* Enhanced Map Popup */
+    .map-popup {
+      font-family: inherit;
+      max-width: 280px;
+    }
+    .map-popup .popup-header {
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .map-popup .popup-header h4 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .map-popup .popup-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .map-popup .popup-body {
+      margin-bottom: 12px;
+    }
+    .map-popup .popup-stats {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .map-popup .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .map-popup .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .map-popup .stat-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .map-popup .popup-reason {
+      font-size: 11px;
+      padding: 6px 8px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      margin-top: 4px;
+      border-left: 3px solid var(--accent);
+    }
+    .map-popup .popup-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .map-popup .popup-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .map-popup .popup-btn:hover {
+      opacity: 0.9;
+    }
 
     /* Tables */
     table{ width:100%; border-collapse:collapse; }
@@ -429,26 +595,6 @@
     .lbFooter{ display:flex; justify-content:space-between; align-items:center; }
     .hide{ display:none !important; }
 
-    /* Map Layer Controls */
-    .layer-controls {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1000;
-      background: rgba(15,26,46,0.85);
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      font-size: 12px;
-    }
-    .layer-controls label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 4px 0;
-      cursor: pointer;
-    }
-
     @media (max-width: 980px){
       .shell{ grid-template-columns: 1fr; }
       .heroMeta{ grid-template-columns: 1fr 1fr; }
@@ -456,6 +602,13 @@
       .showcase{ grid-template-columns: repeat(3, minmax(0,1fr)); }
       .mediaGrid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
       .lbPanel{ grid-template-columns: 1fr; height: min(760px, 100%); }
+      .summary-stats{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+    
+    @media (max-width: 640px){
+      .summary-stats{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .showcase{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .mediaGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
   </style>
 </head>
@@ -463,7 +616,7 @@
 <body>
   <div id="loadingOverlay">
     <div class="spinner"></div>
-    <div style="font-weight:800; letter-spacing:.2px;">Loading AgriVista Dashboard…</div>
+    <div style="font-weight:800; letter-spacing:.2px;">Loading Buctril Super Dashboard…</div>
     <div id="loadingStatus" style="margin-top:10px; font-size:12px; color:var(--muted);">Initializing</div>
   </div>
 
@@ -472,9 +625,9 @@
       <div class="brand">
         <div>
           <h1>AgriVista</h1>
-          <div class="sub">Field Activations Intelligence</div>
+          <div class="sub">Buctril Super Field Activations</div>
         </div>
-        <div class="chip" id="buildStamp">v1</div>
+        <div class="chip" id="buildStamp">v2</div>
       </div>
 
       <div id="errorContainer" class="error-box"></div>
@@ -506,12 +659,6 @@
           <input id="filter-search" type="text" placeholder="city, spot, reason…" />
         </div>
 
-        <div class="mapControls">
-          <button id="btn-show-route" class="mapControlBtn active">Show Route</button>
-          <button id="btn-hide-route" class="mapControlBtn">Hide Route</button>
-          <button id="btn-show-all" class="mapControlBtn">Show All Points</button>
-        </div>
-
         <div id="filterSummary" class="miniSummary"><b>Selection:</b> Loading…</div>
 
         <div class="btnRow">
@@ -530,8 +677,8 @@
 
         <div class="heroTop">
           <div class="heroTitle">
-            <h2>Field Activation Performance Dashboard</h2>
-            <p>Visualizing field activation sessions across Pakistan with route tracking, media gallery, and detailed analytics. Data extracted from Buctril_Super_Activations.xlsx.</p>
+            <h2>Buctril Super Farmer Education Drive</h2>
+            <p>17-day campaign across 40 sessions, reaching 2,908 farmers covering 44,256 wheat acres. Interactive map shows route and session highlights.</p>
           </div>
         </div>
 
@@ -559,15 +706,49 @@
         </div>
       </section>
 
+      <!-- Campaign Overview -->
+      <section class="summary-card">
+        <h3>Campaign Overview</h3>
+        <div class="summary-stats" id="campaignOverview">
+          <!-- Filled by JavaScript -->
+        </div>
+      </section>
+
+      <!-- Day Navigation -->
+      <div class="day-nav" id="dayNavigation">
+        <!-- Day buttons will be generated here -->
+      </div>
+
+      <!-- Region Legend -->
+      <div class="region-legend">
+        <div class="region-item">
+          <div class="region-color skr"></div>
+          <span>Sukkur (SKR)</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color dgk"></div>
+          <span>Dera Ghazi Khan (DGK)</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color fsd"></div>
+          <span>Faisalabad (FSD)</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color guj"></div>
+          <span>Gujranwala (GUJ)</span>
+        </div>
+      </div>
+
+      <!-- Main Tabs -->
       <nav class="tabs" aria-label="Tabs">
         <button class="tabBtn active" data-tab="tab-snapshot" type="button">Snapshot</button>
         <button class="tabBtn" data-tab="tab-analytics" type="button">Analytics</button>
         <button class="tabBtn" data-tab="tab-map" type="button">Map & Route</button>
-        <button class="tabBtn" data-tab="tab-media" type="button">Media</button>
+        <button class="tabBtn" data-tab="tab-media" type="button">Gallery</button>
         <button class="tabBtn" data-tab="tab-sessions" type="button">Sessions</button>
-        <button class="tabBtn" data-tab="tab-raw" type="button">Raw Data</button>
       </nav>
 
+      <!-- Tab Panels -->
       <section class="tabPanel active" id="tab-snapshot">
         <div class="grid2">
           <div class="card">
@@ -578,7 +759,7 @@
 
           <div class="card">
             <h3>Reasons Snapshot</h3>
-            <div class="muted">Top reasons (based on the filtered set).</div>
+            <div class="muted">Top reasons for adoption or hesitation (based on filtered set).</div>
             <div class="grid2" style="margin-top:10px">
               <div>
                 <div class="pill">Top reason to use</div>
@@ -605,14 +786,14 @@
           </div>
         </div>
         <div class="card" style="margin-top:12px">
-          <h3>Trend</h3>
+          <h3>Engagement Trend</h3>
           <div class="canvasWrap"><canvas id="chartTrend"></canvas></div>
         </div>
       </section>
 
       <section class="tabPanel" id="tab-map">
         <div class="card">
-          <h3>Coverage Map with Route Tracking</h3>
+          <h3>Campaign Route & Coverage Map</h3>
 
           <div class="mapBanner">
             <div class="mapChip">
@@ -633,15 +814,8 @@
             </div>
           </div>
 
-          <div class="mapWrap">
-            <div id="map"></div>
-            <div class="layer-controls">
-              <label><input type="checkbox" id="layer-markers" checked> Markers</label>
-              <label><input type="checkbox" id="layer-route" checked> Route</label>
-              <label><input type="checkbox" id="layer-bubbles" checked> Area Bubbles</label>
-            </div>
-          </div>
-          <div class="mapLegend" id="mapLegend">Bubble radius represents wheat acres. Colored route shows chronological journey. Click markers for details.</div>
+          <div class="mapWrap"><div id="map"></div></div>
+          <div class="mapLegend" id="mapLegend">Interactive map showing campaign route. Bubble size = wheat acres, color = region. Click for details.</div>
 
           <div class="showcase" id="mapShowcase"></div>
         </div>
@@ -649,21 +823,20 @@
 
       <section class="tabPanel" id="tab-media">
         <div class="card">
-          <h3>Gallery</h3>
-          <div class="muted">Showing media that matches the active filters. Click any tile to open the lightbox.</div>
+          <h3>Campaign Gallery</h3>
+          <div class="muted">Media from the 40 activation sessions across Pakistan. Click any tile to open.</div>
           <div class="mediaGrid" id="galleryGrid" style="margin-top:12px"></div>
         </div>
       </section>
 
       <section class="tabPanel" id="tab-sessions">
         <div class="card">
-          <h3>Session List</h3>
-          <div class="muted">Click a row to open session media (if available) and pin the location on the map.</div>
+          <h3>Session Details</h3>
+          <div class="muted">All 40 activation sessions with farmer engagement metrics. Click row to view media.</div>
           <div style="overflow:auto; margin-top:10px; max-height: 520px;">
             <table>
               <thead>
                 <tr>
-                  <th>SN</th>
                   <th>Date</th>
                   <th>City</th>
                   <th>Spot</th>
@@ -672,7 +845,6 @@
                   <th>Definite %</th>
                   <th>Awareness %</th>
                   <th>Clarity %</th>
-                  <th>Coordinates</th>
                 </tr>
               </thead>
               <tbody id="tblSessions"></tbody>
@@ -681,39 +853,10 @@
         </div>
       </section>
 
-      <section class="tabPanel" id="tab-raw">
-        <div class="card">
-          <h3>Raw Data View</h3>
-          <div class="muted">Extracted directly from Excel file. Shows all available columns.</div>
-          <div style="overflow:auto; margin-top:10px; max-height: 520px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>SN</th>
-                  <th>City</th>
-                  <th>Spot</th>
-                  <th>Date</th>
-                  <th>Farmers</th>
-                  <th>Acres</th>
-                  <th>Know Buctril</th>
-                  <th>Definite</th>
-                  <th>Maybe</th>
-                  <th>Not Interested</th>
-                  <th>Latitude</th>
-                  <th>Longitude</th>
-                  <th>Reason to Use</th>
-                  <th>Reason Not to Use</th>
-                </tr>
-              </thead>
-              <tbody id="tblRawData"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
     </main>
   </div>
 
+  <!-- Lightbox -->
   <div id="lightbox">
     <div class="lbPanel">
       <div class="lbMedia" id="lbMedia"></div>

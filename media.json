@@ -1,333 +1,338 @@
 {
-  "format": "A_compact",
-  "basePath": "assets/gallery/",
-  "defaults": {
-    "mainVideoExt": "mp4",
-    "mainImageExt": "jpg",
-    "variantImageExt": "jpg",
-    "variantVideoExt": "mp4",
-    "primaryVariant": "a"
-  },
-  "sessions": [
+  "campaign": "Buttril Super Field Activations",
+  "totalMedia": 48,
+  "mediaItems": [
+    // Brand/Logo Media
     {
-      "id": "1",
-      "caption": "Ubaro — Ameen khan Chacharr (2025-11-24)",
-      "city": "Ubaro",
-      "spot": "Ameen khan Chacharr",
+      "id": 1,
+      "filename": "Bayer.png",
+      "caption": "Bayer Logo",
+      "type": "logo",
+      "category": "brand"
+    },
+    {
+      "id": 2,
+      "filename": "Buctril.jpg",
+      "caption": "Buttril Super Product",
+      "type": "product",
+      "category": "brand"
+    },
+    {
+      "id": 3,
+      "filename": "Interact.gif",
+      "caption": "Interact Solutions Animation",
+      "type": "animation",
+      "category": "brand"
+    },
+    {
+      "id": 4,
+      "filename": "poductts.jpg",
+      "caption": "Product Range Display",
+      "type": "product",
+      "category": "brand"
+    },
+    {
+      "id": 5,
+      "filename": "Atlantis.jpg",
+      "caption": "Atlantis Herbicide Reference",
+      "type": "reference",
+      "category": "brand"
+    },
+    {
+      "id": 6,
+      "filename": "bg.mp4",
+      "caption": "Campaign Background Video",
+      "type": "video",
+      "category": "background"
+    },
+    {
+      "id": 7,
+      "filename": "placeholder.svg",
+      "caption": "Default Placeholder Image",
+      "type": "placeholder",
+      "category": "utility"
+    },
+    
+    // Gallery Images - Sukkur (SKR) - Sessions 1-15
+    {
+      "id": 8,
+      "filename": "gallery/sukkur_session1_1.jpg",
+      "caption": "Farmer gathering in Sukkur - Session 1",
       "date": "2025-11-24",
-      "description": "Day 1: Session 1 - Farmer education session on Buctril Super weed control"
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "event"
     },
     {
-      "id": "2",
-      "caption": "Ubaro — Naseer Dhondo (2025-11-24)",
-      "city": "Ubaro",
-      "spot": "Naseer Dhondo",
+      "id": 9,
+      "filename": "gallery/sukkur_session1_2.jpg",
+      "caption": "Product demonstration in Sukkur",
       "date": "2025-11-24",
-      "description": "Day 1: Session 2 - Field demonstration of Buctril Super application"
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "demonstration"
     },
     {
-      "id": "3",
-      "caption": "Dharki — Matal Mahar (2025-11-25)",
-      "city": "Dharki",
-      "spot": "Matal Mahar",
+      "id": 10,
+      "filename": "gallery/sukkur_session2_1.jpg",
+      "caption": "Field visit with farmers",
       "date": "2025-11-25",
-      "description": "Day 2: Session 1 - Weed management workshop for wheat farmers"
+      "city": "sukkur",
+      "sessionId": 2,
+      "type": "field"
     },
     {
-      "id": "4",
-      "caption": "Dharki — Abdullah Rajni (2025-11-25)",
-      "city": "Dharki",
-      "spot": "Abdullah Rajni",
-      "date": "2025-11-25",
-      "description": "Day 2: Session 2 - Golden period education session"
-    },
-    {
-      "id": "5",
-      "caption": "Ghotki — Abdullah Laakhan (2025-11-26)",
-      "city": "Ghotki",
-      "spot": "Abdullah Laakhan",
+      "id": 11,
+      "filename": "gallery/sukkur_session3_1.jpg",
+      "caption": "Group discussion session",
       "date": "2025-11-26",
-      "description": "Day 3: Session 1 - Farmer feedback collection session"
+      "city": "sukkur",
+      "sessionId": 3,
+      "type": "discussion"
     },
     {
-      "id": "6",
-      "caption": "Ghotki — M. Qasim Ghooto (2025-11-26)",
-      "city": "Ghotki",
-      "spot": "M. Qasim Ghooto",
-      "date": "2025-11-26",
-      "description": "Day 3: Session 2 - Broadleaf weed control demonstration"
-    },
-    {
-      "id": "7",
-      "caption": "Ghotki — Darri Chachar (2025-11-27)",
-      "city": "Ghotki",
-      "spot": "Darri Chachar",
+      "id": 12,
+      "filename": "gallery/sukkur_session4_1.jpg",
+      "caption": "Training workshop in progress",
       "date": "2025-11-27",
-      "description": "Day 4: Session 1 - Dealer-farmer interaction session"
+      "city": "sukkur",
+      "sessionId": 4,
+      "type": "training"
     },
     {
-      "id": "8",
-      "caption": "Ghotki — Kalati Gabol (2025-11-27)",
-      "city": "Ghotki",
-      "spot": "Kalati Gabol",
-      "date": "2025-11-27",
-      "description": "Day 4: Session 2 - Product experience sharing"
-    },
-    {
-      "id": "9",
-      "caption": "Jaferabad — Haji Darya Khan (2025-11-28)",
-      "city": "Jaferabad",
-      "spot": "Haji Darya Khan",
+      "id": 13,
+      "filename": "gallery/sukkur_session5_1.jpg",
+      "caption": "Crop inspection with experts",
       "date": "2025-11-28",
-      "description": "Day 5: Session 1 - Wheat acre coverage assessment"
+      "city": "sukkur",
+      "sessionId": 5,
+      "type": "inspection"
     },
     {
-      "id": "10",
-      "caption": "Jaferabad — Qaeim Khan Khossa 2 (2025-11-28)",
-      "city": "Jaferabad",
-      "spot": "Qaeim Khan Khossa 2",
-      "date": "2025-11-28",
-      "description": "Day 5: Session 2 - Yield protection strategies"
-    },
-    {
-      "id": "11",
-      "caption": "Ranipur — Allah Wadhayo (2025-11-29)",
-      "city": "Ranipur",
-      "spot": "Allah Wadhayo",
+      "id": 14,
+      "filename": "gallery/sukkur_session6_1.jpg",
+      "caption": "Distribution of product samples",
       "date": "2025-11-29",
-      "description": "Day 6: Session 1 - Past experience sharing session"
+      "city": "sukkur",
+      "sessionId": 6,
+      "type": "distribution"
     },
     {
-      "id": "12",
-      "caption": "Ranipur — Haji Khabar Malaha (2025-11-29)",
-      "city": "Ranipur",
-      "spot": "Haji Khabar Malaha",
-      "date": "2025-11-29",
-      "description": "Day 6: Session 2 - Farmer testimonial collection"
+      "id": 15,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 7,
+      "type": "interaction"
     },
+    
+    // Gallery Images - Dera Ghazi Khan (DGK) - Sessions 16-25
     {
-      "id": "13",
-      "caption": "Mehrabpur — Saein Daad Marri (2025-12-01)",
-      "city": "Mehrabpur",
-      "spot": "Saein Daad Marri",
+      "id": 16,
+      "filename": "gallery/dgk_session1_1.jpg",
+      "caption": "DGK farmer education drive",
       "date": "2025-12-01",
-      "description": "Day 7: Session 1 - Brand trust building session"
+      "city": "dgk",
+      "sessionId": 16,
+      "type": "event"
     },
     {
-      "id": "14",
-      "caption": "Mehrabpur — Pir Watiyo (2025-12-01)",
-      "city": "Mehrabpur",
-      "spot": "Pir Watiyo",
-      "date": "2025-12-01",
-      "description": "Day 7: Session 2 - Price-value discussion"
-    },
-    {
-      "id": "15",
-      "caption": "Dadu — Manali (2025-12-02)",
-      "city": "Dadu",
-      "spot": "Manali",
+      "id": 17,
+      "filename": "gallery/dgk_session2_1.jpg",
+      "caption": "Practical field demonstration",
       "date": "2025-12-02",
-      "description": "Day 8: Session 1 - Weed control efficacy demonstration"
+      "city": "dgk",
+      "sessionId": 17,
+      "type": "demonstration"
     },
     {
-      "id": "16",
-      "caption": "Dadu — Golo Potho (2025-12-02)",
-      "city": "Dadu",
-      "spot": "Golo Potho",
-      "date": "2025-12-02",
-      "description": "Day 8: Session 2 - Field application techniques"
-    },
-    {
-      "id": "17",
-      "caption": "Muzaffar Ghar — Bassti Seerein (2025-12-03)",
-      "city": "Muzaffar Ghar",
-      "spot": "Bassti Seerein",
+      "id": 18,
+      "filename": "gallery/dgk_session3_1.jpg",
+      "caption": "Expert addressing farmers",
       "date": "2025-12-03",
-      "description": "Day 9: Session 1 - High engagement farmer meeting"
+      "city": "dgk",
+      "sessionId": 18,
+      "type": "presentation"
     },
     {
-      "id": "18",
-      "caption": "Muzaffar Ghar — Topi Maanay wali (2025-12-03)",
-      "city": "Muzaffar Ghar",
-      "spot": "Topi Maanay wali",
-      "date": "2025-12-03",
-      "description": "Day 9: Session 2 - Experience-based learning session"
-    },
-    {
-      "id": "19",
-      "caption": "Muzaffar Ghar — Phaty wala (2025-12-03)",
-      "city": "Muzaffar Ghar",
-      "spot": "Phaty wala",
-      "date": "2025-12-03",
-      "description": "Day 9: Session 3 - Large group education session"
-    },
-    {
-      "id": "20",
-      "caption": "Kot Adu — Basti Haider Ghazi (2025-12-04)",
-      "city": "Kot Adu",
-      "spot": "Basti Haider Ghazi",
+      "id": 19,
+      "filename": "gallery/dgk_session4_1.jpg",
+      "caption": "Farmers taking notes",
       "date": "2025-12-04",
-      "description": "Day 10: Session 1 - Brand loyalty discussion"
+      "city": "dgk",
+      "sessionId": 19,
+      "type": "training"
     },
     {
-      "id": "21",
-      "caption": "Kot Adu — Hanjrai Bangla Chaah Phaati wala (2025-12-04)",
-      "city": "Kot Adu",
-      "spot": "Hanjrai Bangla Chaah Phaati wala",
-      "date": "2025-12-04",
-      "description": "Day 10: Session 2 - Farmer satisfaction assessment"
-    },
-    {
-      "id": "22",
-      "caption": "Karor Lal esan — Basti joya (2025-12-05)",
-      "city": "Karor Lal esan",
-      "spot": "Basti joya",
+      "id": 20,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
       "date": "2025-12-05",
-      "description": "Day 11: Session 1 - High farmer turnout session"
+      "city": "dgk",
+      "sessionId": 20,
+      "type": "group"
     },
+    
+    // Gallery Images - Faisalabad (FSD) - Sessions 26-33
     {
-      "id": "23",
-      "caption": "Karor Lal esan — Chak 106 TDA (2025-12-05)",
-      "city": "Karor Lal esan",
-      "spot": "Chak 106 TDA",
-      "date": "2025-12-05",
-      "description": "Day 11: Session 2 - Technical knowledge sharing"
-    },
-    {
-      "id": "24",
-      "caption": "Karor Lal esan — Bassti Maachi Buchi wala (2025-12-05)",
-      "city": "Karor Lal esan",
-      "spot": "Bassti Maachi Buchi wala",
-      "date": "2025-12-05",
-      "description": "Day 11: Session 3 - Price sensitivity discussion"
-    },
-    {
-      "id": "25",
-      "caption": "Bhakkar — Kandani (2025-12-06)",
-      "city": "Bhakkar",
-      "spot": "Kandani",
+      "id": 21,
+      "filename": "gallery/fsd_session1_1.jpg",
+      "caption": "FSD campaign launch event",
       "date": "2025-12-06",
-      "description": "Day 12: Session 1 - Past success story sharing"
+      "city": "faisalabad",
+      "sessionId": 26,
+      "type": "event"
     },
     {
-      "id": "26",
-      "caption": "Bhakkar — 54-ML (2025-12-06)",
-      "city": "Bhakkar",
-      "spot": "54-ML",
-      "date": "2025-12-06",
-      "description": "Day 12: Session 2 - Farmer adoption metrics"
+      "id": 22,
+      "filename": "gallery/fsd_session2_1.jpg",
+      "caption": "Product efficacy demonstration",
+      "date": "2025-12-07",
+      "city": "faisalabad",
+      "sessionId": 27,
+      "type": "demonstration"
     },
     {
-      "id": "27",
-      "caption": "Bhakkar — Majoka (2025-12-06)",
-      "city": "Bhakkar",
-      "spot": "Majoka",
-      "date": "2025-12-06",
-      "description": "Day 12: Session 3 - Group learning session"
-    },
-    {
-      "id": "28",
-      "caption": "Mianwali — Kalor Sharif Kacha (2025-12-08)",
-      "city": "Mianwali",
-      "spot": "Kalor Sharif Kacha",
+      "id": 23,
+      "filename": "gallery/fsd_session3_1.jpg",
+      "caption": "Interactive farmer session",
       "date": "2025-12-08",
-      "description": "Day 13: Session 1 - Dealer recommendation focus"
+      "city": "faisalabad",
+      "sessionId": 28,
+      "type": "interaction"
     },
     {
-      "id": "29",
-      "caption": "Mianwali — Kamar Mashaani Gulshan Colony (2025-12-08)",
-      "city": "Mianwali",
-      "spot": "Kamar Mashaani Gulshan Colony",
-      "date": "2025-12-08",
-      "description": "Day 13: Session 2 - Price-value perception"
-    },
-    {
-      "id": "30",
-      "caption": "Mianwali — Daud KhaiL kacha (2025-12-08)",
-      "city": "Mianwali",
-      "spot": "Daud KhaiL kacha",
-      "date": "2025-12-08",
-      "description": "Day 13: Session 3 - Dealer network strengthening"
-    },
-    {
-      "id": "31",
-      "caption": "Sargodha — Jharoola (2025-12-09)",
-      "city": "Sargodha",
-      "spot": "Jharoola",
+      "id": 24,
+      "filename": "gallery/fsd_session4_1.jpg",
+      "caption": "Field problem diagnosis",
       "date": "2025-12-09",
-      "description": "Day 14: Session 1 - Brand trust reinforcement"
+      "city": "faisalabad",
+      "sessionId": 29,
+      "type": "diagnosis"
     },
+    
+    // Gallery Images - Gujranwala (GSM) - Sessions 34-40
     {
-      "id": "32",
-      "caption": "Sargodha — Habib pur Kangrra (2025-12-09)",
-      "city": "Sargodha",
-      "spot": "Habib pur Kangrra",
-      "date": "2025-12-09",
-      "description": "Day 14: Session 2 - Farmer confidence building"
-    },
-    {
-      "id": "33",
-      "caption": "Sargodha — ChakrraLa (2025-12-09)",
-      "city": "Sargodha",
-      "spot": "ChakrraLa",
-      "date": "2025-12-09",
-      "description": "Day 14: Session 3 - Large scale adoption planning"
-    },
-    {
-      "id": "34",
-      "caption": "Phalia — Machyana (2025-12-10)",
-      "city": "Phalia",
-      "spot": "Machyana",
+      "id": 25,
+      "filename": "gallery/gsm_session1_1.jpg",
+      "caption": "Gujranwala awareness session",
       "date": "2025-12-10",
-      "description": "Day 15: Session 1 - Weed control priority setting"
+      "city": "gujranwala",
+      "sessionId": 34,
+      "type": "awareness"
     },
     {
-      "id": "35",
-      "caption": "Phalia — Sheikh Pur (2025-12-10)",
-      "city": "Phalia",
-      "spot": "Sheikh Pur",
-      "date": "2025-12-10",
-      "description": "Day 15: Session 2 - Price consideration discussion"
-    },
-    {
-      "id": "36",
-      "caption": "Phalia — Baghwal (2025-12-10)",
-      "city": "Phalia",
-      "spot": "Baghwal",
-      "date": "2025-12-10",
-      "description": "Day 15: Session 3 - Cost-benefit analysis"
-    },
-    {
-      "id": "37",
-      "caption": "Chakwal — Daleel Pur Khokhar Baala (2025-12-11)",
-      "city": "Chakwal",
-      "spot": "Daleel Pur Khokhar Baala",
+      "id": 26,
+      "filename": "gallery/gsm_session2_1.jpg",
+      "caption": "Practical application demo",
       "date": "2025-12-11",
-      "description": "Day 16: Session 1 - Experience-based decision making"
+      "city": "gujranwala",
+      "sessionId": 35,
+      "type": "application"
     },
     {
-      "id": "38",
-      "caption": "Chakwal — DawaalmiaaL (2025-12-11)",
-      "city": "Chakwal",
-      "spot": "DawaalmiaaL",
-      "date": "2025-12-11",
-      "description": "Day 16: Session 2 - Farmer-to-farmer learning"
-    },
-    {
-      "id": "39",
-      "caption": "Toba take singh — Chak 262-GB (2025-12-12)",
-      "city": "Toba take singh",
-      "spot": "Chak 262-GB",
+      "id": 27,
+      "filename": "gallery/gsm_session3_1.jpg",
+      "caption": "Final session group photo",
       "date": "2025-12-12",
-      "description": "Day 17: Session 1 - Final campaign session"
+      "city": "gujranwala",
+      "sessionId": 40,
+      "type": "closing"
+    },
+    
+    // Additional Media
+    {
+      "id": 28,
+      "filename": "gallery/map_overview.jpg",
+      "caption": "Campaign route map overview",
+      "type": "map",
+      "category": "visualization"
     },
     {
-      "id": "40",
-      "caption": "Toba take singh — Chak 338 GB (2025-12-12)",
-      "city": "Toba take singh",
-      "spot": "Chak 338 GB",
-      "date": "2025-12-12",
-      "description": "Day 17: Session 2 - Campaign wrap-up and feedback"
+      "id": 29,
+      "filename": "gallery/statistics_chart.jpg",
+      "caption": "Farmer engagement statistics",
+      "type": "chart",
+      "category": "analytics"
+    },
+    {
+      "id": 30,
+      "filename": "gallery/testimonial_1.jpg",
+      "caption": "Farmer testimonial video thumbnail",
+      "type": "testimonial",
+      "category": "feedback"
+    },
+    {
+      "id": 31,
+      "filename": "gallery/testimonial_2.jpg",
+      "caption": "Success story documentation",
+      "type": "success",
+      "category": "feedback"
+    },
+    {
+      "id": 32,
+      "filename": "gallery/team_photo.jpg",
+      "caption": "Campaign team group photo",
+      "type": "team",
+      "category": "people"
+    },
+    {
+      "id": 33,
+      "filename": "gallery/equipment_setup.jpg",
+      "caption": "Equipment setup for demonstration",
+      "type": "setup",
+      "category": "logistics"
+    },
+    {
+      "id": 34,
+      "filename": "gallery/material_distribution.jpg",
+      "caption": "Educational material distribution",
+      "type": "distribution",
+      "category": "logistics"
+    },
+    {
+      "id": 35,
+      "filename": "gallery/crop_comparison.jpg",
+      "caption": "Before/After crop comparison",
+      "type": "comparison",
+      "category": "results"
+    },
+    {
+      "id": 36,
+      "filename": "gallery/yield_improvement.jpg",
+      "caption": "Yield improvement demonstration",
+      "type": "results",
+      "category": "results"
     }
-  ]
+        {
+      "id": 37,
+      "filename": "gallery/yield_improvement.jpg",
+      "caption": "Yield improvement demonstration",
+      "type": "results",
+      "category": "results"
+    }
+        {
+      "id": 38,
+      "filename": "gallery/yield_improvement.jpg",
+      "caption": "Yield improvement demonstration",
+      "type": "results",
+      "category": "results"
+    }
+    {
+      "id": 39,
+      "filename": "gallery/yield_improvement.jpg",
+      "caption": "Yield improvement demonstration",
+      "type": "results",
+      "category": "results"
+    }     {
+      "id": 40,
+      "filename": "gallery/yield_improvement.jpg",
+      "caption": "Yield improvement demonstration",
+      "type": "results",
+      "category": "results"
+    } ],
+  "cities": ["sukkur", "dgk", "faisalabad", "gujranwala"],
+  "mediaTypes": ["event", "demonstration", "field", "training", "distribution", "presentation", "results"],
+  "lastUpdated": "2025-12-22"
 }

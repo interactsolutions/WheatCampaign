@@ -88,6 +88,7 @@
             align-items: center;
             gap: 15px;
             box-shadow: var(--box-shadow);
+            display: none; /* Hidden by default */
         }
         
         .error-banner i {
@@ -290,6 +291,12 @@
             align-items: center;
         }
         
+        /* Map marker styles */
+        .custom-marker {
+            background: none !important;
+            border: none !important;
+        }
+        
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
@@ -363,6 +370,7 @@
             overflow: hidden;
             box-shadow: var(--box-shadow);
             transition: transform 0.3s;
+            background: white;
         }
         
         .gallery-item:hover {
@@ -402,6 +410,61 @@
             height: 100%;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Analytics charts */
+        .chart-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        /* Sessions table */
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .sessions-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .sessions-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sessions-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Tab content animations */
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Loading animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fa-spin {
+            animation: spin 1s linear infinite;
         }
         
         /* Responsive */
@@ -425,6 +488,26 @@
             .tab {
                 min-width: 50%;
             }
+            
+            .summary-stats {
+                gap: 15px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .map-banner {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .campaign-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
         }
         
         /* Loading State */
@@ -445,20 +528,80 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-weight: 600;
             margin-left: 15px;
+            transition: opacity 0.3s;
         }
         
         .status-success {
             background-color: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
         
         .status-error {
             background-color: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-loading {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Quick Checks List */
+        .quick-checks {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        
+        .quick-checks ol {
+            margin-top: 5px;
+        }
+        
+        .quick-checks li {
+            margin-bottom: 5px;
+        }
+        
+        /* Campaign Duration */
+        .campaign-duration {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+            background-color: var(--primary);
+        }
+        
+        /* City Badge */
+        .city-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Fade In Animation for Tab Content */
+        #tabContent > section {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .nav-tabs, .dashboard-controls, .button-group, .status-indicator {
+                display: none !important;
+            }
+            
+            .map-container {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -472,17 +615,17 @@
         </header>
 
         <!-- Error Banner (Initially hidden if no error) -->
-        <div id="errorBanner" class="error-banner" style="display: none;">
+        <div id="errorBanner" class="error-banner">
             <i class="fas fa-exclamation-triangle"></i>
             <div>
                 <h3>Dashboard failed to load</h3>
-                <p id="errorMessage"></p>
+                <p id="errorMessage">Can't find variable: updateMapBanner</p>
                 <div class="quick-checks">
                     <p><strong>Quick checks:</strong></p>
                     <ol>
-                        <li>Verify sessions.json and media.json exist</li>
+                        <li>Verify all assets are properly hosted</li>
                         <li>Check browser DevTools → Console for errors</li>
-                        <li>Ensure all assets are properly hosted</li>
+                        <li>Ensure JavaScript is enabled in your browser</li>
                     </ol>
                 </div>
             </div>
@@ -494,7 +637,7 @@
                 <div class="control-group">
                     <label for="cityFilter"><i class="fas fa-city"></i> City</label>
                     <select id="cityFilter" class="dropdown">
-                        <option value="all">All</option>
+                        <option value="all">All Cities</option>
                         <option value="sukkur">Sukkur (SKR)</option>
                         <option value="dgk">Dera Ghazi Khan (DGK)</option>
                         <option value="faisalabad">Faisalabad (FSD)</option>
@@ -505,10 +648,10 @@
                 <div class="control-group">
                     <label for="spotFilter"><i class="fas fa-map-marker-alt"></i> Spot</label>
                     <select id="spotFilter" class="dropdown">
-                        <option value="all">All</option>
-                        <option value="spot1">Spot 1</option>
-                        <option value="spot2">Spot 2</option>
-                        <option value="spot3">Spot 3</option>
+                        <option value="all">All Spots</option>
+                        <option value="spot1">Major Spots</option>
+                        <option value="spot2">Secondary Spots</option>
+                        <option value="spot3">Rural Areas</option>
                     </select>
                 </div>
                 
@@ -523,7 +666,7 @@
                 
                 <div class="control-group">
                     <label for="searchInput"><i class="fas fa-search"></i> Search</label>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search city, spot, reason...">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search city, spot, session...">
                 </div>
             </div>
             
@@ -553,7 +696,7 @@
                     <span class="stat-label">Farmers</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="acreCount">33,932.0</span>
+                    <span class="stat-value" id="acreCount">33,932</span>
                     <span class="stat-label">Acres</span>
                 </div>
                 <div class="status-indicator status-success" id="statusIndicator">
@@ -593,7 +736,7 @@
             <div class="map-container">
                 <div class="map-banner" id="mapBanner">
                     <span><i class="fas fa-map-marked-alt"></i> Campaign Coverage Map</span>
-                    <span id="mapStats">40 Sessions • 4 Cities • 1,759 Farmers</span>
+                    <span id="mapStats">40 Sessions • 4 Cities • 2,908 Farmers</span>
                 </div>
                 <div id="campaignMap"></div>
             </div>
@@ -624,6 +767,7 @@
             <section class="key-takeaways" id="snapshotTab">
                 <h2><i class="fas fa-bullseye"></i> Key Takeaways</h2>
                 <p><strong>Scope:</strong> All sessions</p>
+                <p>Sessions: 40 · Farmers: 2,908 · Acres: 44,256</p>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -645,38 +789,38 @@
                     <h3><i class="fas fa-chart-line"></i> City-wise Performance</h3>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Sukkur (SKR)</span>
-                            <span>15 sessions</span>
+                            <span>Sukkur (SKR) <span class="city-badge">15 sessions</span></span>
+                            <span>1,120 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 85%"></div>
+                            <div class="progress-fill" style="width: 100%"></div>
                         </div>
                     </div>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Dera Ghazi Khan (DGK)</span>
-                            <span>10 sessions</span>
+                            <span>Dera Ghazi Khan (DGK) <span class="city-badge">10 sessions</span></span>
+                            <span>728 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 70%"></div>
+                            <div class="progress-fill" style="width: 66.7%"></div>
                         </div>
                     </div>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Faisalabad (FSD)</span>
-                            <span>8 sessions</span>
+                            <span>Faisalabad (FSD) <span class="city-badge">8 sessions</span></span>
+                            <span>640 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
+                            <div class="progress-fill" style="width: 53.3%"></div>
                         </div>
                     </div>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Gujranwala (GSM)</span>
-                            <span>7 sessions</span>
+                            <span>Gujranwala (GSM) <span class="city-badge">7 sessions</span></span>
+                            <span>420 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 60%"></div>
+                            <div class="progress-fill" style="width: 46.7%"></div>
                         </div>
                     </div>
                 </div>
@@ -691,15 +835,66 @@
                     <!-- Images will be loaded here dynamically -->
                     <div class="loading">
                         <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading media...</p>
+                        <p>Loading media gallery...</p>
                     </div>
                 </div>
             </section>
+            
+            <!-- Analytics Tab (Will be created dynamically) -->
+            
+            <!-- Sessions Tab (Will be created dynamically) -->
         </div>
     </div>
 
     <!-- JavaScript Files -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="dashboard.js"></script>
+    
+    <!-- Fallback script in case dashboard.js fails -->
+    <script>
+        // Fallback initialization if dashboard.js fails
+        window.addEventListener('error', function(e) {
+            if (e.message.includes('updateMapBanner') || e.message.includes('dashboard')) {
+                console.error('Dashboard script error:', e.message);
+                document.getElementById('errorBanner').style.display = 'flex';
+                document.getElementById('errorMessage').textContent = e.message;
+                document.getElementById('statusIndicator').className = 'status-indicator status-error';
+                document.getElementById('statusIndicator').innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Script Error Detected</span>';
+            }
+        });
+        
+        // Ensure basic functionality even if dashboard.js fails
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum date for date inputs
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateTo').max = today;
+            
+            // Basic tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const tabId = this.getAttribute('data-tab');
+                    const allSections = document.querySelectorAll('#tabContent > section');
+                    allSections.forEach(section => {
+                        section.style.display = section.id === tabId + 'Tab' ? 'block' : 'none';
+                    });
+                });
+            });
+            
+            // Basic filter reset
+            document.getElementById('resetBtn')?.addEventListener('click', function() {
+                document.getElementById('cityFilter').value = 'all';
+                document.getElementById('spotFilter').value = 'all';
+                document.getElementById('dateFrom').value = '2025-11-24';
+                document.getElementById('dateTo').value = '2025-12-12';
+                document.getElementById('searchInput').value = '';
+                alert('Filters reset to default');
+            });
+            
+            console.log('Basic dashboard functionality loaded');
+        });
+    </script>
 </body>
 </html>

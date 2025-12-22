@@ -1,6 +1,6 @@
 // AgriVista Dashboard - Buttril Super Field Activations
 // Build: 2025-12-22
-// UPDATED: Fixed file loading issues
+// UPDATED: Fixed all initialization and loading issues
 
 // Initialize variables
 let campaignData = null;
@@ -194,6 +194,51 @@ const completeMediaData = {
             city: "sukkur",
             sessionId: 6,
             type: "inspection"
+        },
+        {
+            id: 14,
+            filename: "https://images.unsplash.com/photo-1505253668822-42074d58a7c6?w=400&h=300&fit=crop",
+            caption: "Expert Consultation",
+            date: "2025-11-30",
+            city: "sukkur",
+            sessionId: 7,
+            type: "consultation"
+        },
+        {
+            id: 15,
+            filename: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400&h=300&fit=crop",
+            caption: "Field Application Demo",
+            date: "2025-12-01",
+            city: "sukkur",
+            sessionId: 8,
+            type: "demonstration"
+        },
+        {
+            id: 16,
+            filename: "https://images.unsplash.com/photo-1505253668822-42074d58a7c6?w=400&h=300&fit=crop",
+            caption: "Farmers Taking Notes",
+            date: "2025-12-02",
+            city: "sukkur",
+            sessionId: 9,
+            type: "education"
+        },
+        {
+            id: 17,
+            filename: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400&h=300&fit=crop",
+            caption: "Q&A Session",
+            date: "2025-12-03",
+            city: "sukkur",
+            sessionId: 10,
+            type: "discussion"
+        },
+        {
+            id: 18,
+            filename: "https://images.unsplash.com/photo-1505253668822-42074d58a7c6?w=400&h=300&fit=crop",
+            caption: "Soil Analysis Demo",
+            date: "2025-12-04",
+            city: "sukkur",
+            sessionId: 11,
+            type: "demonstration"
         }
     ]
 };
@@ -257,9 +302,9 @@ function initDashboard() {
     const spotFilter = document.getElementById('spotFilter');
     spotFilter.innerHTML = `
         <option value="all">All Spots</option>
-        <option value="spot1">Major Spots</option>
-        <option value="spot2">Secondary Spots</option>
-        <option value="spot3">Rural Areas</option>
+        <option value="major">Major Spots</option>
+        <option value="secondary">Secondary Spots</option>
+        <option value="rural">Rural Areas</option>
     `;
 }
 
@@ -655,6 +700,10 @@ function switchTab(tabId) {
         case 'sessions':
             loadSessionsList();
             break;
+        default:
+            // For snapshot tab, just update
+            updateDashboard();
+            break;
     }
     
     // Update status
@@ -720,12 +769,13 @@ function loadGallery() {
 
 // Load analytics view
 function loadAnalytics() {
-    const analyticsTab = document.getElementById('analyticsTab');
+    let analyticsTab = document.getElementById('analyticsTab');
+    
     if (!analyticsTab) {
         // Create analytics tab if it doesn't exist
         const tabContent = document.getElementById('tabContent');
         const analyticsHTML = `
-            <section class="campaign-section" id="analyticsTab">
+            <section class="campaign-section" id="analyticsTab" style="display: none;">
                 <h2><i class="fas fa-chart-bar"></i> Campaign Analytics</h2>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
@@ -777,6 +827,7 @@ function loadAnalytics() {
         // Insert after snapshot tab
         const snapshotTab = document.getElementById('snapshotTab');
         snapshotTab.insertAdjacentHTML('afterend', analyticsHTML);
+        analyticsTab = document.getElementById('analyticsTab');
     }
     
     analyticsTab.style.display = 'block';
@@ -784,12 +835,13 @@ function loadAnalytics() {
 
 // Load sessions list
 function loadSessionsList() {
-    const sessionsTab = document.getElementById('sessionsTab');
+    let sessionsTab = document.getElementById('sessionsTab');
+    
     if (!sessionsTab) {
         // Create sessions tab if it doesn't exist
         const tabContent = document.getElementById('tabContent');
         const sessionsHTML = `
-            <section class="campaign-section" id="sessionsTab">
+            <section class="campaign-section" id="sessionsTab" style="display: none;">
                 <h2><i class="fas fa-calendar-day"></i> All Sessions</h2>
                 <div style="overflow-x: auto; margin-top: 20px;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -801,6 +853,7 @@ function loadSessionsList() {
                                 <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Date</th>
                                 <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Farmers</th>
                                 <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Acres</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="sessionsTableBody">
@@ -814,6 +867,7 @@ function loadSessionsList() {
         // Insert after gallery tab
         const galleryTab = document.getElementById('galleryTab');
         galleryTab.insertAdjacentHTML('afterend', sessionsHTML);
+        sessionsTab = document.getElementById('sessionsTab');
         
         // Populate table
         populateSessionsTable();
@@ -835,7 +889,7 @@ function populateSessionsTable() {
     filteredSessions.forEach(session => {
         tableHTML += `
             <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 12px;">${session.sessionNumber}</td>
+                <td style="padding: 12px;"><strong>${session.sessionNumber}</strong></td>
                 <td style="padding: 12px;">
                     <span style="display: inline-block; padding: 4px 8px; background: #e8f5e9; border-radius: 4px; color: #2e7d32;">
                         ${session.cityName}
@@ -845,18 +899,38 @@ function populateSessionsTable() {
                 <td style="padding: 12px;">${session.date}</td>
                 <td style="padding: 12px; font-weight: bold;">${session.farmers}</td>
                 <td style="padding: 12px;">${session.acres.toLocaleString()}</td>
+                <td style="padding: 12px;">
+                    <button onclick="viewSessionDetails(${session.id})" style="background: #2e7d32; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                </td>
             </tr>
         `;
     });
     
     tableBody.innerHTML = tableHTML || `
         <tr>
-            <td colspan="6" style="padding: 40px; text-align: center; color: #666;">
+            <td colspan="7" style="padding: 40px; text-align: center; color: #666;">
                 <i class="fas fa-calendar-times"></i>
                 <p>No sessions matching current filters</p>
             </td>
         </tr>
     `;
+}
+
+// View session details
+function viewSessionDetails(sessionId) {
+    const session = campaignData.sessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    alert(`Session Details:\n\n` +
+          `Session: ${session.sessionNumber}\n` +
+          `City: ${session.cityName}\n` +
+          `Spot: ${session.spot}\n` +
+          `Date: ${session.date}\n` +
+          `Farmers: ${session.farmers}\n` +
+          `Acres: ${session.acres}\n` +
+          `Coordinates: ${session.latitude}, ${session.longitude}`);
 }
 
 // Export data to CSV
@@ -869,6 +943,11 @@ function exportToCSV() {
     }
     
     const filteredSessions = getFilteredSessions();
+    
+    if (filteredSessions.length === 0) {
+        alert('No data to export with current filters');
+        return;
+    }
     
     // Create CSV content
     let csvContent = "Session ID,Session Number,City,Spot,Date,Farmers,Acres,Latitude,Longitude\n";
@@ -950,7 +1029,12 @@ function showError(message) {
     updateStatus('error', 'Error detected');
 }
 
+// Make functions available globally
+window.filterByCity = filterByCity;
+window.viewSessionDetails = viewSessionDetails;
+
 // Initialize everything when page loads
 window.onload = function() {
     console.log('AgriVista Dashboard fully loaded');
+    // The DOMContentLoaded event handler already calls initDashboard()
 };

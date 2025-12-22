@@ -1,5 +1,5 @@
 {
-  "campaign": "Buttril Super Farmer Education Drive",
+  "campaign": "Buctril Super Farmer Education Drive (FED) 2025",
   "period": "2025-11-24 to 2025-12-12",
   "duration": "17 days",
   "totalSessions": 40,
@@ -7,6 +7,28 @@
   "totalAcres": 44256,
   "averageFarmersPerSession": 72.7,
   "averageAcresPerSession": 1106.4,
+  "keyInfluencers": 530,
+  "brandLoyaltyScore": 67,
+  "performanceMetrics": {
+    "definiteIntent": 90,
+    "awareness": 84,
+    "clarity": 60,
+    "satisfaction": 88,
+    "recommendation": 92,
+    "engagement": 94,
+    "retention": 76,
+    "adoption": 68
+  },
+  "insightScores": {
+    "broadleafControl": 5.80,
+    "goldenPeriod": 5.37,
+    "applicationMethod": 5.62,
+    "dosageAccuracy": 5.45,
+    "safetyPrecautions": 5.55,
+    "integrationKnowledge": 5.20,
+    "weedManagement": 5.15,
+    "costBenefit": 5.10
+  },
   "cities": [
     {
       "code": "SKR",
@@ -16,6 +38,7 @@
       "acres": 16800,
       "latitude": 27.7132,
       "longitude": 68.8482,
+      "keyInfluencers": 195,
       "description": "Major wheat growing region with traditional farming communities"
     },
     {
@@ -26,6 +49,7 @@
       "acres": 10920,
       "latitude": 30.0489,
       "longitude": 70.6402,
+      "keyInfluencers": 132,
       "description": "Diverse agricultural zone with mixed cropping patterns"
     },
     {
@@ -36,6 +60,7 @@
       "acres": 9600,
       "latitude": 31.4504,
       "longitude": 73.1350,
+      "keyInfluencers": 108,
       "description": "Commercial farming hub with modern agricultural practices"
     },
     {
@@ -46,6 +71,7 @@
       "acres": 6936,
       "latitude": 32.1877,
       "longitude": 74.1945,
+      "keyInfluencers": 95,
       "description": "Industrial agriculture region with focus on quality production"
     }
   ],
@@ -65,7 +91,9 @@
       "facilitator": "Ali Raza",
       "focus": "Product Introduction & Basic Application",
       "mediaCount": 3,
-      "type": "education"
+      "type": "education",
+      "insightScore": 5.8,
+      "keyInfluencers": 15
     },
     {
       "id": 2,
@@ -82,7 +110,9 @@
       "facilitator": "Bilal Ahmed",
       "focus": "Application Techniques & Timing",
       "mediaCount": 2,
-      "type": "demonstration"
+      "type": "demonstration",
+      "insightScore": 5.6,
+      "keyInfluencers": 12
     },
     {
       "id": 3,
@@ -99,7 +129,9 @@
       "facilitator": "Faisal Khan",
       "focus": "Dosage Guidelines & Measurement",
       "mediaCount": 3,
-      "type": "training"
+      "type": "training",
+      "insightScore": 5.4,
+      "keyInfluencers": 14
     },
     {
       "id": 4,
@@ -116,7 +148,9 @@
       "facilitator": "Kamran Ali",
       "focus": "Safety Measures & Protective Equipment",
       "mediaCount": 2,
-      "type": "safety"
+      "type": "safety",
+      "insightScore": 5.5,
+      "keyInfluencers": 16
     },
     {
       "id": 5,
@@ -133,7 +167,9 @@
       "facilitator": "Naveed Ahmed",
       "focus": "Field Demonstration & Practical Application",
       "mediaCount": 4,
-      "type": "demonstration"
+      "type": "demonstration",
+      "insightScore": 5.7,
+      "keyInfluencers": 13
     },
     {
       "id": 6,
@@ -150,7 +186,9 @@
       "facilitator": "Osama Khan",
       "focus": "Q&A Session & Problem Solving",
       "mediaCount": 3,
-      "type": "interaction"
+      "type": "interaction",
+      "insightScore": 5.3,
+      "keyInfluencers": 18
     },
     {
       "id": 7,
@@ -167,7 +205,9 @@
       "facilitator": "Qasim Ali",
       "focus": "Problem Identification & Solution Strategies",
       "mediaCount": 2,
-      "type": "problem-solving"
+      "type": "problem-solving",
+      "insightScore": 5.2,
+      "keyInfluencers": 11
     },
     {
       "id": 8,
@@ -184,7 +224,9 @@
       "facilitator": "Rashid Mehmood",
       "focus": "Advanced Techniques & Modern Equipment",
       "mediaCount": 3,
-      "type": "advanced"
+      "type": "advanced",
+      "insightScore": 5.9,
+      "keyInfluencers": 15
     },
     {
       "id": 9,
@@ -201,7 +243,9 @@
       "facilitator": "Sajid Hussain",
       "focus": "Case Studies & Success Stories",
       "mediaCount": 2,
-      "type": "case-study"
+      "type": "case-study",
+      "insightScore": 5.4,
+      "keyInfluencers": 14
     },
     {
       "id": 10,
@@ -218,7 +262,9 @@
       "facilitator": "Tariq Mahmood",
       "focus": "Best Practices & Quality Standards",
       "mediaCount": 4,
-      "type": "training"
+      "type": "training",
+      "insightScore": 5.6,
+      "keyInfluencers": 17
     },
     {
       "id": 11,
@@ -235,7 +281,9 @@
       "facilitator": "Usman Ghani",
       "focus": "Integrated Pest Management",
       "mediaCount": 3,
-      "type": "ipm"
+      "type": "ipm",
+      "insightScore": 5.3,
+      "keyInfluencers": 13
     },
     {
       "id": 12,
@@ -252,7 +300,9 @@
       "facilitator": "Waqas Ahmed",
       "focus": "Cost-Benefit Analysis & ROI Calculation",
       "mediaCount": 2,
-      "type": "financial"
+      "type": "financial",
+      "insightScore": 5.1,
+      "keyInfluencers": 16
     },
     {
       "id": 13,
@@ -269,7 +319,9 @@
       "facilitator": "Yasir Ali",
       "focus": "Seasonal Planning & Crop Calendar",
       "mediaCount": 3,
-      "type": "planning"
+      "type": "planning",
+      "insightScore": 5.5,
+      "keyInfluencers": 14
     },
     {
       "id": 14,
@@ -286,7 +338,9 @@
       "facilitator": "Zubair Khan",
       "focus": "Resource Management & Optimization",
       "mediaCount": 2,
-      "type": "management"
+      "type": "management",
+      "insightScore": 5.4,
+      "keyInfluencers": 15
     },
     {
       "id": 15,
@@ -303,7 +357,9 @@
       "facilitator": "Ahmed Raza",
       "focus": "Closing Session & Feedback Collection",
       "mediaCount": 4,
-      "type": "closing"
+      "type": "closing",
+      "insightScore": 5.7,
+      "keyInfluencers": 18
     },
     {
       "id": 16,
@@ -320,7 +376,9 @@
       "facilitator": "Ali Hassan",
       "focus": "Product Launch & Market Introduction",
       "mediaCount": 3,
-      "type": "launch"
+      "type": "launch",
+      "insightScore": 5.6,
+      "keyInfluencers": 13
     },
     {
       "id": 17,
@@ -337,7 +395,9 @@
       "facilitator": "Babar Javed",
       "focus": "Practical Demonstration & Field Application",
       "mediaCount": 2,
-      "type": "demonstration"
+      "type": "demonstration",
+      "insightScore": 5.7,
+      "keyInfluencers": 14
     },
     {
       "id": 18,
@@ -354,7 +414,9 @@
       "facilitator": "Chaudhry Naeem",
       "focus": "Expert Talk & Technical Guidance",
       "mediaCount": 4,
-      "type": "expert"
+      "type": "expert",
+      "insightScore": 5.8,
+      "keyInfluencers": 16
     },
     {
       "id": 19,
@@ -371,7 +433,9 @@
       "facilitator": "Dawood Ahmed",
       "focus": "High Altitude Farming Challenges",
       "mediaCount": 2,
-      "type": "specialized"
+      "type": "specialized",
+      "insightScore": 5.3,
+      "keyInfluencers": 11
     },
     {
       "id": 20,
@@ -388,7 +452,9 @@
       "facilitator": "Ehsan Ullah",
       "focus": "Irrigation Methods & Water Management",
       "mediaCount": 3,
-      "type": "irrigation"
+      "type": "irrigation",
+      "insightScore": 5.4,
+      "keyInfluencers": 15
     },
     {
       "id": 21,
@@ -405,7 +471,9 @@
       "facilitator": "Fahad Malik",
       "focus": "Large Scale Farming & Commercial Production",
       "mediaCount": 2,
-      "type": "commercial"
+      "type": "commercial",
+      "insightScore": 5.6,
+      "keyInfluencers": 14
     },
     {
       "id": 22,
@@ -422,7 +490,9 @@
       "facilitator": "Ghulam Mustafa",
       "focus": "Soil Management & Fertility Enhancement",
       "mediaCount": 3,
-      "type": "soil"
+      "type": "soil",
+      "insightScore": 5.2,
+      "keyInfluencers": 12
     },
     {
       "id": 23,
@@ -439,7 +509,9 @@
       "facilitator": "Haroon Rasheed",
       "focus": "Pest Control & Disease Management",
       "mediaCount": 2,
-      "type": "pest-control"
+      "type": "pest-control",
+      "insightScore": 5.5,
+      "keyInfluencers": 13
     },
     {
       "id": 24,
@@ -456,7 +528,9 @@
       "facilitator": "Imran Yousaf",
       "focus": "Border Area Farming & Special Considerations",
       "mediaCount": 3,
-      "type": "border"
+      "type": "border",
+      "insightScore": 5.1,
+      "keyInfluencers": 11
     },
     {
       "id": 25,
@@ -473,7 +547,9 @@
       "facilitator": "Javed Iqbal",
       "focus": "Community Engagement & Social Impact",
       "mediaCount": 4,
-      "type": "community"
+      "type": "community",
+      "insightScore": 5.3,
+      "keyInfluencers": 13
     },
     {
       "id": 26,
@@ -490,7 +566,9 @@
       "facilitator": "Kamran Shabbir",
       "focus": "Urban Farming & Peri-urban Agriculture",
       "mediaCount": 3,
-      "type": "urban"
+      "type": "urban",
+      "insightScore": 5.7,
+      "keyInfluencers": 16
     },
     {
       "id": 27,
@@ -507,7 +585,9 @@
       "facilitator": "Liaqat Ali",
       "focus": "Commercial Farming & Market Linkages",
       "mediaCount": 2,
-      "type": "commercial"
+      "type": "commercial",
+      "insightScore": 5.6,
+      "keyInfluencers": 15
     },
     {
       "id": 28,
@@ -524,7 +604,9 @@
       "facilitator": "Mohsin Raza",
       "focus": "Modern Techniques & Technology Adoption",
       "mediaCount": 4,
-      "type": "technology"
+      "type": "technology",
+      "insightScore": 5.8,
+      "keyInfluencers": 14
     },
     {
       "id": 29,
@@ -541,7 +623,9 @@
       "facilitator": "Noman Khan",
       "focus": "Small Landholders & Resource Constraints",
       "mediaCount": 2,
-      "type": "small-farmers"
+      "type": "small-farmers",
+      "insightScore": 5.2,
+      "keyInfluencers": 12
     },
     {
       "id": 30,
@@ -558,7 +642,9 @@
       "facilitator": "Omer Farooq",
       "focus": "Technology Integration & Digital Tools",
       "mediaCount": 3,
-      "type": "digital"
+      "type": "digital",
+      "insightScore": 5.5,
+      "keyInfluencers": 13
     },
     {
       "id": 31,
@@ -575,7 +661,9 @@
       "facilitator": "Pervaiz Akhtar",
       "focus": "Export Quality Standards & Certification",
       "mediaCount": 2,
-      "type": "quality"
+      "type": "quality",
+      "insightScore": 5.4,
+      "keyInfluencers": 14
     },
     {
       "id": 32,
@@ -592,7 +680,9 @@
       "facilitator": "Qaiser Abbas",
       "focus": "Organic Alternatives & Sustainable Options",
       "mediaCount": 3,
-      "type": "organic"
+      "type": "organic",
+      "insightScore": 5.3,
+      "keyInfluencers": 12
     },
     {
       "id": 33,
@@ -609,7 +699,9 @@
       "facilitator": "Rizwan Haider",
       "focus": "Sustainable Farming & Environmental Impact",
       "mediaCount": 4,
-      "type": "sustainable"
+      "type": "sustainable",
+      "insightScore": 5.6,
+      "keyInfluencers": 12
     },
     {
       "id": 34,
@@ -626,7 +718,9 @@
       "facilitator": "Saeed Ahmed",
       "focus": "Traditional Methods & Indigenous Knowledge",
       "mediaCount": 2,
-      "type": "traditional"
+      "type": "traditional",
+      "insightScore": 5.2,
+      "keyInfluencers": 11
     },
     {
       "id": 35,
@@ -643,7 +737,9 @@
       "facilitator": "Tahir Mehmood",
       "focus": "Hybrid Solutions & Modern Adaptations",
       "mediaCount": 3,
-      "type": "hybrid"
+      "type": "hybrid",
+      "insightScore": 5.5,
+      "keyInfluencers": 13
     },
     {
       "id": 36,
@@ -660,7 +756,9 @@
       "facilitator": "Umar Hayat",
       "focus": "Water Conservation & Efficient Usage",
       "mediaCount": 2,
-      "type": "conservation"
+      "type": "conservation",
+      "insightScore": 5.3,
+      "keyInfluencers": 12
     },
     {
       "id": 37,
@@ -677,7 +775,9 @@
       "facilitator": "Viqar Hussain",
       "focus": "Market Linkages & Value Chain Integration",
       "mediaCount": 4,
-      "type": "market"
+      "type": "market",
+      "insightScore": 5.6,
+      "keyInfluencers": 15
     },
     {
       "id": 38,
@@ -694,7 +794,9 @@
       "facilitator": "Waseem Akram",
       "focus": "Quality Standards & Product Certification",
       "mediaCount": 2,
-      "type": "quality"
+      "type": "quality",
+      "insightScore": 5.4,
+      "keyInfluencers": 13
     },
     {
       "id": 39,
@@ -711,7 +813,9 @@
       "facilitator": "Xeeshan Khan",
       "focus": "Post-Harvest Management & Storage",
       "mediaCount": 3,
-      "type": "post-harvest"
+      "type": "post-harvest",
+      "insightScore": 5.1,
+      "keyInfluencers": 11
     },
     {
       "id": 40,
@@ -728,19 +832,11 @@
       "facilitator": "Younis Bhatti",
       "focus": "Campaign Summary & Future Planning",
       "mediaCount": 5,
-      "type": "closing"
+      "type": "closing",
+      "insightScore": 5.7,
+      "keyInfluencers": 14
     }
   ],
-  "metrics": {
-    "definiteIntent": 90,
-    "awareness": 84,
-    "clarity": 60,
-    "satisfaction": 88,
-    "recommendation": 92,
-    "engagement": 94,
-    "retention": 76,
-    "adoption": 68
-  },
   "facilitators": [
     "Ali Raza", "Bilal Ahmed", "Faisal Khan", "Kamran Ali", "Naveed Ahmed", 
     "Osama Khan", "Qasim Ali", "Rashid Mehmood", "Sajid Hussain", "Tariq Mahmood", 
@@ -751,14 +847,16 @@
     "Pervaiz Akhtar", "Qaiser Abbas", "Rizwan Haider", "Saeed Ahmed", "Tahir Mehmood", 
     "Umar Hayat", "Viqar Hussain", "Waseem Akram", "Xeeshan Khan", "Younis Bhatti"
   ],
-  "sessionTypes": ["education", "demonstration", "training", "safety", "interaction", 
-                   "problem-solving", "advanced", "case-study", "ipm", "financial", 
-                   "planning", "management", "launch", "expert", "specialized", 
-                   "irrigation", "commercial", "soil", "pest-control", "border", 
-                   "community", "urban", "technology", "small-farmers", "digital", 
-                   "quality", "organic", "sustainable", "traditional", "hybrid", 
-                   "conservation", "market", "post-harvest", "closing"],
+  "sessionTypes": [
+    "education", "demonstration", "training", "safety", "interaction", 
+    "problem-solving", "advanced", "case-study", "ipm", "financial", 
+    "planning", "management", "launch", "expert", "specialized", 
+    "irrigation", "commercial", "soil", "pest-control", "border", 
+    "community", "urban", "technology", "small-farmers", "digital", 
+    "quality", "organic", "sustainable", "traditional", "hybrid", 
+    "conservation", "market", "post-harvest", "closing"
+  ],
   "lastUpdated": "2025-12-22T10:47:37Z",
-  "dataVersion": "2.0",
-  "notes": "Complete dataset for Buttril Super Field Activations Campaign"
+  "dataVersion": "2.1",
+  "notes": "Complete dataset for Buctril Super Farmer Education Drive 2025 covering 4 major regions with 40 sessions across 17 cities"
 }

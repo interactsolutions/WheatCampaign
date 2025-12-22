@@ -91,8 +91,21 @@ async function loadAllData() {
 // CREATE FALLBACK DATA IF FILES MISSING
 function createFallbackSessions() {
     console.log('Creating fallback session data');
-    // ... (include the 40-session array from your provided data here for space)
-    return []; // Return your full 40-session array in the actual file
+    // Create minimal fallback data structure
+    return Array.from({ length: 40 }, (_, i) => ({
+        id: i + 1,
+        sessionNumber: `${["SKR", "DGK", "FSD", "GSM"][Math.floor(i / 10)]}-${(i % 10) + 1}`,
+        city: ["sukkur", "dgk", "faisalabad", "gujranwala"][Math.floor(i / 10)],
+        cityName: ["Sukkur", "Dera Ghazi Khan", "Faisalabad", "Gujranwala"][Math.floor(i / 10)],
+        spot: `Location ${i + 1}`,
+        date: "2025-11-24",
+        farmers: Math.floor(Math.random() * 50) + 50,
+        acres: Math.floor(Math.random() * 500) + 500,
+        latitude: 27 + Math.random() * 5,
+        longitude: 68 + Math.random() * 5,
+        facilitator: `Facilitator ${i + 1}`,
+        focus: "Product Education"
+    }));
 }
 
 function createFallbackMedia() {
@@ -103,7 +116,8 @@ function createFallbackMedia() {
         caption: `Campaign Image ${i + 1}`,
         city: ['sukkur', 'dgk', 'faisalabad', 'gujranwala'][i % 4],
         sessionId: (i % 40) + 1,
-        type: ['event', 'demo', 'training'][i % 3]
+        type: ['event', 'demo', 'training'][i % 3],
+        displayIn: 'gallery'
     }));
 }
 
@@ -319,6 +333,32 @@ function setupEventListeners() {
             searchTimeout = setTimeout(() => applyFilters(), 300);
         });
     }
+    
+    // High Attendance Filter
+    const highAttendanceBtn = document.getElementById('filterHighAttendance');
+    if (highAttendanceBtn) {
+        highAttendanceBtn.addEventListener('click', function() {
+            currentFilteredSessions = allSessions.filter(s => s.farmers >= 80);
+            updateDashboardStats();
+            renderSessionsTable();
+            updateMapMarkers();
+            updateStatus(`${currentFilteredSessions.length} high-attendance sessions`, 'success');
+        });
+    }
+    
+    // Recent Filter
+    const recentBtn = document.getElementById('filterRecent');
+    if (recentBtn) {
+        recentBtn.addEventListener('click', function() {
+            const today = new Date();
+            const lastWeek = new Date(today);
+            lastWeek.setDate(today.getDate() - 7);
+            
+            document.getElementById('dateFrom').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+            applyFilters();
+        });
+    }
 }
 
 // FILTER LOGIC
@@ -349,20 +389,31 @@ function applyFilters() {
     // Update everything
     updateDashboardStats();
     renderSessionsTable();
-    
-    // Update map markers
-    if (markerCluster && map) {
-        markerCluster.clearLayers();
-        currentFilteredSessions.forEach(session => {
-            if (session.latitude && session.longitude) {
-                const marker = L.marker([session.latitude, session.longitude]);
-                marker.bindPopup(`<b>${session.sessionNumber}</b><br>${session.spot}<br>${session.farmers} farmers`);
-                markerCluster.addLayer(marker);
-            }
-        });
-    }
+    updateMapMarkers();
     
     updateStatus(`${currentFilteredSessions.length} sessions found`, 'success');
+}
+
+// UPDATE MAP MARKERS
+function updateMapMarkers() {
+    if (!markerCluster || !map) return;
+    
+    markerCluster.clearLayers();
+    
+    currentFilteredSessions.forEach(session => {
+        if (session.latitude && session.longitude) {
+            const marker = L.marker([session.latitude, session.longitude]);
+            marker.bindPopup(`<b>${session.sessionNumber}</b><br>${session.spot}<br>${session.farmers} farmers`);
+            markerCluster.addLayer(marker);
+        }
+    });
+    
+    // Update map stats
+    if (elements.mapStats) {
+        const uniqueCities = [...new Set(currentFilteredSessions.map(s => s.cityName))].length;
+        const totalFarmers = currentFilteredSessions.reduce((sum, s) => sum + (s.farmers || 0), 0);
+        elements.mapStats.textContent = `${currentFilteredSessions.length} Sessions • ${uniqueCities} Cities • ${totalFarmers.toLocaleString()} Farmers`;
+    }
 }
 
 // RESET FILTERS
@@ -376,6 +427,7 @@ function resetFilters() {
     currentFilteredSessions = [...allSessions];
     updateDashboardStats();
     renderSessionsTable();
+    updateMapMarkers();
     
     // Reset map view
     if (map) {

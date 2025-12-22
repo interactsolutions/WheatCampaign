@@ -1,6 +1,15 @@
 {
-  "campaign": "Buttril Super Field Activations",
+  "campaign": "Buctril Super Farmer Education Drive",
   "totalMedia": 48,
+  "totalImages": 47,
+  "totalVideos": 2,
+  "totalDocuments": 0,
+  "storageSize": "48.5 MB",
+  "imageFormats": ["jpeg", "jpg", "png", "gif", "svg"],
+  "videoFormats": ["mp4"],
+  "resolution": "1920x1080",
+  "license": "Campaign Internal Use Only",
+  "photographer": "Bayer Field Team",
   "mediaItems": [
     {
       "id": 1,
@@ -9,16 +18,18 @@
       "type": "logo",
       "category": "brand",
       "displayIn": "header",
-      "priority": 1
+      "priority": 1,
+      "description": "Official Bayer logo for campaign branding"
     },
     {
       "id": 2,
       "filename": "assets/Buctril.jpg",
-      "caption": "Buttril Super Herbicide Product",
+      "caption": "Buctril Super Herbicide Product",
       "type": "product",
       "category": "brand",
       "displayIn": "header",
-      "priority": 2
+      "priority": 2,
+      "description": "Buctril Super product image for identification"
     },
     {
       "id": 3,
@@ -27,7 +38,8 @@
       "type": "animation",
       "category": "brand",
       "displayIn": "header",
-      "priority": 3
+      "priority": 3,
+      "description": "Animated Interact Solutions logo"
     },
     {
       "id": 4,
@@ -36,7 +48,8 @@
       "type": "product-range",
       "category": "brand",
       "displayIn": "header",
-      "priority": 4
+      "priority": 4,
+      "description": "Complete range of Bayer agricultural products"
     },
     {
       "id": 5,
@@ -45,7 +58,8 @@
       "type": "reference",
       "category": "brand",
       "displayIn": "header",
-      "priority": 5
+      "priority": 5,
+      "description": "Atlantis herbicide for comparison purposes"
     },
     {
       "id": 6,
@@ -55,7 +69,8 @@
       "category": "background",
       "displayIn": "background",
       "duration": "00:30",
-      "loop": true
+      "loop": true,
+      "description": "Background video of farming activities"
     },
     {
       "id": 7,
@@ -63,7 +78,8 @@
       "caption": "Default Placeholder Image",
       "type": "placeholder",
       "category": "utility",
-      "displayIn": "fallback"
+      "displayIn": "fallback",
+      "description": "Fallback image for missing media"
     },
     {
       "id": 8,
@@ -74,7 +90,9 @@
       "sessionId": 1,
       "type": "education",
       "displayIn": "gallery",
-      "description": "Introduction session for Buttril Super with local farmers"
+      "description": "Introduction session for Buctril Super with local farmers",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 9,
@@ -85,7 +103,9 @@
       "sessionId": 2,
       "type": "demonstration",
       "displayIn": "gallery",
-      "description": "Practical demonstration of herbicide application"
+      "description": "Practical demonstration of herbicide application",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 10,
@@ -96,7 +116,9 @@
       "sessionId": 3,
       "type": "training",
       "displayIn": "gallery",
-      "description": "Dosage and measurement training session"
+      "description": "Dosage and measurement training session",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 11,
@@ -107,7 +129,9 @@
       "sessionId": 4,
       "type": "safety",
       "displayIn": "gallery",
-      "description": "Proper use of protective gear during application"
+      "description": "Proper use of protective gear during application",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 12,
@@ -118,7 +142,9 @@
       "sessionId": 5,
       "type": "demonstration",
       "displayIn": "gallery",
-      "description": "Live field application demonstration"
+      "description": "Live field application demonstration",
+      "resolution": "1920x1080",
+      "fileSize": "2.5 MB"
     },
     {
       "id": 13,
@@ -129,7 +155,9 @@
       "sessionId": 6,
       "type": "interaction",
       "displayIn": "gallery",
-      "description": "Interactive question and answer session"
+      "description": "Interactive question and answer session",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 14,
@@ -140,7 +168,9 @@
       "sessionId": 7,
       "type": "problem-solving",
       "displayIn": "gallery",
-      "description": "Identifying and solving common farming challenges"
+      "description": "Identifying and solving common farming challenges",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 15,
@@ -151,7 +181,9 @@
       "sessionId": 8,
       "type": "advanced",
       "displayIn": "gallery",
-      "description": "Modern farming equipment demonstration"
+      "description": "Modern farming equipment demonstration",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 16,
@@ -162,7 +194,9 @@
       "sessionId": 9,
       "type": "case-study",
       "displayIn": "gallery",
-      "description": "Success stories from early adopters"
+      "description": "Success stories from early adopters",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 17,
@@ -173,7 +207,9 @@
       "sessionId": 10,
       "type": "training",
       "displayIn": "gallery",
-      "description": "Quality standards and best practices"
+      "description": "Quality standards and best practices",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 18,
@@ -184,7 +220,9 @@
       "sessionId": 11,
       "type": "ipm",
       "displayIn": "gallery",
-      "description": "Integrated Pest Management techniques"
+      "description": "Integrated Pest Management techniques",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 19,
@@ -195,7 +233,9 @@
       "sessionId": 12,
       "type": "financial",
       "displayIn": "gallery",
-      "description": "Cost-benefit analysis discussion"
+      "description": "Cost-benefit analysis discussion",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 20,
@@ -206,7 +246,9 @@
       "sessionId": 13,
       "type": "planning",
       "displayIn": "gallery",
-      "description": "Crop calendar and seasonal planning"
+      "description": "Crop calendar and seasonal planning",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 21,
@@ -217,7 +259,9 @@
       "sessionId": 14,
       "type": "management",
       "displayIn": "gallery",
-      "description": "Optimizing farm resources and inputs"
+      "description": "Optimizing farm resources and inputs",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 22,
@@ -228,7 +272,9 @@
       "sessionId": 15,
       "type": "closing",
       "displayIn": "gallery",
-      "description": "Final session with feedback collection"
+      "description": "Final session with feedback collection",
+      "resolution": "1920x1080",
+      "fileSize": "2.5 MB"
     },
     {
       "id": 23,
@@ -239,7 +285,9 @@
       "sessionId": 16,
       "type": "launch",
       "displayIn": "gallery",
-      "description": "DGK region product introduction"
+      "description": "DGK region product introduction",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 24,
@@ -250,7 +298,9 @@
       "sessionId": 17,
       "type": "demonstration",
       "displayIn": "gallery",
-      "description": "Practical field application"
+      "description": "Practical field application",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 25,
@@ -261,7 +311,9 @@
       "sessionId": 18,
       "type": "expert",
       "displayIn": "gallery",
-      "description": "Technical guidance from agricultural experts"
+      "description": "Technical guidance from agricultural experts",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 26,
@@ -272,7 +324,9 @@
       "sessionId": 19,
       "type": "specialized",
       "displayIn": "gallery",
-      "description": "Addressing high altitude farming challenges"
+      "description": "Addressing high altitude farming challenges",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 27,
@@ -283,7 +337,9 @@
       "sessionId": 20,
       "type": "irrigation",
       "displayIn": "gallery",
-      "description": "Water management techniques"
+      "description": "Water management techniques",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 28,
@@ -294,7 +350,9 @@
       "sessionId": 21,
       "type": "commercial",
       "displayIn": "gallery",
-      "description": "Large scale production techniques"
+      "description": "Large scale production techniques",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 29,
@@ -305,7 +363,9 @@
       "sessionId": 22,
       "type": "soil",
       "displayIn": "gallery",
-      "description": "Soil fertility and management"
+      "description": "Soil fertility and management",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 30,
@@ -316,7 +376,9 @@
       "sessionId": 23,
       "type": "pest-control",
       "displayIn": "gallery",
-      "description": "Integrated pest management"
+      "description": "Integrated pest management",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 31,
@@ -327,7 +389,9 @@
       "sessionId": 24,
       "type": "border",
       "displayIn": "gallery",
-      "description": "Special considerations for border areas"
+      "description": "Special considerations for border areas",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 32,
@@ -338,7 +402,9 @@
       "sessionId": 25,
       "type": "community",
       "displayIn": "gallery",
-      "description": "Social impact and community building"
+      "description": "Social impact and community building",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 33,
@@ -349,7 +415,9 @@
       "sessionId": 26,
       "type": "urban",
       "displayIn": "gallery",
-      "description": "Peri-urban agricultural practices"
+      "description": "Peri-urban agricultural practices",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 34,
@@ -360,7 +428,9 @@
       "sessionId": 27,
       "type": "commercial",
       "displayIn": "gallery",
-      "description": "Market-oriented farming"
+      "description": "Market-oriented farming",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 35,
@@ -371,7 +441,9 @@
       "sessionId": 28,
       "type": "technology",
       "displayIn": "gallery",
-      "description": "Modern farming technology"
+      "description": "Modern farming technology",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 36,
@@ -382,7 +454,9 @@
       "sessionId": 29,
       "type": "small-farmers",
       "displayIn": "gallery",
-      "description": "Addressing smallholder challenges"
+      "description": "Addressing smallholder challenges",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 37,
@@ -393,7 +467,9 @@
       "sessionId": 30,
       "type": "digital",
       "displayIn": "gallery",
-      "description": "Digital agriculture tools"
+      "description": "Digital agriculture tools",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 38,
@@ -404,7 +480,9 @@
       "sessionId": 31,
       "type": "quality",
       "displayIn": "gallery",
-      "description": "Export quality standards"
+      "description": "Export quality standards",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 39,
@@ -415,7 +493,9 @@
       "sessionId": 32,
       "type": "organic",
       "displayIn": "gallery",
-      "description": "Sustainable alternatives"
+      "description": "Sustainable alternatives",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 40,
@@ -426,7 +506,9 @@
       "sessionId": 33,
       "type": "sustainable",
       "displayIn": "gallery",
-      "description": "Environmental sustainability"
+      "description": "Environmental sustainability",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 41,
@@ -437,7 +519,9 @@
       "sessionId": 34,
       "type": "traditional",
       "displayIn": "gallery",
-      "description": "Indigenous knowledge preservation"
+      "description": "Indigenous knowledge preservation",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 42,
@@ -448,7 +532,9 @@
       "sessionId": 35,
       "type": "hybrid",
       "displayIn": "gallery",
-      "description": "Modern adaptations of traditional methods"
+      "description": "Modern adaptations of traditional methods",
+      "resolution": "1920x1080",
+      "fileSize": "2.3 MB"
     },
     {
       "id": 43,
@@ -459,7 +545,9 @@
       "sessionId": 36,
       "type": "conservation",
       "displayIn": "gallery",
-      "description": "Efficient water usage"
+      "description": "Efficient water usage",
+      "resolution": "1920x1080",
+      "fileSize": "2.1 MB"
     },
     {
       "id": 44,
@@ -470,7 +558,9 @@
       "sessionId": 37,
       "type": "market",
       "displayIn": "gallery",
-      "description": "Value chain integration"
+      "description": "Value chain integration",
+      "resolution": "1920x1080",
+      "fileSize": "2.4 MB"
     },
     {
       "id": 45,
@@ -481,7 +571,9 @@
       "sessionId": 38,
       "type": "quality",
       "displayIn": "gallery",
-      "description": "Product certification processes"
+      "description": "Product certification processes",
+      "resolution": "1920x1080",
+      "fileSize": "2.0 MB"
     },
     {
       "id": 46,
@@ -492,7 +584,9 @@
       "sessionId": 39,
       "type": "post-harvest",
       "displayIn": "gallery",
-      "description": "Storage and handling techniques"
+      "description": "Storage and handling techniques",
+      "resolution": "1920x1080",
+      "fileSize": "2.2 MB"
     },
     {
       "id": 47,
@@ -503,7 +597,9 @@
       "sessionId": 40,
       "type": "closing",
       "displayIn": "gallery",
-      "description": "Final campaign session and future planning"
+      "description": "Final campaign session and future planning",
+      "resolution": "1920x1080",
+      "fileSize": "2.5 MB"
     },
     {
       "id": 48,
@@ -515,27 +611,22 @@
       "type": "video",
       "displayIn": "gallery",
       "duration": "02:30",
-      "description": "Highlights from all campaign sessions"
+      "description": "Highlights from all campaign sessions across 17 cities",
+      "resolution": "1920x1080",
+      "fileSize": "25.8 MB"
     }
   ],
   "cities": ["sukkur", "dgk", "faisalabad", "gujranwala"],
-  "mediaTypes": ["logo", "product", "animation", "video", "education", "demonstration", 
-                 "training", "safety", "interaction", "problem-solving", "advanced", 
-                 "case-study", "ipm", "financial", "planning", "management", "launch", 
-                 "expert", "specialized", "irrigation", "commercial", "soil", 
-                 "pest-control", "border", "community", "urban", "technology", 
-                 "small-farmers", "digital", "quality", "organic", "sustainable", 
-                 "traditional", "hybrid", "conservation", "market", "post-harvest", 
-                 "closing"],
+  "mediaTypes": [
+    "logo", "product", "animation", "video", "education", "demonstration", 
+    "training", "safety", "interaction", "problem-solving", "advanced", 
+    "case-study", "ipm", "financial", "planning", "management", "launch", 
+    "expert", "specialized", "irrigation", "commercial", "soil", 
+    "pest-control", "border", "community", "urban", "technology", 
+    "small-farmers", "digital", "quality", "organic", "sustainable", 
+    "traditional", "hybrid", "conservation", "market", "post-harvest", 
+    "closing"
+  ],
   "lastUpdated": "2025-12-22T14:30:00Z",
-  "totalImages": 47,
-  "totalVideos": 2,
-  "totalDocuments": 0,
-  "storageSize": "48.5 MB",
-  "imageFormats": ["jpeg", "jpg", "png", "gif", "svg"],
-  "videoFormats": ["mp4"],
-  "resolution": "1920x1080",
-  "license": "Campaign Internal Use Only",
-  "photographer": "Bayer Field Team",
-  "notes": "Complete media collection from Buttril Super Field Activations Campaign"
+  "notes": "Complete media collection from Buctril Super Farmer Education Drive Campaign 2025 with 48 items across 40 sessions in 4 regions (17 cities)"
 }

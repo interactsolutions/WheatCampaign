@@ -69,6 +69,15 @@
             z-index: 1;
         }
         
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 10px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
         .build-date {
             font-size: 0.9rem;
             opacity: 0.9;
@@ -88,6 +97,7 @@
             align-items: center;
             gap: 15px;
             box-shadow: var(--box-shadow);
+            display: none; /* Hidden by default */
         }
         
         .error-banner i {
@@ -290,6 +300,12 @@
             align-items: center;
         }
         
+        /* Map marker styles */
+        .custom-marker {
+            background: none !important;
+            border: none !important;
+        }
+        
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
@@ -363,6 +379,7 @@
             overflow: hidden;
             box-shadow: var(--box-shadow);
             transition: transform 0.3s;
+            background: white;
         }
         
         .gallery-item:hover {
@@ -402,6 +419,61 @@
             height: 100%;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Analytics charts */
+        .chart-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        /* Sessions table */
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .sessions-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .sessions-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sessions-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Tab content animations */
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Loading animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fa-spin {
+            animation: spin 1s linear infinite;
         }
         
         /* Responsive */
@@ -425,6 +497,26 @@
             .tab {
                 min-width: 50%;
             }
+            
+            .summary-stats {
+                gap: 15px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .map-banner {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .campaign-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
         }
         
         /* Loading State */
@@ -445,55 +537,80 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-weight: 600;
             margin-left: 15px;
+            transition: opacity 0.3s;
         }
         
         .status-success {
             background-color: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
         
         .status-error {
             background-color: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
         }
         
-        /* Map placeholder when Leaflet fails */
-        .map-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #f8f9fa;
-            color: #666;
-            padding: 20px;
-            text-align: center;
+        .status-loading {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
         
-        .map-placeholder i {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #2e7d32;
-        }
-        
-        /* Quick checks */
+        /* Quick Checks List */
         .quick-checks {
             margin-top: 10px;
-            font-size: 0.9rem;
+            padding-left: 20px;
         }
         
         .quick-checks ol {
-            margin-left: 20px;
             margin-top: 5px;
         }
         
         .quick-checks li {
-            margin-bottom: 3px;
+            margin-bottom: 5px;
+        }
+        
+        /* Campaign Duration */
+        .campaign-duration {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+            background-color: var(--primary);
+        }
+        
+        /* City Badge */
+        .city-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Fade In Animation for Tab Content */
+        #tabContent > section {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .nav-tabs, .dashboard-controls, .button-group, .status-indicator {
+                display: none !important;
+            }
+            
+            .map-container {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -506,18 +623,18 @@
             <h2>Buttril Super Field Activations</h2>
         </header>
 
-        <!-- Error Banner -->
-        <div id="errorBanner" class="error-banner" style="display: none;">
+        <!-- Error Banner (Initially hidden if no error) -->
+        <div id="errorBanner" class="error-banner">
             <i class="fas fa-exclamation-triangle"></i>
             <div>
                 <h3>Dashboard failed to load</h3>
-                <p id="errorMessage"></p>
+                <p id="errorMessage">Can't find variable: updateMapBanner</p>
                 <div class="quick-checks">
                     <p><strong>Quick checks:</strong></p>
                     <ol>
-                        <li>All assets are properly hosted</li>
+                        <li>Verify all assets are properly hosted</li>
                         <li>Check browser DevTools → Console for errors</li>
-                        <li>JavaScript is enabled in your browser</li>
+                        <li>Ensure JavaScript is enabled in your browser</li>
                     </ol>
                 </div>
             </div>
@@ -541,9 +658,9 @@
                     <label for="spotFilter"><i class="fas fa-map-marker-alt"></i> Spot</label>
                     <select id="spotFilter" class="dropdown">
                         <option value="all">All Spots</option>
-                        <option value="spot1">Major Spots</option>
-                        <option value="spot2">Secondary Spots</option>
-                        <option value="spot3">Rural Areas</option>
+                        <option value="major">Major Spots</option>
+                        <option value="secondary">Secondary Spots</option>
+                        <option value="rural">Rural Areas</option>
                     </select>
                 </div>
                 
@@ -558,7 +675,7 @@
                 
                 <div class="control-group">
                     <label for="searchInput"><i class="fas fa-search"></i> Search</label>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search city, spot, reason...">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search city, spot, session...">
                 </div>
             </div>
             
@@ -593,7 +710,7 @@
                 </div>
                 <div class="status-indicator status-success" id="statusIndicator">
                     <i class="fas fa-check-circle"></i>
-                    <span id="statusText">Dashboard Loaded</span>
+                    <span>Loaded Successfully</span>
                 </div>
             </div>
         </section>
@@ -630,28 +747,7 @@
                     <span><i class="fas fa-map-marked-alt"></i> Campaign Coverage Map</span>
                     <span id="mapStats">40 Sessions • 4 Cities • 2,908 Farmers</span>
                 </div>
-                <div id="campaignMap">
-                    <!-- Map placeholder - will be replaced by Leaflet -->
-                    <div class="map-placeholder">
-                        <i class="fas fa-map-marked-alt"></i>
-                        <h3>Campaign Coverage Map</h3>
-                        <p>Map loading... If this persists, check your internet connection.</p>
-                        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-                            <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <strong>Sukkur (SKR)</strong><br>15 sessions
-                            </div>
-                            <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <strong>Dera Ghazi Khan (DGK)</strong><br>10 sessions
-                            </div>
-                            <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <strong>Faisalabad (FSD)</strong><br>8 sessions
-                            </div>
-                            <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <strong>Gujranwala (GSM)</strong><br>7 sessions
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="campaignMap"></div>
             </div>
         </section>
 
@@ -702,38 +798,38 @@
                     <h3><i class="fas fa-chart-line"></i> City-wise Performance</h3>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Sukkur (SKR)</span>
-                            <span>15 sessions</span>
+                            <span>Sukkur (SKR) <span class="city-badge">15 sessions</span></span>
+                            <span>1,120 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 85%"></div>
+                            <div class="progress-fill" style="width: 100%"></div>
                         </div>
                     </div>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Dera Ghazi Khan (DGK)</span>
-                            <span>10 sessions</span>
+                            <span>Dera Ghazi Khan (DGK) <span class="city-badge">10 sessions</span></span>
+                            <span>728 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 70%"></div>
+                            <div class="progress-fill" style="width: 66.7%"></div>
                         </div>
                     </div>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Faisalabad (FSD)</span>
-                            <span>8 sessions</span>
+                            <span>Faisalabad (FSD) <span class="city-badge">8 sessions</span></span>
+                            <span>640 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
+                            <div class="progress-fill" style="width: 53.3%"></div>
                         </div>
                     </div>
                     <div class="city-item">
                         <div class="city-header">
-                            <span>Gujranwala (GSM)</span>
-                            <span>7 sessions</span>
+                            <span>Gujranwala (GSM) <span class="city-badge">7 sessions</span></span>
+                            <span>420 farmers</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: 60%"></div>
+                            <div class="progress-fill" style="width: 46.7%"></div>
                         </div>
                     </div>
                 </div>
@@ -755,541 +851,64 @@
         </div>
     </div>
 
-    <!-- ALL JAVASCRIPT EMBEDDED IN THE SAME FILE -->
+    <!-- JavaScript Files -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- IMPORTANT: Changed from dashboard.js to data_processor.js -->
+    <script src="data_processor.js"></script>
+    
+    <!-- Fallback script in case dashboard.js fails -->
     <script>
-        // ============================================
-        // AGRI-VISTA DASHBOARD - ALL JAVASCRIPT IN ONE FILE
-        // ============================================
-        
-        console.log('AgriVista Dashboard Loading...');
-        
-        // Initialize variables
-        let map = null;
-        let campaignData = null;
-        
-        // Campaign data (embedded in JavaScript)
-        const campaignDataEmbedded = {
-            campaign: "Buttril Super Farmer Education Drive",
-            period: "2025-11-24 to 2025-12-12",
-            duration: "17 days",
-            totalSessions: 40,
-            totalFarmers: 2908,
-            totalAcres: 44256,
-            cities: [
-                { code: "SKR", name: "Sukkur", sessions: 15, farmers: 1120, acres: 16800 },
-                { code: "DGK", name: "Dera Ghazi Khan", sessions: 10, farmers: 728, acres: 10920 },
-                { code: "FSD", name: "Faisalabad", sessions: 8, farmers: 640, acres: 9600 },
-                { code: "GSM", name: "Gujranwala", sessions: 7, farmers: 420, acres: 6936 }
-            ],
-            metrics: {
-                definiteIntent: 90,
-                awareness: 84,
-                clarity: 60
-            }
-        };
-        
-        // City coordinates
-        const cityCoordinates = {
-            'sukkur': { lat: 27.7132, lng: 68.8482, name: 'Sukkur (SKR)' },
-            'dgk': { lat: 30.0489, lng: 70.6402, name: 'Dera Ghazi Khan (DGK)' },
-            'faisalabad': { lat: 31.4504, lng: 73.1350, name: 'Faisalabad (FSD)' },
-            'gujranwala': { lat: 32.1877, lng: 74.1945, name: 'Gujranwala (GSM)' }
-        };
-        
-        // Media data
-        const mediaData = [
-            {
-                id: 1,
-                filename: "assets/Bayer.png",
-                caption: "Bayer Logo",
-                type: "logo"
-            },
-            {
-                id: 2,
-                filename: "assets/Buctril.jpg",
-                caption: "Buttril Super Product",
-                type: "product"
-            },
-            {
-                id: 3,
-                filename: "assets/Interact.gif",
-                caption: "Interact Solutions Animation",
-                type: "animation"
-            },
-            {
-                id: 4,
-                filename: "assets/poductts.jpg",
-                caption: "Product Range Display",
-                type: "product"
-            },
-            {
-                id: 5,
-                filename: "assets/Atlantis.jpg",
-                caption: "Atlantis Herbicide Reference",
-                type: "reference"
-            },
-            {
-                id: 6,
-                filename: "https://images.unsplash.com/photo-1505253668822-42074d58a7c6?w=400&h=300&fit=crop",
-                caption: "Farmer Education Session",
-                type: "event",
-                city: "sukkur"
-            },
-            {
-                id: 7,
-                filename: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400&h=300&fit=crop",
-                caption: "Field Demonstration",
-                type: "demonstration",
-                city: "dgk"
-            },
-            {
-                id: 8,
-                filename: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=300&fit=crop",
-                caption: "Product Distribution",
-                type: "distribution",
-                city: "faisalabad"
-            }
-        ];
-        
-        // Main initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing dashboard...');
-            
-            try {
-                // Set campaign data
-                campaignData = campaignDataEmbedded;
-                
-                // Initialize all components
-                initDashboard();
-                setupEventListeners();
-                initMap();
-                
-                // Update UI
-                updateDashboard();
-                
-                // Hide error banner
-                document.getElementById('errorBanner').style.display = 'none';
-                
-                // Update status
-                updateStatus('success', 'Dashboard loaded successfully');
-                
-                console.log('Dashboard initialized successfully!');
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-                showError(`Initialization error: ${error.message}`);
+        // Fallback initialization if data_processor.js fails
+        window.addEventListener('error', function(e) {
+            console.error('Global error caught:', e.message);
+            if (e.message.includes('updateMapBanner') || e.message.includes('dashboard')) {
+                document.getElementById('errorBanner').style.display = 'flex';
+                document.getElementById('errorMessage').textContent = e.message;
+                const statusIndicator = document.getElementById('statusIndicator');
+                if (statusIndicator) {
+                    statusIndicator.className = 'status-indicator status-error';
+                    statusIndicator.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Script Error Detected</span>';
+                }
             }
         });
         
-        // Initialize dashboard
-        function initDashboard() {
-            console.log('Initializing dashboard components...');
+        // Ensure basic functionality even if data_processor.js fails
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Basic initialization starting...');
             
-            // Set date limits
+            // Set minimum date for date inputs
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateTo').max = today;
             
-            // Update stats display
-            document.getElementById('sessionCount').textContent = campaignData.totalSessions;
-            document.getElementById('farmerCount').textContent = campaignData.totalFarmers.toLocaleString();
-            document.getElementById('acreCount').textContent = campaignData.totalAcres.toLocaleString();
-            
-            document.getElementById('totalSessions').textContent = campaignData.totalSessions;
-            document.getElementById('totalFarmers').textContent = campaignData.totalFarmers.toLocaleString();
-            document.getElementById('totalAcres').textContent = campaignData.totalAcres.toLocaleString();
-        }
-        
-        // Set up event listeners
-        function setupEventListeners() {
-            console.log('Setting up event listeners...');
-            
-            // Search button
-            document.getElementById('searchBtn').addEventListener('click', function() {
-                applyFilters();
-            });
-            
-            // Export button
-            document.getElementById('exportBtn').addEventListener('click', function() {
-                exportToCSV();
-            });
-            
-            // Reset button
-            document.getElementById('resetBtn').addEventListener('click', function() {
-                resetFilters();
-            });
-            
-            // Tab navigation
+            // Basic tab switching
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
                     const tabId = this.getAttribute('data-tab');
-                    switchTab(tabId);
+                    const allSections = document.querySelectorAll('#tabContent > section');
+                    allSections.forEach(section => {
+                        section.style.display = section.id === tabId + 'Tab' ? 'block' : 'none';
+                    });
                 });
             });
             
-            // Search input enter key
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    applyFilters();
-                }
-            });
-            
-            console.log('Event listeners set up successfully');
-        }
-        
-        // Initialize map
-        function initMap() {
-            console.log('Initializing map...');
-            
-            try {
-                // Create map centered on Pakistan
-                map = L.map('campaignMap').setView([30.3753, 69.3451], 6);
-                
-                // Add OpenStreetMap tiles
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
-                    maxZoom: 18
-                }).addTo(map);
-                
-                // Add city markers
-                addCityMarkers();
-                
-                // Update map banner
-                updateMapBanner();
-                
-                console.log('Map initialized successfully');
-            } catch (error) {
-                console.error('Error initializing map:', error);
-                // Map will show placeholder content
-            }
-        }
-        
-        // Add city markers to map
-        function addCityMarkers() {
-            if (!map) return;
-            
-            Object.keys(cityCoordinates).forEach(cityKey => {
-                const city = cityCoordinates[cityKey];
-                const cityStats = campaignData.cities.find(c => c.code === cityKey.toUpperCase());
-                
-                if (cityStats) {
-                    // Create marker
-                    const marker = L.marker([city.lat, city.lng]).addTo(map);
-                    
-                    // Create popup content
-                    const popupContent = `
-                        <div style="padding: 10px; min-width: 200px;">
-                            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">${city.name}</h4>
-                            <p><strong>Sessions:</strong> ${cityStats.sessions}</p>
-                            <p><strong>Farmers:</strong> ${cityStats.farmers.toLocaleString()}</p>
-                            <p><strong>Acres:</strong> ${cityStats.acres.toLocaleString()}</p>
-                            <button onclick="filterCity('${cityKey}')" 
-                                    style="background: #2e7d32; color: white; border: none; padding: 8px 16px; 
-                                           border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%;">
-                                <i class="fas fa-filter"></i> Filter this city
-                            </button>
-                        </div>
-                    `;
-                    
-                    marker.bindPopup(popupContent);
-                }
-            });
-        }
-        
-        // UPDATE MAP BANNER FUNCTION (This was missing!)
-        function updateMapBanner() {
-            console.log('Updating map banner...');
-            
-            try {
-                const banner = document.getElementById('mapStats');
-                if (banner && campaignData) {
-                    banner.innerHTML = `
-                        <i class="fas fa-calendar-check"></i> ${campaignData.totalSessions} Sessions • 
-                        <i class="fas fa-city"></i> ${campaignData.cities.length} Cities • 
-                        <i class="fas fa-users"></i> ${campaignData.totalFarmers.toLocaleString()} Farmers
-                    `;
-                }
-                console.log('Map banner updated');
-            } catch (error) {
-                console.error('Error updating map banner:', error);
-            }
-        }
-        
-        // Filter by city (called from map popup)
-        function filterCity(cityKey) {
-            const cityName = cityCoordinates[cityKey]?.name || cityKey;
-            document.getElementById('cityFilter').value = cityKey;
-            document.getElementById('searchInput').value = cityName;
-            applyFilters();
-        }
-        
-        // Update dashboard
-        function updateDashboard() {
-            console.log('Updating dashboard...');
-            
-            if (!campaignData) return;
-            
-            // Get filtered data
-            const filteredData = getFilteredData();
-            
-            // Update selection summary
-            document.getElementById('sessionCount').textContent = filteredData.sessions;
-            document.getElementById('farmerCount').textContent = filteredData.farmers.toLocaleString();
-            document.getElementById('acreCount').textContent = filteredData.acres.toLocaleString();
-            
-            // Update progress bars based on filter
-            updateProgressBars(filteredData);
-            
-            // Update status
-            updateStatus('success', `Showing ${filteredData.sessions} of ${campaignData.totalSessions} sessions`);
-        }
-        
-        // Get filtered data based on current filters
-        function getFilteredData() {
-            const cityFilter = document.getElementById('cityFilter').value;
-            
-            if (cityFilter === 'all') {
-                return {
-                    sessions: campaignData.totalSessions,
-                    farmers: campaignData.totalFarmers,
-                    acres: campaignData.totalAcres
-                };
-            } else {
-                const city = campaignData.cities.find(c => c.code === cityFilter.toUpperCase());
-                if (city) {
-                    return {
-                        sessions: city.sessions,
-                        farmers: city.farmers,
-                        acres: city.acres
-                    };
-                }
-            }
-            
-            return {
-                sessions: 0,
-                farmers: 0,
-                acres: 0
-            };
-        }
-        
-        // Update progress bars
-        function updateProgressBars(filteredData) {
-            const cityFilter = document.getElementById('cityFilter').value;
-            
-            if (cityFilter === 'all') {
-                // Show all cities with full progress
-                document.querySelectorAll('.progress-fill').forEach((fill, index) => {
-                    const percentages = [85, 70, 65, 60];
-                    if (index < percentages.length) {
-                        fill.style.width = `${percentages[index]}%`;
-                    }
-                });
-            } else {
-                // Highlight only selected city
-                document.querySelectorAll('.progress-fill').forEach((fill, index) => {
-                    const cities = ['sukkur', 'dgk', 'faisalabad', 'gujranwala'];
-                    if (cities[index] === cityFilter) {
-                        fill.style.width = '100%';
-                    } else {
-                        fill.style.width = '20%';
-                    }
+            // Basic filter reset
+            const resetBtn = document.getElementById('resetBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    document.getElementById('cityFilter').value = 'all';
+                    document.getElementById('spotFilter').value = 'all';
+                    document.getElementById('dateFrom').value = '2025-11-24';
+                    document.getElementById('dateTo').value = '2025-12-12';
+                    document.getElementById('searchInput').value = '';
+                    alert('Filters reset to default');
                 });
             }
-        }
-        
-        // Apply filters
-        function applyFilters() {
-            console.log('Applying filters...');
             
-            const cityFilter = document.getElementById('cityFilter').value;
-            const dateFrom = document.getElementById('dateFrom').value;
-            const dateTo = document.getElementById('dateTo').value;
-            const searchQuery = document.getElementById('searchInput').value;
-            
-            // Update dashboard
-            updateDashboard();
-            
-            // Update status
-            updateStatus('success', 'Filters applied successfully');
-            
-            console.log(`Filters: City=${cityFilter}, Dates=${dateFrom} to ${dateTo}, Search="${searchQuery}"`);
-        }
-        
-        // Reset filters
-        function resetFilters() {
-            console.log('Resetting filters...');
-            
-            document.getElementById('cityFilter').value = 'all';
-            document.getElementById('spotFilter').value = 'all';
-            document.getElementById('dateFrom').value = '2025-11-24';
-            document.getElementById('dateTo').value = '2025-12-12';
-            document.getElementById('searchInput').value = '';
-            
-            updateDashboard();
-            updateStatus('success', 'All filters reset');
-            
-            console.log('Filters reset to default');
-        }
-        
-        // Switch tabs
-        function switchTab(tabId) {
-            console.log(`Switching to tab: ${tabId}`);
-            
-            // Update active tab
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.getAttribute('data-tab') === tabId) {
-                    tab.classList.add('active');
-                }
-            });
-            
-            // Show selected tab, hide others
-            const tabContents = ['snapshotTab', 'galleryTab'];
-            tabContents.forEach(contentId => {
-                const element = document.getElementById(contentId);
-                if (element) {
-                    element.style.display = contentId === tabId + 'Tab' ? 'block' : 'none';
-                }
-            });
-            
-            // Load content for specific tabs
-            if (tabId === 'gallery') {
-                loadGallery();
-            } else if (tabId === 'map' && map) {
-                // Trigger map resize
-                setTimeout(() => {
-                    if (map) map.invalidateSize();
-                }, 100);
-            }
-            
-            updateStatus('success', `Switched to ${tabId} view`);
-        }
-        
-        // Load gallery
-        function loadGallery() {
-            console.log('Loading gallery...');
-            
-            const galleryContainer = document.getElementById('mediaGallery');
-            if (!galleryContainer) return;
-            
-            // Filter media by current city filter
-            const cityFilter = document.getElementById('cityFilter').value;
-            let filteredMedia = mediaData;
-            
-            if (cityFilter !== 'all') {
-                filteredMedia = mediaData.filter(media => 
-                    !media.city || media.city === cityFilter
-                );
-            }
-            
-            // Create gallery HTML
-            let galleryHTML = '';
-            
-            filteredMedia.forEach(media => {
-                galleryHTML += `
-                    <div class="gallery-item">
-                        <img src="${media.filename}" alt="${media.caption}" 
-                             onerror="this.src='https://images.unsplash.com/photo-1505253668822-42074d58a7c6?w=400&h=300&fit=crop'">
-                        <div style="padding: 15px; background: white;">
-                            <p style="font-weight: 600; margin: 0 0 5px 0;">${media.caption}</p>
-                            <small style="color: #666;">${media.type}</small>
-                            ${media.city ? `<br><small style="color: #2e7d32;">${media.city}</small>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            galleryContainer.innerHTML = galleryHTML || `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
-                    <i class="fas fa-images"></i>
-                    <p>No media found for current filters</p>
-                </div>
-            `;
-            
-            console.log(`Gallery loaded with ${filteredMedia.length} items`);
-        }
-        
-        // Export to CSV
-        function exportToCSV() {
-            console.log('Exporting to CSV...');
-            
-            // Create CSV content
-            let csvContent = "City,Sessions,Farmers,Acres,Intent%,Awareness%,Clarity%\n";
-            
-            campaignData.cities.forEach(city => {
-                csvContent += `${city.name},${city.sessions},${city.farmers},${city.acres},${campaignData.metrics.definiteIntent},${campaignData.metrics.awareness},${campaignData.metrics.clarity}\n`;
-            });
-            
-            // Add totals
-            csvContent += `TOTAL,${campaignData.totalSessions},${campaignData.totalFarmers},${campaignData.totalAcres},${campaignData.metrics.definiteIntent},${campaignData.metrics.awareness},${campaignData.metrics.clarity}\n`;
-            
-            // Create download
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            
-            link.href = url;
-            link.setAttribute('download', `Buttril_Campaign_Export_${new Date().toISOString().slice(0,10)}.csv`);
-            link.style.display = 'none';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            updateStatus('success', 'CSV exported successfully');
-            
-            console.log('CSV export completed');
-        }
-        
-        // Update status
-        function updateStatus(type, message) {
-            const indicator = document.getElementById('statusIndicator');
-            const statusText = document.getElementById('statusText');
-            
-            if (!indicator || !statusText) return;
-            
-            // Update classes
-            indicator.className = 'status-indicator';
-            if (type === 'success') {
-                indicator.classList.add('status-success');
-            } else if (type === 'error') {
-                indicator.classList.add('status-error');
-            }
-            
-            // Update text
-            statusText.textContent = message;
-            
-            console.log(`Status: ${type} - ${message}`);
-        }
-        
-        // Show error
-        function showError(message) {
-            console.error('Dashboard Error:', message);
-            
-            const errorBanner = document.getElementById('errorBanner');
-            const errorMessage = document.getElementById('errorMessage');
-            
-            if (errorBanner && errorMessage) {
-                errorMessage.textContent = message;
-                errorBanner.style.display = 'flex';
-            }
-            
-            updateStatus('error', 'Error detected');
-        }
-        
-        // Window load handler
-        window.onload = function() {
-            console.log('AgriVista Dashboard fully loaded and ready!');
-            
-            // Final status update
-            setTimeout(() => {
-                updateStatus('success', 'Ready - 40 sessions, 4 cities, 2,908 farmers');
-            }, 1000);
-        };
-        
-        // Error handling for missing updateMapBanner
-        window.updateMapBanner = updateMapBanner;
-        
-        console.log('AgriVista Dashboard JavaScript loaded');
+            console.log('Basic dashboard functionality loaded');
+        });
     </script>
 </body>
 </html>

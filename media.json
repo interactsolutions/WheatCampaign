@@ -15,152 +15,319 @@
       "city": "Ubaro",
       "spot": "Ameen khan Chacharr",
       "date": "2025-11-24",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 1: Session 1 - Farmer education session on Buctril Super weed control"
     },
     {
       "id": "2",
+      "caption": "Ubaro — Naseer Dhondo (2025-11-24)",
+      "city": "Ubaro",
+      "spot": "Naseer Dhondo",
+      "date": "2025-11-24",
+      "description": "Day 1: Session 2 - Field demonstration of Buctril Super application"
+    },
+    {
+      "id": "3",
       "caption": "Dharki — Matal Mahar (2025-11-25)",
       "city": "Dharki",
       "spot": "Matal Mahar",
       "date": "2025-11-25",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 2: Session 1 - Weed management workshop for wheat farmers"
     },
     {
-      "id": "3",
+      "id": "4",
+      "caption": "Dharki — Abdullah Rajni (2025-11-25)",
+      "city": "Dharki",
+      "spot": "Abdullah Rajni",
+      "date": "2025-11-25",
+      "description": "Day 2: Session 2 - Golden period education session"
+    },
+    {
+      "id": "5",
       "caption": "Ghotki — Abdullah Laakhan (2025-11-26)",
       "city": "Ghotki",
       "spot": "Abdullah Laakhan",
       "date": "2025-11-26",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 3: Session 1 - Farmer feedback collection session"
     },
     {
-      "id": "4",
+      "id": "6",
+      "caption": "Ghotki — M. Qasim Ghooto (2025-11-26)",
+      "city": "Ghotki",
+      "spot": "M. Qasim Ghooto",
+      "date": "2025-11-26",
+      "description": "Day 3: Session 2 - Broadleaf weed control demonstration"
+    },
+    {
+      "id": "7",
       "caption": "Ghotki — Darri Chachar (2025-11-27)",
       "city": "Ghotki",
       "spot": "Darri Chachar",
       "date": "2025-11-27",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 4: Session 1 - Dealer-farmer interaction session"
     },
     {
-      "id": "5",
+      "id": "8",
+      "caption": "Ghotki — Kalati Gabol (2025-11-27)",
+      "city": "Ghotki",
+      "spot": "Kalati Gabol",
+      "date": "2025-11-27",
+      "description": "Day 4: Session 2 - Product experience sharing"
+    },
+    {
+      "id": "9",
       "caption": "Jaferabad — Haji Darya Khan (2025-11-28)",
       "city": "Jaferabad",
       "spot": "Haji Darya Khan",
       "date": "2025-11-28",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 5: Session 1 - Wheat acre coverage assessment"
     },
     {
-      "id": "6",
+      "id": "10",
+      "caption": "Jaferabad — Qaeim Khan Khossa 2 (2025-11-28)",
+      "city": "Jaferabad",
+      "spot": "Qaeim Khan Khossa 2",
+      "date": "2025-11-28",
+      "description": "Day 5: Session 2 - Yield protection strategies"
+    },
+    {
+      "id": "11",
       "caption": "Ranipur — Allah Wadhayo (2025-11-29)",
       "city": "Ranipur",
       "spot": "Allah Wadhayo",
       "date": "2025-11-29",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 6: Session 1 - Past experience sharing session"
     },
     {
-      "id": "7",
+      "id": "12",
+      "caption": "Ranipur — Haji Khabar Malaha (2025-11-29)",
+      "city": "Ranipur",
+      "spot": "Haji Khabar Malaha",
+      "date": "2025-11-29",
+      "description": "Day 6: Session 2 - Farmer testimonial collection"
+    },
+    {
+      "id": "13",
       "caption": "Mehrabpur — Saein Daad Marri (2025-12-01)",
       "city": "Mehrabpur",
       "spot": "Saein Daad Marri",
       "date": "2025-12-01",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 7: Session 1 - Brand trust building session"
     },
     {
-      "id": "8",
+      "id": "14",
+      "caption": "Mehrabpur — Pir Watiyo (2025-12-01)",
+      "city": "Mehrabpur",
+      "spot": "Pir Watiyo",
+      "date": "2025-12-01",
+      "description": "Day 7: Session 2 - Price-value discussion"
+    },
+    {
+      "id": "15",
       "caption": "Dadu — Manali (2025-12-02)",
       "city": "Dadu",
       "spot": "Manali",
       "date": "2025-12-02",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 8: Session 1 - Weed control efficacy demonstration"
     },
     {
-      "id": "9",
+      "id": "16",
+      "caption": "Dadu — Golo Potho (2025-12-02)",
+      "city": "Dadu",
+      "spot": "Golo Potho",
+      "date": "2025-12-02",
+      "description": "Day 8: Session 2 - Field application techniques"
+    },
+    {
+      "id": "17",
       "caption": "Muzaffar Ghar — Bassti Seerein (2025-12-03)",
       "city": "Muzaffar Ghar",
       "spot": "Bassti Seerein",
       "date": "2025-12-03",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 9: Session 1 - High engagement farmer meeting"
     },
     {
-      "id": "10",
+      "id": "18",
+      "caption": "Muzaffar Ghar — Topi Maanay wali (2025-12-03)",
+      "city": "Muzaffar Ghar",
+      "spot": "Topi Maanay wali",
+      "date": "2025-12-03",
+      "description": "Day 9: Session 2 - Experience-based learning session"
+    },
+    {
+      "id": "19",
+      "caption": "Muzaffar Ghar — Phaty wala (2025-12-03)",
+      "city": "Muzaffar Ghar",
+      "spot": "Phaty wala",
+      "date": "2025-12-03",
+      "description": "Day 9: Session 3 - Large group education session"
+    },
+    {
+      "id": "20",
       "caption": "Kot Adu — Basti Haider Ghazi (2025-12-04)",
       "city": "Kot Adu",
       "spot": "Basti Haider Ghazi",
       "date": "2025-12-04",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 10: Session 1 - Brand loyalty discussion"
     },
     {
-      "id": "11",
+      "id": "21",
+      "caption": "Kot Adu — Hanjrai Bangla Chaah Phaati wala (2025-12-04)",
+      "city": "Kot Adu",
+      "spot": "Hanjrai Bangla Chaah Phaati wala",
+      "date": "2025-12-04",
+      "description": "Day 10: Session 2 - Farmer satisfaction assessment"
+    },
+    {
+      "id": "22",
       "caption": "Karor Lal esan — Basti joya (2025-12-05)",
       "city": "Karor Lal esan",
       "spot": "Basti joya",
       "date": "2025-12-05",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 11: Session 1 - High farmer turnout session"
     },
     {
-      "id": "12",
+      "id": "23",
+      "caption": "Karor Lal esan — Chak 106 TDA (2025-12-05)",
+      "city": "Karor Lal esan",
+      "spot": "Chak 106 TDA",
+      "date": "2025-12-05",
+      "description": "Day 11: Session 2 - Technical knowledge sharing"
+    },
+    {
+      "id": "24",
+      "caption": "Karor Lal esan — Bassti Maachi Buchi wala (2025-12-05)",
+      "city": "Karor Lal esan",
+      "spot": "Bassti Maachi Buchi wala",
+      "date": "2025-12-05",
+      "description": "Day 11: Session 3 - Price sensitivity discussion"
+    },
+    {
+      "id": "25",
       "caption": "Bhakkar — Kandani (2025-12-06)",
       "city": "Bhakkar",
       "spot": "Kandani",
       "date": "2025-12-06",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 12: Session 1 - Past success story sharing"
     },
     {
-      "id": "13",
+      "id": "26",
+      "caption": "Bhakkar — 54-ML (2025-12-06)",
+      "city": "Bhakkar",
+      "spot": "54-ML",
+      "date": "2025-12-06",
+      "description": "Day 12: Session 2 - Farmer adoption metrics"
+    },
+    {
+      "id": "27",
+      "caption": "Bhakkar — Majoka (2025-12-06)",
+      "city": "Bhakkar",
+      "spot": "Majoka",
+      "date": "2025-12-06",
+      "description": "Day 12: Session 3 - Group learning session"
+    },
+    {
+      "id": "28",
       "caption": "Mianwali — Kalor Sharif Kacha (2025-12-08)",
       "city": "Mianwali",
       "spot": "Kalor Sharif Kacha",
       "date": "2025-12-08",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 13: Session 1 - Dealer recommendation focus"
     },
     {
-      "id": "14",
+      "id": "29",
+      "caption": "Mianwali — Kamar Mashaani Gulshan Colony (2025-12-08)",
+      "city": "Mianwali",
+      "spot": "Kamar Mashaani Gulshan Colony",
+      "date": "2025-12-08",
+      "description": "Day 13: Session 2 - Price-value perception"
+    },
+    {
+      "id": "30",
+      "caption": "Mianwali — Daud KhaiL kacha (2025-12-08)",
+      "city": "Mianwali",
+      "spot": "Daud KhaiL kacha",
+      "date": "2025-12-08",
+      "description": "Day 13: Session 3 - Dealer network strengthening"
+    },
+    {
+      "id": "31",
       "caption": "Sargodha — Jharoola (2025-12-09)",
       "city": "Sargodha",
       "spot": "Jharoola",
       "date": "2025-12-09",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 14: Session 1 - Brand trust reinforcement"
     },
     {
-      "id": "15",
+      "id": "32",
+      "caption": "Sargodha — Habib pur Kangrra (2025-12-09)",
+      "city": "Sargodha",
+      "spot": "Habib pur Kangrra",
+      "date": "2025-12-09",
+      "description": "Day 14: Session 2 - Farmer confidence building"
+    },
+    {
+      "id": "33",
+      "caption": "Sargodha — ChakrraLa (2025-12-09)",
+      "city": "Sargodha",
+      "spot": "ChakrraLa",
+      "date": "2025-12-09",
+      "description": "Day 14: Session 3 - Large scale adoption planning"
+    },
+    {
+      "id": "34",
       "caption": "Phalia — Machyana (2025-12-10)",
       "city": "Phalia",
       "spot": "Machyana",
       "date": "2025-12-10",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 15: Session 1 - Weed control priority setting"
     },
     {
-      "id": "16",
+      "id": "35",
+      "caption": "Phalia — Sheikh Pur (2025-12-10)",
+      "city": "Phalia",
+      "spot": "Sheikh Pur",
+      "date": "2025-12-10",
+      "description": "Day 15: Session 2 - Price consideration discussion"
+    },
+    {
+      "id": "36",
+      "caption": "Phalia — Baghwal (2025-12-10)",
+      "city": "Phalia",
+      "spot": "Baghwal",
+      "date": "2025-12-10",
+      "description": "Day 15: Session 3 - Cost-benefit analysis"
+    },
+    {
+      "id": "37",
       "caption": "Chakwal — Daleel Pur Khokhar Baala (2025-12-11)",
       "city": "Chakwal",
       "spot": "Daleel Pur Khokhar Baala",
       "date": "2025-12-11",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 16: Session 1 - Experience-based decision making"
     },
     {
-      "id": "17",
-      "caption": "Toba Tek Singh — Chak 262-GB (2025-12-12)",
-      "city": "Toba Tek Singh",
+      "id": "38",
+      "caption": "Chakwal — DawaalmiaaL (2025-12-11)",
+      "city": "Chakwal",
+      "spot": "DawaalmiaaL",
+      "date": "2025-12-11",
+      "description": "Day 16: Session 2 - Farmer-to-farmer learning"
+    },
+    {
+      "id": "39",
+      "caption": "Toba take singh — Chak 262-GB (2025-12-12)",
+      "city": "Toba take singh",
       "spot": "Chak 262-GB",
       "date": "2025-12-12",
-      "hasVideo": true,
-      "hasImages": true
+      "description": "Day 17: Session 1 - Final campaign session"
+    },
+    {
+      "id": "40",
+      "caption": "Toba take singh — Chak 338 GB (2025-12-12)",
+      "city": "Toba take singh",
+      "spot": "Chak 338 GB",
+      "date": "2025-12-12",
+      "description": "Day 17: Session 2 - Campaign wrap-up and feedback"
     }
   ]
 }

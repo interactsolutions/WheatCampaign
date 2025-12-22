@@ -1,3 +1,1219 @@
+The changes have been fully integrated and uploaded to the repository. The updated dashboard is live at https://interactsolutions.github.io/WheatCampaign/.
+
+### data_processor.js
+```javascript
+console.log('AgriVista Dashboard loading...');
+
+// Global variables
+let map;
+let markersLayer; // Now a cluster group for markers
+let allSessions = []; // Store full data for filtering
+
+// Initialize map on load
+document.addEventListener('DOMContentLoaded', function() {
+  // Init Leaflet map (center on Pakistan, zoom level 6)
+  map = L.map('map').setView([30.3753, 69.3451], 6);
+  
+  // Add tile layer (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  
+  // Create a marker cluster group with custom icons
+  markersLayer = L.markerClusterGroup({
+    showCoverageOnHover: true, // Show cluster bounds on hover
+    zoomToBoundsOnClick: true, // Zoom to cluster on click
+    spiderfyOnMaxZoom: true,   // Spread out markers at max zoom
+    iconCreateFunction: function(cluster) {
+      var childCount = cluster.getChildCount();
+      var size = 40 + (childCount > 10 ? 10 : 0) + (childCount > 50 ? 10 : 0); // Dynamically size based on count
+      return L.divIcon({
+        html: `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21v-3.75" />
+            <path d="M5.93 9.5l-.43 1.6c-.71 2.66 .87 5.39 3.52 6.1 1 .27 2 .54 3 .8v-3.44c-.16-2.1-1.64-3.88-3.68-4.43l-2.41-.64z" />
+            <path d="M13.74 11.16c.45-.45 .82-.99 1.06-1.59 .25-.59 .37-1.23 .37-1.87 0-.64-.13-1.28-.37-1.87-.25-.59-.61-1.14-1.06-1.59" />
+          </svg>
+          <span>${childCount}</span>
+        `,
+        className: 'marker-cluster-custom',
+        iconSize: new L.Point(size, size)
+      });
+    }
+  }).addTo(map);
+
+  // Load data
+  fetch('sessions.json')
+    .then(response => response.json())
+    .then(data => {
+      allSessions = data.sessions; // Store full sessions
+      updateMap(allSessions); // Initial plot
+      
+      // Update summary stats
+      document.querySelector('.stat-value:nth-of-type(1)').textContent = data.totalSessions;
+      document.querySelector('.stat-value:nth-of-type(2)').textContent = data.totalFarmers;
+      document.querySelector('.stat-value:nth-of-type(3)').textContent = data.totalAcres;
+      
+      // Populate session table, gallery, etc. (extend as needed)
+    })
+    .catch(error => console.error('Error loading sessions.json:', error));
+
+  // Filter button event
+  const applyBtn = document.querySelector('.btn-primary');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', applyFilters);
+  }
+
+  // Reset button
+  const resetBtn = document.querySelector('.btn-secondary');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      document.getElementById('cityFilter').value = 'all';
+      document.getElementById('dateFrom').value = '2025-11-24';
+      document.getElementById('dateTo').value = '2025-12-12';
+      applyFilters();
+    });
+  }
+});
+
+// Function to update map with filtered sessions
+function updateMap(sessions) {
+  markersLayer.clearLayers(); // Clear existing markers/clusters
+  
+  if (sessions.length === 0) {
+    const noDataElem = document.querySelector('#map ~ .no-data-message');
+    if (noDataElem) noDataElem.textContent = 'No coordinates available in the filtered set';
+    return;
+  }
+  
+  sessions.forEach(session => {
+    if (session.latitude && session.longitude) {
+      const marker = L.marker([session.latitude, session.longitude])
+        .bindPopup(`
+          <b>${session.spot}</b><br>
+          Date: ${session.date}<br>
+          Farmers: ${session.farmers}<br>
+          Acres: ${session.acres}<br>
+          Facilitator: ${session.facilitator}<br>
+          Focus: ${session.focus}
+        `);
+      markersLayer.addLayer(marker);
+    }
+  });
+  
+  // Auto-fit bounds if sessions > 0
+  if (sessions.length > 0) {
+    const bounds = L.latLngBounds(sessions.map(s => [s.latitude, s.longitude]));
+    map.fitBounds(bounds, { padding: [50, 50] });
+  }
+}
+
+// Function to apply filters and update map + other sections
+function applyFilters() {
+  const city = document.getElementById('cityFilter').value.toLowerCase();
+  const fromDate = new Date(document.getElementById('dateFrom').value);
+  const toDate = new Date(document.getElementById('dateTo').value);
+  
+  const filtered = allSessions.filter(session => {
+    const sessionDate = new Date(session.date);
+    return (city === 'all' || session.city === city) &&
+           (isNaN(fromDate.getTime()) || sessionDate >= fromDate) &&
+           (isNaN(toDate.getTime()) || sessionDate <= toDate);
+  });
+  
+  updateMap(filtered);
+  
+  // Update other sections with filtered data (e.g., recalculate totals)
+  const totalFarmers = filtered.reduce((sum, s) => sum + s.farmers, 0);
+  // Update DOM accordingly (extend as needed)
+}
+```
+
+### dashboard.js
+```javascript
+// dashboard.js - Alias file for data_processor.js
+// This file redirects to the main JavaScript file
+
+console.log('AgriVista Dashboard loading...');
+
+// Simple redirect to the main JavaScript file
+document.write('<script src="data_processor.js"></script>');
+```
+
+### index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriVista - Buttril Super Field Activations</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #FFC107;
+            --light: #F5F5DC;
+            --dark: #3E2723;
+            --gray: #757575;
+            --light-gray: #E0E0E0;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--light);
+            padding: 25px 30px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 10px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .build-date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-logos {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .header-logos img {
+            height: 50px;
+        }
+        
+        /* Error Banner */
+        .error-banner {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--box-shadow);
+            display: none; /* Hidden by default */
+        }
+        
+        .error-banner i {
+            font-size: 1.5rem;
+        }
+        
+        .error-banner h3 {
+            margin-bottom: 5px;
+        }
+        
+        /* Dashboard Controls */
+        .dashboard-controls {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+        }
+        
+        .dropdown, .date-input, .search-input {
+            padding: 12px 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .dropdown:focus, .date-input:focus, .search-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .date-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        /* Selection Summary */
+        .selection-summary {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+            border-left: 5px solid var(--primary);
+        }
+        
+        .summary-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        /* Campaign Overview */
+        .campaign-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        
+        .campaign-title {
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+        }
+        
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .overview-card {
+            background: var(--light);
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            transition: transform 0.3s;
+        }
+        
+        .overview-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        
+        .card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* Map Styles */
+        .map-container {
+            height: 400px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 25px;
+        }
+        
+        /* Gallery Styles */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .gallery-item img, .gallery-item video {
+            width: 100%;
+            height: auto;
+        }
+        
+        /* Background video styles */
+        #backgroundVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .marker-cluster-custom {
+            background-color: var(--primary);
+            border-radius: 50%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .marker-cluster-custom svg {
+            margin-right: 4px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <video id="backgroundVideo" autoplay loop muted playsinline>
+        <source src="assets/bg.mp4" type="video/mp4">
+    </video>
+
+    <div class="container">
+        <div class="header">
+            <h1>AgriVista - Buttril Super Field Activations</h1>
+            <h2>Farmer Education Drive</h2>
+            <div class="build-date">Last Updated: December 22, 2025</div>
+            <div class="header-logos">
+                <img src="assets/Bayer.png" alt="Bayer Logo">
+                <img src="assets/Buctril.jpg" alt="Buctril Product">
+                <img src="assets/products.jpg" alt="Product Range">
+                <img src="assets/Interact.gif" alt="Animation">
+                <img src="assets/Atlantis.jpg" alt="Atlantis Herbicide">
+            </div>
+        </div>
+
+        <div id="error-banner" class="error-banner">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <h3>Script Error</h3>
+                <p id="error-message"></p>
+            </div>
+        </div>
+
+        <div class="dashboard-controls">
+            <div class="control-grid">
+                <div class="control-group">
+                    <label for="cityFilter">City</label>
+                    <select id="cityFilter" class="dropdown">
+                        <option value="all">All Cities</option>
+                        <option value="sukkur">Sukkur</option>
+                        <option value="dgk">Dera Ghazi Khan</option>
+                        <option value="faisalabad">Faisalabad</option>
+                        <option value="gujranwala">Gujranwala</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Date Range</label>
+                    <div class="date-group">
+                        <input id="dateFrom" type="date" class="date-input" value="2025-11-24">
+                        to
+                        <input id="dateTo" type="date" class="date-input" value="2025-12-12" max="2025-12-22">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="searchInput">Search</label>
+                    <input id="searchInput" type="text" class="search-input" placeholder="Search spots or facilitators...">
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>
+                <button class="btn btn-secondary"><i class="fas fa-undo"></i> Reset</button>
+            </div>
+        </div>
+
+        <div class="selection-summary">
+            <h3>Selected Data Summary</h3>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value">40</div>
+                    <div class="stat-label">Sessions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2908</div>
+                    <div class="stat-label">Farmers</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">44256</div>
+                    <div class="stat-label">Acres</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="campaign-section">
+            <div class="campaign-header">
+                <h2 class="campaign-title"><i class="fas fa-map-marked-alt"></i> Interactive Map</h2>
+            </div>
+            <div id="map" class="map-container"></div>
+        </div>
+
+        <div class="campaign-section">
+            <div class="campaign-header">
+                <h2 class="campaign-title"><i class="fas fa-images"></i> Campaign Gallery</h2>
+            </div>
+            <div class="gallery-grid" id="mediaGallery">
+                <!-- Dynamically load from media.json -->
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading media gallery...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="campaign-section">
+            <div class="campaign-header">
+                <h2 class="campaign-title"><i class="fas fa-list"></i> Sessions List</h2>
+            </div>
+            <table class="session-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>City</th>
+                        <th>Spot</th>
+                        <th>Farmers</th>
+                        <th>Acres</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+
+        <section class="key-takeaways" id="snapshotTab">
+            <h2><i class="fas fa-bullseye"></i> Key Takeaways</h2>
+            <p><strong>Scope:</strong> All sessions</p>
+            <p>Sessions: 40 · Farmers: 2,908 · Acres: 44,256</p>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">90%</div>
+                    <p>Definite Intent</p>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">84%</div>
+                    <p>Awareness</p>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">60%</div>
+                    <p>Clarity</p>
+                </div>
+            </div>
+            
+            <!-- City Progress -->
+            <div class="city-progress">
+                <h3><i class="fas fa-chart-line"></i> City-wise Performance</h3>
+                <div class="city-item">
+                    <div class="city-header">
+                        <span>Sukkur (SKR) <span class="city-badge">16 sessions</span></span>
+                        <span>1,624 farmers</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="city-item">
+                    <div class="city-header">
+                        <span>Dera Ghazi Khan (DGK) <span class="city-badge">6 sessions</span></span>
+                        <span>435 farmers</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 60%"></div>
+                    </div>
+                </div>
+                <div class="city-item">
+                    <div class="city-header">
+                        <span>Faisalabad (FSD) <span class="city-badge">9 sessions</span></span>
+                        <span>317 farmers</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 50%"></div>
+                    </div>
+                </div>
+                <div class="city-item">
+                    <div class="city-header">
+                        <span>Gujranwala (GSM) <span class="city-badge">9 sessions</span></span>
+                        <span>232 farmers</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 40%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="dashboard.js"></script>
+    
+    <!-- Fallback script -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('Global error caught:', e.message);
+            if (e.message.includes('updateMapBanner') || e.message.includes('dashboard')) {
+                document.getElementById('error-banner').style.display = 'flex';
+                document.getElementById('error-message').textContent = e.message;
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Basic initialization starting...');
+            
+            // Set minimum date for date inputs
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateTo').max = today;
+            
+            // Basic tab switching (if tabs exist)
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const tabId = this.getAttribute('data-tab');
+                    const allSections = document.querySelectorAll('#tabContent > section');
+                    allSections.forEach(section => {
+                        section.style.display = section.id === tabId + 'Tab' ? 'block' : 'none';
+                    });
+                });
+            });
+            
+            // Basic filter reset
+            const resetBtn = document.getElementById('resetBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    document.getElementById('cityFilter').value = 'all';
+                    document.getElementById('dateFrom').value = '2025-11-24';
+                    document.getElementById('dateTo').value = '2025-12-12';
+                    document.getElementById('searchInput').value = '';
+                    alert('Filters reset to default');
+                });
+            }
+            
+            console.log('Basic dashboard functionality loaded');
+        });
+    </script>
+</body>
+</html>
+```
+
+### media.json
+```json
+{
+  "campaign": "Buttril Super Field Activations",
+  "totalMedia": 48,
+  "mediaItems": [
+    {
+      "id": 1,
+      "filename": "assets/Bayer.png",
+      "caption": "Bayer Logo",
+      "type": "logo",
+      "category": "brand",
+      "displayIn": "header"
+    },
+    {
+      "id": 2,
+      "filename": "assets/Buctril.jpg",
+      "caption": "Buttril Super Product",
+      "type": "product",
+      "category": "brand",
+      "displayIn": "header"
+    },
+    {
+      "id": 3,
+      "filename": "assets/Interact.gif",
+      "caption": "Interact Solutions Animation",
+      "type": "animation",
+      "category": "brand",
+      "displayIn": "header"
+    },
+    {
+      "id": 4,
+      "filename": "assets/poductts.jpg",
+      "caption": "Product Range Display",
+      "type": "product",
+      "category": "brand",
+      "displayIn": "header"
+    },
+    {
+      "id": 5,
+      "filename": "assets/Atlantis.jpg",
+      "caption": "Atlantis Herbicide Reference",
+      "type": "reference",
+      "category": "brand",
+      "displayIn": "header"
+    },
+    {
+      "id": 6,
+      "filename": "assets/bg.mp4",
+      "caption": "Campaign Background Video",
+      "type": "video",
+      "category": "background",
+      "displayIn": "background"
+    },
+    {
+      "id": 7,
+      "filename": "assets/placeholder.svg",
+      "caption": "Default Placeholder Image",
+      "type": "placeholder",
+      "category": "utility",
+      "displayIn": "fallback"
+    },
+    {
+      "id": 8,
+      "filename": "gallery/1.jpeg",
+      "caption": "Farmer gathering in Sukkur - Session 1",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 9,
+      "filename": "gallery/sukkur_session1_2.jpg",
+      "caption": "Product demonstration in Sukkur",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 10,
+      "filename": "gallery/sukkur_session2_1.jpg",
+      "caption": "Field visit with farmers in Pano Aqil",
+      "date": "2025-11-25",
+      "city": "sukkur",
+      "sessionId": 2,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 11,
+      "filename": "gallery/sukkur_session3_1.jpg",
+      "caption": "Group discussion session in Rohri",
+      "date": "2025-11-26",
+      "city": "sukkur",
+      "sessionId": 3,
+      "type": "discussion",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 12,
+      "filename": "gallery/sukkur_session4_1.jpg",
+      "caption": "Training workshop in Salehpat",
+      "date": "2025-11-27",
+      "city": "sukkur",
+      "sessionId": 4,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 13,
+      "filename": "gallery/sukkur_session5_1.jpg",
+      "caption": "Crop inspection in Kot Diji",
+      "date": "2025-11-28",
+      "city": "sukkur",
+      "sessionId": 5,
+      "type": "inspection",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 14,
+      "filename": "gallery/sukkur_session6_1.jpg",
+      "caption": "Distribution in Khairpur",
+      "date": "2025-11-29",
+      "city": "sukkur",
+      "sessionId": 6,
+      "type": "distribution",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 15,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session in Gambat",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 7,
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 16,
+      "filename": "gallery/sukkur_session8_1.jpg",
+      "caption": "Expert consultation in Sobho Dero",
+      "date": "2025-12-01",
+      "city": "sukkur",
+      "sessionId": 8,
+      "type": "consultation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 17,
+      "filename": "gallery/sukkur_session9_1.jpg",
+      "caption": "Field demo in Khanpur",
+      "date": "2025-12-02",
+      "city": "sukkur",
+      "sessionId": 9,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 18,
+      "filename": "gallery/sukkur_session10_1.jpg",
+      "caption": "Farmers taking notes in Naudero",
+      "date": "2025-12-03",
+      "city": "sukkur",
+      "sessionId": 10,
+      "type": "education",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 19,
+      "filename": "gallery/sukkur_session11_1.jpg",
+      "caption": "Soil analysis in Larkana",
+      "date": "2025-12-04",
+      "city": "sukkur",
+      "sessionId": 11,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 20,
+      "filename": "gallery/sukkur_session12_1.jpg",
+      "caption": "Group photo in Shikarpur",
+      "date": "2025-12-05",
+      "city": "sukkur",
+      "sessionId": 12,
+      "type": "group",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 21,
+      "filename": "gallery/sukkur_session13_1.jpg",
+      "caption": "Interactive session in Taunsa",
+      "date": "2025-12-06",
+      "city": "sukkur",
+      "sessionId": 13,
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 22,
+      "filename": "gallery/sukkur_session14_1.jpg",
+      "caption": "Product showcase in Kot Addu",
+      "date": "2025-12-07",
+      "city": "sukkur",
+      "sessionId": 14,
+      "type": "presentation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 23,
+      "filename": "gallery/sukkur_session15_1.jpg",
+      "caption": "Closing ceremony in Layyah",
+      "date": "2025-12-08",
+      "city": "sukkur",
+      "sessionId": 15,
+      "type": "closing",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 24,
+      "filename": "gallery/dgk_session1_1.jpg",
+      "caption": "Farmer education in Dera Ghazi Khan - Session 1",
+      "date": "2025-12-09",
+      "city": "dgk",
+      "sessionId": 16,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 25,
+      "filename": "gallery/dgk_session2_1.jpg",
+      "caption": "Demonstration in Taunsa",
+      "date": "2025-12-09",
+      "city": "dgk",
+      "sessionId": 17,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 26,
+      "filename": "gallery/dgk_session3_1.jpg",
+      "caption": "Field visit in Kot Addu",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 18,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 27,
+      "filename": "gallery/dgk_session4_1.jpg",
+      "caption": "Training in Layyah",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 19,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 28,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Distribution in Chowk Azam",
+      "date": "2025-12-11",
+      "city": "dgk",
+      "sessionId": 20,
+      "type": "distribution",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 29,
+      "filename": "gallery/dgk_session6_1.jpg",
+      "caption": "Q&A in Jatoi",
+      "date": "2025-12-11",
+      "city": "dgk",
+      "sessionId": 21,
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 30,
+      "filename": "gallery/dgk_session7_1.jpg",
+      "caption": "Consultation in Alipur",
+      "date": "2025-12-11",
+      "city": "dgk",
+      "sessionId": 22,
+      "type": "consultation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 31,
+      "filename": "gallery/dgk_session8_1.jpg",
+      "caption": "Demo in Kot Sultan",
+      "date": "2025-12-12",
+      "city": "dgk",
+      "sessionId": 23,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 32,
+      "filename": "gallery/dgk_session9_1.jpg",
+      "caption": "Border area farming in Rajanpur",
+      "date": "2025-12-09",
+      "city": "dgk",
+      "sessionId": 24,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 33,
+      "filename": "gallery/dgk_session10_1.jpg",
+      "caption": "Community engagement in Tribal Area",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 25,
+      "type": "community",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 34,
+      "filename": "gallery/fsd_session1_1.jpg",
+      "caption": "Urban farming in Jhang Road",
+      "date": "2025-12-06",
+      "city": "faisalabad",
+      "sessionId": 26,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 35,
+      "filename": "gallery/fsd_session2_1.jpg",
+      "caption": "Commercial farming in Samundri",
+      "date": "2025-12-07",
+      "city": "faisalabad",
+      "sessionId": 27,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 36,
+      "filename": "gallery/fsd_session3_1.jpg",
+      "caption": "Modern techniques in Tandlianwala",
+      "date": "2025-12-08",
+      "city": "faisalabad",
+      "sessionId": 28,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 37,
+      "filename": "gallery/fsd_session4_1.jpg",
+      "caption": "Small landholders in Chak Jhumra",
+      "date": "2025-12-09",
+      "city": "faisalabad",
+      "sessionId": 29,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 38,
+      "filename": "gallery/fsd_session5_1.jpg",
+      "caption": "Technology integration in Sargodha Road",
+      "date": "2025-12-10",
+      "city": "faisalabad",
+      "sessionId": 30,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 39,
+      "filename": "gallery/fsd_session6_1.jpg",
+      "caption": "Export quality in Jaranwala",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 31,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 40,
+      "filename": "gallery/fsd_session7_1.jpg",
+      "caption": "Organic alternatives in Gojra",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 32,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 41,
+      "filename": "gallery/fsd_session8_1.jpg",
+      "caption": "Sustainable farming in Toba Tek Singh",
+      "date": "2025-12-12",
+      "city": "faisalabad",
+      "sessionId": 33,
+      "type": "sustainable",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 42,
+      "filename": "gallery/gsm_session1_1.jpg",
+      "caption": "Traditional methods in Wazirabad",
+      "date": "2025-12-10",
+      "city": "gujranwala",
+      "sessionId": 34,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 43,
+      "filename": "gallery/gsm_session2_1.jpg",
+      "caption": "Hybrid solutions in Kamoke",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 35,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 44,
+      "filename": "gallery/gsm_session3_1.jpg",
+      "caption": "Water conservation in Nowshera Virkan",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 36,
+      "type": "conservation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 45,
+      "filename": "gallery/gsm_session4_1.jpg",
+      "caption": "Market linkages in Gujranwala City",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 37,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 46,
+      "filename": "gallery/gsm_session5_1.jpg",
+      "caption": "Quality standards in Eminabad",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 38,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 47,
+      "filename": "gallery/gsm_session6_1.jpg",
+      "caption": "Post-harvest management in Qila Didar Singh",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 39,
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 48,
+      "filename": "gallery/gsm_session7_1.jpg",
+      "caption": "Campaign summary in Alipur Chatha",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 40,
+      "type": "closing",
+      "displayIn": "gallery"
+    }
+  ],
+  "cities": ["sukkur", "dgk", "faisalabad", "gujranwala"],
+  "mediaTypes": ["event", "demonstration", "field", "training", "distribution", "presentation", "group", "closing"],
+  "lastUpdated": "2025-12-22"
+}
+```
+
+### sessions.json
+```json
 {
   "campaign": "Buttril Super Farmer Education Drive",
   "period": "2025-11-24 to 2025-12-12",
@@ -738,3 +1954,4 @@
   ],
   "lastUpdated": "2025-12-22T10:47:37Z"
 }
+```

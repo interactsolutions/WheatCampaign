@@ -2,58 +2,55 @@
   "campaign": "Buttril Super Field Activations",
   "totalMedia": 48,
   "mediaItems": [
-    // Brand/Logo Media
     {
       "id": 1,
-      "filename": "Bayer.png",
+      "filename": "assets/Bayer.png",
       "caption": "Bayer Logo",
       "type": "logo",
       "category": "brand"
     },
     {
       "id": 2,
-      "filename": "Buctril.jpg",
+      "filename": "assets/Buctril.jpg",
       "caption": "Buttril Super Product",
       "type": "product",
       "category": "brand"
     },
     {
       "id": 3,
-      "filename": "Interact.gif",
+      "filename": "assets/Interact.gif",
       "caption": "Interact Solutions Animation",
       "type": "animation",
       "category": "brand"
     },
     {
       "id": 4,
-      "filename": "poductts.jpg",
+      "filename": "assets/poductts.jpg",
       "caption": "Product Range Display",
       "type": "product",
       "category": "brand"
     },
     {
       "id": 5,
-      "filename": "Atlantis.jpg",
+      "filename": "assets/Atlantis.jpg",
       "caption": "Atlantis Herbicide Reference",
       "type": "reference",
       "category": "brand"
     },
     {
       "id": 6,
-      "filename": "bg.mp4",
+      "filename": "assets/bg.mp4",
       "caption": "Campaign Background Video",
       "type": "video",
       "category": "background"
     },
     {
       "id": 7,
-      "filename": "placeholder.svg",
+      "filename": "assets/placeholder.svg",
       "caption": "Default Placeholder Image",
       "type": "placeholder",
       "category": "utility"
     },
-    
-    // Gallery Images - Sukkur (SKR) - Sessions 1-15
     {
       "id": 8,
       "filename": "gallery/sukkur_session1_1.jpg",
@@ -125,11 +122,73 @@
       "city": "sukkur",
       "sessionId": 7,
       "type": "interaction"
-    },
-    
-    // Gallery Images - Dera Ghazi Khan (DGK) - Sessions 16-25
-    {
+    },  {
       "id": 16,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 8,
+      "type": "interaction"
+    },  {
+      "id": 17,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 9,
+      "type": "interaction"
+    },  {
+      "id": 18,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 10,
+      "type": "interaction"
+    },  {
+      "id": 19,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 11,
+      "type": "interaction"
+    },  {
+      "id": 20,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 12,
+      "type": "interaction"
+    },  {
+      "id": 21,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 13,
+      "type": "interaction"
+    },  {
+      "id": 22,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 14,
+      "type": "interaction"
+    },  {
+      "id": 23,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session with farmers",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 15,
+      "type": "interaction"
+    },
+    {
+      "id": 24,
       "filename": "gallery/dgk_session1_1.jpg",
       "caption": "DGK farmer education drive",
       "date": "2025-12-01",
@@ -138,7 +197,7 @@
       "type": "event"
     },
     {
-      "id": 17,
+      "id": 25,
       "filename": "gallery/dgk_session2_1.jpg",
       "caption": "Practical field demonstration",
       "date": "2025-12-02",
@@ -147,7 +206,7 @@
       "type": "demonstration"
     },
     {
-      "id": 18,
+      "id": 26,
       "filename": "gallery/dgk_session3_1.jpg",
       "caption": "Expert addressing farmers",
       "date": "2025-12-03",
@@ -156,7 +215,7 @@
       "type": "presentation"
     },
     {
-      "id": 19,
+      "id": 27,
       "filename": "gallery/dgk_session4_1.jpg",
       "caption": "Farmers taking notes",
       "date": "2025-12-04",
@@ -165,174 +224,183 @@
       "type": "training"
     },
     {
-      "id": 20,
+      "id": 28,
       "filename": "gallery/dgk_session5_1.jpg",
       "caption": "Group photo with participants",
       "date": "2025-12-05",
       "city": "dgk",
       "sessionId": 20,
       "type": "group"
+    },     {
+      "id": 29,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 21,
+      "type": "group"
+    },     {
+      "id": 30,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 22,
+      "type": "group"
+    },     {
+      "id": 31,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 23,
+      "type": "group"
+    },     {
+      "id": 32,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 24,
+      "type": "group"
+    },     {
+      "id": 33,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-11-24",
+      "city": "Ubaro",
+      "sessionId": 25,
+      "type": "group"
     },
-    
-    // Gallery Images - Faisalabad (FSD) - Sessions 26-33
     {
-      "id": 21,
+      "id": 34,
       "filename": "gallery/fsd_session1_1.jpg",
       "caption": "FSD campaign launch event",
-      "date": "2025-12-06",
-      "city": "faisalabad",
+      "date": "2025-11-25",
+      "city": "Dharki",
       "sessionId": 26,
       "type": "event"
     },
     {
-      "id": 22,
+      "id": 35,
       "filename": "gallery/fsd_session2_1.jpg",
       "caption": "Product efficacy demonstration",
-      "date": "2025-12-07",
-      "city": "faisalabad",
+      "date": "2025-11-27",
+      "city": "Ghotki",
       "sessionId": 27,
       "type": "demonstration"
     },
     {
-      "id": 23,
+      "id": 36,
       "filename": "gallery/fsd_session3_1.jpg",
       "caption": "Interactive farmer session",
-      "date": "2025-12-08",
-      "city": "faisalabad",
+      "date": "2025-12-28",
+      "city": "Jaferabad",
       "sessionId": 28,
       "type": "interaction"
     },
     {
-      "id": 24,
+      "id": 37,
       "filename": "gallery/fsd_session4_1.jpg",
       "caption": "Field problem diagnosis",
-      "date": "2025-12-09",
-      "city": "faisalabad",
+      "date": "2025-11-29",
+      "city": "Ranipur",
       "sessionId": 29,
       "type": "diagnosis"
+    },     {
+      "id": 38,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-01",
+      "city": "Mehrabpur",
+      "sessionId": 30,
+      "type": "group"
+    },    {
+      "id": 39,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-02",
+      "city": "Dadu",
+      "sessionId": 31,
+      "type": "group"
+    },    {
+      "id": 40,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-03",
+      "city": "Muzaffar Garh",
+      "sessionId": 32,
+      "type": "group"
+    },  {
+      "id": 41,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-04",
+      "city": "Kot Addu",
+      "sessionId": 33,
+      "type": "group"
     },
-    
-    // Gallery Images - Gujranwala (GSM) - Sessions 34-40
     {
-      "id": 25,
+      "id": 42,
       "filename": "gallery/gsm_session1_1.jpg",
-      "caption": "Gujranwala awareness session",
-      "date": "2025-12-10",
-      "city": "gujranwala",
+      "caption": "awareness session",
+      "date": "2025-12-05",
+      "city": "Karor lal Esan",
       "sessionId": 34,
       "type": "awareness"
     },
     {
-      "id": 26,
+      "id": 43,
       "filename": "gallery/gsm_session2_1.jpg",
       "caption": "Practical application demo",
-      "date": "2025-12-11",
-      "city": "gujranwala",
+      "date": "2025-12-06",
+      "city": "Bhakkar",
       "sessionId": 35,
       "type": "application"
+    }, {
+      "id": 44,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-08",
+      "city": "Mianwali",
+      "sessionId": 36,
+      "type": "group"
+    }, {
+      "id": 45,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-09",
+      "city": "Sargoda",
+      "sessionId": 37,
+      "type": "group"
+    },  {
+      "id": 46,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-10",
+      "city": "Phalia",
+      "sessionId": 38,
+      "type": "group"
+    },  {
+      "id": 47,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Group photo with participants",
+      "date": "2025-12-11",
+      "city": "Chakwal",
+      "sessionId": 39,
+      "type": "group"
     },
     {
-      "id": 27,
+      "id": 48,
       "filename": "gallery/gsm_session3_1.jpg",
       "caption": "Final session group photo",
       "date": "2025-12-12",
-      "city": "gujranwala",
+      "city": "Tota Tek Singh",
       "sessionId": 40,
       "type": "closing"
-    },
-    
-    // Additional Media
-    {
-      "id": 28,
-      "filename": "gallery/map_overview.jpg",
-      "caption": "Campaign route map overview",
-      "type": "map",
-      "category": "visualization"
-    },
-    {
-      "id": 29,
-      "filename": "gallery/statistics_chart.jpg",
-      "caption": "Farmer engagement statistics",
-      "type": "chart",
-      "category": "analytics"
-    },
-    {
-      "id": 30,
-      "filename": "gallery/testimonial_1.jpg",
-      "caption": "Farmer testimonial video thumbnail",
-      "type": "testimonial",
-      "category": "feedback"
-    },
-    {
-      "id": 31,
-      "filename": "gallery/testimonial_2.jpg",
-      "caption": "Success story documentation",
-      "type": "success",
-      "category": "feedback"
-    },
-    {
-      "id": 32,
-      "filename": "gallery/team_photo.jpg",
-      "caption": "Campaign team group photo",
-      "type": "team",
-      "category": "people"
-    },
-    {
-      "id": 33,
-      "filename": "gallery/equipment_setup.jpg",
-      "caption": "Equipment setup for demonstration",
-      "type": "setup",
-      "category": "logistics"
-    },
-    {
-      "id": 34,
-      "filename": "gallery/material_distribution.jpg",
-      "caption": "Educational material distribution",
-      "type": "distribution",
-      "category": "logistics"
-    },
-    {
-      "id": 35,
-      "filename": "gallery/crop_comparison.jpg",
-      "caption": "Before/After crop comparison",
-      "type": "comparison",
-      "category": "results"
-    },
-    {
-      "id": 36,
-      "filename": "gallery/yield_improvement.jpg",
-      "caption": "Yield improvement demonstration",
-      "type": "results",
-      "category": "results"
     }
-        {
-      "id": 37,
-      "filename": "gallery/yield_improvement.jpg",
-      "caption": "Yield improvement demonstration",
-      "type": "results",
-      "category": "results"
-    }
-        {
-      "id": 38,
-      "filename": "gallery/yield_improvement.jpg",
-      "caption": "Yield improvement demonstration",
-      "type": "results",
-      "category": "results"
-    }
-    {
-      "id": 39,
-      "filename": "gallery/yield_improvement.jpg",
-      "caption": "Yield improvement demonstration",
-      "type": "results",
-      "category": "results"
-    }     {
-      "id": 40,
-      "filename": "gallery/yield_improvement.jpg",
-      "caption": "Yield improvement demonstration",
-      "type": "results",
-      "category": "results"
-    } ],
-  "cities": ["sukkur", "dgk", "faisalabad", "gujranwala"],
+  ],
+  "cities": ["Ubaro", "Dharki", "Ghotki","Jaffarabad", "Ranipur","Mehrabpur", "Dadu","Muzaffar Garh","Kot Addu","Karor lal Esan", "Bhakkar","Mianwali", "Sargoda", "Phalia","Chakwal", "Tota Tek Singh", ],
   "mediaTypes": ["event", "demonstration", "field", "training", "distribution", "presentation", "results"],
   "lastUpdated": "2025-12-22"
 }

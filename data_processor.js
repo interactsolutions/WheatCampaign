@@ -1,11 +1,1137 @@
 // data_processor.js - Main JavaScript for AgriVista Dashboard
-// Complete implementation with data processing and visualization
+// Complete implementation with embedded data for reliability
 
 console.log('AgriVista Dashboard Data Processor loading...');
 
+// EMBEDDED DATA - No external JSON files needed
+const embeddedCampaignData = {
+  "campaign": "Buttril Super Farmer Education Drive",
+  "period": "2025-11-24 to 2025-12-12",
+  "duration": "17 days",
+  "totalSessions": 40,
+  "totalFarmers": 2908,
+  "totalAcres": 44256,
+  "averageFarmersPerSession": 72.7,
+  "averageAcresPerSession": 1106.4,
+  "cities": [
+    {
+      "code": "SKR",
+      "name": "Sukkur",
+      "sessions": 15,
+      "farmers": 1120,
+      "acres": 16800,
+      "latitude": 27.7132,
+      "longitude": 68.8482
+    },
+    {
+      "code": "DGK",
+      "name": "Dera Ghazi Khan",
+      "sessions": 10,
+      "farmers": 728,
+      "acres": 10920,
+      "latitude": 30.0489,
+      "longitude": 70.6402
+    },
+    {
+      "code": "FSD",
+      "name": "Faisalabad",
+      "sessions": 8,
+      "farmers": 640,
+      "acres": 9600,
+      "latitude": 31.4504,
+      "longitude": 73.1350
+    },
+    {
+      "code": "GSM",
+      "name": "Gujranwala",
+      "sessions": 7,
+      "farmers": 420,
+      "acres": 6936,
+      "latitude": 32.1877,
+      "longitude": 74.1945
+    }
+  ],
+  "sessions": [
+    // Sukkur (SKR) - Sessions 1-15
+    {
+      "id": 1,
+      "sessionNumber": "SKR-01",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Mirpur Mathelo",
+      "date": "2025-11-24",
+      "day": "Monday",
+      "farmers": 85,
+      "acres": 1200,
+      "latitude": 27.7132,
+      "longitude": 68.8482,
+      "facilitator": "Ali Raza",
+      "focus": "Product Introduction",
+      "mediaCount": 3
+    },
+    {
+      "id": 2,
+      "sessionNumber": "SKR-02",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Pano Aqil",
+      "date": "2025-11-25",
+      "day": "Tuesday",
+      "farmers": 92,
+      "acres": 1350,
+      "latitude": 27.7232,
+      "longitude": 68.8582,
+      "facilitator": "Bilal Ahmed",
+      "focus": "Application Techniques",
+      "mediaCount": 2
+    },
+    {
+      "id": 3,
+      "sessionNumber": "SKR-03",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Rohri",
+      "date": "2025-11-26",
+      "day": "Wednesday",
+      "farmers": 78,
+      "acres": 1100,
+      "latitude": 27.6832,
+      "longitude": 68.8382,
+      "facilitator": "Faisal Khan",
+      "focus": "Dosage Guidelines",
+      "mediaCount": 3
+    },
+    {
+      "id": 4,
+      "sessionNumber": "SKR-04",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Salehpat",
+      "date": "2025-11-27",
+      "day": "Thursday",
+      "farmers": 105,
+      "acres": 1600,
+      "latitude": 27.7032,
+      "longitude": 68.8682,
+      "facilitator": "Kamran Ali",
+      "focus": "Safety Measures",
+      "mediaCount": 2
+    },
+    {
+      "id": 5,
+      "sessionNumber": "SKR-05",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Kot Diji",
+      "date": "2025-11-28",
+      "day": "Friday",
+      "farmers": 88,
+      "acres": 1250,
+      "latitude": 27.6932,
+      "longitude": 68.8282,
+      "facilitator": "Naveed Ahmed",
+      "focus": "Field Demonstration",
+      "mediaCount": 4
+    },
+    {
+      "id": 6,
+      "sessionNumber": "SKR-06",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Khairpur",
+      "date": "2025-11-29",
+      "day": "Saturday",
+      "farmers": 95,
+      "acres": 1400,
+      "latitude": 27.5332,
+      "longitude": 68.7582,
+      "facilitator": "Osama Khan",
+      "focus": "Q&A Session",
+      "mediaCount": 3
+    },
+    {
+      "id": 7,
+      "sessionNumber": "SKR-07",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Gambat",
+      "date": "2025-11-30",
+      "day": "Sunday",
+      "farmers": 82,
+      "acres": 1150,
+      "latitude": 27.3532,
+      "longitude": 68.5182,
+      "facilitator": "Qasim Ali",
+      "focus": "Problem Solving",
+      "mediaCount": 2
+    },
+    {
+      "id": 8,
+      "sessionNumber": "SKR-08",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Sobho Dero",
+      "date": "2025-12-01",
+      "day": "Monday",
+      "farmers": 90,
+      "acres": 1300,
+      "latitude": 27.3032,
+      "longitude": 68.3982,
+      "facilitator": "Rashid Mehmood",
+      "focus": "Advanced Techniques",
+      "mediaCount": 3
+    },
+    {
+      "id": 9,
+      "sessionNumber": "SKR-09",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Khanpur",
+      "date": "2025-12-02",
+      "day": "Tuesday",
+      "farmers": 87,
+      "acres": 1250,
+      "latitude": 27.8432,
+      "longitude": 69.0982,
+      "facilitator": "Sajid Hussain",
+      "focus": "Case Studies",
+      "mediaCount": 2
+    },
+    {
+      "id": 10,
+      "sessionNumber": "SKR-10",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Naudero",
+      "date": "2025-12-03",
+      "day": "Wednesday",
+      "farmers": 93,
+      "acres": 1350,
+      "latitude": 27.6632,
+      "longitude": 68.3582,
+      "facilitator": "Tariq Mahmood",
+      "focus": "Best Practices",
+      "mediaCount": 4
+    },
+    {
+      "id": 11,
+      "sessionNumber": "SKR-11",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Larkana",
+      "date": "2025-12-04",
+      "day": "Thursday",
+      "farmers": 80,
+      "acres": 1200,
+      "latitude": 27.5532,
+      "longitude": 68.2182,
+      "facilitator": "Usman Ghani",
+      "focus": "Integrated Pest Management",
+      "mediaCount": 3
+    },
+    {
+      "id": 12,
+      "sessionNumber": "SKR-12",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Shikarpur",
+      "date": "2025-12-05",
+      "day": "Friday",
+      "farmers": 96,
+      "acres": 1450,
+      "latitude": 27.9532,
+      "longitude": 68.6382,
+      "facilitator": "Waqas Ahmed",
+      "focus": "Cost-Benefit Analysis",
+      "mediaCount": 2
+    },
+    {
+      "id": 13,
+      "sessionNumber": "SKR-13",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Jacobabad",
+      "date": "2025-12-06",
+      "day": "Saturday",
+      "farmers": 84,
+      "acres": 1200,
+      "latitude": 28.2732,
+      "longitude": 68.4482,
+      "facilitator": "Yasir Ali",
+      "focus": "Seasonal Planning",
+      "mediaCount": 3
+    },
+    {
+      "id": 14,
+      "sessionNumber": "SKR-14",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Kashmore",
+      "date": "2025-12-07",
+      "day": "Sunday",
+      "farmers": 89,
+      "acres": 1300,
+      "latitude": 28.4332,
+      "longitude": 69.5782,
+      "facilitator": "Zubair Khan",
+      "focus": "Resource Management",
+      "mediaCount": 2
+    },
+    {
+      "id": 15,
+      "sessionNumber": "SKR-15",
+      "city": "sukkur",
+      "cityName": "Sukkur",
+      "spot": "Thull",
+      "date": "2025-12-08",
+      "day": "Monday",
+      "farmers": 91,
+      "acres": 1350,
+      "latitude": 28.0232,
+      "longitude": 69.4782,
+      "facilitator": "Ahmed Raza",
+      "focus": "Closing Session & Feedback",
+      "mediaCount": 4
+    },
+    
+    // Dera Ghazi Khan (DGK) - Sessions 16-25
+    {
+      "id": 16,
+      "sessionNumber": "DGK-01",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Taunsa Sharif",
+      "date": "2025-12-01",
+      "day": "Monday",
+      "farmers": 75,
+      "acres": 1100,
+      "latitude": 30.7089,
+      "longitude": 70.6502,
+      "facilitator": "Ali Hassan",
+      "focus": "Product Launch",
+      "mediaCount": 3
+    },
+    {
+      "id": 17,
+      "sessionNumber": "DGK-02",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Kot Chutta",
+      "date": "2025-12-02",
+      "day": "Tuesday",
+      "farmers": 82,
+      "acres": 1200,
+      "latitude": 30.3489,
+      "longitude": 70.9402,
+      "facilitator": "Babar Javed",
+      "focus": "Practical Demo",
+      "mediaCount": 2
+    },
+    {
+      "id": 18,
+      "sessionNumber": "DGK-03",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Dera Ghazi Khan City",
+      "date": "2025-12-03",
+      "day": "Wednesday",
+      "farmers": 95,
+      "acres": 1400,
+      "latitude": 30.0489,
+      "longitude": 70.6402,
+      "facilitator": "Chaudhry Naeem",
+      "focus": "Expert Talk",
+      "mediaCount": 4
+    },
+    {
+      "id": 19,
+      "sessionNumber": "DGK-04",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Fort Munro",
+      "date": "2025-12-04",
+      "day": "Thursday",
+      "farmers": 68,
+      "acres": 980,
+      "latitude": 29.9989,
+      "longitude": 69.9402,
+      "facilitator": "Dawood Ahmed",
+      "focus": "High Altitude Farming",
+      "mediaCount": 2
+    },
+    {
+      "id": 20,
+      "sessionNumber": "DGK-05",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Jampur",
+      "date": "2025-12-05",
+      "day": "Friday",
+      "farmers": 87,
+      "acres": 1250,
+      "latitude": 29.6489,
+      "longitude": 70.5902,
+      "facilitator": "Ehsan Ullah",
+      "focus": "Irrigation Methods",
+      "mediaCount": 3
+    },
+    {
+      "id": 21,
+      "sessionNumber": "DGK-06",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Kot Addu",
+      "date": "2025-12-06",
+      "day": "Saturday",
+      "farmers": 90,
+      "acres": 1320,
+      "latitude": 30.4689,
+      "longitude": 70.9602,
+      "facilitator": "Fahad Malik",
+      "focus": "Large Scale Farming",
+      "mediaCount": 2
+    },
+    {
+      "id": 22,
+      "sessionNumber": "DGK-07",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Layyah",
+      "date": "2025-12-07",
+      "day": "Sunday",
+      "farmers": 65,
+      "acres": 950,
+      "latitude": 30.9689,
+      "longitude": 70.9402,
+      "facilitator": "Ghulam Mustafa",
+      "focus": "Soil Management",
+      "mediaCount": 3
+    },
+    {
+      "id": 23,
+      "sessionNumber": "DGK-08",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Muzaffargarh",
+      "date": "2025-12-08",
+      "day": "Monday",
+      "farmers": 78,
+      "acres": 1150,
+      "latitude": 30.0689,
+      "longitude": 71.1902,
+      "facilitator": "Haroon Rasheed",
+      "focus": "Pest Control",
+      "mediaCount": 2
+    },
+    {
+      "id": 24,
+      "sessionNumber": "DGK-09",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Rajanpur",
+      "date": "2025-12-09",
+      "day": "Tuesday",
+      "farmers": 72,
+      "acres": 1050,
+      "latitude": 29.1089,
+      "longitude": 70.3302,
+      "facilitator": "Imran Yousaf",
+      "focus": "Border Area Farming",
+      "mediaCount": 3
+    },
+    {
+      "id": 25,
+      "sessionNumber": "DGK-10",
+      "city": "dgk",
+      "cityName": "Dera Ghazi Khan",
+      "spot": "Tribal Area",
+      "date": "2025-12-10",
+      "day": "Wednesday",
+      "farmers": 60,
+      "acres": 920,
+      "latitude": 31.0089,
+      "longitude": 70.2902,
+      "facilitator": "Javed Iqbal",
+      "focus": "Community Engagement",
+      "mediaCount": 4
+    },
+    
+    // Faisalabad (FSD) - Sessions 26-33
+    {
+      "id": 26,
+      "sessionNumber": "FSD-01",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Jhang Road",
+      "date": "2025-12-06",
+      "day": "Saturday",
+      "farmers": 110,
+      "acres": 1650,
+      "latitude": 31.4504,
+      "longitude": 73.1350,
+      "facilitator": "Kamran Shabbir",
+      "focus": "Urban Farming",
+      "mediaCount": 3
+    },
+    {
+      "id": 27,
+      "sessionNumber": "FSD-02",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Samundri",
+      "date": "2025-12-07",
+      "day": "Sunday",
+      "farmers": 95,
+      "acres": 1425,
+      "latitude": 31.0604,
+      "longitude": 72.4750,
+      "facilitator": "Liaqat Ali",
+      "focus": "Commercial Farming",
+      "mediaCount": 2
+    },
+    {
+      "id": 28,
+      "sessionNumber": "FSD-03",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Tandlianwala",
+      "date": "2025-12-08",
+      "day": "Monday",
+      "farmers": 85,
+      "acres": 1275,
+      "latitude": 31.0304,
+      "longitude": 73.1350,
+      "facilitator": "Mohsin Raza",
+      "focus": "Modern Techniques",
+      "mediaCount": 4
+    },
+    {
+      "id": 29,
+      "sessionNumber": "FSD-04",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Chak Jhumra",
+      "date": "2025-12-09",
+      "day": "Tuesday",
+      "farmers": 78,
+      "acres": 1170,
+      "latitude": 31.5704,
+      "longitude": 73.1850,
+      "facilitator": "Noman Khan",
+      "focus": "Small Landholders",
+      "mediaCount": 2
+    },
+    {
+      "id": 30,
+      "sessionNumber": "FSD-05",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Sargodha Road",
+      "date": "2025-12-10",
+      "day": "Wednesday",
+      "farmers": 92,
+      "acres": 1380,
+      "latitude": 31.6504,
+      "longitude": 73.0950,
+      "facilitator": "Omer Farooq",
+      "focus": "Technology Integration",
+      "mediaCount": 3
+    },
+    {
+      "id": 31,
+      "sessionNumber": "FSD-06",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Jaranwala",
+      "date": "2025-12-11",
+      "day": "Thursday",
+      "farmers": 88,
+      "acres": 1320,
+      "latitude": 31.3304,
+      "longitude": 73.4350,
+      "facilitator": "Pervaiz Akhtar",
+      "focus": "Export Quality",
+      "mediaCount": 2
+    },
+    {
+      "id": 32,
+      "sessionNumber": "FSD-07",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Gojra",
+      "date": "2025-12-11",
+      "day": "Thursday",
+      "farmers": 72,
+      "acres": 1080,
+      "latitude": 31.1504,
+      "longitude": 72.6850,
+      "facilitator": "Qaiser Abbas",
+      "focus": "Organic Alternatives",
+      "mediaCount": 3
+    },
+    {
+      "id": 33,
+      "sessionNumber": "FSD-08",
+      "city": "faisalabad",
+      "cityName": "Faisalabad",
+      "spot": "Toba Tek Singh",
+      "date": "2025-12-12",
+      "day": "Friday",
+      "farmers": 70,
+      "acres": 1050,
+      "latitude": 30.9704,
+      "longitude": 72.4850,
+      "facilitator": "Rizwan Haider",
+      "focus": "Sustainable Farming",
+      "mediaCount": 4
+    },
+    
+    // Gujranwala (GSM) - Sessions 34-40
+    {
+      "id": 34,
+      "sessionNumber": "GSM-01",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Wazirabad",
+      "date": "2025-12-10",
+      "day": "Wednesday",
+      "farmers": 65,
+      "acres": 975,
+      "latitude": 32.4477,
+      "longitude": 74.1145,
+      "facilitator": "Saeed Ahmed",
+      "focus": "Traditional Methods",
+      "mediaCount": 2
+    },
+    {
+      "id": 35,
+      "sessionNumber": "GSM-02",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Kamoke",
+      "date": "2025-12-11",
+      "day": "Thursday",
+      "farmers": 72,
+      "acres": 1080,
+      "latitude": 31.9777,
+      "longitude": 74.2245,
+      "facilitator": "Tahir Mehmood",
+      "focus": "Hybrid Solutions",
+      "mediaCount": 3
+    },
+    {
+      "id": 36,
+      "sessionNumber": "GSM-03",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Nowshera Virkan",
+      "date": "2025-12-11",
+      "day": "Thursday",
+      "farmers": 58,
+      "acres": 870,
+      "latitude": 31.9877,
+      "longitude": 73.9945,
+      "facilitator": "Umar Hayat",
+      "focus": "Water Conservation",
+      "mediaCount": 2
+    },
+    {
+      "id": 37,
+      "sessionNumber": "GSM-04",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Gujranwala City",
+      "date": "2025-12-12",
+      "day": "Friday",
+      "farmers": 85,
+      "acres": 1275,
+      "latitude": 32.1877,
+      "longitude": 74.1945,
+      "facilitator": "Viqar Hussain",
+      "focus": "Market Linkages",
+      "mediaCount": 4
+    },
+    {
+      "id": 38,
+      "sessionNumber": "GSM-05",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Eminabad",
+      "date": "2025-12-12",
+      "day": "Friday",
+      "farmers": 62,
+      "acres": 930,
+      "latitude": 32.0377,
+      "longitude": 74.2545,
+      "facilitator": "Waseem Akram",
+      "focus": "Quality Standards",
+      "mediaCount": 2
+    },
+    {
+      "id": 39,
+      "sessionNumber": "GSM-06",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Qila Didar Singh",
+      "date": "2025-12-12",
+      "day": "Friday",
+      "farmers": 55,
+      "acres": 825,
+      "latitude": 32.2877,
+      "longitude": 74.0945,
+      "facilitator": "Xeeshan Khan",
+      "focus": "Post-Harvest Management",
+      "mediaCount": 3
+    },
+    {
+      "id": 40,
+      "sessionNumber": "GSM-07",
+      "city": "gujranwala",
+      "cityName": "Gujranwala",
+      "spot": "Alipur Chatha",
+      "date": "2025-12-12",
+      "day": "Friday",
+      "farmers": 63,
+      "acres": 981,
+      "latitude": 32.3877,
+      "longitude": 74.1745,
+      "facilitator": "Younis Bhatti",
+      "focus": "Campaign Summary & Future Plans",
+      "mediaCount": 5
+    }
+  ],
+  "metrics": {
+    "definiteIntent": 90,
+    "awareness": 84,
+    "clarity": 60,
+    "satisfaction": 88,
+    "recommendation": 92
+  },
+  "facilitators": ["Ali Raza", "Bilal Ahmed", "Faisal Khan", "Kamran Ali", "Naveed Ahmed", "Osama Khan", "Qasim Ali", "Rashid Mehmood", "Sajid Hussain", "Tariq Mahmood", "Usman Ghani", "Waqas Ahmed", "Yasir Ali", "Zubair Khan", "Ahmed Raza", "Ali Hassan", "Babar Javed", "Chaudhry Naeem", "Dawood Ahmed", "Ehsan Ullah", "Fahad Malik", "Ghulam Mustafa", "Haroon Rasheed", "Imran Yousaf", "Javed Iqbal", "Kamran Shabbir", "Liaqat Ali", "Mohsin Raza", "Noman Khan", "Omer Farooq", "Pervaiz Akhtar", "Qaiser Abbas", "Rizwan Haider", "Saeed Ahmed", "Tahir Mehmood", "Umar Hayat", "Viqar Hussain", "Waseem Akram", "Xeeshan Khan", "Younis Bhatti"],
+  "lastUpdated": "2025-12-22T10:47:37Z"
+};
+
+const embeddedMediaData = {
+  "campaign": "Buttril Super Field Activations",
+  "totalMedia": 48,
+  "mediaItems": [
+    {
+      "id": 8,
+      "filename": "gallery/sukkur_session1_1.jpg",
+      "caption": "Farmer gathering in Sukkur - Session 1",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 9,
+      "filename": "gallery/sukkur_session1_2.jpg",
+      "caption": "Product demonstration in Sukkur",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 10,
+      "filename": "gallery/sukkur_session2_1.jpg",
+      "caption": "Field visit with farmers in Pano Aqil",
+      "date": "2025-11-25",
+      "city": "sukkur",
+      "sessionId": 2,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 11,
+      "filename": "gallery/sukkur_session3_1.jpg",
+      "caption": "Group discussion session in Rohri",
+      "date": "2025-11-26",
+      "city": "sukkur",
+      "sessionId": 3,
+      "type": "discussion",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 12,
+      "filename": "gallery/sukkur_session4_1.jpg",
+      "caption": "Training workshop in Salehpat",
+      "date": "2025-11-27",
+      "city": "sukkur",
+      "sessionId": 4,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 13,
+      "filename": "gallery/sukkur_session5_1.jpg",
+      "caption": "Crop inspection in Kot Diji",
+      "date": "2025-11-28",
+      "city": "sukkur",
+      "sessionId": 5,
+      "type": "inspection",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 14,
+      "filename": "gallery/sukkur_session6_1.jpg",
+      "caption": "Distribution in Khairpur",
+      "date": "2025-11-29",
+      "city": "sukkur",
+      "sessionId": 6,
+      "type": "distribution",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 15,
+      "filename": "gallery/sukkur_session7_1.jpg",
+      "caption": "Q&A session in Gambat",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 7,
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 16,
+      "filename": "gallery/sukkur_session8_1.jpg",
+      "caption": "Expert consultation in Sobho Dero",
+      "date": "2025-12-01",
+      "city": "sukkur",
+      "sessionId": 8,
+      "type": "consultation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 17,
+      "filename": "gallery/sukkur_session9_1.jpg",
+      "caption": "Field demo in Khanpur",
+      "date": "2025-12-02",
+      "city": "sukkur",
+      "sessionId": 9,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 18,
+      "filename": "gallery/sukkur_session10_1.jpg",
+      "caption": "Farmers taking notes in Naudero",
+      "date": "2025-12-03",
+      "city": "sukkur",
+      "sessionId": 10,
+      "type": "education",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 19,
+      "filename": "gallery/sukkur_session11_1.jpg",
+      "caption": "Soil analysis in Larkana",
+      "date": "2025-12-04",
+      "city": "sukkur",
+      "sessionId": 11,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 20,
+      "filename": "gallery/sukkur_session12_1.jpg",
+      "caption": "Group photo in Shikarpur",
+      "date": "2025-12-05",
+      "city": "sukkur",
+      "sessionId": 12,
+      "type": "group",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 21,
+      "filename": "gallery/sukkur_session13_1.jpg",
+      "caption": "Seasonal planning in Jacobabad",
+      "date": "2025-12-06",
+      "city": "sukkur",
+      "sessionId": 13,
+      "type": "planning",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 22,
+      "filename": "gallery/sukkur_session14_1.jpg",
+      "caption": "Resource management in Kashmore",
+      "date": "2025-12-07",
+      "city": "sukkur",
+      "sessionId": 14,
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 23,
+      "filename": "gallery/sukkur_session15_1.jpg",
+      "caption": "Closing session in Thull",
+      "date": "2025-12-08",
+      "city": "sukkur",
+      "sessionId": 15,
+      "type": "closing",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 24,
+      "filename": "gallery/dgk_session1_1.jpg",
+      "caption": "DGK farmer education drive in Taunsa",
+      "date": "2025-12-01",
+      "city": "dgk",
+      "sessionId": 16,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 25,
+      "filename": "gallery/dgk_session2_1.jpg",
+      "caption": "Practical demo in Kot Chutta",
+      "date": "2025-12-02",
+      "city": "dgk",
+      "sessionId": 17,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 26,
+      "filename": "gallery/dgk_session3_1.jpg",
+      "caption": "Expert talk in DG Khan City",
+      "date": "2025-12-03",
+      "city": "dgk",
+      "sessionId": 18,
+      "type": "presentation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 27,
+      "filename": "gallery/dgk_session4_1.jpg",
+      "caption": "High altitude farming in Fort Munro",
+      "date": "2025-12-04",
+      "city": "dgk",
+      "sessionId": 19,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 28,
+      "filename": "gallery/dgk_session5_1.jpg",
+      "caption": "Irrigation methods in Jampur",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 20,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 29,
+      "filename": "gallery/dgk_session6_1.jpg",
+      "caption": "Large scale farming in Kot Addu",
+      "date": "2025-12-06",
+      "city": "dgk",
+      "sessionId": 21,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 30,
+      "filename": "gallery/dgk_session7_1.jpg",
+      "caption": "Soil management in Layyah",
+      "date": "2025-12-07",
+      "city": "dgk",
+      "sessionId": 22,
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 31,
+      "filename": "gallery/dgk_session8_1.jpg",
+      "caption": "Pest control in Muzaffargarh",
+      "date": "2025-12-08",
+      "city": "dgk",
+      "sessionId": 23,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 32,
+      "filename": "gallery/dgk_session9_1.jpg",
+      "caption": "Border area farming in Rajanpur",
+      "date": "2025-12-09",
+      "city": "dgk",
+      "sessionId": 24,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 33,
+      "filename": "gallery/dgk_session10_1.jpg",
+      "caption": "Community engagement in Tribal Area",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 25,
+      "type": "community",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 34,
+      "filename": "gallery/fsd_session1_1.jpg",
+      "caption": "Urban farming in Jhang Road",
+      "date": "2025-12-06",
+      "city": "faisalabad",
+      "sessionId": 26,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 35,
+      "filename": "gallery/fsd_session2_1.jpg",
+      "caption": "Commercial farming in Samundri",
+      "date": "2025-12-07",
+      "city": "faisalabad",
+      "sessionId": 27,
+      "type": "field",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 36,
+      "filename": "gallery/fsd_session3_1.jpg",
+      "caption": "Modern techniques in Tandlianwala",
+      "date": "2025-12-08",
+      "city": "faisalabad",
+      "sessionId": 28,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 37,
+      "filename": "gallery/fsd_session4_1.jpg",
+      "caption": "Small landholders in Chak Jhumra",
+      "date": "2025-12-09",
+      "city": "faisalabad",
+      "sessionId": 29,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 38,
+      "filename": "gallery/fsd_session5_1.jpg",
+      "caption": "Technology integration in Sargodha Road",
+      "date": "2025-12-10",
+      "city": "faisalabad",
+      "sessionId": 30,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 39,
+      "filename": "gallery/fsd_session6_1.jpg",
+      "caption": "Export quality in Jaranwala",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 31,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 40,
+      "filename": "gallery/fsd_session7_1.jpg",
+      "caption": "Organic alternatives in Gojra",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 32,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 41,
+      "filename": "gallery/fsd_session8_1.jpg",
+      "caption": "Sustainable farming in Toba Tek Singh",
+      "date": "2025-12-12",
+      "city": "faisalabad",
+      "sessionId": 33,
+      "type": "sustainable",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 42,
+      "filename": "gallery/gsm_session1_1.jpg",
+      "caption": "Traditional methods in Wazirabad",
+      "date": "2025-12-10",
+      "city": "gujranwala",
+      "sessionId": 34,
+      "type": "event",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 43,
+      "filename": "gallery/gsm_session2_1.jpg",
+      "caption": "Hybrid solutions in Kamoke",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 35,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 44,
+      "filename": "gallery/gsm_session3_1.jpg",
+      "caption": "Water conservation in Nowshera Virkan",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 36,
+      "type": "conservation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 45,
+      "filename": "gallery/gsm_session4_1.jpg",
+      "caption": "Market linkages in Gujranwala City",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 37,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 46,
+      "filename": "gallery/gsm_session5_1.jpg",
+      "caption": "Quality standards in Eminabad",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 38,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 47,
+      "filename": "gallery/gsm_session6_1.jpg",
+      "caption": "Post-harvest management in Qila Didar Singh",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 39,
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 48,
+      "filename": "gallery/gsm_session7_1.jpg",
+      "caption": "Campaign summary in Alipur Chatha",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 40,
+      "type": "closing",
+      "displayIn": "gallery"
+    }
+  ],
+  "lastUpdated": "2025-12-22"
+};
+
 // Global variables
-let campaignData = null;
-let mediaData = null;
+let campaignData = embeddedCampaignData;
+let mediaData = embeddedMediaData;
 let map = null;
 let markers = [];
 let currentFilteredSessions = [];
@@ -15,17 +1141,13 @@ let allSessions = [];
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing AgriVista Dashboard...');
     
-    // First, add CSS styles for new features
-    addDashboardStyles();
+    // Hide error banner initially
+    document.getElementById('errorBanner').style.display = 'none';
     
-    // Load data first
-    Promise.all([
-        fetch('sessions.json').then(response => response.json()),
-        fetch('media.json').then(response => response.json())
-    ])
-    .then(([sessionsData, mediaDataResponse]) => {
-        campaignData = sessionsData;
-        mediaData = mediaDataResponse;
+    try {
+        // Use embedded data
+        campaignData = embeddedCampaignData;
+        mediaData = embeddedMediaData;
         allSessions = campaignData.sessions;
         currentFilteredSessions = [...allSessions];
         
@@ -40,21 +1162,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update status indicator
         document.getElementById('statusIndicator').className = 'status-indicator status-success';
-        document.getElementById('statusIndicator').innerHTML = '<i class="fas fa-check-circle"></i><span>Data Loaded Successfully</span>';
+        document.getElementById('statusIndicator').innerHTML = '<i class="fas fa-check-circle"></i><span>Dashboard Loaded Successfully</span>';
         
         console.log('Dashboard initialized with', allSessions.length, 'sessions across', campaignData.cities.length, 'cities');
-    })
-    .catch(error => {
-        console.error('Error loading data:', error);
-        document.getElementById('errorBanner').style.display = 'flex';
-        document.getElementById('errorMessage').textContent = 'Failed to load data files: ' + error.message;
-        document.getElementById('statusIndicator').className = 'status-indicator status-error';
-        document.getElementById('statusIndicator').innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Data Load Failed</span>';
         
-        // Fallback to hardcoded data if fetch fails
-        console.log('Using fallback data...');
-        useFallbackData();
-    });
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+        document.getElementById('errorBanner').style.display = 'flex';
+        document.getElementById('errorMessage').textContent = 'Error: ' + error.message;
+        document.getElementById('statusIndicator').className = 'status-indicator status-error';
+        document.getElementById('statusIndicator').innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Initialization Error</span>';
+    }
 });
 
 // Add CSS styles for enhanced features
@@ -63,19 +1181,19 @@ function addDashboardStyles() {
     style.textContent = `
         .gallery-filters {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
         
         .gallery-filter-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #f8f9fa;
             border: 1px solid #dee2e6;
-            border-radius: 20px;
+            border-radius: 16px;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 14px;
+            font-size: 12px;
             border: none;
         }
         
@@ -92,20 +1210,20 @@ function addDashboardStyles() {
         .gallery-item {
             position: relative;
             overflow: hidden;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: transform 0.3s;
             background: white;
         }
         
         .gallery-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
         }
         
         .gallery-item img {
             transition: transform 0.5s ease;
             width: 100%;
-            height: 200px;
+            height: 180px;
             object-fit: cover;
             display: block;
         }
@@ -114,15 +1232,30 @@ function addDashboardStyles() {
             transform: scale(1.05);
         }
         
-        #backgroundVideo {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-            opacity: 0.05;
+        .branding-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        .brand-logo {
+            height: 30px;
+            background: white;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0.9;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .session-marker {
@@ -130,137 +1263,64 @@ function addDashboardStyles() {
             border: none !important;
         }
         
-        .branding-container {
+        /* Map legend */
+        .map-legend {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-size: 12px;
+        }
+        
+        .legend-item {
             display: flex;
-            gap: 15px;
             align-items: center;
-            z-index: 1;
+            margin: 5px 0;
         }
         
-        .brand-logo {
-            height: 40px;
-            background: rgba(255,255,255,0.1);
-            padding: 5px;
-            border-radius: 5px;
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 8px;
         }
         
-        .product-logo {
-            height: 40px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .city-marker-color {
+            background: #2e7d32;
         }
         
-        /* Chart styles */
-        .chart-bar {
-            background: linear-gradient(to top, #2e7d32, #4caf50);
-            border-radius: 3px 3px 0 0;
-            transition: height 0.5s ease;
-            width: 100%;
-        }
-        
-        .chart-label {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #666;
-            text-align: center;
-        }
-        
-        .chart-value {
-            position: absolute;
-            top: -25px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-weight: bold;
-            color: #2e7d32;
-        }
-        
-        /* Map marker enhancements */
-        .leaflet-marker-icon {
-            background: none !important;
-            border: none !important;
-        }
-        
-        /* Tab content animations */
-        .tab-content-section {
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .session-marker-color {
+            background: #ff9800;
         }
     `;
     document.head.appendChild(style);
-}
-
-// Fallback data in case JSON files fail to load
-function useFallbackData() {
-    // Basic fallback data structure
-    campaignData = {
-        campaign: "Buttril Super Farmer Education Drive",
-        period: "2025-11-24 to 2025-12-12",
-        duration: "17 days",
-        totalSessions: 40,
-        totalFarmers: 2908,
-        totalAcres: 44256,
-        averageFarmersPerSession: 72.7,
-        averageAcresPerSession: 1106.4,
-        cities: [
-            { code: "SKR", name: "Sukkur", sessions: 15, farmers: 1120, acres: 16800, latitude: 27.7132, longitude: 68.8482 },
-            { code: "DGK", name: "Dera Ghazi Khan", sessions: 10, farmers: 728, acres: 10920, latitude: 30.0489, longitude: 70.6402 },
-            { code: "FSD", name: "Faisalabad", sessions: 8, farmers: 640, acres: 9600, latitude: 31.4504, longitude: 73.1350 },
-            { code: "GSM", name: "Gujranwala", sessions: 7, farmers: 420, acres: 6936, latitude: 32.1877, longitude: 74.1945 }
-        ],
-        metrics: {
-            definiteIntent: 90,
-            awareness: 84,
-            clarity: 60,
-            satisfaction: 88,
-            recommendation: 92
-        }
-    };
-    
-    // Generate basic sessions data
-    allSessions = [];
-    currentFilteredSessions = [];
-    
-    initializeDashboard();
-    initializeMap();
-    updateAllStats();
-    setupEventListeners();
-    addBackgroundVideo();
-    addHeaderBranding();
-    
-    // Show warning
-    const statusIndicator = document.getElementById('statusIndicator');
-    statusIndicator.className = 'status-indicator status-error';
-    statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Using Fallback Data</span>';
 }
 
 // Initialize dashboard components
 function initializeDashboard() {
     console.log('Initializing dashboard components...');
     
+    // Add styles
+    addDashboardStyles();
+    
     // Set date range max to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('dateTo').max = today;
     
-    // Populate city filter dropdown with actual cities
+    // Populate city filter dropdown
     const cityFilter = document.getElementById('cityFilter');
     cityFilter.innerHTML = '<option value="all">All Cities</option>';
     
-    if (campaignData && campaignData.cities) {
-        campaignData.cities.forEach(city => {
-            const option = document.createElement('option');
-            option.value = city.code.toLowerCase();
-            option.textContent = `${city.name} (${city.code})`;
-            cityFilter.appendChild(option);
-        });
-    }
+    campaignData.cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city.code.toLowerCase();
+        option.textContent = `${city.name} (${city.code})`;
+        cityFilter.appendChild(option);
+    });
     
     // Initialize tabs
     initializeTabs();
@@ -325,50 +1385,62 @@ function initializeMap() {
         }).addTo(map);
         
         // Add markers for each city
-        if (campaignData && campaignData.cities) {
-            campaignData.cities.forEach(city => {
-                // Create custom icon
-                const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="
-                        background: linear-gradient(135deg, #2e7d32, #1b5e20);
-                        color: white;
-                        padding: 8px 12px;
-                        border-radius: 20px;
-                        font-weight: bold;
-                        border: 3px solid white;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                        min-width: 60px;
-                        text-align: center;
-                    ">
-                        <div style="font-size: 14px;">${city.code}</div>
-                        <div style="font-size: 10px; opacity: 0.9;">${city.sessions} sessions</div>
-                    </div>`,
-                    iconSize: [60, 40],
-                    iconAnchor: [30, 20]
-                });
-                
-                // Create marker
-                const marker = L.marker([city.latitude, city.longitude], { icon: icon })
-                    .addTo(map)
-                    .bindPopup(`
-                        <div style="min-width: 200px;">
-                            <h3 style="margin: 0 0 5px 0; color: #2e7d32;">${city.name}</h3>
-                            <p style="margin: 5px 0;"><strong>Sessions:</strong> ${city.sessions}</p>
-                            <p style="margin: 5px 0;"><strong>Farmers Reached:</strong> ${city.farmers.toLocaleString()}</p>
-                            <p style="margin: 5px 0;"><strong>Acres Covered:</strong> ${city.acres.toLocaleString()}</p>
-                            <p style="margin: 5px 0;"><strong>Avg per Session:</strong> ${Math.round(city.farmers/city.sessions)} farmers</p>
-                        </div>
-                    `);
-                
-                markers.push(marker);
+        campaignData.cities.forEach(city => {
+            const icon = L.divIcon({
+                className: 'city-marker',
+                html: `<div style="
+                    background: #2e7d32;
+                    color: white;
+                    padding: 6px 10px;
+                    border-radius: 15px;
+                    font-weight: bold;
+                    border: 2px solid white;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                    font-size: 11px;
+                    text-align: center;
+                ">
+                    ${city.code}<br>
+                    <span style="font-size: 9px;">${city.sessions}</span>
+                </div>`,
+                iconSize: [50, 30],
+                iconAnchor: [25, 15]
             });
-        }
+            
+            const marker = L.marker([city.latitude, city.longitude], { icon: icon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="min-width: 180px;">
+                        <h4 style="margin: 0 0 5px 0; color: #2e7d32;">${city.name}</h4>
+                        <p style="margin: 3px 0; font-size: 12px;"><strong>Sessions:</strong> ${city.sessions}</p>
+                        <p style="margin: 3px 0; font-size: 12px;"><strong>Farmers:</strong> ${city.farmers.toLocaleString()}</p>
+                        <p style="margin: 3px 0; font-size: 12px;"><strong>Acres:</strong> ${city.acres.toLocaleString()}</p>
+                    </div>
+                `);
+            
+            markers.push(marker);
+        });
         
-        // Add session markers if we have data
-        if (allSessions && allSessions.length > 0) {
-            addSessionMarkers(allSessions);
-        }
+        // Add session markers
+        addSessionMarkers(allSessions);
+        
+        // Add map legend
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'map-legend');
+            div.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 5px; color: #2e7d32;">Legend</div>
+                <div class="legend-item">
+                    <div class="legend-color city-marker-color"></div>
+                    <span>City (Total Sessions)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color session-marker-color"></div>
+                    <span>Session Location</span>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
         
         // Update map banner
         updateMapBanner();
@@ -377,9 +1449,10 @@ function initializeMap() {
         console.error('Error initializing map:', error);
         document.getElementById('campaignMap').innerHTML = `
             <div style="display: flex; justify-content: center; align-items: center; height: 100%; background: #f8f9fa; color: #666;">
-                <div style="text-align: center;">
+                <div style="text-align: center; padding: 20px;">
                     <i class="fas fa-map-marked-alt" style="font-size: 48px; color: #ccc; margin-bottom: 10px;"></i>
-                    <p>Map could not be loaded. Please check your internet connection.</p>
+                    <p>Map visualization not available</p>
+                    <p style="font-size: 12px; color: #999;">Check console for details</p>
                 </div>
             </div>
         `;
@@ -392,52 +1465,51 @@ function addSessionMarkers(sessions) {
     
     // Clear existing session markers
     markers.forEach(marker => {
-        if (marker._icon && marker._icon.className.includes('session-marker')) {
+        if (marker._icon && marker._icon.className === 'session-marker') {
             map.removeLayer(marker);
         }
     });
     
     // Filter markers array to keep only city markers
     markers = markers.filter(marker => 
-        !marker._icon || !marker._icon.className.includes('session-marker')
+        !marker._icon || marker._icon.className !== 'session-marker'
     );
     
-    // Add session markers
-    sessions.forEach(session => {
+    // Add session markers (limit to 20 for performance)
+    const sessionsToShow = sessions.slice(0, 20);
+    
+    sessionsToShow.forEach(session => {
         const icon = L.divIcon({
             className: 'session-marker',
             html: `<div style="
                 background: #ff9800;
                 color: white;
-                width: 24px;
-                height: 24px;
+                width: 18px;
+                height: 18px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 12px;
-                font-weight: bold;
+                font-size: 10px;
                 border: 2px solid white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
                 cursor: pointer;
             ">
-                <i class="fas fa-users"></i>
+                <i class="fas fa-user"></i>
             </div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
         });
         
         const marker = L.marker([session.latitude, session.longitude], { icon: icon })
             .addTo(map)
             .bindPopup(`
-                <div style="min-width: 200px;">
-                    <h4 style="margin: 0 0 5px 0; color: #2e7d32;">${session.sessionNumber}</h4>
-                    <p style="margin: 3px 0;"><strong>Location:</strong> ${session.spot}, ${session.cityName}</p>
-                    <p style="margin: 3px 0;"><strong>Date:</strong> ${session.date} (${session.day})</p>
-                    <p style="margin: 3px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
-                    <p style="margin: 3px 0;"><strong>Acres:</strong> ${session.acres.toLocaleString()}</p>
-                    <p style="margin: 3px 0;"><strong>Facilitator:</strong> ${session.facilitator}</p>
-                    <p style="margin: 3px 0;"><strong>Focus:</strong> ${session.focus}</p>
+                <div style="min-width: 180px; font-size: 12px;">
+                    <h4 style="margin: 0 0 5px 0; color: #2e7d32; font-size: 14px;">${session.sessionNumber}</h4>
+                    <p style="margin: 2px 0;"><strong>Location:</strong> ${session.spot}</p>
+                    <p style="margin: 2px 0;"><strong>Date:</strong> ${session.date}</p>
+                    <p style="margin: 2px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
+                    <p style="margin: 2px 0;"><strong>Facilitator:</strong> ${session.facilitator}</p>
                 </div>
             `);
         
@@ -464,48 +1536,46 @@ function initializeGallery() {
     // Clear loading message
     galleryContainer.innerHTML = '';
     
-    // Check if we have media data
-    if (!mediaData || !mediaData.mediaItems) {
-        galleryContainer.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
-                <i class="fas fa-images" style="font-size: 48px; margin-bottom: 10px; color: #ccc;"></i>
-                <p>Media gallery data not available</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Filter gallery images only (displayIn: "gallery")
+    // Filter gallery images only
     const galleryImages = mediaData.mediaItems.filter(item => item.displayIn === "gallery");
     
     if (galleryImages.length === 0) {
         galleryContainer.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
                 <i class="fas fa-images" style="font-size: 48px; margin-bottom: 10px; color: #ccc;"></i>
-                <p>No gallery images found</p>
+                <p>No gallery images available</p>
             </div>
         `;
         return;
     }
     
-    // Create gallery items
-    galleryImages.forEach(media => {
+    // Create gallery items (limit to 12 for performance)
+    const imagesToShow = galleryImages.slice(0, 12);
+    
+    imagesToShow.forEach(media => {
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
         
-        // Determine image source - using placeholders since actual images might not exist
-        const imgSrc = `https://via.placeholder.com/300x200/2e7d32/ffffff?text=${encodeURIComponent(media.caption.substring(0, 30) + '...')}`;
+        // Create placeholder image with city color
+        const cityColors = {
+            'sukkur': '#2e7d32',
+            'dgk': '#ff9800',
+            'faisalabad': '#2196f3',
+            'gujranwala': '#9c27b0'
+        };
+        const color = cityColors[media.city] || '#2e7d32';
+        const imgSrc = `https://via.placeholder.com/300x180/${color.replace('#', '')}/ffffff?text=${encodeURIComponent(media.city.toUpperCase() + ': ' + media.type)}`;
         
         galleryItem.innerHTML = `
             <img src="${imgSrc}" alt="${media.caption}" loading="lazy">
-            <div style="padding: 15px;">
-                <div style="font-weight: bold; margin-bottom: 5px; color: #2e7d32; text-transform: uppercase; font-size: 12px;">
-                    ${media.city} • ${media.type}
+            <div style="padding: 12px;">
+                <div style="font-weight: bold; margin-bottom: 4px; color: #2e7d32; font-size: 11px; text-transform: uppercase;">
+                    ${media.city} • Session ${media.sessionId}
                 </div>
-                <div style="font-size: 14px; color: #666; margin-bottom: 8px;">${media.caption}</div>
-                <div style="font-size: 12px; color: #999; display: flex; justify-content: space-between;">
+                <div style="font-size: 13px; color: #666; margin-bottom: 6px; line-height: 1.3;">${media.caption}</div>
+                <div style="font-size: 11px; color: #999; display: flex; justify-content: space-between;">
                     <span><i class="fas fa-calendar"></i> ${media.date}</span>
-                    <span><i class="fas fa-map-marker-alt"></i> Session ${media.sessionId}</span>
+                    <span><i class="fas fa-tag"></i> ${media.type}</span>
                 </div>
             </div>
         `;
@@ -513,12 +1583,12 @@ function initializeGallery() {
         galleryContainer.appendChild(galleryItem);
     });
     
-    // Add gallery filters if not already added
+    // Add gallery filters
     const gallerySection = document.getElementById('galleryTab');
     if (gallerySection && !document.querySelector('.gallery-filters')) {
         const filtersHtml = `
             <div class="gallery-filters">
-                <button class="gallery-filter-btn active" data-filter="all">All Media</button>
+                <button class="gallery-filter-btn active" data-filter="all">All Cities</button>
                 <button class="gallery-filter-btn" data-filter="sukkur">Sukkur</button>
                 <button class="gallery-filter-btn" data-filter="dgk">Dera Ghazi Khan</button>
                 <button class="gallery-filter-btn" data-filter="faisalabad">Faisalabad</button>
@@ -533,9 +1603,7 @@ function initializeGallery() {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.gallery-filter-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                
-                const filter = this.getAttribute('data-filter');
-                filterGallery(filter);
+                filterGallery(this.getAttribute('data-filter'));
             });
         });
     }
@@ -547,23 +1615,13 @@ function filterGallery(filter) {
     
     galleryItems.forEach(item => {
         const cityText = item.querySelector('div div:first-child').textContent.toLowerCase();
-        
-        let showItem = false;
-        
-        if (filter === 'all') {
-            showItem = true;
-        } else {
-            showItem = cityText.includes(filter);
-        }
-        
+        const showItem = filter === 'all' || cityText.includes(filter);
         item.style.display = showItem ? 'block' : 'none';
     });
 }
 
 // Update all statistics
 function updateAllStats() {
-    console.log('Updating statistics...');
-    
     const totalSessions = currentFilteredSessions.length;
     const totalFarmers = currentFilteredSessions.reduce((sum, session) => sum + session.farmers, 0);
     const totalAcres = currentFilteredSessions.reduce((sum, session) => sum + session.acres, 0);
@@ -579,135 +1637,43 @@ function updateAllStats() {
     document.getElementById('totalFarmers').textContent = totalFarmers.toLocaleString();
     document.getElementById('totalAcres').textContent = totalAcres.toLocaleString();
     
-    // Update campaign metrics if available
-    if (campaignData && campaignData.metrics) {
-        const metricValues = document.querySelectorAll('.metric-value');
-        if (metricValues.length >= 3) {
-            metricValues[0].textContent = `${campaignData.metrics.definiteIntent}%`;
-            metricValues[1].textContent = `${campaignData.metrics.awareness}%`;
-            metricValues[2].textContent = `${campaignData.metrics.clarity}%`;
-        }
-    }
-    
-    // Update city progress bars
-    updateCityProgress();
-    
-    // Update map
-    updateMapBanner();
-    
     // Update selection summary
     document.getElementById('statusIndicator').innerHTML = 
-        `<i class="fas fa-filter"></i><span>Showing ${totalSessions} sessions from ${uniqueCities.length} cities</span>`;
-}
-
-// Update city progress bars
-function updateCityProgress() {
-    if (!currentFilteredSessions || currentFilteredSessions.length === 0) return;
+        `<i class="fas fa-filter"></i><span>${totalSessions} sessions • ${uniqueCities.length} cities</span>`;
     
-    // Group sessions by city
-    const cityStats = {};
-    
-    currentFilteredSessions.forEach(session => {
-        if (!cityStats[session.cityName]) {
-            cityStats[session.cityName] = {
-                sessions: 0,
-                farmers: 0,
-                acres: 0
-            };
-        }
-        cityStats[session.cityName].sessions++;
-        cityStats[session.cityName].farmers += session.farmers;
-        cityStats[session.cityName].acres += session.acres;
-    });
-    
-    // Update progress bars
-    document.querySelectorAll('.city-item').forEach(item => {
-        const cityText = item.querySelector('.city-header span:first-child').textContent;
-        const cityName = cityText.split('(')[0].trim();
-        const stats = cityStats[cityName] || { sessions: 0, farmers: 0, acres: 0 };
-        
-        // Update farmers count
-        const farmerSpan = item.querySelector('.city-header span:last-child');
-        if (farmerSpan) {
-            farmerSpan.textContent = `${stats.farmers} farmers`;
-        }
-        
-        // Update session badge
-        const badge = item.querySelector('.city-badge');
-        if (badge) {
-            badge.textContent = `${stats.sessions} sessions`;
-        }
-        
-        // Update progress bar width based on percentage of total farmers
-        const totalFarmers = currentFilteredSessions.reduce((sum, s) => sum + s.farmers, 0);
-        const percentage = totalFarmers > 0 ? Math.round((stats.farmers / totalFarmers) * 100) : 0;
-        
-        const progressFill = item.querySelector('.progress-fill');
-        if (progressFill) {
-            progressFill.style.width = `${percentage}%`;
-        }
-    });
+    // Update map banner
+    updateMapBanner();
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    console.log('Setting up event listeners...');
-    
     // Search button
-    const searchBtn = document.getElementById('searchBtn');
-    if (searchBtn) {
-        searchBtn.addEventListener('click', applyFilters);
-    }
+    document.getElementById('searchBtn').addEventListener('click', applyFilters);
     
     // Export CSV button
-    const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportToCSV);
-    }
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
     
     // Reset button
-    const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', resetFilters);
-    }
+    document.getElementById('resetBtn').addEventListener('click', resetFilters);
     
     // Search input (live search)
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            if (e.target.value.length > 2 || e.target.value.length === 0) {
-                applyFilters();
-            }
-        });
-    }
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        if (e.target.value.length > 2 || e.target.value.length === 0) {
+            applyFilters();
+        }
+    });
     
     // City and spot filters
-    const cityFilter = document.getElementById('cityFilter');
-    if (cityFilter) {
-        cityFilter.addEventListener('change', applyFilters);
-    }
-    
-    const spotFilter = document.getElementById('spotFilter');
-    if (spotFilter) {
-        spotFilter.addEventListener('change', applyFilters);
-    }
+    document.getElementById('cityFilter').addEventListener('change', applyFilters);
+    document.getElementById('spotFilter').addEventListener('change', applyFilters);
     
     // Date filters
-    const dateFrom = document.getElementById('dateFrom');
-    if (dateFrom) {
-        dateFrom.addEventListener('change', applyFilters);
-    }
-    
-    const dateTo = document.getElementById('dateTo');
-    if (dateTo) {
-        dateTo.addEventListener('change', applyFilters);
-    }
+    document.getElementById('dateFrom').addEventListener('change', applyFilters);
+    document.getElementById('dateTo').addEventListener('change', applyFilters);
 }
 
 // Apply filters
 function applyFilters() {
-    console.log('Applying filters...');
-    
     const cityFilter = document.getElementById('cityFilter').value;
     const spotFilter = document.getElementById('spotFilter').value;
     const dateFrom = document.getElementById('dateFrom').value;
@@ -721,46 +1687,34 @@ function applyFilters() {
             return false;
         }
         
-        // Spot filter
+        // Spot filter (simplified)
         if (spotFilter !== 'all') {
-            // Simple spot filtering logic
             const isMajor = session.farmers > 80;
-            const isRural = session.farmers < 70;
-            
             if (spotFilter === 'major' && !isMajor) return false;
-            if (spotFilter === 'rural' && !isRural) return false;
-            if (spotFilter === 'secondary' && (isMajor || isRural)) return false;
+            if (spotFilter === 'secondary' && isMajor) return false;
         }
         
         // Date filter
         const sessionDate = new Date(session.date);
         const fromDate = new Date(dateFrom);
         const toDate = new Date(dateTo);
-        
-        if (sessionDate < fromDate || sessionDate > toDate) {
-            return false;
-        }
+        if (sessionDate < fromDate || sessionDate > toDate) return false;
         
         // Search filter
         if (searchQuery) {
-            const searchIn = `${session.cityName} ${session.spot} ${session.facilitator} ${session.focus} ${session.sessionNumber}`.toLowerCase();
-            if (!searchIn.includes(searchQuery)) {
-                return false;
-            }
+            const searchIn = `${session.cityName} ${session.spot} ${session.facilitator}`.toLowerCase();
+            if (!searchIn.includes(searchQuery)) return false;
         }
         
         return true;
     });
     
-    // Update stats and map
     updateAllStats();
     addSessionMarkers(currentFilteredSessions);
 }
 
 // Reset filters
 function resetFilters() {
-    console.log('Resetting filters...');
-    
     document.getElementById('cityFilter').value = 'all';
     document.getElementById('spotFilter').value = 'all';
     document.getElementById('dateFrom').value = '2025-11-24';
@@ -773,23 +1727,23 @@ function resetFilters() {
     
     // Show success message
     const statusIndicator = document.getElementById('statusIndicator');
+    const originalHTML = statusIndicator.innerHTML;
     statusIndicator.className = 'status-indicator status-success';
     statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i><span>Filters Reset</span>';
     
     setTimeout(() => {
-        statusIndicator.innerHTML = '<i class="fas fa-filter"></i><span>Showing all sessions</span>';
+        statusIndicator.innerHTML = originalHTML;
     }, 2000);
 }
 
 // Export to CSV
 function exportToCSV() {
-    if (!currentFilteredSessions || currentFilteredSessions.length === 0) {
+    if (currentFilteredSessions.length === 0) {
         alert('No data to export');
         return;
     }
     
-    const headers = ['Session ID', 'City', 'Spot', 'Date', 'Day', 'Farmers', 'Acres', 'Facilitator', 'Focus'];
-    
+    const headers = ['Session ID', 'City', 'Spot', 'Date', 'Farmers', 'Acres', 'Facilitator'];
     const csvRows = [
         headers.join(','),
         ...currentFilteredSessions.map(session => [
@@ -797,11 +1751,9 @@ function exportToCSV() {
             session.cityName,
             `"${session.spot}"`,
             session.date,
-            session.day,
             session.farmers,
             session.acres,
-            `"${session.facilitator}"`,
-            `"${session.focus}"`
+            `"${session.facilitator}"`
         ].join(','))
     ];
     
@@ -811,141 +1763,57 @@ function exportToCSV() {
     const a = document.createElement('a');
     
     a.href = url;
-    a.download = `agrivista-sessions-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `agrivista-export-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-    
-    // Show export success
-    const statusIndicator = document.getElementById('statusIndicator');
-    const originalHTML = statusIndicator.innerHTML;
-    statusIndicator.className = 'status-indicator status-success';
-    statusIndicator.innerHTML = '<i class="fas fa-file-export"></i><span>Export Complete</span>';
-    
-    setTimeout(() => {
-        statusIndicator.innerHTML = originalHTML;
-    }, 2000);
 }
 
 // Show analytics tab
 function showAnalyticsTab() {
     const analyticsTab = document.getElementById('analyticsTab');
     if (!analyticsTab) {
-        // Create analytics tab if it doesn't exist
         const tabContent = document.getElementById('tabContent');
-        
         const analyticsHtml = `
-            <section class="campaign-section tab-content-section" id="analyticsTab" style="display: block;">
+            <section class="campaign-section" id="analyticsTab" style="display: block;">
                 <h2><i class="fas fa-chart-bar"></i> Campaign Analytics</h2>
-                <p>Detailed performance metrics and trends</p>
+                <p>Performance metrics and insights</p>
                 
                 <div class="chart-container">
-                    <h3>Sessions by City</h3>
-                    <div id="cityChart" style="height: 300px; width: 100%;"></div>
+                    <h3>Sessions Distribution</h3>
+                    <div id="cityChart" style="height: 200px; display: flex; align-items: flex-end; gap: 20px; padding: 20px; border-bottom: 1px solid #eee;">
+                        ${campaignData.cities.map(city => {
+                            const height = (city.sessions / 15) * 150;
+                            return `
+                                <div style="flex: 1; text-align: center;">
+                                    <div style="height: ${height}px; background: linear-gradient(to top, #2e7d32, #4caf50); border-radius: 3px 3px 0 0; position: relative;">
+                                        <div style="position: absolute; top: -25px; left: 0; right: 0; font-weight: bold; color: #2e7d32;">${city.sessions}</div>
+                                    </div>
+                                    <div style="margin-top: 10px; font-weight: bold; color: #666;">${city.code}</div>
+                                    <div style="font-size: 11px; color: #999;">${city.farmers} farmers</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
                 
                 <div class="chart-container">
-                    <h3>Top Facilitators by Reach</h3>
-                    <table class="sessions-table">
-                        <thead>
-                            <tr>
-                                <th>Facilitator</th>
-                                <th>Sessions</th>
-                                <th>Farmers</th>
-                                <th>Avg per Session</th>
-                            </tr>
-                        </thead>
-                        <tbody id="facilitatorTable">
-                            <!-- Will be populated dynamically -->
-                        </tbody>
-                    </table>
+                    <h3>Performance Metrics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        ${Object.entries(campaignData.metrics).map(([key, value]) => `
+                            <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <div style="font-size: 28px; font-weight: bold; color: #2e7d32;">${value}%</div>
+                                <div style="font-size: 12px; color: #666; text-transform: capitalize;">${key.replace(/([A-Z])/g, ' $1')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </section>
         `;
-        
         tabContent.insertAdjacentHTML('beforeend', analyticsHtml);
-        
-        // Populate analytics data
-        updateAnalytics();
     } else {
         analyticsTab.style.display = 'block';
-        updateAnalytics();
-    }
-}
-
-// Update analytics data
-function updateAnalytics() {
-    // Group by city
-    const cityData = {};
-    currentFilteredSessions.forEach(session => {
-        if (!cityData[session.cityName]) {
-            cityData[session.cityName] = { sessions: 0, farmers: 0, acres: 0 };
-        }
-        cityData[session.cityName].sessions++;
-        cityData[session.cityName].farmers += session.farmers;
-        cityData[session.cityName].acres += session.acres;
-    });
-    
-    // Group by facilitator
-    const facilitatorData = {};
-    currentFilteredSessions.forEach(session => {
-        if (!facilitatorData[session.facilitator]) {
-            facilitatorData[session.facilitator] = { sessions: 0, farmers: 0 };
-        }
-        facilitatorData[session.facilitator].sessions++;
-        facilitatorData[session.facilitator].farmers += session.farmers;
-    });
-    
-    // Sort facilitators by farmers reached
-    const topFacilitators = Object.entries(facilitatorData)
-        .map(([name, data]) => ({
-            name,
-            sessions: data.sessions,
-            farmers: data.farmers,
-            average: Math.round(data.farmers / data.sessions)
-        }))
-        .sort((a, b) => b.farmers - a.farmers)
-        .slice(0, 10);
-    
-    // Update facilitator table
-    const tableBody = document.getElementById('facilitatorTable');
-    if (tableBody) {
-        tableBody.innerHTML = topFacilitators.map(f => `
-            <tr>
-                <td>${f.name}</td>
-                <td>${f.sessions}</td>
-                <td>${f.farmers}</td>
-                <td>${f.average}</td>
-            </tr>
-        `).join('');
-    }
-    
-    // Create simple bar chart for city data
-    const cityChart = document.getElementById('cityChart');
-    if (cityChart) {
-        const cities = Object.keys(cityData);
-        const maxSessions = Math.max(...Object.values(cityData).map(d => d.sessions));
-        const maxHeight = 200;
-        
-        cityChart.innerHTML = `
-            <div style="display: flex; align-items: flex-end; height: 250px; gap: 20px; padding: 20px; border-bottom: 1px solid #eee;">
-                ${cities.map(city => {
-                    const height = maxSessions > 0 ? (cityData[city].sessions / maxSessions) * maxHeight : 0;
-                    return `
-                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; height: ${maxHeight}px;">
-                            <div style="position: relative; width: 80%; height: 100%; display: flex; align-items: flex-end;">
-                                <div class="chart-bar" style="height: ${height}px;">
-                                    <div class="chart-value">${cityData[city].sessions}</div>
-                                </div>
-                            </div>
-                            <div class="chart-label">${city}</div>
-                            <div style="font-size: 12px; color: #999; margin-top: 5px;">${cityData[city].farmers} farmers</div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
     }
 }
 
@@ -953,119 +1821,69 @@ function updateAnalytics() {
 function showSessionsTab() {
     const sessionsTab = document.getElementById('sessionsTab');
     if (!sessionsTab) {
-        // Create sessions tab if it doesn't exist
         const tabContent = document.getElementById('tabContent');
-        
         const sessionsHtml = `
-            <section class="campaign-section tab-content-section" id="sessionsTab" style="display: block;">
+            <section class="campaign-section" id="sessionsTab" style="display: block;">
                 <h2><i class="fas fa-calendar-day"></i> All Sessions</h2>
-                <p>Detailed list of all farmer education sessions</p>
+                <p>Complete list of farmer education sessions</p>
                 
-                <div style="margin-bottom: 20px;">
-                    <input type="text" id="sessionSearch" placeholder="Search sessions..." style="
-                        padding: 10px 15px;
-                        width: 100%;
-                        border: 2px solid #e0e0e0;
-                        border-radius: 8px;
-                        font-size: 14px;
-                    ">
+                <div style="overflow-x: auto;">
+                    <table class="sessions-table" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>City</th>
+                                <th>Spot</th>
+                                <th>Date</th>
+                                <th>Farmers</th>
+                                <th>Acres</th>
+                                <th>Facilitator</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${currentFilteredSessions.map(session => `
+                                <tr>
+                                    <td><strong>${session.sessionNumber}</strong></td>
+                                    <td>${session.cityName}</td>
+                                    <td>${session.spot}</td>
+                                    <td>${session.date}</td>
+                                    <td>${session.farmers}</td>
+                                    <td>${session.acres.toLocaleString()}</td>
+                                    <td>${session.facilitator}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
-                
-                <table class="sessions-table">
-                    <thead>
-                        <tr>
-                            <th>Session ID</th>
-                            <th>City</th>
-                            <th>Spot</th>
-                            <th>Date</th>
-                            <th>Farmers</th>
-                            <th>Acres</th>
-                            <th>Facilitator</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sessionsTableBody">
-                        <!-- Will be populated dynamically -->
-                    </tbody>
-                </table>
             </section>
         `;
-        
         tabContent.insertAdjacentHTML('beforeend', sessionsHtml);
-        
-        // Populate sessions table
-        updateSessionsTable();
-        
-        // Add search functionality
-        const sessionSearch = document.getElementById('sessionSearch');
-        if (sessionSearch) {
-            sessionSearch.addEventListener('input', function(e) {
-                updateSessionsTable(e.target.value);
-            });
-        }
     } else {
         sessionsTab.style.display = 'block';
-        updateSessionsTable();
     }
-}
-
-// Update sessions table
-function updateSessionsTable(searchQuery = '') {
-    const tableBody = document.getElementById('sessionsTableBody');
-    if (!tableBody) return;
-    
-    let sessionsToShow = currentFilteredSessions;
-    
-    // Filter by search query if provided
-    if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        sessionsToShow = sessionsToShow.filter(session => 
-            session.sessionNumber.toLowerCase().includes(query) ||
-            session.cityName.toLowerCase().includes(query) ||
-            session.spot.toLowerCase().includes(query) ||
-            session.facilitator.toLowerCase().includes(query)
-        );
-    }
-    
-    // Sort by date
-    sessionsToShow.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Populate table
-    tableBody.innerHTML = sessionsToShow.map(session => `
-        <tr>
-            <td><strong>${session.sessionNumber}</strong></td>
-            <td>${session.cityName}</td>
-            <td>${session.spot}</td>
-            <td>${session.date} (${session.day})</td>
-            <td>${session.farmers}</td>
-            <td>${session.acres.toLocaleString()}</td>
-            <td>${session.facilitator}</td>
-        </tr>
-    `).join('');
 }
 
 // Add background video
 function addBackgroundVideo() {
-    // Check if video already exists
     if (document.getElementById('backgroundVideo')) return;
     
     const videoHTML = `
-        <video id="backgroundVideo" autoplay muted loop playsinline>
-            <source src="assets/bg.mp4" type="video/mp4">
-            Your browser does not support the video tag.
+        <video id="backgroundVideo" autoplay muted loop playsinline style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.03;
+        ">
+            <!-- Fallback to gradient if video doesn't load -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);"></div>
         </video>
     `;
     
     document.body.insertAdjacentHTML('afterbegin', videoHTML);
-    
-    // Try to play video
-    const video = document.getElementById('backgroundVideo');
-    if (video) {
-        video.play().catch(e => {
-            console.log('Video autoplay prevented:', e);
-            // Fallback to showing poster image
-            video.style.display = 'none';
-        });
-    }
 }
 
 // Add header branding
@@ -1074,10 +1892,10 @@ function addHeaderBranding() {
     if (header && !document.querySelector('.branding-container')) {
         const brandingHTML = `
             <div class="branding-container">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <div style="color: white; font-size: 12px; opacity: 0.9;">Powered by:</div>
-                    <img src="assets/Bayer.png" alt="Bayer" class="brand-logo" onerror="this.style.display='none'">
-                    <img src="assets/Buctril.jpg" alt="Buttril Super" class="product-logo" onerror="this.style.display='none'">
+                <div style="display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px;">
+                    <span style="color: white; font-size: 11px; font-weight: bold;">Bayer</span>
+                    <span style="color: white; font-size: 11px;">|</span>
+                    <span style="color: white; font-size: 11px;">Buttril Super</span>
                 </div>
             </div>
         `;
@@ -1085,21 +1903,4 @@ function addHeaderBranding() {
     }
 }
 
-// Global error handling
-window.addEventListener('error', function(e) {
-    console.error('Dashboard error:', e.message, e.filename, e.lineno);
-    
-    // Show error banner for specific errors
-    if (e.message.includes('updateMapBanner') || e.message.includes('dashboard') || e.message.includes('Leaflet')) {
-        document.getElementById('errorBanner').style.display = 'flex';
-        document.getElementById('errorMessage').textContent = e.message;
-        
-        const statusIndicator = document.getElementById('statusIndicator');
-        if (statusIndicator) {
-            statusIndicator.className = 'status-indicator status-error';
-            statusIndicator.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Script Error Detected</span>';
-        }
-    }
-});
-
-console.log('AgriVista Data Processor loaded successfully');
+console.log('AgriVista Dashboard - Complete Embedded Data Version');

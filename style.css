@@ -1560,4 +1560,268 @@ body {
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1200px) {
     .container {
-        padding: 15px
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .map-container {
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .control-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .date-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-group span {
+        text-align: center;
+        margin: 5px 0;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .tab {
+        min-width: 100%;
+        text-align: left;
+        padding-left: 25px;
+    }
+    
+    .summary-stats {
+        gap: 20px;
+    }
+    
+    .stat-item {
+        flex: 1 0 calc(50% - 10px);
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .map-banner {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .campaign-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .overview-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .knowledge-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .performance-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .influencer-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .header h2 {
+        font-size: 1.1rem;
+    }
+    
+    .header-logos {
+        gap: 8px;
+    }
+    
+    .logo-container {
+        min-width: 100px;
+        min-height: 50px;
+    }
+    
+    .logo-img {
+        height: 30px;
+    }
+    
+    .stat-item {
+        flex: 1 0 100%;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .performance-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== LEAFLET MAP CUSTOM STYLES ===== */
+.leaflet-popup-content {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-width: 250px;
+}
+
+.leaflet-popup-content h3 {
+    color: var(--primary);
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 5px;
+}
+
+.leaflet-popup-content p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+    color: var(--dark);
+}
+
+.leaflet-popup-content strong {
+    color: var(--primary-dark);
+}
+
+.marker-cluster-small {
+    background-color: rgba(46, 125, 50, 0.6);
+}
+
+.marker-cluster-small div {
+    background-color: rgba(46, 125, 50, 0.9);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.marker-cluster-medium {
+    background-color: rgba(255, 152, 0, 0.6);
+}
+
+.marker-cluster-medium div {
+    background-color: rgba(255, 152, 0, 0.9);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.marker-cluster-large {
+    background-color: rgba(33, 150, 243, 0.6);
+}
+
+.marker-cluster-large div {
+    background-color: rgba(33, 150, 243, 0.9);
+    color: var(--white);
+    font-weight: 600;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .nav-tabs, 
+    .dashboard-controls, 
+    .button-group, 
+    .status-indicator,
+    .gallery-filters,
+    .map-banner,
+    .footer-links,
+    .pagination-controls,
+    .map-controls-panel {
+        display: none !important;
+    }
+    
+    .map-container {
+        height: 300px;
+        page-break-inside: avoid;
+    }
+    
+    .campaign-section {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .video-background,
+    .video-fallback {
+        display: none !important;
+    }
+    
+    .container {
+        padding: 10px !important;
+    }
+    
+    .header {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .logo-container {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}

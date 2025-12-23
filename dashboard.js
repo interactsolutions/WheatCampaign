@@ -91,7 +91,6 @@ async function loadAllData() {
 // CREATE FALLBACK DATA IF FILES MISSING
 function createFallbackSessions() {
     console.log('Creating fallback session data');
-    // Create minimal fallback data structure
     return Array.from({ length: 40 }, (_, i) => ({
         id: i + 1,
         sessionNumber: `${["SKR", "DGK", "FSD", "GSM"][Math.floor(i / 10)]}-${(i % 10) + 1}`,
@@ -419,12 +418,17 @@ function updateMapMarkers() {
 // RESET FILTERS
 function resetFilters() {
     console.log('Resetting filters...');
+    
+    // Reset form values
     document.getElementById('cityFilter').value = 'all';
     document.getElementById('searchInput').value = '';
     document.getElementById('dateFrom').value = '2025-11-24';
     document.getElementById('dateTo').value = '2025-12-12';
     
+    // Reset filtered sessions
     currentFilteredSessions = [...allSessions];
+    
+    // Update everything
     updateDashboardStats();
     renderSessionsTable();
     updateMapMarkers();

@@ -1,5 +1,5 @@
-// dashboard.js - FIXED VERSION FOR LOCAL FILES
-console.log('AgriVista Dashboard v2.2 initializing...');
+// dashboard.js - ENHANCED VERSION v2.3
+console.log('AgriVista Dashboard v2.3 initializing...');
 
 // GLOBAL STATE
 let allSessions = [];
@@ -7,6 +7,10 @@ let currentFilteredSessions = [];
 let mediaItems = [];
 let map;
 let markerCluster;
+let visitorCount = 0;
+let sessionDetailMap = null;
+let currentPage = 1;
+const itemsPerPage = 10;
 
 // DOM ELEMENTS
 const elements = {
@@ -24,12 +28,14 @@ const elements = {
     shownSessions: document.getElementById('shownSessions'),
     totalSessionsCount: document.getElementById('totalSessionsCount'),
     errorBanner: document.getElementById('errorBanner'),
-    errorMessage: document.getElementById('errorMessage')
+    errorMessage: document.getElementById('errorMessage'),
+    loadingOverlay: document.getElementById('loadingOverlay')
 };
 
 // INITIALIZE EVERYTHING
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM loaded. Starting initialization...');
+    showLoading(true);
     updateStatus('Loading dashboard data...', 'loading');
     
     // Hide error banner at start
@@ -47,9 +53,325 @@ document.addEventListener('DOMContentLoaded', function () {
     loadAllData();
     setupEventListeners();
     initializeTabs();
+    initializeEnhancedFeatures();
 });
 
-// LOAD ALL JSON DATA - FIXED FOR LOCAL FILES
+// ===== ENHANCED FEATURES INITIALIZATION =====
+function initializeEnhancedFeatures() {
+    console.log('Initializing enhanced features...');
+    
+    // Initialize visitor counter
+    initializeVisitorCounter();
+    
+    // Initialize feedback system
+    initializeFeedbackSystem();
+    
+    // Initialize social sharing
+    initializeSocialSharing();
+    
+    // Initialize image loading animations
+    initializeImageLoading();
+}
+
+// ===== 1. VISITOR COUNTER =====
+function initializeVisitorCounter() {
+    // Get existing count from localStorage or start at 0
+    visitorCount = localStorage.getItem('wheatCampaignVisitors') || 0;
+    visitorCount = parseInt(visitorCount);
+    
+    // Increment counter (only counts unique sessions)
+    if (!sessionStorage.getItem('hasVisited')) {
+        visitorCount++;
+        localStorage.setItem('wheatCampaignVisitors', visitorCount);
+        sessionStorage.setItem('hasVisited', 'true');
+    }
+    
+    // Update counter display
+    updateVisitorCounter();
+    
+    // Update counter every hour to show activity
+    setInterval(updateVisitorCounter, 3600000);
+}
+
+function updateVisitorCounter() {
+    const counterElement = document.getElementById('visitorCounter');
+    if (!counterElement) {
+        // Create counter element if it doesn't exist
+        const headerSubtitle = document.querySelector('.header-subtitle');
+        if (headerSubtitle) {
+            const counter = document.createElement('div');
+            counter.id = 'visitorCounter';
+            counter.className = 'visitor-counter';
+            counter.innerHTML = `<i class="fas fa-eye"></i> ${visitorCount.toLocaleString()} Visitors`;
+            headerSubtitle.appendChild(counter);
+        }
+    } else {
+        counterElement.innerHTML = `<i class="fas fa-eye"></i> ${visitorCount.toLocaleString()} Visitors`;
+    }
+}
+
+// ===== 2. LOADING MANAGEMENT =====
+function showLoading(show) {
+    if (elements.loadingOverlay) {
+        if (show) {
+            elements.loadingOverlay.classList.remove('hidden');
+        } else {
+            setTimeout(() => {
+                elements.loadingOverlay.classList.add('hidden');
+            }, 500);
+        }
+    }
+}
+
+// ===== 3. IMAGE LOADING ANIMATIONS =====
+function initializeImageLoading() {
+    // This will be implemented in the renderGallery function
+}
+
+// ===== 4. FEEDBACK SYSTEM =====
+function initializeFeedbackSystem() {
+    // Add feedback button to footer
+    const footerLinks = document.querySelector('.footer-links');
+    if (footerLinks) {
+        const feedbackLink = document.createElement('a');
+        feedbackLink.href = '#';
+        feedbackLink.id = 'feedbackBtn';
+        feedbackLink.innerHTML = '<i class="fas fa-comment-alt"></i> Share Feedback';
+        footerLinks.appendChild(feedbackLink);
+        
+        feedbackLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showFeedbackModal();
+        });
+    }
+    
+    // Initialize feedback modal controls
+    document.getElementById('feedbackCancel')?.addEventListener('click', hideFeedbackModal);
+    document.querySelector('#feedbackModal .modal-close')?.addEventListener('click', hideFeedbackModal);
+    document.getElementById('feedbackSubmit')?.addEventListener('click', submitFeedback);
+    
+    // Form submission
+    document.getElementById('feedbackForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitFeedback();
+    });
+}
+
+function showFeedbackModal() {
+    document.getElementById('feedbackModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function hideFeedbackModal() {
+    document.getElementById('feedbackModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function submitFeedback() {
+    const name = document.getElementById('feedbackName').value.trim();
+    const phone = document.getElementById('feedbackPhone').value.trim();
+    const email = document.getElementById('feedbackEmail').value.trim();
+    const type = document.getElementById('feedbackType').value;
+    const message = document.getElementById('feedbackMessage').value.trim();
+    
+    const contactMethods = Array.from(document.querySelectorAll('input[name="contactMethod"]:checked'))
+        .map(cb => cb.value);
+    
+    if (!name || !message) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Prepare feedback data
+    const feedback = {
+        name,
+        phone,
+        email,
+        type,
+        message,
+        contactMethods,
+        timestamp: new Date().toISOString(),
+        pageUrl: window.location.href,
+        visitorCount
+    };
+    
+    // Save to localStorage for demo purposes
+    try {
+        const feedbacks = JSON.parse(localStorage.getItem('campaignFeedbacks') || '[]');
+        feedbacks.push(feedback);
+        localStorage.setItem('campaignFeedbacks', JSON.stringify(feedbacks));
+        
+        // Prepare WhatsApp message
+        let whatsappMessage = `*New Feedback - Buctril Super Campaign*\n\n`;
+        whatsappMessage += `*Name:* ${name}\n`;
+        if (phone) whatsappMessage += `*Phone:* ${phone}\n`;
+        if (email) whatsappMessage += `*Email:* ${email}\n`;
+        whatsappMessage += `*Type:* ${type}\n`;
+        whatsappMessage += `*Message:* ${message}\n`;
+        whatsappMessage += `*Contact via:* ${contactMethods.join(', ') || 'None specified'}\n`;
+        whatsappMessage += `\n_Submitted via AgriVista Dashboard_`;
+        
+        // Create WhatsApp link
+        const whatsappLink = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
+        
+        // Show success
+        hideFeedbackModal();
+        showToast('Feedback submitted successfully!', 'success');
+        
+        // Offer WhatsApp option
+        setTimeout(() => {
+            if (confirm('Would you like to share this feedback via WhatsApp?')) {
+                window.open(whatsappLink, '_blank');
+            }
+        }, 1000);
+        
+        // Clear form
+        document.getElementById('feedbackForm').reset();
+        
+    } catch (error) {
+        console.error('Feedback save error:', error);
+        showToast('Error saving feedback. Please try again.', 'error');
+    }
+}
+
+// ===== 5. SOCIAL SHARING =====
+function initializeSocialSharing() {
+    // Add share button to footer
+    const footerLinks = document.querySelector('.footer-links');
+    if (footerLinks) {
+        const shareLink = document.createElement('a');
+        shareLink.href = '#';
+        shareLink.id = 'shareDashboardBtn';
+        shareLink.innerHTML = '<i class="fas fa-share-alt"></i> Share Dashboard';
+        footerLinks.appendChild(shareLink);
+        
+        shareLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showShareModal();
+        });
+    }
+    
+    // Initialize share modal
+    document.querySelector('#shareModal .modal-close')?.addEventListener('click', hideShareModal);
+    document.getElementById('copyUrlBtn')?.addEventListener('click', copyShareUrl);
+    
+    // Share option buttons
+    document.querySelectorAll('.share-option').forEach(button => {
+        button.addEventListener('click', function() {
+            const platform = this.dataset.platform;
+            shareToPlatform(platform);
+        });
+    });
+}
+
+function showShareModal(customText = null, customUrl = null) {
+    const shareText = customText || 'Check out the Buctril Super Farmer Education Drive 2025 Dashboard! Track 40 sessions across 17 cities with detailed analytics and media gallery.';
+    const shareUrl = customUrl || window.location.href;
+    
+    // Store for sharing
+    window.shareData = { text: shareText, url: shareUrl };
+    
+    // Update URL field
+    document.getElementById('shareUrl').value = shareUrl;
+    
+    // Show modal
+    document.getElementById('shareModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function hideShareModal() {
+    document.getElementById('shareModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function copyShareUrl() {
+    const urlInput = document.getElementById('shareUrl');
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999);
+    
+    try {
+        navigator.clipboard.writeText(urlInput.value);
+        showToast('Link copied to clipboard!', 'success');
+    } catch (err) {
+        // Fallback for older browsers
+        document.execCommand('copy');
+        showToast('Link copied to clipboard!', 'success');
+    }
+}
+
+function shareToPlatform(platform) {
+    const { text, url } = window.shareData || {
+        text: 'Check out the Buctril Super Campaign Dashboard!',
+        url: window.location.href
+    };
+    
+    let shareUrl;
+    
+    switch (platform) {
+        case 'whatsapp':
+            shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+            break;
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            break;
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+            break;
+        case 'email':
+            shareUrl = `mailto:?subject=Buctril Super Campaign Dashboard&body=${encodeURIComponent(text + '\n\n' + url)}`;
+            break;
+        case 'copy':
+            copyShareUrl();
+            return;
+        default:
+            return;
+    }
+    
+    if (platform === 'email') {
+        window.location.href = shareUrl;
+    } else {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+    
+    hideShareModal();
+}
+
+// ===== 6. TOAST NOTIFICATIONS =====
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? 'fa-check-circle' : 
+                type === 'error' ? 'fa-exclamation-circle' : 
+                'fa-info-circle';
+    
+    toast.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.getElementById('toastContainer').appendChild(toast);
+    
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// ===== CORE DASHBOARD FUNCTIONS =====
+
+// LOAD ALL JSON DATA
 async function loadAllData() {
     try {
         updateStatus('Loading sessions data...', 'loading');
@@ -91,6 +413,9 @@ async function loadAllData() {
         
         updateStatus('Dashboard loaded successfully', 'success');
         console.log('Dashboard initialization complete.');
+        
+        // Hide loading overlay
+        showLoading(false);
 
     } catch (error) {
         console.error('Fatal error loading data:', error);
@@ -104,6 +429,7 @@ async function loadAllData() {
         updateDashboardStats();
         renderSessionsTable();
         renderGallery();
+        showLoading(false);
     }
 }
 
@@ -135,7 +461,7 @@ function createFallbackSessions() {
     });
 }
 
-// CREATE FALLBACK MEDIA - USES LOCAL FILE PATHS
+// CREATE FALLBACK MEDIA
 function createFallbackMedia() {
     console.log('Creating fallback media with local paths');
     const cities = ['sukkur', 'dgk', 'faisalabad', 'gujranwala'];
@@ -154,7 +480,7 @@ function createFallbackMedia() {
         
         return {
             id: i + 1,
-            filename: `gallery/${(i % 10) + 1}.jpeg`, // Try local path first
+            filename: `gallery/${(i % 10) + 1}.jpeg`,
             fallback: `https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${city.toUpperCase()}+Session`,
             caption: `Campaign Session ${i + 1}: ${types[i % types.length]}`,
             date: `2025-11-${24 + (i % 10)}`,
@@ -181,7 +507,7 @@ function updateDashboardStats() {
     if (elements.totalSessions) elements.totalSessions.textContent = totalSessions;
     if (elements.totalFarmers) elements.totalFarmers.textContent = totalFarmers.toLocaleString();
     if (elements.totalAcres) elements.totalAcres.textContent = totalAcres.toLocaleString();
-    if (elements.shownSessions) elements.shownSessions.textContent = Math.min(10, totalSessions);
+    if (elements.shownSessions) elements.shownSessions.textContent = Math.min(itemsPerPage, totalSessions);
     if (elements.totalSessionsCount) elements.totalSessionsCount.textContent = totalSessions;
     
     // Update map banner
@@ -235,7 +561,7 @@ function initializeMap() {
     }
 }
 
-// RENDER GALLERY - FIXED FOR LOCAL FILES
+// RENDER GALLERY WITH LOADING ANIMATIONS
 function renderGallery() {
     console.log('Rendering gallery...');
     const container = elements.mediaGallery;
@@ -261,7 +587,7 @@ function renderGallery() {
     
     itemsToShow.forEach(media => {
         const item = document.createElement('div');
-        item.className = 'gallery-item';
+        item.className = 'gallery-item loading';
         item.setAttribute('data-city', media.city);
         item.setAttribute('data-type', media.type);
         
@@ -280,8 +606,10 @@ function renderGallery() {
                       `https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city}`;
         
         item.innerHTML = `
+            <div class="image-loading"></div>
             <img src="${imgSrc}" alt="${media.caption}" 
-                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city}'">
+                 onload="this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded')"
+                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city}'; this.parentElement.classList.remove('loading'); this.parentElement.classList.add('loaded')">
             <div class="gallery-caption">
                 <div class="gallery-city">${media.city.toUpperCase()} • Session ${media.sessionId}</div>
                 <div class="gallery-title">${media.caption}</div>
@@ -296,7 +624,7 @@ function renderGallery() {
     });
 }
 
-// RENDER SESSIONS TABLE
+// RENDER SESSIONS TABLE WITH CLICK HANDLERS
 function renderSessionsTable() {
     console.log('Rendering sessions table...');
     const tbody = elements.sessionsTableBody;
@@ -317,8 +645,15 @@ function renderSessionsTable() {
 
     // Clear and add rows
     tbody.innerHTML = '';
-    currentFilteredSessions.forEach(session => {
+    
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageSessions = currentFilteredSessions.slice(startIndex, endIndex);
+    
+    pageSessions.forEach(session => {
         const row = document.createElement('tr');
+        row.dataset.sessionId = session.id;
         row.innerHTML = `
             <td class="session-number">${session.sessionNumber || 'N/A'}</td>
             <td>${session.date || 'N/A'}</td>
@@ -331,11 +666,200 @@ function renderSessionsTable() {
         `;
         tbody.appendChild(row);
     });
+    
+    // Update pagination
+    updatePaginationControls();
+}
+
+// UPDATE PAGINATION CONTROLS
+function updatePaginationControls() {
+    const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    
+    if (elements.shownSessions) {
+        const startIndex = (currentPage - 1) * itemsPerPage + 1;
+        const endIndex = Math.min(currentPage * itemsPerPage, currentFilteredSessions.length);
+        elements.shownSessions.textContent = `${startIndex}-${endIndex}`;
+    }
+}
+
+// ===== 7. SESSION DETAIL VIEW =====
+function initializeSessionDetails() {
+    // Add click handler to table body
+    const tableBody = document.getElementById('sessionsTableBody');
+    if (tableBody) {
+        tableBody.addEventListener('click', function(e) {
+            const row = e.target.closest('tr');
+            if (row && row.dataset.sessionId) {
+                const sessionId = parseInt(row.dataset.sessionId);
+                const session = allSessions.find(s => s.id === sessionId);
+                if (session) {
+                    showSessionDetail(session);
+                }
+            }
+        });
+    }
+    
+    // Initialize session modal controls
+    document.getElementById('modalCloseBtn')?.addEventListener('click', hideSessionDetail);
+    document.querySelector('#sessionModal .modal-close')?.addEventListener('click', hideSessionDetail);
+    document.getElementById('modalShareBtn')?.addEventListener('click', shareSessionDetails);
+    
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideSessionDetail();
+            hideFeedbackModal();
+            hideShareModal();
+        }
+    });
+    
+    // Close modal on background click
+    document.getElementById('sessionModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideSessionDetail();
+        }
+    });
+}
+
+function showSessionDetail(session) {
+    console.log('Showing session details:', session);
+    
+    // Update modal content
+    document.getElementById('modalSessionTitle').textContent = `${session.sessionNumber}: ${session.focus}`;
+    document.getElementById('modalSessionId').textContent = session.sessionNumber;
+    document.getElementById('modalSessionDate').textContent = `${session.date} (${session.day})`;
+    document.getElementById('modalSessionCity').textContent = session.cityName;
+    document.getElementById('modalSessionLocation').textContent = session.spot;
+    document.getElementById('modalSessionFacilitator').textContent = session.facilitator;
+    document.getElementById('modalSessionFarmers').textContent = session.farmers;
+    document.getElementById('modalSessionAcres').textContent = session.acres.toLocaleString();
+    document.getElementById('modalSessionFocus').textContent = session.type;
+    
+    // Load session media
+    loadSessionMedia(session.id);
+    
+    // Initialize map for this session
+    initializeSessionMap(session);
+    
+    // Show modal
+    document.getElementById('sessionModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Store current session for sharing
+    window.currentSession = session;
+}
+
+function hideSessionDetail() {
+    document.getElementById('sessionModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Clean up map
+    if (sessionDetailMap) {
+        sessionDetailMap.remove();
+        sessionDetailMap = null;
+    }
+}
+
+function initializeSessionMap(session) {
+    const mapContainer = document.getElementById('modalMap');
+    if (!mapContainer) return;
+    
+    // Clear existing content
+    mapContainer.innerHTML = '';
+    
+    if (session.latitude && session.longitude) {
+        try {
+            // Create mini map
+            sessionDetailMap = L.map('modalMap').setView([session.latitude, session.longitude], 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 15
+            }).addTo(sessionDetailMap);
+            
+            // Add marker
+            L.marker([session.latitude, session.longitude])
+                .bindPopup(`<b>${session.sessionNumber}</b><br>${session.spot}`)
+                .addTo(sessionDetailMap)
+                .openPopup();
+                
+        } catch (error) {
+            console.error('Map error:', error);
+            mapContainer.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666;">
+                    <i class="fas fa-map-marked-alt" style="font-size:48px; opacity:0.3;"></i>
+                    <p style="margin-top:10px;">Map unavailable</p>
+                </div>
+            `;
+        }
+    } else {
+        mapContainer.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#666;">
+                <i class="fas fa-map-marked-alt" style="font-size:48px; opacity:0.3;"></i>
+                <p style="margin-top:10px;">Location data not available</p>
+            </div>
+        `;
+    }
+}
+
+function loadSessionMedia(sessionId) {
+    const mediaGallery = document.getElementById('modalMediaGallery');
+    if (!mediaGallery) return;
+    
+    // Filter media for this session
+    const sessionMedia = mediaItems.filter(item => 
+        item.sessionId === sessionId && item.displayIn === 'gallery'
+    );
+    
+    if (sessionMedia.length === 0) {
+        mediaGallery.innerHTML = `
+            <div style="text-align:center; padding:20px; color:#666;">
+                <i class="fas fa-images" style="font-size:32px; opacity:0.3;"></i>
+                <p>No media available for this session</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Display first 6 media items
+    mediaGallery.innerHTML = '';
+    const itemsToShow = sessionMedia.slice(0, 6);
+    
+    itemsToShow.forEach(media => {
+        const img = document.createElement('img');
+        img.src = media.filename;
+        img.alt = media.caption;
+        img.title = media.caption;
+        img.addEventListener('click', () => {
+            // Open image in new tab
+            window.open(media.filename, '_blank');
+        });
+        mediaGallery.appendChild(img);
+    });
+}
+
+function shareSessionDetails() {
+    if (!window.currentSession) return;
+    
+    const session = window.currentSession;
+    const text = `Check out ${session.sessionNumber} from Buctril Super Campaign: ${session.focus} in ${session.cityName} on ${session.date}. ${session.farmers} farmers attended!`;
+    const url = window.location.href;
+    
+    // Open share modal
+    showShareModal(text, url);
 }
 
 // SETUP EVENT LISTENERS
 function setupEventListeners() {
     console.log('Setting up event listeners...');
+    
+    // Initialize session details
+    initializeSessionDetails();
     
     // Apply Filters
     const applyBtn = document.getElementById('applyFilters');
@@ -374,6 +898,7 @@ function setupEventListeners() {
     if (highAttendanceBtn) {
         highAttendanceBtn.addEventListener('click', function() {
             currentFilteredSessions = allSessions.filter(s => s.farmers >= 80);
+            currentPage = 1;
             updateDashboardStats();
             renderSessionsTable();
             updateMapMarkers();
@@ -399,6 +924,29 @@ function setupEventListeners() {
     const refreshBtn = document.getElementById('refreshData');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => location.reload());
+    }
+    
+    // Pagination buttons
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderSessionsTable();
+            }
+        });
+    }
+    
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function() {
+            const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderSessionsTable();
+            }
+        });
     }
 }
 
@@ -426,6 +974,9 @@ function applyFilters() {
         
         return true;
     });
+    
+    // Reset to first page
+    currentPage = 1;
     
     // Update everything
     updateDashboardStats();
@@ -486,6 +1037,7 @@ function resetFilters() {
     
     // Reset filtered sessions
     currentFilteredSessions = [...allSessions];
+    currentPage = 1;
     
     // Update everything
     updateDashboardStats();
@@ -504,7 +1056,7 @@ function resetFilters() {
 // EXPORT TO CSV
 function exportToCSV() {
     if (currentFilteredSessions.length === 0) {
-        alert('No data to export. Please adjust your filters.');
+        showToast('No data to export. Please adjust your filters.', 'error');
         return;
     }
     
@@ -536,10 +1088,11 @@ function exportToCSV() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
+        showToast(`Exported ${currentFilteredSessions.length} sessions to CSV`, 'success');
         updateStatus(`Exported ${currentFilteredSessions.length} sessions`, 'success');
     } catch (error) {
         console.error('Export failed:', error);
-        alert('Failed to export data. Please try again.');
+        showToast('Failed to export data. Please try again.', 'error');
     }
 }
 
@@ -591,4 +1144,4 @@ function showError(message) {
     }
 }
 
-console.log('AgriVista Dashboard v2.2 loaded.');
+console.log('AgriVista Dashboard v2.3 enhanced version loaded.');

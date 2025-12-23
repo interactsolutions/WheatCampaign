@@ -9,14 +9,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/svg+xml" href="assets/placeholder.svg">
 </head>
 <body>
-    <!-- Background Video -->
-    <video id="backgroundVideo" autoplay loop muted playsinline>
-        <source src="assets/bg.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    <div class="video-fallback"></div>
+    <!-- Background Video Fallback -->
+    <div id="backgroundVideo" class="video-background">
+        <div class="video-fallback"></div>
+    </div>
 
     <div class="container">
         <!-- Header -->
@@ -35,25 +34,30 @@
             
             <div class="header-logos">
                 <div class="logo-container">
-                    <img src="assets/Bayer.png" alt="Bayer" onerror="this.style.display='none'">
+                    <img src="https://via.placeholder.com/150x60/ffffff/2e7d32?text=Bayer&font=arial" 
+                         alt="Bayer" class="logo-img">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Buctril.jpg" alt="Buctril Super" onerror="this.style.display='none'">
+                    <img src="https://via.placeholder.com/150x60/ffffff/ff9800?text=Buctril+Super&font=arial" 
+                         alt="Buctril Super" class="logo-img">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/products.jpg" alt="Product Range" onerror="this.style.display='none'">
+                    <img src="https://via.placeholder.com/150x60/ffffff/2196f3?text=Product+Range&font=arial" 
+                         alt="Product Range" class="logo-img">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Interact.gif" alt="Interact Solutions" onerror="this.style.display='none'">
+                    <img src="https://via.placeholder.com/150x60/ffffff/9c27b0?text=Interact&font=arial" 
+                         alt="Interact Solutions" class="logo-img">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Atlantis.jpg" alt="Atlantis Herbicide" onerror="this.style.display='none'">
+                    <img src="https://via.placeholder.com/150x60/ffffff/4caf50?text=Atlantis&font=arial" 
+                         alt="Atlantis Herbicide" class="logo-img">
                 </div>
             </div>
         </header>
 
-        <!-- Error Banner -->
-        <div id="errorBanner" class="error-banner">
+        <!-- Error Banner (Initially Hidden) -->
+        <div id="errorBanner" class="error-banner" style="display: none;">
             <i class="fas fa-exclamation-triangle"></i>
             <div>
                 <h3>Dashboard Initialization Error</h3>
@@ -61,10 +65,10 @@
                 <div class="quick-checks">
                     <p><strong>Quick Troubleshooting:</strong></p>
                     <ol>
-                        <li>Ensure sessions.json and media.json files are properly uploaded</li>
-                        <li>Check browser console for specific errors (F12 → Console)</li>
-                        <li>Verify that JavaScript is enabled in your browser</li>
-                        <li>Make sure all asset files are in the correct folders</li>
+                        <li>Ensure browser has internet access</li>
+                        <li>Check browser console for errors (F12 → Console)</li>
+                        <li>Refresh the page to retry loading data</li>
+                        <li>Make sure JavaScript is enabled in your browser</li>
                     </ol>
                 </div>
             </div>
@@ -76,14 +80,11 @@
                 <div class="control-group">
                     <label for="cityFilter"><i class="fas fa-city"></i> Filter by City</label>
                     <select id="cityFilter" class="dropdown">
-                        <option value="all">All Cities (17)</option>
+                        <option value="all">All Cities (4)</option>
                         <option value="sukkur">Sukkur (SKR) - 15 sessions</option>
                         <option value="dgk">Dera Ghazi Khan (DGK) - 10 sessions</option>
                         <option value="faisalabad">Faisalabad (FSD) - 8 sessions</option>
                         <option value="gujranwala">Gujranwala (GSM) - 7 sessions</option>
-                        <option value="multan">Multan (MUX) - 6 sessions</option>
-                        <option value="bahawalpur">Bahawalpur (BWP) - 5 sessions</option>
-                        <option value="sahiwal">Sahiwal (SWL) - 4 sessions</option>
                     </select>
                 </div>
                 
@@ -92,7 +93,7 @@
                     <div class="date-group">
                         <input type="date" id="dateFrom" class="date-input" value="2025-11-24">
                         <span>to</span>
-                        <input type="date" id="dateTo" class="date-input" value="2025-12-12" max="2025-12-22">
+                        <input type="date" id="dateTo" class="date-input" value="2025-12-12">
                     </div>
                 </div>
                 
@@ -104,11 +105,11 @@
                 
                 <div class="control-group">
                     <label><i class="fas fa-filter"></i> Quick Filters</label>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-outline" id="filterHighAttendance" style="flex: 1;">
+                    <div class="quick-filter-buttons">
+                        <button class="btn btn-outline" id="filterHighAttendance">
                             <i class="fas fa-users"></i> High Attendance (80+)
                         </button>
-                        <button class="btn btn-outline" id="filterRecent" style="flex: 1;">
+                        <button class="btn btn-outline" id="filterRecent">
                             <i class="fas fa-clock"></i> Last 7 Days
                         </button>
                     </div>
@@ -148,7 +149,7 @@
                     <span class="stat-label">Acres Covered</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="cityCount">17</span>
+                    <span class="stat-value" id="cityCount">4</span>
                     <span class="stat-label">Regions Covered</span>
                 </div>
                 <div class="status-indicator status-success" id="statusIndicator">
@@ -164,11 +165,8 @@
                 <h2 class="campaign-title">
                     <i class="fas fa-tractor"></i> Buctril Super Field Education Drive Metrics
                 </h2>
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <div style="background: linear-gradient(135deg, var(--primary-light), var(--primary)); 
-                                color: white; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
-                        <i class="fas fa-chart-line"></i> Live Dashboard
-                    </div>
+                <div class="campaign-badge">
+                    <i class="fas fa-chart-line"></i> Live Dashboard
                 </div>
             </div>
             
@@ -194,8 +192,8 @@
                     <p>Avg. Farmers per Session</p>
                 </div>
                 <div class="overview-card">
-                    <h3>17</h3>
-                    <p>Major Cities Covered</p>
+                    <h3>4</h3>
+                    <p>Major Regions Covered</p>
                 </div>
             </div>
             
@@ -203,7 +201,7 @@
             <div class="map-container">
                 <div class="map-banner">
                     <span><i class="fas fa-map-marked-alt"></i> Campaign Coverage Map - Pakistan</span>
-                    <span id="mapStats">Showing 40 Sessions across 17 Cities</span>
+                    <span id="mapStats">Showing 40 Sessions across 4 Regions</span>
                 </div>
                 <div id="campaignMap"></div>
             </div>
@@ -221,7 +219,7 @@
                 <i class="fas fa-map"></i> Interactive Map
             </button>
             <button class="tab" data-tab="gallery">
-                <i class="fas fa-images"></i> Media Gallery (48)
+                <i class="fas fa-images"></i> Media Gallery
             </button>
             <button class="tab" data-tab="sessions">
                 <i class="fas fa-calendar-day"></i> All Sessions
@@ -236,7 +234,9 @@
             <!-- Snapshot Tab (Default) -->
             <section class="key-takeaways" id="snapshotTab">
                 <h2><i class="fas fa-bullseye"></i> Key Campaign Takeaways</h2>
-                <p><strong>Campaign Scope:</strong> 17-day intensive farmer education drive covering 17 major agricultural regions across Punjab, Sindh, and Khyber Pakhtunkhwa, focusing on Buctril Super herbicide application and modern farming techniques.</p>
+                <p class="campaign-description">
+                    <strong>Campaign Scope:</strong> 17-day intensive farmer education drive covering 4 major agricultural regions across Punjab, Sindh, and Khyber Pakhtunkhwa, focusing on Buctril Super herbicide application and modern farming techniques.
+                </p>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -262,31 +262,29 @@
                 </div>
                 
                 <!-- Key Influencers Section -->
-                <div style="margin-top: 30px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 20px; border-radius: var(--border-radius); border-left: 4px solid var(--secondary);">
-                    <h3 style="color: var(--primary-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-user-friends"></i> Key Influencer Network
-                    </h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                        <div>
-                            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">530</div>
-                            <div style="color: var(--gray); font-weight: 600;">Key Opinion Leaders</div>
-                            <div style="font-size: 0.9rem; color: var(--gray); margin-top: 5px;">Activated across 17 cities</div>
+                <div class="influencer-section">
+                    <h3><i class="fas fa-user-friends"></i> Key Influencer Network</h3>
+                    <div class="influencer-grid">
+                        <div class="influencer-stat">
+                            <div class="influencer-value">530</div>
+                            <div class="influencer-label">Key Opinion Leaders</div>
+                            <div class="influencer-subtext">Activated across 4 regions</div>
                         </div>
-                        <div>
-                            <div style="font-size: 2rem; font-weight: 800; color: var(--secondary);">78%</div>
-                            <div style="color: var(--gray); font-weight: 600;">Active Engagement Rate</div>
-                            <div style="font-size: 0.9rem; color: var(--gray); margin-top: 5px;">Highly engaged with farming communities</div>
+                        <div class="influencer-stat">
+                            <div class="influencer-value">78%</div>
+                            <div class="influencer-label">Active Engagement Rate</div>
+                            <div class="influencer-subtext">Highly engaged with farming communities</div>
                         </div>
-                        <div>
-                            <div style="font-size: 2rem; font-weight: 800; color: #2196f3;">3.5x</div>
-                            <div style="color: var(--gray); font-weight: 600;">Amplification Factor</div>
-                            <div style="font-size: 0.9rem; color: var(--gray); margin-top: 5px;">Message reach multiplier</div>
+                        <div class="influencer-stat">
+                            <div class="influencer-value">3.5x</div>
+                            <div class="influencer-label">Amplification Factor</div>
+                            <div class="influencer-subtext">Message reach multiplier</div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- City Performance -->
-                <div class="city-progress" style="margin-top: 30px;">
+                <div class="city-progress">
                     <h3><i class="fas fa-chart-line"></i> Top Performing Regions</h3>
                     <div class="city-item">
                         <div class="city-header">
@@ -332,55 +330,53 @@
                 <h2><i class="fas fa-chart-bar"></i> Performance Analytics</h2>
                 <p>Detailed metrics and performance analysis across all campaign parameters</p>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 20px;">
-                    <div style="background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
-                        <h3 style="color: var(--primary-dark); margin-bottom: 15px;"><i class="fas fa-calendar-day"></i> Daily Attendance Trend</h3>
-                        <div id="attendanceChart" style="height: 200px; display: flex; align-items: flex-end; gap: 8px; padding: 15px; border-bottom: 1px solid #eee;">
-                            <!-- Chart bars will be generated here -->
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-calendar-day"></i> Daily Attendance Trend</h3>
+                        <div id="attendanceChart" class="chart-container">
+                            <!-- Chart will be generated by JavaScript -->
                         </div>
-                        <div style="text-align: center; margin-top: 10px; color: var(--gray); font-size: 0.9rem;">
+                        <div class="chart-note">
                             <i class="fas fa-info-circle"></i> Peak attendance: Day 4 (105 farmers)
                         </div>
                     </div>
                     
-                    <div style="background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
-                        <h3 style="color: var(--primary-dark); margin-bottom: 15px;"><i class="fas fa-map-marked-alt"></i> Regional Distribution</h3>
-                        <div id="regionalChart" style="height: 200px; display: flex; align-items: center; justify-content: center; padding: 15px;">
+                    <div class="analytics-card">
+                        <h3><i class="fas fa-map-marked-alt"></i> Regional Distribution</h3>
+                        <div id="regionalChart" class="chart-container">
                             <!-- Distribution visualization -->
-                            <div style="text-align: center;">
-                                <div style="font-size: 3rem; font-weight: 800; color: var(--primary);">37.5%</div>
-                                <div style="color: var(--gray);">Sukkur Region</div>
-                                <div style="font-size: 0.9rem; color: var(--gray); margin-top: 10px;">Highest session concentration</div>
+                            <div class="distribution-center">
+                                <div class="distribution-value">37.5%</div>
+                                <div class="distribution-label">Sukkur Region</div>
+                                <div class="distribution-subtext">Highest session concentration</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Performance Metrics -->
-                <div style="margin-top: 30px;">
+                <div class="performance-section">
                     <h3><i class="fas fa-trending-up"></i> Campaign Performance Metrics</h3>
-                    <div style="background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-top: 15px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">₹ 4.2L</div>
-                                <div style="font-size: 0.9rem; color: var(--gray);">Estimated Impact Value</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 800; color: var(--secondary);">94%</div>
-                                <div style="font-size: 0.9rem; color: var(--gray);">Farmer Engagement Rate</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 800; color: #2196f3;">3.2x</div>
-                                <div style="font-size: 0.9rem; color: var(--gray);">ROI Multiplier</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 800; color: #9c27b0;">28%</div>
-                                <div style="font-size: 0.9rem; color: var(--gray);">Cost Efficiency Gain</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 800; color: #ff5722;">76%</div>
-                                <div style="font-size: 0.9rem; color: var(--gray);">Knowledge Retention</div>
-                            </div>
+                    <div class="performance-grid">
+                        <div class="performance-card">
+                            <div class="performance-value">₹ 4.2L</div>
+                            <div class="performance-label">Estimated Impact Value</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">94%</div>
+                            <div class="performance-label">Farmer Engagement Rate</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">3.2x</div>
+                            <div class="performance-label">ROI Multiplier</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">28%</div>
+                            <div class="performance-label">Cost Efficiency Gain</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">76%</div>
+                            <div class="performance-label">Knowledge Retention</div>
                         </div>
                     </div>
                 </div>
@@ -389,54 +385,54 @@
             <!-- Map Tab -->
             <section class="campaign-section" id="mapTab" style="display: none;">
                 <h2><i class="fas fa-map"></i> Interactive Campaign Map</h2>
-                <p>Geospatial visualization of all field education sessions across 17 major cities in Pakistan</p>
+                <p>Geospatial visualization of all field education sessions across 4 major regions in Pakistan</p>
                 
-                <div style="display: grid; grid-template-columns: 300px 1fr; gap: 25px; margin-top: 20px;">
-                    <div style="background: white; padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
-                        <h3 style="color: var(--primary-dark); margin-bottom: 15px;"><i class="fas fa-filter"></i> Map Controls</h3>
+                <div class="map-controls-grid">
+                    <div class="map-controls-panel">
+                        <h3><i class="fas fa-filter"></i> Map Controls</h3>
                         
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark);">Session Types</label>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <div class="control-section">
+                            <label>Session Types</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
                                     <input type="checkbox" checked class="map-filter" data-filter="education">
                                     <span>Education Sessions</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="checkbox-label">
                                     <input type="checkbox" checked class="map-filter" data-filter="demo">
                                     <span>Field Demonstrations</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="checkbox-label">
                                     <input type="checkbox" checked class="map-filter" data-filter="training">
                                     <span>Training Workshops</span>
                                 </label>
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <label class="checkbox-label">
                                     <input type="checkbox" checked class="map-filter" data-filter="qa">
                                     <span>Q&A Sessions</span>
                                 </label>
                             </div>
                         </div>
                         
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark);">Attendance Range</label>
-                            <input type="range" id="attendanceRange" min="0" max="150" value="0" style="width: 100%;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--gray); margin-top: 5px;">
+                        <div class="control-section">
+                            <label>Attendance Range</label>
+                            <input type="range" id="attendanceRange" min="0" max="150" value="0" class="range-slider">
+                            <div class="range-labels">
                                 <span>All</span>
                                 <span id="rangeValue">0+ farmers</span>
                             </div>
                         </div>
                         
-                        <button id="fitBounds" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                        <button id="fitBounds" class="btn btn-primary full-width">
                             <i class="fas fa-expand-alt"></i> Fit to Sessions
                         </button>
-                        <button id="resetMap" class="btn btn-outline" style="width: 100%; margin-top: 10px;">
+                        <button id="resetMap" class="btn btn-outline full-width">
                             <i class="fas fa-redo"></i> Reset View
                         </button>
                     </div>
                     
                     <div class="map-container">
                         <div class="map-banner">
-                            <span><i class="fas fa-map-marked-alt"></i> Campaign Geographic Coverage - 17 Cities</span>
+                            <span><i class="fas fa-map-marked-alt"></i> Campaign Geographic Coverage - 4 Regions</span>
                             <span id="mapFilterStats">40 sessions shown</span>
                         </div>
                         <div id="detailedMap"></div>
@@ -447,16 +443,14 @@
             <!-- Gallery Tab -->
             <section class="gallery-section" id="galleryTab" style="display: none;">
                 <h2><i class="fas fa-images"></i> Campaign Media Gallery</h2>
-                <p>Visual documentation of field education sessions, farmer interactions, and product demonstrations across 17 cities</p>
+                <p>Visual documentation of field education sessions, farmer interactions, and product demonstrations across 4 regions</p>
                 
                 <div class="gallery-filters">
-                    <button class="gallery-filter-btn active" data-filter="all">All Media (48)</button>
-                    <button class="gallery-filter-btn" data-filter="sukkur">Sukkur (15)</button>
-                    <button class="gallery-filter-btn" data-filter="dgk">Dera Ghazi Khan (10)</button>
-                    <button class="gallery-filter-btn" data-filter="faisalabad">Faisalabad (8)</button>
-                    <button class="gallery-filter-btn" data-filter="gujranwala">Gujranwala (7)</button>
-                    <button class="gallery-filter-btn" data-filter="demonstrations">Field Demos (12)</button>
-                    <button class="gallery-filter-btn" data-filter="training">Training (8)</button>
+                    <button class="gallery-filter-btn active" data-filter="all">All Media (12)</button>
+                    <button class="gallery-filter-btn" data-filter="sukkur">Sukkur (3)</button>
+                    <button class="gallery-filter-btn" data-filter="dgk">Dera Ghazi Khan (3)</button>
+                    <button class="gallery-filter-btn" data-filter="faisalabad">Faisalabad (3)</button>
+                    <button class="gallery-filter-btn" data-filter="gujranwala">Gujranwala (3)</button>
                 </div>
                 
                 <div class="gallery-grid" id="mediaGallery">
@@ -464,11 +458,10 @@
                     <div class="loading">
                         <i class="fas fa-spinner fa-spin"></i>
                         <p>Loading media gallery...</p>
-                        <p class="loading-subtext">48 images from 40 sessions across 17 cities</p>
                     </div>
                 </div>
                 
-                <div style="text-align: center; margin-top: 30px;">
+                <div class="gallery-footer">
                     <button id="loadMoreGallery" class="btn btn-primary" style="display: none;">
                         <i class="fas fa-plus"></i> Load More Images
                     </button>
@@ -478,7 +471,7 @@
             <!-- Sessions Tab -->
             <section class="campaign-section" id="sessionsTab" style="display: none;">
                 <h2><i class="fas fa-calendar-day"></i> All Campaign Sessions</h2>
-                <p>Complete chronological list of all 40 farmer education sessions across 17 cities</p>
+                <p>Complete chronological list of all 40 farmer education sessions across 4 regions</p>
                 
                 <div class="sessions-table-container">
                     <table class="sessions-table">
@@ -497,7 +490,7 @@
                         <tbody id="sessionsTableBody">
                             <!-- Sessions will be loaded here -->
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: 40px;">
+                                <td colspan="8" class="loading-cell">
                                     <div class="loading">
                                         <i class="fas fa-spinner fa-spin"></i>
                                         <p>Loading sessions data...</p>
@@ -508,11 +501,11 @@
                     </table>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                    <div style="font-size: 0.9rem; color: var(--gray);">
+                <div class="pagination-controls">
+                    <div class="pagination-info">
                         Showing <span id="shownSessions">0</span> of <span id="totalSessionsCount">40</span> sessions
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="pagination-buttons">
                         <button id="prevPage" class="btn btn-outline" disabled>
                             <i class="fas fa-chevron-left"></i> Previous
                         </button>
@@ -528,69 +521,59 @@
                 <h2><i class="fas fa-lightbulb"></i> Farmer Insights & Understanding</h2>
                 <p>Detailed analysis of farmer understanding across key product knowledge areas (1-7 scale)</p>
                 
-                <div style="background: white; padding: 25px; border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-top: 20px;">
-                    <h3 style="color: var(--primary-dark); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                        <i class="fas fa-chart-line"></i> Farmer Understanding Scores
-                    </h3>
+                <div class="insights-container">
+                    <h3><i class="fas fa-chart-line"></i> Farmer Understanding Scores</h3>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div class="insights-grid">
                         <!-- Insight Score Cards -->
-                        <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 20px; border-radius: 10px; border-left: 4px solid var(--primary);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="insight-card insight-high">
+                            <div class="insight-header">
                                 <div>
-                                    <div style="font-size: 0.9rem; color: var(--gray); font-weight: 600; text-transform: uppercase;">Broadleaf Control</div>
-                                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary); margin-top: 5px;">5.80</div>
+                                    <div class="insight-category">Broadleaf Control</div>
+                                    <div class="insight-score">5.80</div>
                                 </div>
-                                <div style="background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">
-                                    83%
-                                </div>
+                                <div class="insight-percentage">83%</div>
                             </div>
-                            <div style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                            <div class="insight-description">
                                 Understanding of broadleaf weed control mechanism
                             </div>
                         </div>
                         
-                        <div style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); padding: 20px; border-radius: 10px; border-left: 4px solid var(--secondary);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="insight-card insight-medium">
+                            <div class="insight-header">
                                 <div>
-                                    <div style="font-size: 0.9rem; color: var(--gray); font-weight: 600; text-transform: uppercase;">Golden Period</div>
-                                    <div style="font-size: 2rem; font-weight: 800; color: var(--secondary); margin-top: 5px;">5.37</div>
+                                    <div class="insight-category">Golden Period</div>
+                                    <div class="insight-score">5.37</div>
                                 </div>
-                                <div style="background: var(--secondary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">
-                                    77%
-                                </div>
+                                <div class="insight-percentage">77%</div>
                             </div>
-                            <div style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                            <div class="insight-description">
                                 Awareness of optimal application timing
                             </div>
                         </div>
                         
-                        <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 20px; border-radius: 10px; border-left: 4px solid #2196f3;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="insight-card insight-high">
+                            <div class="insight-header">
                                 <div>
-                                    <div style="font-size: 0.9rem; color: var(--gray); font-weight: 600; text-transform: uppercase;">Application Method</div>
-                                    <div style="font-size: 2rem; font-weight: 800; color: #2196f3; margin-top: 5px;">5.62</div>
+                                    <div class="insight-category">Application Method</div>
+                                    <div class="insight-score">5.62</div>
                                 </div>
-                                <div style="background: #2196f3; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">
-                                    80%
-                                </div>
+                                <div class="insight-percentage">80%</div>
                             </div>
-                            <div style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                            <div class="insight-description">
                                 Knowledge of proper application techniques
                             </div>
                         </div>
                         
-                        <div style="background: linear-gradient(135deg, #f3e5f5, #e1bee7); padding: 20px; border-radius: 10px; border-left: 4px solid #9c27b0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="insight-card insight-medium">
+                            <div class="insight-header">
                                 <div>
-                                    <div style="font-size: 0.9rem; color: var(--gray); font-weight: 600; text-transform: uppercase;">Dosage Accuracy</div>
-                                    <div style="font-size: 2rem; font-weight: 800; color: #9c27b0; margin-top: 5px;">5.45</div>
+                                    <div class="insight-category">Dosage Accuracy</div>
+                                    <div class="insight-score">5.45</div>
                                 </div>
-                                <div style="background: #9c27b0; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800;">
-                                    78%
-                                </div>
+                                <div class="insight-percentage">78%</div>
                             </div>
-                            <div style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                            <div class="insight-description">
                                 Understanding of correct dosage measurements
                             </div>
                         </div>
@@ -598,37 +581,35 @@
                 </div>
                 
                 <!-- Key Insights -->
-                <div style="margin-top: 30px;">
+                <div class="knowledge-section">
                     <h3><i class="fas fa-chart-bar"></i> Knowledge Gap Analysis</h3>
-                    <div style="background: white; padding: 25px; border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-top: 15px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                            <div style="border-left: 4px solid var(--primary); padding-left: 15px;">
-                                <h4 style="color: var(--primary-dark); margin-bottom: 10px;">Top Understanding Areas</h4>
-                                <ul style="color: var(--gray); line-height: 1.6; padding-left: 15px;">
-                                    <li>Broadleaf weed identification (5.80/7)</li>
-                                    <li>Product application methods (5.62/7)</li>
-                                    <li>Safety precautions (5.55/7)</li>
-                                    <li>Timing for maximum efficacy (5.37/7)</li>
-                                </ul>
-                            </div>
-                            <div style="border-left: 4px solid var(--secondary); padding-left: 15px;">
-                                <h4 style="color: var(--primary-dark); margin-bottom: 10px;">Areas for Improvement</h4>
-                                <ul style="color: var(--gray); line-height: 1.6; padding-left: 15px;">
-                                    <li>Dosage calculation accuracy (5.45/7)</li>
-                                    <li>Integration with other products (5.20/7)</li>
-                                    <li>Long-term weed management (5.15/7)</li>
-                                    <li>Cost-benefit analysis (5.10/7)</li>
-                                </ul>
-                            </div>
-                            <div style="border-left: 4px solid #2196f3; padding-left: 15px;">
-                                <h4 style="color: var(--primary-dark); margin-bottom: 10px;">Training Recommendations</h4>
-                                <ul style="color: var(--gray); line-height: 1.6; padding-left: 15px;">
-                                    <li>Focus on dosage calculation workshops</li>
-                                    <li>Enhanced visual aids for application timing</li>
-                                    <li>Practical field demonstrations for integration</li>
-                                    <li>ROI calculator tools for farmers</li>
-                                </ul>
-                            </div>
+                    <div class="knowledge-grid">
+                        <div class="knowledge-card knowledge-good">
+                            <h4>Top Understanding Areas</h4>
+                            <ul>
+                                <li>Broadleaf weed identification (5.80/7)</li>
+                                <li>Product application methods (5.62/7)</li>
+                                <li>Safety precautions (5.55/7)</li>
+                                <li>Timing for maximum efficacy (5.37/7)</li>
+                            </ul>
+                        </div>
+                        <div class="knowledge-card knowledge-improve">
+                            <h4>Areas for Improvement</h4>
+                            <ul>
+                                <li>Dosage calculation accuracy (5.45/7)</li>
+                                <li>Integration with other products (5.20/7)</li>
+                                <li>Long-term weed management (5.15/7)</li>
+                                <li>Cost-benefit analysis (5.10/7)</li>
+                            </ul>
+                        </div>
+                        <div class="knowledge-card knowledge-recommend">
+                            <h4>Training Recommendations</h4>
+                            <ul>
+                                <li>Focus on dosage calculation workshops</li>
+                                <li>Enhanced visual aids for application timing</li>
+                                <li>Practical field demonstrations for integration</li>
+                                <li>ROI calculator tools for farmers</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -639,11 +620,11 @@
         <footer class="footer">
             <div>
                 <p>AgriVista Dashboard v2.1 • Buctril Super Farmer Education Drive 2025</p>
-                <p style="font-size: 0.8rem; color: var(--gray); margin-top: 5px;">
-                    <i class="fas fa-info-circle"></i> Data updated: December 22, 2025 • Campaign period: Nov 24 - Dec 12, 2025 • 17 Cities Covered
+                <p class="footer-subtext">
+                    <i class="fas fa-info-circle"></i> Data updated: December 22, 2025 • Campaign period: Nov 24 - Dec 12, 2025 • 4 Regions Covered
                 </p>
                 <div class="footer-links">
-                    <a href="#"><i class="fas fa-question-circle"></i> Help & Support</a>
+                    <a href="#" id="helpSupport"><i class="fas fa-question-circle"></i> Help & Support</a>
                     <a href="#" id="exportInsights"><i class="fas fa-download"></i> Export Insights</a>
                     <a href="#" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
                     <a href="#" id="shareDashboard"><i class="fas fa-share-alt"></i> Share Dashboard</a>
@@ -668,6 +649,7 @@
             // Set today as max date
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateTo').max = today;
+            document.getElementById('dateTo').value = today;
             
             // Basic tab switching
             document.querySelectorAll('.tab').forEach(tab => {

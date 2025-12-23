@@ -1,4 +1,4 @@
-// dashboard.js - COMPLETE AND WORKING VERSION
+// dashboard.js - FIXED VERSION
 console.log('AgriVista Dashboard initializing...');
 
 // GLOBAL STATE
@@ -35,6 +35,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Hide error banner at start
     if (elements.errorBanner) elements.errorBanner.style.display = 'none';
     
+    // Set date max to today
+    const today = new Date().toISOString().split('T')[0];
+    const dateTo = document.getElementById('dateTo');
+    if (dateTo) dateTo.max = today;
+    
     // Load data and initialize components
     loadAllData();
     setupEventListeners();
@@ -47,22 +52,29 @@ async function loadAllData() {
         // Load sessions data
         console.log('Fetching sessions.json...');
         const sessionsResponse = await fetch('sessions.json');
-        if (!sessionsResponse.ok) throw new Error(`sessions.json failed: ${sessionsResponse.status}`);
+        if (!sessionsResponse.ok) {
+            throw new Error(`HTTP ${sessionsResponse.status}: Could not load sessions.json`);
+        }
         const sessionsData = await sessionsResponse.json();
         allSessions = sessionsData.sessions || [];
         currentFilteredSessions = [...allSessions];
         console.log(`Loaded ${allSessions.length} sessions`);
 
-        // Load media data
+        // Load media data (optional - if file doesn't exist, use placeholders)
         console.log('Fetching media.json...');
-        const mediaResponse = await fetch('media.json');
-        if (mediaResponse.ok) {
-            const mediaData = await mediaResponse.json();
-            mediaItems = mediaData.mediaItems || [];
-            console.log(`Loaded ${mediaItems.length} media items`);
-        } else {
-            console.warn('media.json not found, using fallback');
-            mediaItems = createFallbackMedia();
+        try {
+            const mediaResponse = await fetch('media.json');
+            if (mediaResponse.ok) {
+                const mediaData = await mediaResponse.json();
+                mediaItems = mediaData.mediaItems || [];
+                console.log(`Loaded ${mediaItems.length} media items`);
+            } else {
+                console.warn('media.json not found, using placeholder images');
+                mediaItems = createPlaceholderMedia();
+            }
+        } catch (mediaError) {
+            console.warn('Media load error:', mediaError);
+            mediaItems = createPlaceholderMedia();
         }
 
         // UPDATE THE ENTIRE DASHBOARD
@@ -76,46 +88,59 @@ async function loadAllData() {
 
     } catch (error) {
         console.error('Fatal error loading data:', error);
-        showError(`Could not load campaign data: ${error.message}. Check console.`);
-        updateStatus('Data load failed', 'error');
+        showError(`Could not load campaign data: ${error.message}. Using sample data.`);
+        updateStatus('Using sample data', 'warning');
         
-        // Try to show SOMETHING with fallback data
-        allSessions = createFallbackSessions();
+        // Use fallback sample data
+        allSessions = createSampleSessions();
         currentFilteredSessions = [...allSessions];
-        mediaItems = createFallbackMedia();
+        mediaItems = createPlaceholderMedia();
         updateDashboardStats();
         renderSessionsTable();
+        renderGallery();
     }
 }
 
-// CREATE FALLBACK DATA IF FILES MISSING
-function createFallbackSessions() {
-    console.log('Creating fallback session data');
-    return Array.from({ length: 40 }, (_, i) => ({
-        id: i + 1,
-        sessionNumber: `${["SKR", "DGK", "FSD", "GSM"][Math.floor(i / 10)]}-${(i % 10) + 1}`,
-        city: ["sukkur", "dgk", "faisalabad", "gujranwala"][Math.floor(i / 10)],
-        cityName: ["Sukkur", "Dera Ghazi Khan", "Faisalabad", "Gujranwala"][Math.floor(i / 10)],
-        spot: `Location ${i + 1}`,
-        date: "2025-11-24",
-        farmers: Math.floor(Math.random() * 50) + 50,
-        acres: Math.floor(Math.random() * 500) + 500,
-        latitude: 27 + Math.random() * 5,
-        longitude: 68 + Math.random() * 5,
-        facilitator: `Facilitator ${i + 1}`,
-        focus: "Product Education"
-    }));
+// CREATE SAMPLE SESSIONS (Fallback)
+function createSampleSessions() {
+    console.log('Creating sample session data');
+    return Array.from({ length: 40 }, (_, i) => {
+        const cities = ['sukkur', 'dgk', 'faisalabad', 'gujranwala'];
+        const cityIndex = Math.floor(i / 10);
+        const cityNames = ['Sukkur', 'Dera Ghazi Khan', 'Faisalabad', 'Gujranwala'];
+        const codes = ['SKR', 'DGK', 'FSD', 'GSM'];
+        
+        return {
+            id: i + 1,
+            sessionNumber: `${codes[cityIndex]}-${(i % 10) + 1}`,
+            city: cities[cityIndex],
+            cityName: cityNames[cityIndex],
+            spot: `Location ${i + 1}`,
+            date: `2025-11-${24 + (i % 7)}`,
+            farmers: Math.floor(Math.random() * 50) + 50,
+            acres: Math.floor(Math.random() * 500) + 500,
+            latitude: 27 + Math.random() * 5,
+            longitude: 68 + Math.random() * 5,
+            facilitator: `Facilitator ${i + 1}`,
+            focus: ['Product Education', 'Application Training', 'Safety Demo', 'Field Practice'][i % 4]
+        };
+    });
 }
 
-function createFallbackMedia() {
-    console.log('Creating fallback media data');
+// CREATE PLACEHOLDER MEDIA
+function createPlaceholderMedia() {
+    console.log('Creating placeholder media');
+    const cities = ['sukkur', 'dgk', 'faisalabad', 'gujranwala'];
+    const types = ['education', 'demonstration', 'training', 'field'];
+    
     return Array.from({ length: 12 }, (_, i) => ({
         id: i + 1,
-        filename: `https://via.placeholder.com/300x200/2e7d32/ffffff?text=Session+${i + 1}`,
-        caption: `Campaign Image ${i + 1}`,
-        city: ['sukkur', 'dgk', 'faisalabad', 'gujranwala'][i % 4],
+        filename: `https://via.placeholder.com/400x300/2e7d32/ffffff?text=Session+${i + 1}`,
+        caption: `Campaign Session ${i + 1}: ${types[i % types.length]}`,
+        date: `2025-11-${24 + (i % 10)}`,
+        city: cities[i % 4],
         sessionId: (i % 40) + 1,
-        type: ['event', 'demo', 'training'][i % 3],
+        type: types[i % types.length],
         displayIn: 'gallery'
     }));
 }
@@ -175,7 +200,6 @@ function initializeMap() {
             if (session.latitude && session.longitude) {
                 const marker = L.marker([session.latitude, session.longitude]);
                 
-                // Create popup content
                 const popupContent = `
                     <div style="min-width: 200px;">
                         <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber}</h4>
@@ -205,7 +229,9 @@ function initializeMap() {
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#f8f9fa; color:#666; padding:20px; text-align:center;">
                 <i class="fas fa-map-marked-alt" style="font-size:48px; color:#ccc; margin-bottom:16px;"></i>
                 <p>Interactive map could not be loaded.</p>
-                <p style="font-size:0.9em; color:#999;">Technical details: ${error.message}</p>
+                <button onclick="location.reload()" class="btn btn-primary" style="margin-top:10px;">
+                    <i class="fas fa-redo"></i> Reload Page
+                </button>
             </div>
         `;
     }
@@ -225,38 +251,44 @@ function renderGallery() {
             <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
                 <i class="fas fa-images" style="font-size:48px; margin-bottom:16px; color:#ccc;"></i>
                 <p>No gallery images available.</p>
-                <p style="font-size:0.9em; color:#999;">Check media.json file</p>
+                <p>Using placeholder images for demonstration.</p>
             </div>
         `;
         return;
     }
 
-    // Clear and render items (limit to 12 for performance)
+    // Clear and render items
     container.innerHTML = '';
-    const itemsToShow = galleryMedia.slice(0, 12);
     
-    itemsToShow.forEach(media => {
+    galleryMedia.forEach(media => {
         const item = document.createElement('div');
         item.className = 'gallery-item';
+        item.setAttribute('data-city', media.city);
+        item.setAttribute('data-type', media.type);
         
-        // City-based color for fallback images
-        const cityColors = { sukkur: '#2e7d32', dgk: '#ff9800', faisalabad: '#2196f3', gujranwala: '#9c27b0' };
+        // City-based colors
+        const cityColors = { 
+            sukkur: '#2e7d32', 
+            dgk: '#ff9800', 
+            faisalabad: '#2196f3', 
+            gujranwala: '#9c27b0' 
+        };
         const color = cityColors[media.city] || '#2e7d32';
+        const colorHex = color.replace('#', '');
         
         item.innerHTML = `
             <img src="${media.filename}" alt="${media.caption}" 
-                 onerror="this.src='https://via.placeholder.com/300x200/${color.replace('#', '')}/ffffff?text=${media.city.toUpperCase()}'">
-            <div style="padding:16px;">
-                <div style="font-weight:bold; color:#2e7d32; font-size:0.85em; margin-bottom:8px; text-transform:uppercase;">
-                    ${media.city} • Session ${media.sessionId}
-                </div>
-                <div style="font-size:0.95em; color:#333; margin-bottom:12px; line-height:1.4;">${media.caption}</div>
-                <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#666;">
+                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city.toUpperCase()}'">
+            <div class="gallery-caption">
+                <div class="gallery-city">${media.city.toUpperCase()} • Session ${media.sessionId}</div>
+                <div class="gallery-title">${media.caption}</div>
+                <div class="gallery-meta">
                     <span><i class="fas fa-calendar"></i> ${media.date}</span>
                     <span><i class="fas fa-tag"></i> ${media.type}</span>
                 </div>
             </div>
         `;
+        
         container.appendChild(item);
     });
 }
@@ -297,7 +329,7 @@ function renderSessionsTable() {
     });
 }
 
-// SETUP EVENT LISTENERS FOR FILTERS AND BUTTONS
+// SETUP EVENT LISTENERS
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
@@ -323,11 +355,11 @@ function setupEventListeners() {
     if (dateFrom) dateFrom.addEventListener('change', applyFilters);
     if (dateTo) dateTo.addEventListener('change', applyFilters);
     
-    // Search Input (with debounce)
+    // Search Input
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         let searchTimeout;
-        searchInput.addEventListener('input', function(e) {
+        searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => applyFilters(), 300);
         });
@@ -358,6 +390,12 @@ function setupEventListeners() {
             applyFilters();
         });
     }
+    
+    // Refresh Data Button
+    const refreshBtn = document.getElementById('refreshData');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => location.reload());
+    }
 }
 
 // FILTER LOGIC
@@ -378,7 +416,7 @@ function applyFilters() {
             if (!searchable.includes(searchValue)) return false;
         }
         
-        // Date filter (basic)
+        // Date filter
         if (dateFromValue && session.date < dateFromValue) return false;
         if (dateToValue && session.date > dateToValue) return false;
         
@@ -402,7 +440,15 @@ function updateMapMarkers() {
     currentFilteredSessions.forEach(session => {
         if (session.latitude && session.longitude) {
             const marker = L.marker([session.latitude, session.longitude]);
-            marker.bindPopup(`<b>${session.sessionNumber}</b><br>${session.spot}<br>${session.farmers} farmers`);
+            const popupContent = `
+                <div style="min-width: 200px;">
+                    <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber}</h4>
+                    <p style="margin:4px 0;"><strong>Location:</strong> ${session.spot}</p>
+                    <p style="margin:4px 0;"><strong>Date:</strong> ${session.date}</p>
+                    <p style="margin:4px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
+                </div>
+            `;
+            marker.bindPopup(popupContent);
             markerCluster.addLayer(marker);
         }
     });
@@ -445,38 +491,43 @@ function resetFilters() {
 // EXPORT TO CSV
 function exportToCSV() {
     if (currentFilteredSessions.length === 0) {
-        alert('No data to export');
+        alert('No data to export. Please adjust your filters.');
         return;
     }
     
-    const headers = ['Session ID', 'City', 'Location', 'Date', 'Farmers', 'Acres', 'Facilitator', 'Focus'];
-    const csvRows = [
-        headers.join(','),
-        ...currentFilteredSessions.map(s => [
-            s.sessionNumber,
-            s.cityName,
-            `"${s.spot}"`,
-            s.date,
-            s.farmers,
-            s.acres,
-            `"${s.facilitator}"`,
-            `"${s.focus || ''}"`
-        ].join(','))
-    ];
-    
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    
-    a.href = url;
-    a.download = `agrivista-export-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    updateStatus(`Exported ${currentFilteredSessions.length} sessions`, 'success');
+    try {
+        const headers = ['Session ID', 'City', 'Location', 'Date', 'Farmers', 'Acres', 'Facilitator', 'Focus'];
+        const csvRows = [
+            headers.join(','),
+            ...currentFilteredSessions.map(s => [
+                s.sessionNumber,
+                s.cityName,
+                `"${s.spot}"`,
+                s.date,
+                s.farmers,
+                s.acres,
+                `"${s.facilitator}"`,
+                `"${s.focus || ''}"`
+            ].join(','))
+        ];
+        
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        a.href = url;
+        a.download = `agrivista-export-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        updateStatus(`Exported ${currentFilteredSessions.length} sessions`, 'success');
+    } catch (error) {
+        console.error('Export failed:', error);
+        alert('Failed to export data. Please try again.');
+    }
 }
 
 // TAB SWITCHING
@@ -512,7 +563,8 @@ function updateStatus(message, type = 'info') {
         success: 'fa-check-circle',
         error: 'fa-exclamation-circle',
         loading: 'fa-spinner fa-spin',
-        warning: 'fa-exclamation-triangle'
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
     };
     
     elements.statusIndicator.className = `status-indicator status-${type}`;

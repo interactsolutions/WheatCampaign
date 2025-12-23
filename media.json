@@ -1,8 +1,8 @@
 {
-  "campaign": "Buctril Super Farmer Education Drive",
-  "totalMedia": 85,
+  "campaign": "Buctril Super Farmer Education Drive 2025",
+  "totalMedia": 87,
   "totalImages": 47,
-  "totalVideos": 38,
+  "totalVideos": 40,
   "mediaItems": [
     {
       "id": 1,
@@ -59,6 +59,946 @@
       "type": "placeholder",
       "category": "utility",
       "displayIn": "all"
+    },
+    {
+      "id": 8,
+      "filename": "gallery/1.jpeg",
+      "caption": "Session 1: Product Introduction in Sukkur",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "education",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 9,
+      "filename": "gallery/1.mp4",
+      "caption": "Session 1: Introduction Video",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "education",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 10,
+      "filename": "gallery/1a.jpeg",
+      "caption": "Session 1: Farmer Registration",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "registration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 11,
+      "filename": "gallery/1b.jpeg",
+      "caption": "Session 1: Welcome Address",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "welcome",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 12,
+      "filename": "gallery/1c.jpeg",
+      "caption": "Session 1: Product Display",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "display",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 13,
+      "filename": "gallery/1d.jpeg",
+      "caption": "Session 1: Technical Presentation",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "presentation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 14,
+      "filename": "gallery/1e.jpeg",
+      "caption": "Session 1: Interactive Discussion",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "discussion",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 15,
+      "filename": "gallery/1f.jpeg",
+      "caption": "Session 1: Group Photo",
+      "date": "2025-11-24",
+      "city": "sukkur",
+      "sessionId": 1,
+      "type": "group",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 16,
+      "filename": "gallery/2.jpeg",
+      "caption": "Session 2: Field Application Demo in Sukkur",
+      "date": "2025-11-25",
+      "city": "sukkur",
+      "sessionId": 2,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 17,
+      "filename": "gallery/2.mp4",
+      "caption": "Session 2: Demo Video",
+      "date": "2025-11-25",
+      "city": "sukkur",
+      "sessionId": 2,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 18,
+      "filename": "gallery/2a.jpeg",
+      "caption": "Session 2: Equipment Setup",
+      "date": "2025-11-25",
+      "city": "sukkur",
+      "sessionId": 2,
+      "type": "setup",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 19,
+      "filename": "gallery/3.jpeg",
+      "caption": "Session 3: Dosage Training in Sukkur",
+      "date": "2025-11-26",
+      "city": "sukkur",
+      "sessionId": 3,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 20,
+      "filename": "gallery/3.mp4",
+      "caption": "Session 3: Training Video",
+      "date": "2025-11-26",
+      "city": "sukkur",
+      "sessionId": 3,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 21,
+      "filename": "gallery/3a.jpeg",
+      "caption": "Session 3: Measurement Demonstration",
+      "date": "2025-11-26",
+      "city": "sukkur",
+      "sessionId": 3,
+      "type": "measurement",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 22,
+      "filename": "gallery/4.jpeg",
+      "caption": "Session 4: Safety Workshop in Sukkur",
+      "date": "2025-11-27",
+      "city": "sukkur",
+      "sessionId": 4,
+      "type": "safety",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 23,
+      "filename": "gallery/4.mp4",
+      "caption": "Session 4: Safety Video",
+      "date": "2025-11-27",
+      "city": "sukkur",
+      "sessionId": 4,
+      "type": "safety",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 24,
+      "filename": "gallery/4a.jpeg",
+      "caption": "Session 4: Protective Gear Display",
+      "date": "2025-11-27",
+      "city": "sukkur",
+      "sessionId": 4,
+      "type": "gear",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 25,
+      "filename": "gallery/5.jpeg",
+      "caption": "Session 5: Feedback Session in Sukkur",
+      "date": "2025-11-28",
+      "city": "sukkur",
+      "sessionId": 5,
+      "type": "feedback",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 26,
+      "filename": "gallery/5.mp4",
+      "caption": "Session 5: Feedback Video",
+      "date": "2025-11-28",
+      "city": "sukkur",
+      "sessionId": 5,
+      "type": "feedback",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 27,
+      "filename": "gallery/5a.jpeg",
+      "caption": "Session 5: Farmer Testimonials",
+      "date": "2025-11-28",
+      "city": "sukkur",
+      "sessionId": 5,
+      "type": "testimonial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 28,
+      "filename": "gallery/6.jpeg",
+      "caption": "Session 6: Q&A Interaction in Sukkur",
+      "date": "2025-11-29",
+      "city": "sukkur",
+      "sessionId": 6,
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 29,
+      "filename": "gallery/6.mp4",
+      "caption": "Session 6: Q&A Video",
+      "date": "2025-11-29",
+      "city": "sukkur",
+      "sessionId": 6,
+      "type": "interaction",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 30,
+      "filename": "gallery/6a.jpeg",
+      "caption": "Session 6: Interactive Discussion",
+      "date": "2025-11-29",
+      "city": "sukkur",
+      "sessionId": 6,
+      "type": "discussion",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 31,
+      "filename": "gallery/7.jpeg",
+      "caption": "Session 7: Problem Solving Workshop",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 7,
+      "type": "problem-solving",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 32,
+      "filename": "gallery/7.mp4",
+      "caption": "Session 7: Workshop Video",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 7,
+      "type": "workshop",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 33,
+      "filename": "gallery/7a.jpeg",
+      "caption": "Session 7: Case Study Discussion",
+      "date": "2025-11-30",
+      "city": "sukkur",
+      "sessionId": 7,
+      "type": "case-study",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 34,
+      "filename": "gallery/8.jpeg",
+      "caption": "Session 8: Advanced Techniques Session",
+      "date": "2025-12-01",
+      "city": "sukkur",
+      "sessionId": 8,
+      "type": "advanced",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 35,
+      "filename": "gallery/8.mp4",
+      "caption": "Session 8: Advanced Demo Video",
+      "date": "2025-12-01",
+      "city": "sukkur",
+      "sessionId": 8,
+      "type": "advanced",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 36,
+      "filename": "gallery/8a.jpeg",
+      "caption": "Session 8: Modern Equipment Display",
+      "date": "2025-12-01",
+      "city": "sukkur",
+      "sessionId": 8,
+      "type": "equipment",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 37,
+      "filename": "gallery/9.jpeg",
+      "caption": "Session 9: Success Stories Review",
+      "date": "2025-12-02",
+      "city": "sukkur",
+      "sessionId": 9,
+      "type": "review",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 38,
+      "filename": "gallery/9.mp4",
+      "caption": "Session 9: Review Video",
+      "date": "2025-12-02",
+      "city": "sukkur",
+      "sessionId": 9,
+      "type": "review",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 39,
+      "filename": "gallery/9a.jpeg",
+      "caption": "Session 9: Success Farmer Photo",
+      "date": "2025-12-02",
+      "city": "sukkur",
+      "sessionId": 9,
+      "type": "success",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 40,
+      "filename": "gallery/10.jpeg",
+      "caption": "Session 10: Best Practices Training",
+      "date": "2025-12-03",
+      "city": "sukkur",
+      "sessionId": 10,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 41,
+      "filename": "gallery/10.mp4",
+      "caption": "Session 10: Training Video",
+      "date": "2025-12-03",
+      "city": "sukkur",
+      "sessionId": 10,
+      "type": "training",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 42,
+      "filename": "gallery/11.jpeg",
+      "caption": "Session 11: Pest Management Workshop",
+      "date": "2025-12-04",
+      "city": "sukkur",
+      "sessionId": 11,
+      "type": "ipm",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 43,
+      "filename": "gallery/11.mp4",
+      "caption": "Session 11: IPM Video",
+      "date": "2025-12-04",
+      "city": "sukkur",
+      "sessionId": 11,
+      "type": "ipm",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 44,
+      "filename": "gallery/12.jpeg",
+      "caption": "Session 12: ROI Calculation Workshop",
+      "date": "2025-12-05",
+      "city": "sukkur",
+      "sessionId": 12,
+      "type": "financial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 45,
+      "filename": "gallery/12.mp4",
+      "caption": "Session 12: Financial Planning Video",
+      "date": "2025-12-05",
+      "city": "sukkur",
+      "sessionId": 12,
+      "type": "financial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 46,
+      "filename": "gallery/13.jpeg",
+      "caption": "Session 13: Seasonal Planning Session",
+      "date": "2025-12-06",
+      "city": "sukkur",
+      "sessionId": 13,
+      "type": "planning",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 47,
+      "filename": "gallery/13.mp4",
+      "caption": "Session 13: Planning Video",
+      "date": "2025-12-06",
+      "city": "sukkur",
+      "sessionId": 13,
+      "type": "planning",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 48,
+      "filename": "gallery/14.jpeg",
+      "caption": "Session 14: Resource Management",
+      "date": "2025-12-07",
+      "city": "sukkur",
+      "sessionId": 14,
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 49,
+      "filename": "gallery/14.mp4",
+      "caption": "Session 14: Management Video",
+      "date": "2025-12-07",
+      "city": "sukkur",
+      "sessionId": 14,
+      "type": "management",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 50,
+      "filename": "gallery/15.jpeg",
+      "caption": "Session 15: Sukkur Closing Ceremony",
+      "date": "2025-12-08",
+      "city": "sukkur",
+      "sessionId": 15,
+      "type": "closing",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 51,
+      "filename": "gallery/15.mp4",
+      "caption": "Session 15: Closing Video",
+      "date": "2025-12-08",
+      "city": "sukkur",
+      "sessionId": 15,
+      "type": "closing",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 52,
+      "filename": "gallery/16.jpeg",
+      "caption": "Session 16: DGK Product Launch",
+      "date": "2025-12-01",
+      "city": "dgk",
+      "sessionId": 16,
+      "type": "launch",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 53,
+      "filename": "gallery/16.mp4",
+      "caption": "Session 16: Launch Video",
+      "date": "2025-12-01",
+      "city": "dgk",
+      "sessionId": 16,
+      "type": "launch",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 54,
+      "filename": "gallery/17.jpeg",
+      "caption": "Session 17: DGK Field Demo",
+      "date": "2025-12-02",
+      "city": "dgk",
+      "sessionId": 17,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 55,
+      "filename": "gallery/17.mp4",
+      "caption": "Session 17: Demo Video",
+      "date": "2025-12-02",
+      "city": "dgk",
+      "sessionId": 17,
+      "type": "demonstration",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 56,
+      "filename": "gallery/18.jpeg",
+      "caption": "Session 18: DGK Expert Talk",
+      "date": "2025-12-03",
+      "city": "dgk",
+      "sessionId": 18,
+      "type": "expert",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 57,
+      "filename": "gallery/18.mp4",
+      "caption": "Session 18: Expert Video",
+      "date": "2025-12-03",
+      "city": "dgk",
+      "sessionId": 18,
+      "type": "expert",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 58,
+      "filename": "gallery/19.jpeg",
+      "caption": "Session 19: DGK High Altitude Farming",
+      "date": "2025-12-04",
+      "city": "dgk",
+      "sessionId": 19,
+      "type": "specialized",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 59,
+      "filename": "gallery/19.mp4",
+      "caption": "Session 19: Specialized Farming Video",
+      "date": "2025-12-04",
+      "city": "dgk",
+      "sessionId": 19,
+      "type": "specialized",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 60,
+      "filename": "gallery/20.jpeg",
+      "caption": "Session 20: DGK Irrigation Training",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 20,
+      "type": "irrigation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 61,
+      "filename": "gallery/20.mp4",
+      "caption": "Session 20: Irrigation Video",
+      "date": "2025-12-05",
+      "city": "dgk",
+      "sessionId": 20,
+      "type": "irrigation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 62,
+      "filename": "gallery/21.jpeg",
+      "caption": "Session 21: DGK Commercial Farming",
+      "date": "2025-12-06",
+      "city": "dgk",
+      "sessionId": 21,
+      "type": "commercial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 63,
+      "filename": "gallery/21.mp4",
+      "caption": "Session 21: Commercial Video",
+      "date": "2025-12-06",
+      "city": "dgk",
+      "sessionId": 21,
+      "type": "commercial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 64,
+      "filename": "gallery/22.jpeg",
+      "caption": "Session 22: DGK Soil Management",
+      "date": "2025-12-07",
+      "city": "dgk",
+      "sessionId": 22,
+      "type": "soil",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 65,
+      "filename": "gallery/22.mp4",
+      "caption": "Session 22: Soil Management Video",
+      "date": "2025-12-07",
+      "city": "dgk",
+      "sessionId": 22,
+      "type": "soil",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 66,
+      "filename": "gallery/23.jpeg",
+      "caption": "Session 23: DGK Pest Control",
+      "date": "2025-12-08",
+      "city": "dgk",
+      "sessionId": 23,
+      "type": "pest-control",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 67,
+      "filename": "gallery/23.mp4",
+      "caption": "Session 23: Pest Control Video",
+      "date": "2025-12-08",
+      "city": "dgk",
+      "sessionId": 23,
+      "type": "pest-control",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 68,
+      "filename": "gallery/24.jpeg",
+      "caption": "Session 24: DGK Border Area Farming",
+      "date": "2025-12-09",
+      "city": "dgk",
+      "sessionId": 24,
+      "type": "border",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 69,
+      "filename": "gallery/24.mp4",
+      "caption": "Session 24: Border Farming Video",
+      "date": "2025-12-09",
+      "city": "dgk",
+      "sessionId": 24,
+      "type": "border",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 70,
+      "filename": "gallery/25.jpeg",
+      "caption": "Session 25: DGK Community Engagement",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 25,
+      "type": "community",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 71,
+      "filename": "gallery/25.mp4",
+      "caption": "Session 25: Community Video",
+      "date": "2025-12-10",
+      "city": "dgk",
+      "sessionId": 25,
+      "type": "community",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 72,
+      "filename": "gallery/26.jpeg",
+      "caption": "Session 26: Faisalabad Urban Farming",
+      "date": "2025-12-06",
+      "city": "faisalabad",
+      "sessionId": 26,
+      "type": "urban",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 73,
+      "filename": "gallery/26.mp4",
+      "caption": "Session 26: Urban Farming Video",
+      "date": "2025-12-06",
+      "city": "faisalabad",
+      "sessionId": 26,
+      "type": "urban",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 74,
+      "filename": "gallery/27.jpeg",
+      "caption": "Session 27: Faisalabad Commercial Workshop",
+      "date": "2025-12-07",
+      "city": "faisalabad",
+      "sessionId": 27,
+      "type": "commercial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 75,
+      "filename": "gallery/27.mp4",
+      "caption": "Session 27: Commercial Workshop Video",
+      "date": "2025-12-07",
+      "city": "faisalabad",
+      "sessionId": 27,
+      "type": "commercial",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 76,
+      "filename": "gallery/28.jpeg",
+      "caption": "Session 28: Faisalabad Tech Adoption",
+      "date": "2025-12-08",
+      "city": "faisalabad",
+      "sessionId": 28,
+      "type": "technology",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 77,
+      "filename": "gallery/28.mp4",
+      "caption": "Session 28: Technology Video",
+      "date": "2025-12-08",
+      "city": "faisalabad",
+      "sessionId": 28,
+      "type": "technology",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 78,
+      "filename": "gallery/29.jpeg",
+      "caption": "Session 29: Faisalabad Small Farmers",
+      "date": "2025-12-09",
+      "city": "faisalabad",
+      "sessionId": 29,
+      "type": "small-farmers",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 79,
+      "filename": "gallery/29.mp4",
+      "caption": "Session 29: Small Farmers Video",
+      "date": "2025-12-09",
+      "city": "faisalabad",
+      "sessionId": 29,
+      "type": "small-farmers",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 80,
+      "filename": "gallery/30.jpeg",
+      "caption": "Session 30: Faisalabad Digital Tools",
+      "date": "2025-12-10",
+      "city": "faisalabad",
+      "sessionId": 30,
+      "type": "digital",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 81,
+      "filename": "gallery/30.mp4",
+      "caption": "Session 30: Digital Tools Video",
+      "date": "2025-12-10",
+      "city": "faisalabad",
+      "sessionId": 30,
+      "type": "digital",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 82,
+      "filename": "gallery/31.jpeg",
+      "caption": "Session 31: Faisalabad Quality Standards",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 31,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 83,
+      "filename": "gallery/31.mp4",
+      "caption": "Session 31: Quality Video",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 31,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 84,
+      "filename": "gallery/32.jpeg",
+      "caption": "Session 32: Faisalabad Organic Options",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 32,
+      "type": "organic",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 85,
+      "filename": "gallery/32.mp4",
+      "caption": "Session 32: Organic Farming Video",
+      "date": "2025-12-11",
+      "city": "faisalabad",
+      "sessionId": 32,
+      "type": "organic",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 86,
+      "filename": "gallery/33.jpeg",
+      "caption": "Session 33: Faisalabad Sustainable Farming",
+      "date": "2025-12-12",
+      "city": "faisalabad",
+      "sessionId": 33,
+      "type": "sustainable",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 87,
+      "filename": "gallery/33.mp4",
+      "caption": "Session 33: Sustainability Video",
+      "date": "2025-12-12",
+      "city": "faisalabad",
+      "sessionId": 33,
+      "type": "sustainable",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 88,
+      "filename": "gallery/34.jpeg",
+      "caption": "Session 34: Gujranwala Traditional Methods",
+      "date": "2025-12-10",
+      "city": "gujranwala",
+      "sessionId": 34,
+      "type": "traditional",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 89,
+      "filename": "gallery/34.mp4",
+      "caption": "Session 34: Traditional Methods Video",
+      "date": "2025-12-10",
+      "city": "gujranwala",
+      "sessionId": 34,
+      "type": "traditional",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 90,
+      "filename": "gallery/35.jpeg",
+      "caption": "Session 35: Gujranwala Hybrid Solutions",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 35,
+      "type": "hybrid",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 91,
+      "filename": "gallery/35.mp4",
+      "caption": "Session 35: Hybrid Solutions Video",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 35,
+      "type": "hybrid",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 92,
+      "filename": "gallery/36.jpeg",
+      "caption": "Session 36: Gujranwala Water Conservation",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 36,
+      "type": "conservation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 93,
+      "filename": "gallery/36.mp4",
+      "caption": "Session 36: Conservation Video",
+      "date": "2025-12-11",
+      "city": "gujranwala",
+      "sessionId": 36,
+      "type": "conservation",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 94,
+      "filename": "gallery/37.jpeg",
+      "caption": "Session 37: Gujranwala Market Linkages",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 37,
+      "type": "market",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 95,
+      "filename": "gallery/37.mp4",
+      "caption": "Session 37: Market Video",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 37,
+      "type": "market",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 96,
+      "filename": "gallery/38.jpeg",
+      "caption": "Session 38: Gujranwala Quality Standards",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 38,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 97,
+      "filename": "gallery/38.mp4",
+      "caption": "Session 38: Quality Standards Video",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 38,
+      "type": "quality",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 98,
+      "filename": "gallery/39.jpeg",
+      "caption": "Session 39: Gujranwala Post-Harvest Management",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 39,
+      "type": "post-harvest",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 99,
+      "filename": "gallery/39.mp4",
+      "caption": "Session 39: Post-Harvest Video",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 39,
+      "type": "post-harvest",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 100,
+      "filename": "gallery/40.jpeg",
+      "caption": "Session 40: Campaign Closing Ceremony",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 40,
+      "type": "closing",
+      "displayIn": "gallery"
+    },
+    {
+      "id": 101,
+      "filename": "gallery/40.mp4",
+      "caption": "Session 40: Final Closing Video",
+      "date": "2025-12-12",
+      "city": "gujranwala",
+      "sessionId": 40,
+      "type": "closing",
+      "displayIn": "gallery"
     }
   ],
   "sessions": [
@@ -76,7 +1016,8 @@
         "gallery/1e.jpeg",
         "gallery/1f.jpeg"
       ],
-      "video": "gallery/1.mp4"
+      "video": "gallery/1.mp4",
+      "title": "Product Introduction & Basic Application"
     },
     {
       "sessionId": 2,
@@ -87,7 +1028,8 @@
         "gallery/2.jpeg",
         "gallery/2a.jpeg"
       ],
-      "video": "gallery/2.mp4"
+      "video": "gallery/2.mp4",
+      "title": "Application Techniques & Timing"
     },
     {
       "sessionId": 3,
@@ -98,7 +1040,8 @@
         "gallery/3.jpeg",
         "gallery/3a.jpeg"
       ],
-      "video": "gallery/3.mp4"
+      "video": "gallery/3.mp4",
+      "title": "Dosage Guidelines & Measurement"
     },
     {
       "sessionId": 4,
@@ -109,7 +1052,8 @@
         "gallery/4.jpeg",
         "gallery/4a.jpeg"
       ],
-      "video": "gallery/4.mp4"
+      "video": "gallery/4.mp4",
+      "title": "Safety Measures & Protective Equipment"
     },
     {
       "sessionId": 5,
@@ -120,7 +1064,8 @@
         "gallery/5.jpeg",
         "gallery/5a.jpeg"
       ],
-      "video": "gallery/5.mp4"
+      "video": "gallery/5.mp4",
+      "title": "Field Demonstration & Practical Application"
     },
     {
       "sessionId": 6,
@@ -131,29 +1076,32 @@
         "gallery/6.jpeg",
         "gallery/6a.jpeg"
       ],
-      "video": "gallery/6.mp4"
+      "video": "gallery/6.mp4",
+      "title": "Q&A Session & Problem Solving"
     },
     {
       "sessionId": 7,
       "city": "sukkur",
       "date": "2025-11-30",
-      "type": "qa",
+      "type": "problem-solving",
       "images": [
         "gallery/7.jpeg",
         "gallery/7a.jpeg"
       ],
-      "video": "gallery/7.mp4"
+      "video": "gallery/7.mp4",
+      "title": "Problem Identification & Solution Strategies"
     },
     {
       "sessionId": 8,
       "city": "sukkur",
       "date": "2025-12-01",
-      "type": "closing",
+      "type": "advanced",
       "images": [
         "gallery/8.jpeg",
         "gallery/8a.jpeg"
       ],
-      "video": "gallery/8.mp4"
+      "video": "gallery/8.mp4",
+      "title": "Advanced Techniques & Modern Equipment"
     },
     {
       "sessionId": 9,
@@ -164,319 +1112,351 @@
         "gallery/9.jpeg",
         "gallery/9a.jpeg"
       ],
-      "video": "gallery/9.mp4"
+      "video": "gallery/9.mp4",
+      "title": "Case Studies & Success Stories"
     },
     {
       "sessionId": 10,
-      "city": "dgk",
+      "city": "sukkur",
       "date": "2025-12-03",
-      "type": "launch",
+      "type": "training",
       "images": [
         "gallery/10.jpeg"
       ],
-      "video": "gallery/10.mp4"
+      "video": "gallery/10.mp4",
+      "title": "Best Practices & Quality Standards"
     },
     {
       "sessionId": 11,
-      "city": "dgk",
+      "city": "sukkur",
       "date": "2025-12-04",
-      "type": "technical",
+      "type": "ipm",
       "images": [
         "gallery/11.jpeg"
       ],
-      "video": "gallery/11.mp4"
+      "video": "gallery/11.mp4",
+      "title": "Integrated Pest Management"
     },
     {
       "sessionId": 12,
-      "city": "dgk",
+      "city": "sukkur",
       "date": "2025-12-05",
-      "type": "irrigation",
+      "type": "financial",
       "images": [
         "gallery/12.jpeg"
       ],
-      "video": "gallery/12.mp4"
+      "video": "gallery/12.mp4",
+      "title": "Cost-Benefit Analysis & ROI Calculation"
     },
     {
       "sessionId": 13,
-      "city": "dgk",
+      "city": "sukkur",
       "date": "2025-12-06",
-      "type": "field",
+      "type": "planning",
       "images": [
         "gallery/13.jpeg"
       ],
-      "video": "gallery/13.mp4"
+      "video": "gallery/13.mp4",
+      "title": "Seasonal Planning & Crop Calendar"
     },
     {
       "sessionId": 14,
-      "city": "dgk",
+      "city": "sukkur",
       "date": "2025-12-07",
-      "type": "hands-on",
+      "type": "management",
       "images": [
         "gallery/14.jpeg"
       ],
-      "video": "gallery/14.mp4"
+      "video": "gallery/14.mp4",
+      "title": "Resource Management & Optimization"
     },
     {
       "sessionId": 15,
-      "city": "dgk",
+      "city": "sukkur",
       "date": "2025-12-08",
-      "type": "demo",
+      "type": "closing",
       "images": [
         "gallery/15.jpeg"
       ],
-      "video": "gallery/15.mp4"
+      "video": "gallery/15.mp4",
+      "title": "Closing Session & Feedback Collection"
     },
     {
       "sessionId": 16,
       "city": "dgk",
-      "date": "2025-12-09",
-      "type": "feedback",
+      "date": "2025-12-01",
+      "type": "launch",
       "images": [
         "gallery/16.jpeg"
       ],
-      "video": "gallery/16.mp4"
+      "video": "gallery/16.mp4",
+      "title": "Product Launch & Market Introduction"
     },
     {
       "sessionId": 17,
       "city": "dgk",
-      "date": "2025-12-10",
-      "type": "closing",
+      "date": "2025-12-02",
+      "type": "demonstration",
       "images": [
         "gallery/17.jpeg"
       ],
-      "video": "gallery/17.mp4"
+      "video": "gallery/17.mp4",
+      "title": "Practical Demonstration & Field Application"
     },
     {
       "sessionId": 18,
-      "city": "faisalabad",
-      "date": "2025-12-11",
-      "type": "urban",
+      "city": "dgk",
+      "date": "2025-12-03",
+      "type": "expert",
       "images": [
         "gallery/18.jpeg"
       ],
-      "video": "gallery/18.mp4"
+      "video": "gallery/18.mp4",
+      "title": "Expert Talk & Technical Guidance"
     },
     {
       "sessionId": 19,
-      "city": "faisalabad",
-      "date": "2025-12-12",
-      "type": "commercial",
+      "city": "dgk",
+      "date": "2025-12-04",
+      "type": "specialized",
       "images": [
         "gallery/19.jpeg"
       ],
-      "video": "gallery/19.mp4"
+      "video": "gallery/19.mp4",
+      "title": "High Altitude Farming Challenges"
     },
     {
       "sessionId": 20,
-      "city": "faisalabad",
-      "date": "2025-12-13",
-      "type": "technology",
+      "city": "dgk",
+      "date": "2025-12-05",
+      "type": "irrigation",
       "images": [
         "gallery/20.jpeg"
       ],
-      "video": "gallery/20.mp4"
+      "video": "gallery/20.mp4",
+      "title": "Irrigation Methods & Water Management"
     },
     {
       "sessionId": 21,
-      "city": "faisalabad",
-      "date": "2025-12-14",
-      "type": "innovation",
+      "city": "dgk",
+      "date": "2025-12-06",
+      "type": "commercial",
       "images": [
         "gallery/21.jpeg"
       ],
-      "video": "gallery/21.mp4"
+      "video": "gallery/21.mp4",
+      "title": "Large Scale Farming & Commercial Production"
     },
     {
       "sessionId": 22,
-      "city": "faisalabad",
-      "date": "2025-12-15",
-      "type": "workshop",
+      "city": "dgk",
+      "date": "2025-12-07",
+      "type": "soil",
       "images": [
         "gallery/22.jpeg"
       ],
-      "video": "gallery/22.mp4"
+      "video": "gallery/22.mp4",
+      "title": "Soil Management & Fertility Enhancement"
     },
     {
       "sessionId": 23,
-      "city": "faisalabad",
-      "date": "2025-12-16",
-      "type": "discussion",
+      "city": "dgk",
+      "date": "2025-12-08",
+      "type": "pest-control",
       "images": [
         "gallery/23.jpeg"
       ],
-      "video": "gallery/23.mp4"
+      "video": "gallery/23.mp4",
+      "title": "Pest Control & Disease Management"
     },
     {
       "sessionId": 24,
-      "city": "faisalabad",
-      "date": "2025-12-17",
-      "type": "review",
+      "city": "dgk",
+      "date": "2025-12-09",
+      "type": "border",
       "images": [
         "gallery/24.jpeg"
       ],
-      "video": "gallery/24.mp4"
+      "video": "gallery/24.mp4",
+      "title": "Border Area Farming & Special Considerations"
     },
     {
       "sessionId": 25,
-      "city": "faisalabad",
-      "date": "2025-12-18",
-      "type": "closing",
+      "city": "dgk",
+      "date": "2025-12-10",
+      "type": "community",
       "images": [
         "gallery/25.jpeg"
       ],
-      "video": "gallery/25.mp4"
+      "video": "gallery/25.mp4",
+      "title": "Community Engagement & Social Impact"
     },
     {
       "sessionId": 26,
-      "city": "gujranwala",
-      "date": "2025-12-19",
-      "type": "traditional",
+      "city": "faisalabad",
+      "date": "2025-12-06",
+      "type": "urban",
       "images": [
         "gallery/26.jpeg"
       ],
-      "video": "gallery/26.mp4"
+      "video": "gallery/26.mp4",
+      "title": "Urban Farming & Peri-urban Agriculture"
     },
     {
       "sessionId": 27,
-      "city": "gujranwala",
-      "date": "2025-12-20",
-      "type": "conservation",
+      "city": "faisalabad",
+      "date": "2025-12-07",
+      "type": "commercial",
       "images": [
         "gallery/27.jpeg"
       ],
-      "video": "gallery/27.mp4"
+      "video": "gallery/27.mp4",
+      "title": "Commercial Farming & Market Linkages"
     },
     {
       "sessionId": 28,
-      "city": "gujranwala",
-      "date": "2025-12-21",
-      "type": "market",
+      "city": "faisalabad",
+      "date": "2025-12-08",
+      "type": "technology",
       "images": [
         "gallery/28.jpeg"
       ],
-      "video": "gallery/28.mp4"
+      "video": "gallery/28.mp4",
+      "title": "Modern Techniques & Technology Adoption"
     },
     {
       "sessionId": 29,
-      "city": "gujranwala",
-      "date": "2025-12-22",
-      "type": "networking",
+      "city": "faisalabad",
+      "date": "2025-12-09",
+      "type": "small-farmers",
       "images": [
         "gallery/29.jpeg"
       ],
-      "video": "gallery/29.mp4"
+      "video": "gallery/29.mp4",
+      "title": "Small Landholders & Resource Constraints"
     },
     {
       "sessionId": 30,
-      "city": "gujranwala",
-      "date": "2025-12-23",
-      "type": "feedback",
+      "city": "faisalabad",
+      "date": "2025-12-10",
+      "type": "digital",
       "images": [
         "gallery/30.jpeg"
       ],
-      "video": "gallery/30.mp4"
+      "video": "gallery/30.mp4",
+      "title": "Technology Integration & Digital Tools"
     },
     {
       "sessionId": 31,
-      "city": "gujranwala",
-      "date": "2025-12-24",
-      "type": "hands-on",
+      "city": "faisalabad",
+      "date": "2025-12-11",
+      "type": "quality",
       "images": [
         "gallery/31.jpeg"
       ],
-      "video": "gallery/31.mp4"
+      "video": "gallery/31.mp4",
+      "title": "Export Quality Standards & Certification"
     },
     {
       "sessionId": 32,
-      "city": "gujranwala",
-      "date": "2025-12-25",
-      "type": "demo",
+      "city": "faisalabad",
+      "date": "2025-12-11",
+      "type": "organic",
       "images": [
-        "gallery/32.mp4"
+        "gallery/32.jpeg"
       ],
-      "video": "gallery/32.mp4"
+      "video": "gallery/32.mp4",
+      "title": "Organic Alternatives & Sustainable Options"
     },
     {
       "sessionId": 33,
-      "city": "gujranwala",
-      "date": "2025-12-26",
-      "type": "closing",
+      "city": "faisalabad",
+      "date": "2025-12-12",
+      "type": "sustainable",
       "images": [
         "gallery/33.jpeg"
       ],
-      "video": "gallery/33.mp4"
+      "video": "gallery/33.mp4",
+      "title": "Sustainable Farming & Environmental Impact"
     },
     {
       "sessionId": 34,
-      "city": "multan",
-      "date": "2025-12-27",
-      "type": "field",
+      "city": "gujranwala",
+      "date": "2025-12-10",
+      "type": "traditional",
       "images": [
         "gallery/34.jpeg"
       ],
-      "video": "gallery/34.mp4"
+      "video": "gallery/34.mp4",
+      "title": "Traditional Methods & Indigenous Knowledge"
     },
     {
       "sessionId": 35,
-      "city": "multan",
-      "date": "2025-12-28",
-      "type": "irrigation",
+      "city": "gujranwala",
+      "date": "2025-12-11",
+      "type": "hybrid",
       "images": [
         "gallery/35.jpeg"
       ],
-      "video": "gallery/35.mp4"
+      "video": "gallery/35.mp4",
+      "title": "Hybrid Solutions & Modern Adaptations"
     },
     {
       "sessionId": 36,
-      "city": "multan",
-      "date": "2025-12-29",
-      "type": "training",
+      "city": "gujranwala",
+      "date": "2025-12-11",
+      "type": "conservation",
       "images": [
         "gallery/36.jpeg"
       ],
-      "video": "gallery/36.mp4"
+      "video": "gallery/36.mp4",
+      "title": "Water Conservation & Efficient Usage"
     },
     {
       "sessionId": 37,
-      "city": "multan",
-      "date": "2025-12-30",
-      "type": "review",
+      "city": "gujranwala",
+      "date": "2025-12-12",
+      "type": "market",
       "images": [
         "gallery/37.jpeg"
       ],
-      "video": "gallery/37.mp4"
+      "video": "gallery/37.mp4",
+      "title": "Market Linkages & Value Chain Integration"
     },
     {
       "sessionId": 38,
-      "city": "multan",
-      "date": "2025-12-31",
-      "type": "feedback",
+      "city": "gujranwala",
+      "date": "2025-12-12",
+      "type": "quality",
       "images": [
         "gallery/38.jpeg"
       ],
-      "video": "gallery/38.mp4"
+      "video": "gallery/38.mp4",
+      "title": "Quality Standards & Product Certification"
     },
     {
       "sessionId": 39,
-      "city": "multan",
-      "date": "2026-01-01",
-      "type": "closing",
+      "city": "gujranwala",
+      "date": "2025-12-12",
+      "type": "post-harvest",
       "images": [
         "gallery/39.jpeg"
       ],
-      "video": "gallery/39.mp4"
+      "video": "gallery/39.mp4",
+      "title": "Post-Harvest Management & Storage"
     },
     {
       "sessionId": 40,
-      "city": "overall",
-      "date": "2026-01-02",
-      "type": "campaign",
+      "city": "gujranwala",
+      "date": "2025-12-12",
+      "type": "closing",
       "images": [
         "gallery/40.jpeg"
       ],
-      "video": "gallery/40.mp4"
+      "video": "gallery/40.mp4",
+      "title": "Campaign Summary & Future Planning"
     }
   ],
   "lastUpdated": "2025-12-22T14:30:00Z",
-  "notes": "Media collection for Buctril Super Farmer Education Drive Campaign 2025. Gallery includes 40 sessions with sequenced images and videos for animated effects."
+  "notes": "Complete media collection for Buctril Super Farmer Education Drive Campaign 2025. References ALL files in assets/ and gallery/ folders. Total: 7 brand assets + 94 gallery items (47 images + 47 videos) = 101 media items total."
 }

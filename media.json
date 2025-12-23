@@ -1,12 +1,12 @@
 {
   "campaign": "Buctril Super Farmer Education Drive",
-  "totalMedia": 48,
-  "totalImages": 46,
-  "totalVideos": 2,
+  "totalMedia": 85,
+  "totalImages": 47,
+  "totalVideos": 38,
   "mediaItems": [
     {
       "id": 1,
-      "filename": "https://via.placeholder.com/150x60/ffffff/2e7d32?text=Bayer&font=arial",
+      "filename": "assets/Bayer.png",
       "caption": "Bayer Corporation Logo",
       "type": "logo",
       "category": "brand",
@@ -14,7 +14,7 @@
     },
     {
       "id": 2,
-      "filename": "https://via.placeholder.com/150x60/ffffff/ff9800?text=Buctril+Super&font=arial",
+      "filename": "assets/Buctril.jpg",
       "caption": "Buctril Super Herbicide Product",
       "type": "product",
       "category": "brand",
@@ -22,7 +22,7 @@
     },
     {
       "id": 3,
-      "filename": "https://via.placeholder.com/150x60/ffffff/2196f3?text=Interact&font=arial",
+      "filename": "assets/Interact.gif",
       "caption": "Interact Solutions Animation",
       "type": "animation",
       "category": "brand",
@@ -30,7 +30,7 @@
     },
     {
       "id": 4,
-      "filename": "https://via.placeholder.com/150x60/ffffff/9c27b0?text=Products&font=arial",
+      "filename": "assets/poductts.jpg",
       "caption": "Bayer Agricultural Product Range",
       "type": "product-range",
       "category": "brand",
@@ -38,7 +38,7 @@
     },
     {
       "id": 5,
-      "filename": "https://via.placeholder.com/150x60/ffffff/4caf50?text=Atlantis&font=arial",
+      "filename": "assets/Atlantis.jpg",
       "caption": "Atlantis Herbicide Reference",
       "type": "reference",
       "category": "brand",
@@ -46,155 +46,437 @@
     },
     {
       "id": 6,
-      "filename": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Farmers attending education session",
-      "date": "2025-11-24",
-      "city": "sukkur",
-      "sessionId": 1,
-      "type": "education",
+      "filename": "assets/bg.mp4",
+      "caption": "Background video for gallery",
+      "type": "background",
+      "category": "brand",
       "displayIn": "gallery"
     },
     {
       "id": 7,
-      "filename": "https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Field demonstration of herbicide application",
-      "date": "2025-11-25",
+      "filename": "assets/placeholder.svg",
+      "caption": "Fallback placeholder",
+      "type": "placeholder",
+      "category": "utility",
+      "displayIn": "all"
+    }
+  ],
+  "sessions": [
+    {
+      "sessionId": 1,
       "city": "sukkur",
+      "date": "2025-11-24",
+      "type": "education",
+      "images": [
+        "gallery/1.jpeg",
+        "gallery/1a.jpeg",
+        "gallery/1b.jpeg",
+        "gallery/1c.jpeg",
+        "gallery/1d.jpeg",
+        "gallery/1e.jpeg",
+        "gallery/1f.jpeg"
+      ],
+      "video": "gallery/1.mp4"
+    },
+    {
       "sessionId": 2,
+      "city": "sukkur",
+      "date": "2025-11-25",
       "type": "demonstration",
-      "displayIn": "gallery"
+      "images": [
+        "gallery/2.jpeg",
+        "gallery/2a.jpeg"
+      ],
+      "video": "gallery/2.mp4"
     },
     {
-      "id": 8,
-      "filename": "https://images.unsplash.com/photo-1559131397-f94da358a2c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Training session on dosage measurement",
-      "date": "2025-11-26",
-      "city": "sukkur",
       "sessionId": 3,
+      "city": "sukkur",
+      "date": "2025-11-26",
       "type": "training",
-      "displayIn": "gallery"
+      "images": [
+        "gallery/3.jpeg",
+        "gallery/3a.jpeg"
+      ],
+      "video": "gallery/3.mp4"
     },
     {
-      "id": 9,
-      "filename": "https://images.unsplash.com/photo-1586771107445-d3ca888129fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Safety equipment demonstration",
-      "date": "2025-11-27",
-      "city": "sukkur",
       "sessionId": 4,
-      "type": "safety",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 10,
-      "filename": "https://images.unsplash.com/photo-1594489428504-5c0c480d21a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Interactive Q&A session with farmers",
-      "date": "2025-11-29",
       "city": "sukkur",
+      "date": "2025-11-27",
+      "type": "safety",
+      "images": [
+        "gallery/4.jpeg",
+        "gallery/4a.jpeg"
+      ],
+      "video": "gallery/4.mp4"
+    },
+    {
+      "sessionId": 5,
+      "city": "sukkur",
+      "date": "2025-11-28",
+      "type": "feedback",
+      "images": [
+        "gallery/5.jpeg",
+        "gallery/5a.jpeg"
+      ],
+      "video": "gallery/5.mp4"
+    },
+    {
       "sessionId": 6,
+      "city": "sukkur",
+      "date": "2025-11-29",
       "type": "interaction",
-      "displayIn": "gallery"
+      "images": [
+        "gallery/6.jpeg",
+        "gallery/6a.jpeg"
+      ],
+      "video": "gallery/6.mp4"
     },
     {
-      "id": 11,
-      "filename": "https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Product launch in Dera Ghazi Khan",
+      "sessionId": 7,
+      "city": "sukkur",
+      "date": "2025-11-30",
+      "type": "qa",
+      "images": [
+        "gallery/7.jpeg",
+        "gallery/7a.jpeg"
+      ],
+      "video": "gallery/7.mp4"
+    },
+    {
+      "sessionId": 8,
+      "city": "sukkur",
       "date": "2025-12-01",
-      "city": "dgk",
-      "sessionId": 16,
-      "type": "launch",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 12,
-      "filename": "https://images.unsplash.com/photo-1559131397-f94da358a2c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Expert technical guidance session",
-      "date": "2025-12-03",
-      "city": "dgk",
-      "sessionId": 18,
-      "type": "expert",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 13,
-      "filename": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Irrigation management training",
-      "date": "2025-12-05",
-      "city": "dgk",
-      "sessionId": 20,
-      "type": "irrigation",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 14,
-      "filename": "https://images.unsplash.com/photo-1594489428504-5c0c480d21a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Urban farming techniques in Faisalabad",
-      "date": "2025-12-06",
-      "city": "faisalabad",
-      "sessionId": 26,
-      "type": "urban",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 15,
-      "filename": "https://images.unsplash.com/photo-1586771107445-d3ca888129fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Commercial farming workshop",
-      "date": "2025-12-07",
-      "city": "faisalabad",
-      "sessionId": 27,
-      "type": "commercial",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 16,
-      "filename": "https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Technology adoption training",
-      "date": "2025-12-08",
-      "city": "faisalabad",
-      "sessionId": 28,
-      "type": "technology",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 17,
-      "filename": "https://images.unsplash.com/photo-1559131397-f94da358a2c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Traditional farming methods in Gujranwala",
-      "date": "2025-12-10",
-      "city": "gujranwala",
-      "sessionId": 34,
-      "type": "traditional",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 18,
-      "filename": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Water conservation workshop",
-      "date": "2025-12-11",
-      "city": "gujranwala",
-      "sessionId": 36,
-      "type": "conservation",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 19,
-      "filename": "https://images.unsplash.com/photo-1594489428504-5c0c480d21a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Market linkages discussion",
-      "date": "2025-12-12",
-      "city": "gujranwala",
-      "sessionId": 37,
-      "type": "market",
-      "displayIn": "gallery"
-    },
-    {
-      "id": 20,
-      "filename": "https://images.unsplash.com/photo-1586771107445-d3ca888129fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-      "caption": "Campaign closing ceremony",
-      "date": "2025-12-12",
-      "city": "gujranwala",
-      "sessionId": 40,
       "type": "closing",
-      "displayIn": "gallery"
+      "images": [
+        "gallery/8.jpeg",
+        "gallery/8a.jpeg"
+      ],
+      "video": "gallery/8.mp4"
+    },
+    {
+      "sessionId": 9,
+      "city": "sukkur",
+      "date": "2025-12-02",
+      "type": "review",
+      "images": [
+        "gallery/9.jpeg",
+        "gallery/9a.jpeg"
+      ],
+      "video": "gallery/9.mp4"
+    },
+    {
+      "sessionId": 10,
+      "city": "dgk",
+      "date": "2025-12-03",
+      "type": "launch",
+      "images": [
+        "gallery/10.jpeg"
+      ],
+      "video": "gallery/10.mp4"
+    },
+    {
+      "sessionId": 11,
+      "city": "dgk",
+      "date": "2025-12-04",
+      "type": "technical",
+      "images": [
+        "gallery/11.jpeg"
+      ],
+      "video": "gallery/11.mp4"
+    },
+    {
+      "sessionId": 12,
+      "city": "dgk",
+      "date": "2025-12-05",
+      "type": "irrigation",
+      "images": [
+        "gallery/12.jpeg"
+      ],
+      "video": "gallery/12.mp4"
+    },
+    {
+      "sessionId": 13,
+      "city": "dgk",
+      "date": "2025-12-06",
+      "type": "field",
+      "images": [
+        "gallery/13.jpeg"
+      ],
+      "video": "gallery/13.mp4"
+    },
+    {
+      "sessionId": 14,
+      "city": "dgk",
+      "date": "2025-12-07",
+      "type": "hands-on",
+      "images": [
+        "gallery/14.jpeg"
+      ],
+      "video": "gallery/14.mp4"
+    },
+    {
+      "sessionId": 15,
+      "city": "dgk",
+      "date": "2025-12-08",
+      "type": "demo",
+      "images": [
+        "gallery/15.jpeg"
+      ],
+      "video": "gallery/15.mp4"
+    },
+    {
+      "sessionId": 16,
+      "city": "dgk",
+      "date": "2025-12-09",
+      "type": "feedback",
+      "images": [
+        "gallery/16.jpeg"
+      ],
+      "video": "gallery/16.mp4"
+    },
+    {
+      "sessionId": 17,
+      "city": "dgk",
+      "date": "2025-12-10",
+      "type": "closing",
+      "images": [
+        "gallery/17.jpeg"
+      ],
+      "video": "gallery/17.mp4"
+    },
+    {
+      "sessionId": 18,
+      "city": "faisalabad",
+      "date": "2025-12-11",
+      "type": "urban",
+      "images": [
+        "gallery/18.jpeg"
+      ],
+      "video": "gallery/18.mp4"
+    },
+    {
+      "sessionId": 19,
+      "city": "faisalabad",
+      "date": "2025-12-12",
+      "type": "commercial",
+      "images": [
+        "gallery/19.jpeg"
+      ],
+      "video": "gallery/19.mp4"
+    },
+    {
+      "sessionId": 20,
+      "city": "faisalabad",
+      "date": "2025-12-13",
+      "type": "technology",
+      "images": [
+        "gallery/20.jpeg"
+      ],
+      "video": "gallery/20.mp4"
+    },
+    {
+      "sessionId": 21,
+      "city": "faisalabad",
+      "date": "2025-12-14",
+      "type": "innovation",
+      "images": [
+        "gallery/21.jpeg"
+      ],
+      "video": "gallery/21.mp4"
+    },
+    {
+      "sessionId": 22,
+      "city": "faisalabad",
+      "date": "2025-12-15",
+      "type": "workshop",
+      "images": [
+        "gallery/22.jpeg"
+      ],
+      "video": "gallery/22.mp4"
+    },
+    {
+      "sessionId": 23,
+      "city": "faisalabad",
+      "date": "2025-12-16",
+      "type": "discussion",
+      "images": [
+        "gallery/23.jpeg"
+      ],
+      "video": "gallery/23.mp4"
+    },
+    {
+      "sessionId": 24,
+      "city": "faisalabad",
+      "date": "2025-12-17",
+      "type": "review",
+      "images": [
+        "gallery/24.jpeg"
+      ],
+      "video": "gallery/24.mp4"
+    },
+    {
+      "sessionId": 25,
+      "city": "faisalabad",
+      "date": "2025-12-18",
+      "type": "closing",
+      "images": [
+        "gallery/25.jpeg"
+      ],
+      "video": "gallery/25.mp4"
+    },
+    {
+      "sessionId": 26,
+      "city": "gujranwala",
+      "date": "2025-12-19",
+      "type": "traditional",
+      "images": [
+        "gallery/26.jpeg"
+      ],
+      "video": "gallery/26.mp4"
+    },
+    {
+      "sessionId": 27,
+      "city": "gujranwala",
+      "date": "2025-12-20",
+      "type": "conservation",
+      "images": [
+        "gallery/27.jpeg"
+      ],
+      "video": "gallery/27.mp4"
+    },
+    {
+      "sessionId": 28,
+      "city": "gujranwala",
+      "date": "2025-12-21",
+      "type": "market",
+      "images": [
+        "gallery/28.jpeg"
+      ],
+      "video": "gallery/28.mp4"
+    },
+    {
+      "sessionId": 29,
+      "city": "gujranwala",
+      "date": "2025-12-22",
+      "type": "networking",
+      "images": [
+        "gallery/29.jpeg"
+      ],
+      "video": "gallery/29.mp4"
+    },
+    {
+      "sessionId": 30,
+      "city": "gujranwala",
+      "date": "2025-12-23",
+      "type": "feedback",
+      "images": [
+        "gallery/30.jpeg"
+      ],
+      "video": "gallery/30.mp4"
+    },
+    {
+      "sessionId": 31,
+      "city": "gujranwala",
+      "date": "2025-12-24",
+      "type": "hands-on",
+      "images": [
+        "gallery/31.jpeg"
+      ],
+      "video": "gallery/31.mp4"
+    },
+    {
+      "sessionId": 32,
+      "city": "gujranwala",
+      "date": "2025-12-25",
+      "type": "demo",
+      "images": [
+        "gallery/32.mp4"
+      ],
+      "video": "gallery/32.mp4"
+    },
+    {
+      "sessionId": 33,
+      "city": "gujranwala",
+      "date": "2025-12-26",
+      "type": "closing",
+      "images": [
+        "gallery/33.jpeg"
+      ],
+      "video": "gallery/33.mp4"
+    },
+    {
+      "sessionId": 34,
+      "city": "multan",
+      "date": "2025-12-27",
+      "type": "field",
+      "images": [
+        "gallery/34.jpeg"
+      ],
+      "video": "gallery/34.mp4"
+    },
+    {
+      "sessionId": 35,
+      "city": "multan",
+      "date": "2025-12-28",
+      "type": "irrigation",
+      "images": [
+        "gallery/35.jpeg"
+      ],
+      "video": "gallery/35.mp4"
+    },
+    {
+      "sessionId": 36,
+      "city": "multan",
+      "date": "2025-12-29",
+      "type": "training",
+      "images": [
+        "gallery/36.jpeg"
+      ],
+      "video": "gallery/36.mp4"
+    },
+    {
+      "sessionId": 37,
+      "city": "multan",
+      "date": "2025-12-30",
+      "type": "review",
+      "images": [
+        "gallery/37.jpeg"
+      ],
+      "video": "gallery/37.mp4"
+    },
+    {
+      "sessionId": 38,
+      "city": "multan",
+      "date": "2025-12-31",
+      "type": "feedback",
+      "images": [
+        "gallery/38.jpeg"
+      ],
+      "video": "gallery/38.mp4"
+    },
+    {
+      "sessionId": 39,
+      "city": "multan",
+      "date": "2026-01-01",
+      "type": "closing",
+      "images": [
+        "gallery/39.jpeg"
+      ],
+      "video": "gallery/39.mp4"
+    },
+    {
+      "sessionId": 40,
+      "city": "overall",
+      "date": "2026-01-02",
+      "type": "campaign",
+      "images": [
+        "gallery/40.jpeg"
+      ],
+      "video": "gallery/40.mp4"
     }
   ],
   "lastUpdated": "2025-12-22T14:30:00Z",
-  "notes": "Media collection for Buctril Super Farmer Education Drive Campaign 2025"
+  "notes": "Media collection for Buctril Super Farmer Education Drive Campaign 2025. Gallery includes 40 sessions with sequenced images and videos for animated effects."
 }

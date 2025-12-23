@@ -1,3 +1,5 @@
+[file name]: dashboard.js
+[file content begin]
 // dashboard.js - COMPLETE WORKING VERSION
 console.log('AgriVista Dashboard v2.4 initializing...');
 
@@ -689,3 +691,4 @@ function showError(message) {
 }
 
 console.log('AgriVista Dashboard loaded successfully.');
+[file content end]

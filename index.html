@@ -1,672 +1,210 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriVista - Buctril Super Farmer Education Drive (FED) 2025</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/svg+xml" href="assets/placeholder.svg">
-</head>
-<body>
-    <!-- Background Video Fallback -->
-    <div id="backgroundVideo" class="video-background">
-        <div class="video-fallback"></div>
-    </div>
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loader"></div>
+    <p>Loading dashboard...</p>
+</div>
 
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1><i class="fas fa-seedling"></i> AgriVista Dashboard</h1>
-            <h2>Buctril Super Farmer Education Drive (FED) 2025</h2>
-            
-            <div class="header-subtitle">
-                <div class="build-date">
-                    <i class="fas fa-calendar-check"></i> Last Updated: December 22, 2025
+<!-- Session Detail Modal -->
+<div id="sessionModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalSessionTitle">Session Details</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-grid">
+                <div class="modal-section">
+                    <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Session ID:</span>
+                            <span id="modalSessionId" class="info-value"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date:</span>
+                            <span id="modalSessionDate" class="info-value"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">City:</span>
+                            <span id="modalSessionCity" class="info-value"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Location:</span>
+                            <span id="modalSessionLocation" class="info-value"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Facilitator:</span>
+                            <span id="modalSessionFacilitator" class="info-value"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="campaign-duration">
-                    <i class="fas fa-clock"></i> 17 Major Cities • 40 Sessions • 2,908 Farmers
+                
+                <div class="modal-section">
+                    <h4><i class="fas fa-chart-bar"></i> Statistics</h4>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="modalSessionFarmers">0</div>
+                                <div class="stat-label">Farmers</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-seedling"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="modalSessionAcres">0</div>
+                                <div class="stat-label">Acres</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="modalSessionFocus"></div>
+                                <div class="stat-label">Focus Area</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="header-logos">
-                <div class="logo-container">
-                    <img src="https://via.placeholder.com/150x60/ffffff/2e7d32?text=Bayer&font=arial" 
-                         alt="Bayer" class="logo-img">
+                
+                <div class="modal-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Location Map</h4>
+                    <div id="modalMap" style="height: 200px; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; color: #666;">
+                        <i class="fas fa-map-marked-alt" style="font-size: 48px; opacity: 0.3;"></i>
+                    </div>
                 </div>
-                <div class="logo-container">
-                    <img src="https://via.placeholder.com/150x60/ffffff/ff9800?text=Buctril+Super&font=arial" 
-                         alt="Buctril Super" class="logo-img">
-                </div>
-                <div class="logo-container">
-                    <img src="https://via.placeholder.com/150x60/ffffff/2196f3?text=Product+Range&font=arial" 
-                         alt="Product Range" class="logo-img">
-                </div>
-                <div class="logo-container">
-                    <img src="https://via.placeholder.com/150x60/ffffff/9c27b0?text=Interact&font=arial" 
-                         alt="Interact Solutions" class="logo-img">
-                </div>
-                <div class="logo-container">
-                    <img src="https://via.placeholder.com/150x60/ffffff/4caf50?text=Atlantis&font=arial" 
-                         alt="Atlantis Herbicide" class="logo-img">
-                </div>
-            </div>
-        </header>
-
-        <!-- Error Banner (Initially Hidden) -->
-        <div id="errorBanner" class="error-banner" style="display: none;">
-            <i class="fas fa-exclamation-triangle"></i>
-            <div>
-                <h3>Dashboard Initialization Error</h3>
-                <p id="errorMessage">Unable to load dashboard data. Please check your internet connection and try again.</p>
-                <div class="quick-checks">
-                    <p><strong>Quick Troubleshooting:</strong></p>
-                    <ol>
-                        <li>Ensure browser has internet access</li>
-                        <li>Check browser console for errors (F12 → Console)</li>
-                        <li>Refresh the page to retry loading data</li>
-                        <li>Make sure JavaScript is enabled in your browser</li>
-                    </ol>
+                
+                <div class="modal-section">
+                    <h4><i class="fas fa-images"></i> Session Media</h4>
+                    <div id="modalMediaGallery" class="modal-gallery">
+                        <!-- Media will be loaded here -->
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="modalCloseBtn">Close</button>
+            <button class="btn btn-primary" id="modalShareBtn">
+                <i class="fas fa-share-alt"></i> Share Session
+            </button>
+        </div>
+    </div>
+</div>
 
-        <!-- Dashboard Controls -->
-        <section class="dashboard-controls">
-            <div class="control-grid">
-                <div class="control-group">
-                    <label for="cityFilter"><i class="fas fa-city"></i> Filter by City</label>
-                    <select id="cityFilter" class="dropdown">
-                        <option value="all">All Cities (4)</option>
-                        <option value="sukkur">Sukkur (SKR) - 15 sessions</option>
-                        <option value="dgk">Dera Ghazi Khan (DGK) - 10 sessions</option>
-                        <option value="faisalabad">Faisalabad (FSD) - 8 sessions</option>
-                        <option value="gujranwala">Gujranwala (GSM) - 7 sessions</option>
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-comment-alt"></i> Share Your Feedback</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="feedbackForm">
+                <div class="form-group">
+                    <label for="feedbackName"><i class="fas fa-user"></i> Your Name</label>
+                    <input type="text" id="feedbackName" class="form-control" placeholder="Enter your name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedbackPhone"><i class="fas fa-phone"></i> Phone Number</label>
+                    <input type="tel" id="feedbackPhone" class="form-control" placeholder="+92 300 1234567">
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedbackEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="feedbackEmail" class="form-control" placeholder="you@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedbackType"><i class="fas fa-tag"></i> Feedback Type</label>
+                    <select id="feedbackType" class="form-control">
+                        <option value="general">General Feedback</option>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="feature">Feature Request</option>
                     </select>
                 </div>
                 
-                <div class="control-group">
-                    <label for="dateRange"><i class="fas fa-calendar-alt"></i> Date Range</label>
-                    <div class="date-group">
-                        <input type="date" id="dateFrom" class="date-input" value="2025-11-24">
-                        <span>to</span>
-                        <input type="date" id="dateTo" class="date-input" value="2025-12-12">
-                    </div>
+                <div class="form-group">
+                    <label for="feedbackMessage"><i class="fas fa-comment"></i> Your Message</label>
+                    <textarea id="feedbackMessage" class="form-control" rows="4" placeholder="Share your thoughts, suggestions, or feedback..." required></textarea>
                 </div>
                 
-                <div class="control-group">
-                    <label for="searchInput"><i class="fas fa-search"></i> Search Sessions</label>
-                    <input type="text" id="searchInput" class="search-input" 
-                           placeholder="Search by spot, facilitator, or focus...">
-                </div>
-                
-                <div class="control-group">
-                    <label><i class="fas fa-filter"></i> Quick Filters</label>
-                    <div class="quick-filter-buttons">
-                        <button class="btn btn-outline" id="filterHighAttendance">
-                            <i class="fas fa-users"></i> High Attendance (80+)
-                        </button>
-                        <button class="btn btn-outline" id="filterRecent">
-                            <i class="fas fa-clock"></i> Last 7 Days
-                        </button>
+                <div class="form-group">
+                    <label for="feedbackContactMethod">Preferred Contact Method</label>
+                    <div class="contact-methods">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="contactMethod" value="whatsapp">
+                            <i class="fab fa-whatsapp" style="color: #25D366;"></i> WhatsApp
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="contactMethod" value="email">
+                            <i class="fas fa-envelope" style="color: #EA4335;"></i> Email
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="contactMethod" value="phone">
+                            <i class="fas fa-phone" style="color: #34A853;"></i> Phone Call
+                        </label>
                     </div>
                 </div>
-            </div>
-            
-            <div class="button-group">
-                <button id="applyFilters" class="btn btn-primary">
-                    <i class="fas fa-filter"></i> Apply Filters
-                </button>
-                <button id="exportData" class="btn btn-secondary">
-                    <i class="fas fa-file-export"></i> Export CSV
-                </button>
-                <button id="resetFilters" class="btn btn-secondary">
-                    <i class="fas fa-redo"></i> Reset All
-                </button>
-                <button id="refreshData" class="btn btn-outline">
-                    <i class="fas fa-sync-alt"></i> Refresh Data
-                </button>
-            </div>
-        </section>
-
-        <!-- Selection Summary -->
-        <section class="selection-summary">
-            <h3><i class="fas fa-chart-pie"></i> Campaign Overview</h3>
-            <div class="summary-stats">
-                <div class="stat-item">
-                    <span class="stat-value" id="sessionCount">40</span>
-                    <span class="stat-label">Total Sessions</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="farmerCount">2,908</span>
-                    <span class="stat-label">Farmers Reached</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="acreCount">44,256</span>
-                    <span class="stat-label">Acres Covered</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="cityCount">4</span>
-                    <span class="stat-label">Regions Covered</span>
-                </div>
-                <div class="status-indicator status-success" id="statusIndicator">
-                    <i class="fas fa-check-circle"></i>
-                    <span>All Systems Operational</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Campaign Overview -->
-        <section class="campaign-section">
-            <div class="campaign-header">
-                <h2 class="campaign-title">
-                    <i class="fas fa-tractor"></i> Buctril Super Field Education Drive Metrics
-                </h2>
-                <div class="campaign-badge">
-                    <i class="fas fa-chart-line"></i> Live Dashboard
-                </div>
-            </div>
-            
-            <div class="overview-stats">
-                <div class="overview-card">
-                    <h3 id="totalSessions">40</h3>
-                    <p>Field Education Sessions</p>
-                </div>
-                <div class="overview-card">
-                    <h3 id="totalFarmers">2,908</h3>
-                    <p>Farmers Educated</p>
-                </div>
-                <div class="overview-card">
-                    <h3 id="totalAcres">44,256</h3>
-                    <p>Wheat Acres Impacted</p>
-                </div>
-                <div class="overview-card">
-                    <h3>530</h3>
-                    <p>Key Influencers (KOLs)</p>
-                </div>
-                <div class="overview-card">
-                    <h3>72.7</h3>
-                    <p>Avg. Farmers per Session</p>
-                </div>
-                <div class="overview-card">
-                    <h3>4</h3>
-                    <p>Major Regions Covered</p>
-                </div>
-            </div>
-            
-            <!-- Interactive Map -->
-            <div class="map-container">
-                <div class="map-banner">
-                    <span><i class="fas fa-map-marked-alt"></i> Campaign Coverage Map - Pakistan</span>
-                    <span id="mapStats">Showing 40 Sessions across 4 Regions</span>
-                </div>
-                <div id="campaignMap"></div>
-            </div>
-        </section>
-
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-            <button class="tab active" data-tab="snapshot">
-                <i class="fas fa-camera"></i> Campaign Snapshot
-            </button>
-            <button class="tab" data-tab="analytics">
-                <i class="fas fa-chart-bar"></i> Performance Analytics
-            </button>
-            <button class="tab" data-tab="map">
-                <i class="fas fa-map"></i> Interactive Map
-            </button>
-            <button class="tab" data-tab="gallery">
-                <i class="fas fa-images"></i> Media Gallery
-            </button>
-            <button class="tab" data-tab="sessions">
-                <i class="fas fa-calendar-day"></i> All Sessions
-            </button>
-            <button class="tab" data-tab="insights">
-                <i class="fas fa-lightbulb"></i> Farmer Insights
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="feedbackCancel">Cancel</button>
+            <button class="btn btn-primary" id="feedbackSubmit">
+                <i class="fas fa-paper-plane"></i> Submit Feedback
             </button>
         </div>
-
-        <!-- Tab Content -->
-        <div id="tabContent">
-            <!-- Snapshot Tab (Default) -->
-            <section class="key-takeaways" id="snapshotTab">
-                <h2><i class="fas fa-bullseye"></i> Key Campaign Takeaways</h2>
-                <p class="campaign-description">
-                    <strong>Campaign Scope:</strong> 17-day intensive farmer education drive covering 4 major agricultural regions across Punjab, Sindh, and Khyber Pakhtunkhwa, focusing on Buctril Super herbicide application and modern farming techniques.
-                </p>
-                
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-value">90%</div>
-                        <p>Definite Purchase Intent</p>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">84%</div>
-                        <p>Product Awareness Increase</p>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">67%</div>
-                        <p>Brand Loyalty Score</p>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">88%</div>
-                        <p>Farmer Satisfaction Rate</p>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">92%</div>
-                        <p>Recommendation Likelihood</p>
-                    </div>
-                </div>
-                
-                <!-- Key Influencers Section -->
-                <div class="influencer-section">
-                    <h3><i class="fas fa-user-friends"></i> Key Influencer Network</h3>
-                    <div class="influencer-grid">
-                        <div class="influencer-stat">
-                            <div class="influencer-value">530</div>
-                            <div class="influencer-label">Key Opinion Leaders</div>
-                            <div class="influencer-subtext">Activated across 4 regions</div>
-                        </div>
-                        <div class="influencer-stat">
-                            <div class="influencer-value">78%</div>
-                            <div class="influencer-label">Active Engagement Rate</div>
-                            <div class="influencer-subtext">Highly engaged with farming communities</div>
-                        </div>
-                        <div class="influencer-stat">
-                            <div class="influencer-value">3.5x</div>
-                            <div class="influencer-label">Amplification Factor</div>
-                            <div class="influencer-subtext">Message reach multiplier</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- City Performance -->
-                <div class="city-progress">
-                    <h3><i class="fas fa-chart-line"></i> Top Performing Regions</h3>
-                    <div class="city-item">
-                        <div class="city-header">
-                            <span>Sukkur Division (SKR) <span class="city-badge">15 sessions</span></span>
-                            <span>1,120 farmers • 16,800 acres</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 100%"></div>
-                        </div>
-                    </div>
-                    <div class="city-item">
-                        <div class="city-header">
-                            <span>Dera Ghazi Khan (DGK) <span class="city-badge">10 sessions</span></span>
-                            <span>728 farmers • 10,920 acres</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 85%"></div>
-                        </div>
-                    </div>
-                    <div class="city-item">
-                        <div class="city-header">
-                            <span>Faisalabad Region (FSD) <span class="city-badge">8 sessions</span></span>
-                            <span>640 farmers • 9,600 acres</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 75%"></div>
-                        </div>
-                    </div>
-                    <div class="city-item">
-                        <div class="city-header">
-                            <span>Gujranwala Zone (GSM) <span class="city-badge">7 sessions</span></span>
-                            <span>420 farmers • 6,936 acres</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Analytics Tab -->
-            <section class="campaign-section" id="analyticsTab" style="display: none;">
-                <h2><i class="fas fa-chart-bar"></i> Performance Analytics</h2>
-                <p>Detailed metrics and performance analysis across all campaign parameters</p>
-                
-                <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <h3><i class="fas fa-calendar-day"></i> Daily Attendance Trend</h3>
-                        <div id="attendanceChart" class="chart-container">
-                            <!-- Chart will be generated by JavaScript -->
-                        </div>
-                        <div class="chart-note">
-                            <i class="fas fa-info-circle"></i> Peak attendance: Day 4 (105 farmers)
-                        </div>
-                    </div>
-                    
-                    <div class="analytics-card">
-                        <h3><i class="fas fa-map-marked-alt"></i> Regional Distribution</h3>
-                        <div id="regionalChart" class="chart-container">
-                            <!-- Distribution visualization -->
-                            <div class="distribution-center">
-                                <div class="distribution-value">37.5%</div>
-                                <div class="distribution-label">Sukkur Region</div>
-                                <div class="distribution-subtext">Highest session concentration</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Performance Metrics -->
-                <div class="performance-section">
-                    <h3><i class="fas fa-trending-up"></i> Campaign Performance Metrics</h3>
-                    <div class="performance-grid">
-                        <div class="performance-card">
-                            <div class="performance-value">₹ 4.2L</div>
-                            <div class="performance-label">Estimated Impact Value</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">94%</div>
-                            <div class="performance-label">Farmer Engagement Rate</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">3.2x</div>
-                            <div class="performance-label">ROI Multiplier</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">28%</div>
-                            <div class="performance-label">Cost Efficiency Gain</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">76%</div>
-                            <div class="performance-label">Knowledge Retention</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Map Tab -->
-            <section class="campaign-section" id="mapTab" style="display: none;">
-                <h2><i class="fas fa-map"></i> Interactive Campaign Map</h2>
-                <p>Geospatial visualization of all field education sessions across 4 major regions in Pakistan</p>
-                
-                <div class="map-controls-grid">
-                    <div class="map-controls-panel">
-                        <h3><i class="fas fa-filter"></i> Map Controls</h3>
-                        
-                        <div class="control-section">
-                            <label>Session Types</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" checked class="map-filter" data-filter="education">
-                                    <span>Education Sessions</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" checked class="map-filter" data-filter="demo">
-                                    <span>Field Demonstrations</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" checked class="map-filter" data-filter="training">
-                                    <span>Training Workshops</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" checked class="map-filter" data-filter="qa">
-                                    <span>Q&A Sessions</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="control-section">
-                            <label>Attendance Range</label>
-                            <input type="range" id="attendanceRange" min="0" max="150" value="0" class="range-slider">
-                            <div class="range-labels">
-                                <span>All</span>
-                                <span id="rangeValue">0+ farmers</span>
-                            </div>
-                        </div>
-                        
-                        <button id="fitBounds" class="btn btn-primary full-width">
-                            <i class="fas fa-expand-alt"></i> Fit to Sessions
-                        </button>
-                        <button id="resetMap" class="btn btn-outline full-width">
-                            <i class="fas fa-redo"></i> Reset View
-                        </button>
-                    </div>
-                    
-                    <div class="map-container">
-                        <div class="map-banner">
-                            <span><i class="fas fa-map-marked-alt"></i> Campaign Geographic Coverage - 4 Regions</span>
-                            <span id="mapFilterStats">40 sessions shown</span>
-                        </div>
-                        <div id="detailedMap"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Gallery Tab -->
-            <section class="gallery-section" id="galleryTab" style="display: none;">
-                <h2><i class="fas fa-images"></i> Campaign Media Gallery</h2>
-                <p>Visual documentation of field education sessions, farmer interactions, and product demonstrations across 4 regions</p>
-                
-                <div class="gallery-filters">
-                    <button class="gallery-filter-btn active" data-filter="all">All Media (12)</button>
-                    <button class="gallery-filter-btn" data-filter="sukkur">Sukkur (3)</button>
-                    <button class="gallery-filter-btn" data-filter="dgk">Dera Ghazi Khan (3)</button>
-                    <button class="gallery-filter-btn" data-filter="faisalabad">Faisalabad (3)</button>
-                    <button class="gallery-filter-btn" data-filter="gujranwala">Gujranwala (3)</button>
-                </div>
-                
-                <div class="gallery-grid" id="mediaGallery">
-                    <!-- Gallery items will be loaded here -->
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading media gallery...</p>
-                    </div>
-                </div>
-                
-                <div class="gallery-footer">
-                    <button id="loadMoreGallery" class="btn btn-primary" style="display: none;">
-                        <i class="fas fa-plus"></i> Load More Images
-                    </button>
-                </div>
-            </section>
-
-            <!-- Sessions Tab -->
-            <section class="campaign-section" id="sessionsTab" style="display: none;">
-                <h2><i class="fas fa-calendar-day"></i> All Campaign Sessions</h2>
-                <p>Complete chronological list of all 40 farmer education sessions across 4 regions</p>
-                
-                <div class="sessions-table-container">
-                    <table class="sessions-table">
-                        <thead>
-                            <tr>
-                                <th>Session ID</th>
-                                <th>Date</th>
-                                <th>City</th>
-                                <th>Spot/Location</th>
-                                <th>Facilitator</th>
-                                <th>Farmers</th>
-                                <th>Acres</th>
-                                <th>Focus Area</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sessionsTableBody">
-                            <!-- Sessions will be loaded here -->
-                            <tr>
-                                <td colspan="8" class="loading-cell">
-                                    <div class="loading">
-                                        <i class="fas fa-spinner fa-spin"></i>
-                                        <p>Loading sessions data...</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="pagination-controls">
-                    <div class="pagination-info">
-                        Showing <span id="shownSessions">0</span> of <span id="totalSessionsCount">40</span> sessions
-                    </div>
-                    <div class="pagination-buttons">
-                        <button id="prevPage" class="btn btn-outline" disabled>
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </button>
-                        <button id="nextPage" class="btn btn-outline">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Insights Tab -->
-            <section class="campaign-section" id="insightsTab" style="display: none;">
-                <h2><i class="fas fa-lightbulb"></i> Farmer Insights & Understanding</h2>
-                <p>Detailed analysis of farmer understanding across key product knowledge areas (1-7 scale)</p>
-                
-                <div class="insights-container">
-                    <h3><i class="fas fa-chart-line"></i> Farmer Understanding Scores</h3>
-                    
-                    <div class="insights-grid">
-                        <!-- Insight Score Cards -->
-                        <div class="insight-card insight-high">
-                            <div class="insight-header">
-                                <div>
-                                    <div class="insight-category">Broadleaf Control</div>
-                                    <div class="insight-score">5.80</div>
-                                </div>
-                                <div class="insight-percentage">83%</div>
-                            </div>
-                            <div class="insight-description">
-                                Understanding of broadleaf weed control mechanism
-                            </div>
-                        </div>
-                        
-                        <div class="insight-card insight-medium">
-                            <div class="insight-header">
-                                <div>
-                                    <div class="insight-category">Golden Period</div>
-                                    <div class="insight-score">5.37</div>
-                                </div>
-                                <div class="insight-percentage">77%</div>
-                            </div>
-                            <div class="insight-description">
-                                Awareness of optimal application timing
-                            </div>
-                        </div>
-                        
-                        <div class="insight-card insight-high">
-                            <div class="insight-header">
-                                <div>
-                                    <div class="insight-category">Application Method</div>
-                                    <div class="insight-score">5.62</div>
-                                </div>
-                                <div class="insight-percentage">80%</div>
-                            </div>
-                            <div class="insight-description">
-                                Knowledge of proper application techniques
-                            </div>
-                        </div>
-                        
-                        <div class="insight-card insight-medium">
-                            <div class="insight-header">
-                                <div>
-                                    <div class="insight-category">Dosage Accuracy</div>
-                                    <div class="insight-score">5.45</div>
-                                </div>
-                                <div class="insight-percentage">78%</div>
-                            </div>
-                            <div class="insight-description">
-                                Understanding of correct dosage measurements
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Key Insights -->
-                <div class="knowledge-section">
-                    <h3><i class="fas fa-chart-bar"></i> Knowledge Gap Analysis</h3>
-                    <div class="knowledge-grid">
-                        <div class="knowledge-card knowledge-good">
-                            <h4>Top Understanding Areas</h4>
-                            <ul>
-                                <li>Broadleaf weed identification (5.80/7)</li>
-                                <li>Product application methods (5.62/7)</li>
-                                <li>Safety precautions (5.55/7)</li>
-                                <li>Timing for maximum efficacy (5.37/7)</li>
-                            </ul>
-                        </div>
-                        <div class="knowledge-card knowledge-improve">
-                            <h4>Areas for Improvement</h4>
-                            <ul>
-                                <li>Dosage calculation accuracy (5.45/7)</li>
-                                <li>Integration with other products (5.20/7)</li>
-                                <li>Long-term weed management (5.15/7)</li>
-                                <li>Cost-benefit analysis (5.10/7)</li>
-                            </ul>
-                        </div>
-                        <div class="knowledge-card knowledge-recommend">
-                            <h4>Training Recommendations</h4>
-                            <ul>
-                                <li>Focus on dosage calculation workshops</li>
-                                <li>Enhanced visual aids for application timing</li>
-                                <li>Practical field demonstrations for integration</li>
-                                <li>ROI calculator tools for farmers</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div>
-                <p>AgriVista Dashboard v2.1 • Buctril Super Farmer Education Drive 2025</p>
-                <p class="footer-subtext">
-                    <i class="fas fa-info-circle"></i> Data updated: December 22, 2025 • Campaign period: Nov 24 - Dec 12, 2025 • 4 Regions Covered
-                </p>
-                <div class="footer-links">
-                    <a href="#" id="helpSupport"><i class="fas fa-question-circle"></i> Help & Support</a>
-                    <a href="#" id="exportInsights"><i class="fas fa-download"></i> Export Insights</a>
-                    <a href="#" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
-                    <a href="#" id="shareDashboard"><i class="fas fa-share-alt"></i> Share Dashboard</a>
-                </div>
-            </div>
-        </footer>
     </div>
+</div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    
-    <!-- Main Application Script -->
-    <script src="dashboard.js"></script>
-    
-    <!-- Fallback initialization -->
-    <script>
-        // Ensure basic functionality if main script fails
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Basic dashboard initialization starting...');
-            
-            // Set today as max date
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dateTo').max = today;
-            document.getElementById('dateTo').value = today;
-            
-            // Basic tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const tabId = this.getAttribute('data-tab');
-                    const allSections = document.querySelectorAll('#tabContent > section');
-                    allSections.forEach(section => {
-                        section.style.display = section.id === tabId + 'Tab' ? 'block' : 'none';
-                    });
-                });
-            });
-            
-            console.log('Basic dashboard functionality loaded');
-        });
-    </script>
-</body>
-</html>
+<!-- Share Modal -->
+<div id="shareModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-share-alt"></i> Share This Dashboard</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="share-options">
+                <button class="share-option" data-platform="whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </button>
+                <button class="share-option" data-platform="facebook">
+                    <i class="fab fa-facebook"></i>
+                    <span>Facebook</span>
+                </button>
+                <button class="share-option" data-platform="twitter">
+                    <i class="fab fa-twitter"></i>
+                    <span>Twitter</span>
+                </button>
+                <button class="share-option" data-platform="linkedin">
+                    <i class="fab fa-linkedin"></i>
+                    <span>LinkedIn</span>
+                </button>
+                <button class="share-option" data-platform="email">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email</span>
+                </button>
+                <button class="share-option" data-platform="copy">
+                    <i class="fas fa-copy"></i>
+                    <span>Copy Link</span>
+                </button>
+            </div>
+            <div class="share-url">
+                <input type="text" id="shareUrl" readonly value="https://interactsolutions.github.io/WheatCampaign/">
+                <button class="btn-copy" id="copyUrlBtn">
+                    <i class="fas fa-copy"></i>
+                </button>
+            <div class="footer-links">
+    <a href="#" id="helpSupport"><i class="fas fa-question-circle"></i> Help & Support</a>
+    <a href="#" id="exportInsights"><i class="fas fa-download"></i> Export Insights</a>
+    <a href="#" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
+    <!-- The feedback and share buttons will be added dynamically by JavaScript -->
+</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toastContainer"></div>

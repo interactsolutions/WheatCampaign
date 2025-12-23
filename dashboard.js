@@ -1,5 +1,5 @@
-// dashboard.js - FIXED VERSION
-console.log('AgriVista Dashboard initializing...');
+// dashboard.js - FIXED VERSION FOR LOCAL FILES
+console.log('AgriVista Dashboard v2.2 initializing...');
 
 // GLOBAL STATE
 let allSessions = [];
@@ -38,30 +38,35 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set date max to today
     const today = new Date().toISOString().split('T')[0];
     const dateTo = document.getElementById('dateTo');
-    if (dateTo) dateTo.max = today;
+    if (dateTo) {
+        dateTo.max = today;
+        dateTo.value = '2025-12-12'; // Campaign end date
+    }
     
-    // Load data and initialize components
+    // Load data and initialize
     loadAllData();
     setupEventListeners();
     initializeTabs();
 });
 
-// LOAD ALL JSON DATA
+// LOAD ALL JSON DATA - FIXED FOR LOCAL FILES
 async function loadAllData() {
     try {
-        // Load sessions data
-        console.log('Fetching sessions.json...');
+        updateStatus('Loading sessions data...', 'loading');
+        
+        // 1. LOAD SESSIONS DATA
+        console.log('Loading sessions.json...');
         const sessionsResponse = await fetch('sessions.json');
         if (!sessionsResponse.ok) {
-            throw new Error(`HTTP ${sessionsResponse.status}: Could not load sessions.json`);
+            throw new Error(`Failed to load sessions.json: ${sessionsResponse.status}`);
         }
         const sessionsData = await sessionsResponse.json();
         allSessions = sessionsData.sessions || [];
         currentFilteredSessions = [...allSessions];
         console.log(`Loaded ${allSessions.length} sessions`);
-
-        // Load media data (optional - if file doesn't exist, use placeholders)
-        console.log('Fetching media.json...');
+        
+        // 2. LOAD MEDIA DATA
+        updateStatus('Loading media gallery...', 'loading');
         try {
             const mediaResponse = await fetch('media.json');
             if (mediaResponse.ok) {
@@ -69,15 +74,16 @@ async function loadAllData() {
                 mediaItems = mediaData.mediaItems || [];
                 console.log(`Loaded ${mediaItems.length} media items`);
             } else {
-                console.warn('media.json not found, using placeholder images');
-                mediaItems = createPlaceholderMedia();
+                console.warn('media.json not found or error');
+                mediaItems = createFallbackMedia();
             }
         } catch (mediaError) {
             console.warn('Media load error:', mediaError);
-            mediaItems = createPlaceholderMedia();
+            mediaItems = createFallbackMedia();
         }
 
-        // UPDATE THE ENTIRE DASHBOARD
+        // 3. UPDATE DASHBOARD
+        updateStatus('Rendering dashboard...', 'loading');
         updateDashboardStats();
         initializeMap();
         renderGallery();
@@ -88,71 +94,86 @@ async function loadAllData() {
 
     } catch (error) {
         console.error('Fatal error loading data:', error);
-        showError(`Could not load campaign data: ${error.message}. Using sample data.`);
-        updateStatus('Using sample data', 'warning');
+        showError(`Data load error: ${error.message}. Check console.`);
+        updateStatus('Data load failed', 'error');
         
-        // Use fallback sample data
-        allSessions = createSampleSessions();
+        // Load fallback data
+        allSessions = createFallbackSessions();
         currentFilteredSessions = [...allSessions];
-        mediaItems = createPlaceholderMedia();
+        mediaItems = createFallbackMedia();
         updateDashboardStats();
         renderSessionsTable();
         renderGallery();
     }
 }
 
-// CREATE SAMPLE SESSIONS (Fallback)
-function createSampleSessions() {
-    console.log('Creating sample session data');
+// CREATE FALLBACK SESSIONS
+function createFallbackSessions() {
+    console.log('Creating fallback session data');
     return Array.from({ length: 40 }, (_, i) => {
         const cities = ['sukkur', 'dgk', 'faisalabad', 'gujranwala'];
-        const cityIndex = Math.floor(i / 10);
         const cityNames = ['Sukkur', 'Dera Ghazi Khan', 'Faisalabad', 'Gujranwala'];
-        const codes = ['SKR', 'DGK', 'FSD', 'GSM'];
+        const cityCodes = ['SKR', 'DGK', 'FSD', 'GSM'];
+        const cityIndex = Math.floor(i / 10);
         
         return {
             id: i + 1,
-            sessionNumber: `${codes[cityIndex]}-${(i % 10) + 1}`,
+            sessionNumber: `${cityCodes[cityIndex]}-${(i % 10) + 1}`,
             city: cities[cityIndex],
             cityName: cityNames[cityIndex],
             spot: `Location ${i + 1}`,
-            date: `2025-11-${24 + (i % 7)}`,
+            date: `2025-11-${24 + (i % 10)}`,
+            day: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i % 7],
             farmers: Math.floor(Math.random() * 50) + 50,
             acres: Math.floor(Math.random() * 500) + 500,
             latitude: 27 + Math.random() * 5,
             longitude: 68 + Math.random() * 5,
             facilitator: `Facilitator ${i + 1}`,
-            focus: ['Product Education', 'Application Training', 'Safety Demo', 'Field Practice'][i % 4]
+            focus: ['Product Introduction', 'Application Training', 'Safety Demo', 'Field Practice'][i % 4],
+            type: ['education', 'demonstration', 'training', 'field'][i % 4]
         };
     });
 }
 
-// CREATE PLACEHOLDER MEDIA
-function createPlaceholderMedia() {
-    console.log('Creating placeholder media');
+// CREATE FALLBACK MEDIA - USES LOCAL FILE PATHS
+function createFallbackMedia() {
+    console.log('Creating fallback media with local paths');
     const cities = ['sukkur', 'dgk', 'faisalabad', 'gujranwala'];
-    const types = ['education', 'demonstration', 'training', 'field'];
+    const types = ['education', 'demonstration', 'training', 'safety'];
     
-    return Array.from({ length: 12 }, (_, i) => ({
-        id: i + 1,
-        filename: `https://via.placeholder.com/400x300/2e7d32/ffffff?text=Session+${i + 1}`,
-        caption: `Campaign Session ${i + 1}: ${types[i % types.length]}`,
-        date: `2025-11-${24 + (i % 10)}`,
-        city: cities[i % 4],
-        sessionId: (i % 40) + 1,
-        type: types[i % types.length],
-        displayIn: 'gallery'
-    }));
+    return Array.from({ length: 12 }, (_, i) => {
+        const city = cities[i % 4];
+        const cityColors = { 
+            sukkur: '#2e7d32', 
+            dgk: '#ff9800', 
+            faisalabad: '#2196f3', 
+            gujranwala: '#9c27b0' 
+        };
+        const color = cityColors[city] || '#2e7d32';
+        const colorHex = color.replace('#', '');
+        
+        return {
+            id: i + 1,
+            filename: `gallery/${(i % 10) + 1}.jpeg`, // Try local path first
+            fallback: `https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${city.toUpperCase()}+Session`,
+            caption: `Campaign Session ${i + 1}: ${types[i % types.length]}`,
+            date: `2025-11-${24 + (i % 10)}`,
+            city: city,
+            sessionId: (i % 40) + 1,
+            type: types[i % types.length],
+            displayIn: 'gallery'
+        };
+    });
 }
 
-// UPDATE ALL STATISTICS
+// UPDATE DASHBOARD STATS
 function updateDashboardStats() {
     const totalSessions = currentFilteredSessions.length;
     const totalFarmers = currentFilteredSessions.reduce((sum, s) => sum + (s.farmers || 0), 0);
     const totalAcres = currentFilteredSessions.reduce((sum, s) => sum + (s.acres || 0), 0);
     const uniqueCities = [...new Set(currentFilteredSessions.map(s => s.cityName))].length;
 
-    // Update all stat elements
+    // Update all stats
     if (elements.sessionCount) elements.sessionCount.textContent = totalSessions;
     if (elements.farmerCount) elements.farmerCount.textContent = totalFarmers.toLocaleString();
     if (elements.acreCount) elements.acreCount.textContent = totalAcres.toLocaleString();
@@ -169,17 +190,17 @@ function updateDashboardStats() {
     }
 }
 
-// INITIALIZE LEAFLET MAP
+// INITIALIZE MAP
 function initializeMap() {
     console.log('Initializing map...');
     const mapContainer = document.getElementById('campaignMap');
     if (!mapContainer) {
-        console.error('Map container #campaignMap not found!');
+        console.error('Map container not found!');
         return;
     }
 
     try {
-        // Create map centered on Pakistan
+        // Create map
         map = L.map('campaignMap').setView([30.3753, 69.3451], 6);
 
         // Add tile layer
@@ -188,62 +209,39 @@ function initializeMap() {
             maxZoom: 12
         }).addTo(map);
 
-        // Create marker cluster group
+        // Create marker cluster
         markerCluster = L.markerClusterGroup({
             maxClusterRadius: 50,
             showCoverageOnHover: false
         });
         map.addLayer(markerCluster);
 
-        // Add markers for each session
-        currentFilteredSessions.forEach(session => {
-            if (session.latitude && session.longitude) {
-                const marker = L.marker([session.latitude, session.longitude]);
-                
-                const popupContent = `
-                    <div style="min-width: 200px;">
-                        <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber}</h4>
-                        <p style="margin:4px 0;"><strong>Location:</strong> ${session.spot}</p>
-                        <p style="margin:4px 0;"><strong>Date:</strong> ${session.date}</p>
-                        <p style="margin:4px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
-                        <p style="margin:4px 0;"><strong>Facilitator:</strong> ${session.facilitator}</p>
-                    </div>
-                `;
-                
-                marker.bindPopup(popupContent);
-                markerCluster.addLayer(marker);
-            }
-        });
-
-        // Fit bounds to show all markers
-        if (currentFilteredSessions.length > 0) {
-            const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
-            map.fitBounds(bounds, { padding: [50, 50] });
-        }
+        // Add markers
+        updateMapMarkers();
 
         console.log('Map initialized successfully');
 
     } catch (error) {
-        console.error('Failed to initialize map:', error);
+        console.error('Map error:', error);
         mapContainer.innerHTML = `
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#f8f9fa; color:#666; padding:20px; text-align:center;">
                 <i class="fas fa-map-marked-alt" style="font-size:48px; color:#ccc; margin-bottom:16px;"></i>
-                <p>Interactive map could not be loaded.</p>
+                <p>Interactive map loading...</p>
                 <button onclick="location.reload()" class="btn btn-primary" style="margin-top:10px;">
-                    <i class="fas fa-redo"></i> Reload Page
+                    <i class="fas fa-redo"></i> Retry
                 </button>
             </div>
         `;
     }
 }
 
-// RENDER MEDIA GALLERY
+// RENDER GALLERY - FIXED FOR LOCAL FILES
 function renderGallery() {
     console.log('Rendering gallery...');
     const container = elements.mediaGallery;
     if (!container) return;
 
-    // Filter to only gallery items
+    // Filter gallery items
     const galleryMedia = mediaItems.filter(item => item.displayIn === 'gallery');
     
     if (galleryMedia.length === 0) {
@@ -251,22 +249,23 @@ function renderGallery() {
             <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
                 <i class="fas fa-images" style="font-size:48px; margin-bottom:16px; color:#ccc;"></i>
                 <p>No gallery images available.</p>
-                <p>Using placeholder images for demonstration.</p>
+                <p style="font-size:0.9em; color:#999;">Check media.json and gallery/ folder</p>
             </div>
         `;
         return;
     }
 
-    // Clear and render items
+    // Clear and render
     container.innerHTML = '';
+    const itemsToShow = galleryMedia.slice(0, 12); // Limit for performance
     
-    galleryMedia.forEach(media => {
+    itemsToShow.forEach(media => {
         const item = document.createElement('div');
         item.className = 'gallery-item';
         item.setAttribute('data-city', media.city);
         item.setAttribute('data-type', media.type);
         
-        // City-based colors
+        // City colors for fallback
         const cityColors = { 
             sukkur: '#2e7d32', 
             dgk: '#ff9800', 
@@ -276,9 +275,13 @@ function renderGallery() {
         const color = cityColors[media.city] || '#2e7d32';
         const colorHex = color.replace('#', '');
         
+        // Use local file with fallback
+        const imgSrc = media.filename || media.fallback || 
+                      `https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city}`;
+        
         item.innerHTML = `
-            <img src="${media.filename}" alt="${media.caption}" 
-                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city.toUpperCase()}'">
+            <img src="${imgSrc}" alt="${media.caption}" 
+                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city}'">
             <div class="gallery-caption">
                 <div class="gallery-city">${media.city.toUpperCase()} • Session ${media.sessionId}</div>
                 <div class="gallery-title">${media.caption}</div>
@@ -305,6 +308,7 @@ function renderSessionsTable() {
                 <td colspan="8" style="text-align:center; padding:40px; color:#666;">
                     <i class="fas fa-inbox" style="font-size:48px; margin-bottom:16px; color:#ccc; display:block;"></i>
                     <p>No session data available.</p>
+                    <p style="font-size:0.9em; color:#999;">Check sessions.json file</p>
                 </td>
             </tr>
         `;
@@ -316,13 +320,13 @@ function renderSessionsTable() {
     currentFilteredSessions.forEach(session => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="session-number">${session.sessionNumber}</td>
-            <td>${session.date}</td>
-            <td class="session-city">${session.cityName}</td>
-            <td class="session-spot" title="${session.spot}">${session.spot}</td>
-            <td>${session.facilitator}</td>
-            <td class="session-stats">${session.farmers}</td>
-            <td class="session-stats">${session.acres.toLocaleString()}</td>
+            <td class="session-number">${session.sessionNumber || 'N/A'}</td>
+            <td>${session.date || 'N/A'}</td>
+            <td class="session-city">${session.cityName || 'N/A'}</td>
+            <td class="session-spot" title="${session.spot || ''}">${session.spot || 'N/A'}</td>
+            <td>${session.facilitator || 'N/A'}</td>
+            <td class="session-stats">${session.farmers || 0}</td>
+            <td class="session-stats">${(session.acres || 0).toLocaleString()}</td>
             <td>${session.focus || 'General Education'}</td>
         `;
         tbody.appendChild(row);
@@ -333,15 +337,15 @@ function renderSessionsTable() {
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
-    // Apply Filters Button
+    // Apply Filters
     const applyBtn = document.getElementById('applyFilters');
     if (applyBtn) applyBtn.addEventListener('click', applyFilters);
     
-    // Reset Filters Button
+    // Reset Filters
     const resetBtn = document.getElementById('resetFilters');
     if (resetBtn) resetBtn.addEventListener('click', resetFilters);
     
-    // Export Data Button
+    // Export Data
     const exportBtn = document.getElementById('exportData');
     if (exportBtn) exportBtn.addEventListener('click', exportToCSV);
     
@@ -391,14 +395,14 @@ function setupEventListeners() {
         });
     }
     
-    // Refresh Data Button
+    // Refresh Data
     const refreshBtn = document.getElementById('refreshData');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => location.reload());
     }
 }
 
-// FILTER LOGIC
+// APPLY FILTERS
 function applyFilters() {
     console.log('Applying filters...');
     const cityValue = document.getElementById('cityFilter').value;
@@ -412,7 +416,7 @@ function applyFilters() {
         
         // Search filter
         if (searchValue) {
-            const searchable = `${session.cityName} ${session.spot} ${session.facilitator} ${session.focus}`.toLowerCase();
+            const searchable = `${session.sessionNumber || ''} ${session.cityName || ''} ${session.spot || ''} ${session.facilitator || ''} ${session.focus || ''}`.toLowerCase();
             if (!searchable.includes(searchValue)) return false;
         }
         
@@ -440,18 +444,27 @@ function updateMapMarkers() {
     currentFilteredSessions.forEach(session => {
         if (session.latitude && session.longitude) {
             const marker = L.marker([session.latitude, session.longitude]);
+            
             const popupContent = `
                 <div style="min-width: 200px;">
-                    <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber}</h4>
-                    <p style="margin:4px 0;"><strong>Location:</strong> ${session.spot}</p>
-                    <p style="margin:4px 0;"><strong>Date:</strong> ${session.date}</p>
-                    <p style="margin:4px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
+                    <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber || 'Session'}</h4>
+                    <p style="margin:4px 0;"><strong>Location:</strong> ${session.spot || 'N/A'}</p>
+                    <p style="margin:4px 0;"><strong>Date:</strong> ${session.date || 'N/A'}</p>
+                    <p style="margin:4px 0;"><strong>Farmers:</strong> ${session.farmers || 0}</p>
+                    <p style="margin:4px 0;"><strong>Facilitator:</strong> ${session.facilitator || 'N/A'}</p>
                 </div>
             `;
+            
             marker.bindPopup(popupContent);
             markerCluster.addLayer(marker);
         }
     });
+    
+    // Fit bounds if we have markers
+    if (currentFilteredSessions.length > 0 && currentFilteredSessions[0].latitude) {
+        const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
     
     // Update map stats
     if (elements.mapStats) {
@@ -480,7 +493,7 @@ function resetFilters() {
     updateMapMarkers();
     
     // Reset map view
-    if (map) {
+    if (map && allSessions.length > 0 && allSessions[0].latitude) {
         const bounds = L.latLngBounds(allSessions.map(s => [s.latitude, s.longitude]));
         map.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -500,13 +513,13 @@ function exportToCSV() {
         const csvRows = [
             headers.join(','),
             ...currentFilteredSessions.map(s => [
-                s.sessionNumber,
-                s.cityName,
-                `"${s.spot}"`,
-                s.date,
-                s.farmers,
-                s.acres,
-                `"${s.facilitator}"`,
+                s.sessionNumber || '',
+                s.cityName || '',
+                `"${s.spot || ''}"`,
+                s.date || '',
+                s.farmers || 0,
+                s.acres || 0,
+                `"${s.facilitator || ''}"`,
                 `"${s.focus || ''}"`
             ].join(','))
         ];
@@ -578,4 +591,4 @@ function showError(message) {
     }
 }
 
-console.log('AgriVista Dashboard script loaded.');
+console.log('AgriVista Dashboard v2.2 loaded.');

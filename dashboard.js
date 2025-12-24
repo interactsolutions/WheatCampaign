@@ -1,5 +1,5 @@
-// dashboard.js - FIXED VERSION
-console.log('AgriVista Dashboard v2.5 - FIXED initializing...');
+// dashboard.js - ENHANCED VERSION
+console.log('AgriVista Dashboard v2.5 - Enhanced initializing...');
 
 // GLOBAL STATE
 let allSessions = [];
@@ -52,77 +52,95 @@ document.addEventListener('DOMContentLoaded', function () {
         dateFrom.value = '2025-11-24';
     }
     
+    // Add share summary button
+    addShareSummaryButton();
+    
     // Load data
     loadAllData();
 });
 
-// LOAD ALL DATA - FIXED VERSION
+// ADD SHARE SUMMARY BUTTON
+function addShareSummaryButton() {
+    const buttonGroup = document.querySelector('.button-group');
+    if (buttonGroup) {
+        const shareSummaryBtn = document.createElement('button');
+        shareSummaryBtn.className = 'btn btn-secondary';
+        shareSummaryBtn.id = 'shareSummaryBtn';
+        shareSummaryBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Summary';
+        shareSummaryBtn.addEventListener('click', shareCampaignSummary);
+        buttonGroup.appendChild(shareSummaryBtn);
+    }
+}
+
+// OPTIMIZED DATA LOADING
 async function loadAllData() {
     try {
         updateStatus('Loading dashboard data...', 'loading');
         
-        // TRY TO LOAD sessions.json - USE EMBEDDED DATA IF NOT FOUND
-        try {
-            // First try to fetch from file
-            const sessionsResponse = await fetch('sessions.json');
-            if (sessionsResponse.ok) {
-                const sessionsData = await sessionsResponse.json();
-                allSessions = sessionsData.sessions || [];
-                console.log(`Loaded ${allSessions.length} sessions from file`);
-                updateStatus('Loaded session data from file', 'success');
-            } else {
-                // If file not found, use embedded data
-                console.warn('sessions.json not found, using embedded data');
-                await loadEmbeddedSessionsData();
-            }
-        } catch (fetchError) {
-            console.warn('Fetch error, using embedded data:', fetchError);
+        // Use Promise.all for parallel loading
+        const [sessionsData, mediaData] = await Promise.allSettled([
+            fetchData('sessions.json'),
+            fetchData('media.json')
+        ]);
+        
+        // Handle sessions data
+        if (sessionsData.status === 'fulfilled') {
+            allSessions = sessionsData.value.sessions || [];
+            console.log(`Loaded ${allSessions.length} sessions`);
+        } else {
+            console.warn('Using embedded sessions data');
             await loadEmbeddedSessionsData();
+        }
+        
+        // Handle media data
+        if (mediaData.status === 'fulfilled') {
+            mediaItems = mediaData.value.mediaItems || [];
+            console.log(`Loaded ${mediaItems.length} media items`);
+            
+            // Preload critical images
+            preloadCriticalImages();
+        } else {
+            console.warn('Using fallback media data');
+            mediaItems = createFallbackMedia();
         }
         
         currentFilteredSessions = [...allSessions];
         
-        // TRY TO LOAD media.json - USE EMBEDDED DATA IF NOT FOUND
-        try {
-            const mediaResponse = await fetch('media.json');
-            if (mediaResponse.ok) {
-                const mediaData = await mediaResponse.json();
-                mediaItems = mediaData.mediaItems || [];
-                console.log(`Loaded ${mediaItems.length} media items from file`);
-            } else {
-                console.warn('media.json not found, using fallback');
-                mediaItems = createFallbackMedia();
-            }
-        } catch (mediaError) {
-            console.warn('Failed to load media data:', mediaError);
-            mediaItems = createFallbackMedia();
-        }
-
-        // UPDATE THE ENTIRE DASHBOARD
+        // Initialize components sequentially for better UX
         updateDashboardStats();
-        initializeMap();
+        
+        // Initialize map first (critical for user)
+        await initializeMap();
+        
+        // Initialize other components
         renderGallery();
         renderSessionsTable();
         initializeAnalyticsCharts();
         
-        // Hide loading overlay
+        // Hide loading overlay with fade
         if (elements.loadingOverlay) {
-            elements.loadingOverlay.style.display = 'none';
+            elements.loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                elements.loadingOverlay.style.display = 'none';
+            }, 300);
         }
         
         updateStatus('Dashboard loaded successfully', 'success');
+        
+        // Lazy load remaining media
+        setTimeout(lazyLoadMedia, 1000);
+        
         console.log('Dashboard initialization complete.');
-
+        
     } catch (error) {
         console.error('Fatal error loading data:', error);
-        showError(`Data loading error: ${error.message}. Using embedded data.`);
-        updateStatus('Using embedded data', 'warning');
+        showError(`Data loading error: ${error.message}. Using fallback data.`);
         
-        // Load fallback data
+        // Fallback data loading
         await loadEmbeddedSessionsData();
         mediaItems = createFallbackMedia();
         
-        // Update dashboard with fallback data
+        // Initialize with fallback data
         updateDashboardStats();
         renderSessionsTable();
         initializeMap();
@@ -135,11 +153,27 @@ async function loadAllData() {
     }
 }
 
-// EMBEDDED SESSIONS DATA - Fallback when sessions.json is not available
+// OPTIMIZED DATA FETCHING
+async function fetchData(url) {
+    const response = await fetch(url, {
+        cache: 'no-cache',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status}`);
+    }
+    
+    return response.json();
+}
+
+// EMBEDDED SESSIONS DATA
 async function loadEmbeddedSessionsData() {
     console.log('Loading embedded session data...');
     
-    // Create embedded sessions data from your provided JSON
+    // Create embedded sessions data from provided JSON
     const embeddedSessions = [
         // Sukkur sessions
         {id: 1, sessionNumber: "SKR-01", city: "sukkur", cityName: "Ubaro", spot: "Ameen khan Chacharr", date: "2025-11-24", day: "Monday", farmers: 42, acres: 553, latitude: 27.7132, longitude: 68.8482, facilitator: "Ali Raza", focus: "Product Introduction", type: "education"},
@@ -183,6 +217,47 @@ function createFallbackMedia() {
     }));
 }
 
+// PRELOAD CRITICAL IMAGES
+function preloadCriticalImages() {
+    const criticalImages = [
+        'assets/Bayer.png',
+        'assets/Buctril.jpg',
+        'gallery/1.jpeg',
+        'gallery/16.jpeg',
+        'gallery/27.jpeg',
+        'gallery/35.jpeg'
+    ];
+    
+    criticalImages.forEach(src => {
+        const img = new Image();
+        img.src = src;
+        img.fetchPriority = 'high';
+    });
+}
+
+// LAZY LOAD MEDIA
+function lazyLoadMedia() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    if (images.length === 0) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.add('loaded');
+                observer.unobserve(img);
+            }
+        });
+    }, {
+        rootMargin: '50px',
+        threshold: 0.1
+    });
+    
+    images.forEach(img => observer.observe(img));
+}
+
 // UPDATE DASHBOARD STATS
 function updateDashboardStats() {
     const totalSessions = currentFilteredSessions.length;
@@ -203,91 +278,172 @@ function updateDashboardStats() {
     
     // Update map banner
     if (elements.mapStats) {
-        elements.mapStats.textContent = `${totalSessions} Sessions • ${uniqueCities} Regions • ${totalFarmers.toLocaleString()} Farmers`;
+        elements.mapStats.innerHTML = `
+            <i class="fas fa-map-marker-alt"></i>
+            ${totalSessions} Sessions • ${uniqueCities} Regions • ${totalFarmers.toLocaleString()} Farmers
+        `;
     }
 }
 
-// INITIALIZE MAP - FIXED VERSION
+// ENHANCED MAP INITIALIZATION
 function initializeMap() {
     console.log('Initializing main map...');
     const mapContainer = document.getElementById('campaignMap');
     if (!mapContainer) {
         console.error('Map container #campaignMap not found!');
-        return;
+        return Promise.resolve();
     }
 
-    try {
-        // Clear any existing map
-        if (map) {
-            map.remove();
-            map = null;
+    return new Promise((resolve) => {
+        try {
+            // Create map centered on Pakistan with optimized settings
+            map = L.map('campaignMap', {
+                center: [30.3753, 69.3451],
+                zoom: 6,
+                zoomControl: false,
+                preferCanvas: true,
+                fadeAnimation: false,
+                markerZoomAnimation: false
+            });
+
+            // Add optimized tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 12,
+                minZoom: 5,
+                updateWhenIdle: true
+            }).addTo(map);
+
+            // Add zoom control
+            L.control.zoom({ position: 'topright' }).addTo(map);
+
+            // Create optimized marker cluster group
+            markerCluster = L.markerClusterGroup({
+                maxClusterRadius: 60,
+                showCoverageOnHover: false,
+                spiderfyOnMaxZoom: true,
+                disableClusteringAtZoom: 10,
+                animateAddingMarkers: false
+            });
+            map.addLayer(markerCluster);
+
+            // Add markers for each session
+            updateMapMarkers();
+            
+            // Add legend
+            addMapLegend();
+
+            console.log('Main map initialized successfully');
+            resolve();
+
+        } catch (error) {
+            console.error('Failed to initialize map:', error);
+            showMapError(mapContainer, error);
+            resolve();
         }
-        
-        // Create map centered on Pakistan
-        map = L.map('campaignMap').setView([30.3753, 69.3451], 6);
+    });
+}
 
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap',
-            maxZoom: 12,
-            minZoom: 5
-        }).addTo(map);
+// ADD MAP LEGEND
+function addMapLegend() {
+    const legend = L.control({ position: 'bottomright' });
 
-        // Create marker cluster group
-        markerCluster = L.markerClusterGroup({
-            maxClusterRadius: 50,
-            showCoverageOnHover: false,
-            spiderfyOnMaxZoom: true
-        });
-        map.addLayer(markerCluster);
+    legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'info legend');
+        div.style.backgroundColor = 'white';
+        div.style.padding = '10px';
+        div.style.borderRadius = '5px';
+        div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+        div.innerHTML = `
+            <h4 style="margin: 0 0 10px 0; font-size: 14px;">
+                <i class="fas fa-map-pin"></i> Session Types
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 5px; font-size: 12px;">
+                <div><i class="fas fa-circle" style="color: #2e7d32;"></i> Education/Training</div>
+                <div><i class="fas fa-circle" style="color: #ff9800;"></i> Demonstration</div>
+                <div><i class="fas fa-circle" style="color: #2196f3;"></i> Field Session</div>
+                <div><i class="fas fa-circle" style="color: #9c27b0;"></i> Other Activities</div>
+            </div>
+        `;
+        return div;
+    };
 
-        // Add markers for each session
-        updateMapMarkers();
-
-        console.log('Main map initialized successfully');
-
-    } catch (error) {
-        console.error('Failed to initialize map:', error);
-        showMapError(mapContainer, error);
+    if (map) {
+        legend.addTo(map);
     }
 }
 
+// UPDATE MAP MARKERS
 function updateMapMarkers() {
     if (!map || !markerCluster) return;
     
     // Clear existing markers
     markerCluster.clearLayers();
     
-    // Add markers for each filtered session
+    // Batch markers for better performance
+    const markerBatch = [];
+    
     currentFilteredSessions.forEach(session => {
         if (session.latitude && session.longitude) {
-            const marker = L.marker([session.latitude, session.longitude], {
-                title: session.sessionNumber
+            // Determine marker color based on session type
+            let markerColor = '#2e7d32'; // Default green for education
+            if (session.type?.includes('demonstration')) markerColor = '#ff9800';
+            if (session.type?.includes('field')) markerColor = '#2196f3';
+            if (['launch', 'commercial', 'expert'].includes(session.type)) markerColor = '#9c27b0';
+            
+            // Create custom icon
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
             });
             
-            // Create popup content
+            const marker = L.marker([session.latitude, session.longitude], {
+                title: session.sessionNumber,
+                icon: icon
+            });
+            
+            // Create optimized popup content
             const popupContent = `
-                <div style="min-width: 200px;">
-                    <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber}</h4>
+                <div style="min-width: 200px; max-width: 300px;">
+                    <h4 style="margin:0 0 8px 0; color: ${markerColor};">${session.sessionNumber}</h4>
                     <p style="margin:4px 0;"><strong>Location:</strong> ${session.spot}</p>
                     <p style="margin:4px 0;"><strong>Date:</strong> ${session.date}</p>
                     <p style="margin:4px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
+                    <p style="margin:4px 0;"><strong>Acres:</strong> ${session.acres?.toLocaleString() || 0}</p>
+                    <p style="margin:4px 0;"><strong>Type:</strong> ${session.type || 'General'}</p>
                     <p style="margin:4px 0;"><strong>Facilitator:</strong> ${session.facilitator}</p>
+                    <button onclick="showSessionModal(${session.id})" style="margin-top: 8px; background: ${markerColor}; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-info-circle"></i> View Details
+                    </button>
                 </div>
             `;
             
-            marker.bindPopup(popupContent);
-            markerCluster.addLayer(marker);
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                minWidth: 200
+            });
+            
+            markerBatch.push(marker);
         }
     });
+    
+    // Add all markers at once
+    markerCluster.addLayers(markerBatch);
 
-    // Fit bounds to show all markers if we have sessions
+    // Fit bounds with animation if we have sessions
     if (currentFilteredSessions.length > 0) {
         const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
-        map.fitBounds(bounds, { padding: [50, 50] });
+        map.fitBounds(bounds, { 
+            padding: [50, 50],
+            animate: true,
+            duration: 1
+        });
     }
 }
 
+// SHOW MAP ERROR
 function showMapError(container, error) {
     container.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#f8f9fa; color:#666; padding:20px; text-align:center;">
@@ -301,7 +457,7 @@ function showMapError(container, error) {
     `;
 }
 
-// RENDER GALLERY
+// ENHANCED GALLERY RENDERING
 function renderGallery() {
     console.log('Rendering gallery...');
     const container = elements.mediaGallery;
@@ -323,37 +479,78 @@ function renderGallery() {
     // Clear and render items
     container.innerHTML = '';
     
-    galleryMedia.forEach(media => {
-        const item = document.createElement('div');
-        item.className = 'gallery-item';
-        item.setAttribute('data-city', media.city);
-        item.setAttribute('data-type', media.type);
+    // Show first 12 items immediately, lazy load rest
+    const initialItems = galleryMedia.slice(0, 12);
+    const lazyItems = galleryMedia.slice(12);
+    
+    initialItems.forEach((media, index) => {
+        createGalleryItem(media, container, false);
         
-        // City-based color for fallback images
-        const cityColors = { 
-            sukkur: '#2e7d32', 
-            dgk: '#ff9800', 
-            faisalabad: '#2196f3', 
-            gujranwala: '#9c27b0' 
-        };
-        const color = cityColors[media.city] || '#2e7d32';
-        const colorHex = color.replace('#', '');
-        
-        item.innerHTML = `
-            <img src="${media.filename}" alt="${media.caption}" 
-                 onerror="this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city.toUpperCase()}'">
-            <div class="gallery-caption">
-                <div class="gallery-city">${media.city.toUpperCase()} • Session ${media.sessionId}</div>
-                <div class="gallery-title">${media.caption}</div>
-                <div class="gallery-meta">
-                    <span><i class="fas fa-calendar"></i> ${media.date}</span>
-                    <span><i class="fas fa-tag"></i> ${media.type}</span>
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(item);
+        // Preload next few images
+        if (index < 4 && lazyItems[index]) {
+            const img = new Image();
+            img.src = lazyItems[index].filename;
+        }
     });
+    
+    // Lazy load remaining items
+    if (lazyItems.length > 0) {
+        const placeholder = document.createElement('div');
+        placeholder.id = 'galleryLoader';
+        placeholder.style.gridColumn = '1 / -1';
+        placeholder.style.textAlign = 'center';
+        placeholder.style.padding = '20px';
+        placeholder.innerHTML = `
+            <button id="loadMoreGallery" class="btn btn-outline">
+                <i class="fas fa-plus"></i> Load ${lazyItems.length} More Images
+            </button>
+        `;
+        container.appendChild(placeholder);
+        
+        document.getElementById('loadMoreGallery').addEventListener('click', () => {
+            lazyItems.forEach(media => createGalleryItem(media, container, true));
+            placeholder.remove();
+        });
+    }
+}
+
+// CREATE GALLERY ITEM
+function createGalleryItem(media, container, lazyLoad = false) {
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.setAttribute('data-city', media.city);
+    item.setAttribute('data-type', media.type);
+    
+    // City-based color for fallback images
+    const cityColors = { 
+        sukkur: '#2e7d32', 
+        dgk: '#ff9800', 
+        faisalabad: '#2196f3', 
+        gujranwala: '#9c27b0' 
+    };
+    const color = cityColors[media.city] || '#2e7d32';
+    const colorHex = color.replace('#', '');
+    
+    const placeholderSVG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PC9zdmc+';
+    
+    item.innerHTML = `
+        <img src="${lazyLoad ? placeholderSVG : media.filename}"
+             ${lazyLoad ? `data-src="${media.filename}"` : ''}
+             alt="${media.caption}"
+             loading="${lazyLoad ? 'lazy' : 'eager'}"
+             onerror="this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city.toUpperCase()}'"
+             ${lazyLoad ? 'class="lazy"' : 'class="loaded"'}>
+        <div class="gallery-caption">
+            <div class="gallery-city">${media.city.toUpperCase()} • Session ${media.sessionId}</div>
+            <div class="gallery-title">${media.caption}</div>
+            <div class="gallery-meta">
+                <span><i class="fas fa-calendar"></i> ${media.date}</span>
+                <span><i class="fas fa-tag"></i> ${media.type}</span>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(item);
 }
 
 // RENDER SESSIONS TABLE
@@ -384,6 +581,8 @@ function renderSessionsTable() {
     
     pageSessions.forEach(session => {
         const row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+        row.onclick = () => showSessionModal(session.id);
         
         row.innerHTML = `
             <td class="session-number">${session.sessionNumber}</td>
@@ -418,55 +617,189 @@ function updatePaginationControls() {
     }
 }
 
-// ANALYTICS CHARTS
+// ENHANCED ANALYTICS CHARTS
 function initializeAnalyticsCharts() {
     console.log('Initializing analytics charts...');
     
-    // Daily attendance chart
+    // 1. Daily attendance chart
+    updateAttendanceChart();
+    
+    // 2. City distribution
+    updateCityDistribution();
+    
+    // 3. Session type distribution
+    updateSessionTypeChart();
+    
+    // 4. Performance metrics
+    updatePerformanceMetrics();
+}
+
+function updateAttendanceChart() {
     const attendanceChart = document.getElementById('attendanceChart');
-    if (attendanceChart && currentFilteredSessions.length > 0) {
-        // Group by date
-        const sessionsByDate = currentFilteredSessions.reduce((acc, session) => {
-            acc[session.date] = (acc[session.date] || 0) + (session.farmers || 0);
-            return acc;
-        }, {});
+    if (!attendanceChart || currentFilteredSessions.length === 0) return;
+    
+    // Group by date with aggregation
+    const sessionsByDate = currentFilteredSessions.reduce((acc, session) => {
+        if (!acc[session.date]) {
+            acc[session.date] = {
+                farmers: 0,
+                sessions: 0,
+                acres: 0
+            };
+        }
+        acc[session.date].farmers += session.farmers || 0;
+        acc[session.date].sessions += 1;
+        acc[session.date].acres += session.acres || 0;
+        return acc;
+    }, {});
+    
+    const dates = Object.keys(sessionsByDate).sort();
+    const farmers = dates.map(date => sessionsByDate[date].farmers);
+    const maxFarmers = Math.max(...farmers, 1);
+    const totalSessions = dates.reduce((sum, date) => sum + sessionsByDate[date].sessions, 0);
+    
+    // Create responsive chart
+    attendanceChart.innerHTML = dates.map((date, index) => {
+        const height = (farmers[index] / maxFarmers) * 100;
+        const shortDate = date.split('-').slice(1).join('-');
+        const tooltip = `
+            Date: ${date}<br>
+            Sessions: ${sessionsByDate[date].sessions}<br>
+            Farmers: ${farmers[index]}<br>
+            Acres: ${sessionsByDate[date].acres.toLocaleString()}
+        `;
         
-        const dates = Object.keys(sessionsByDate).sort();
-        const farmers = dates.map(date => sessionsByDate[date]);
-        const maxFarmers = Math.max(...farmers);
-        
-        attendanceChart.innerHTML = dates.slice(0, 10).map((date, index) => {
-            const height = maxFarmers > 0 ? (farmers[index] / maxFarmers) * 100 : 0;
-            const shortDate = date.split('-').slice(1).join('-'); // Remove year
-            
-            return `
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                    <div style="height: ${height}px; width: 20px; background: #2e7d32; border-radius: 4px 4px 0 0; margin-top: auto;"></div>
-                    <div style="margin-top: 5px; font-size: 11px; color: #666;">${shortDate}</div>
+        return `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
+                <div class="chart-bar" 
+                     style="height: ${height}px; width: 20px; background: linear-gradient(to top, #2e7d32, #4caf50); border-radius: 4px 4px 0 0; margin-top: auto; cursor: pointer;"
+                     title="${tooltip}"
+                     onclick="filterByDate('${date}')">
                 </div>
-            `;
-        }).join('');
-        
-        attendanceChart.style.display = 'flex';
-        attendanceChart.style.alignItems = 'flex-end';
-        attendanceChart.style.gap = '5px';
-        attendanceChart.style.height = '150px';
+                <div style="margin-top: 5px; font-size: 11px; color: #666; transform: rotate(-45deg); transform-origin: left top; white-space: nowrap;">${shortDate}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Add chart description
+    const chartNote = attendanceChart.nextElementSibling;
+    if (chartNote) {
+        chartNote.innerHTML = `
+            <i class="fas fa-info-circle"></i> 
+            Showing ${dates.length} days, ${totalSessions} sessions, ${farmers.reduce((a, b) => a + b, 0).toLocaleString()} total farmers.
+            Click bars for details.
+        `;
     }
 }
 
-// EVENT LISTENERS - FIXED VERSION
+function updateCityDistribution() {
+    const cityDistribution = document.getElementById('cityDistribution');
+    if (!cityDistribution) return;
+    
+    const cityStats = currentFilteredSessions.reduce((acc, session) => {
+        if (!acc[session.city]) {
+            acc[session.city] = {
+                name: session.cityName || session.city,
+                sessions: 0,
+                farmers: 0,
+                acres: 0
+            };
+        }
+        acc[session.city].sessions += 1;
+        acc[session.city].farmers += session.farmers || 0;
+        acc[session.city].acres += session.acres || 0;
+        return acc;
+    }, {});
+    
+    const cities = Object.keys(cityStats);
+    cityDistribution.innerHTML = cities.length;
+    
+    // Update distribution subtext
+    const distributionSubtext = cityDistribution.closest('.distribution-center')?.querySelector('.distribution-subtext');
+    if (distributionSubtext && cities.length > 0) {
+        const topCity = cities.reduce((a, b) => cityStats[a].farmers > cityStats[b].farmers ? a : b);
+        distributionSubtext.innerHTML = `
+            Top city: <strong>${cityStats[topCity].name}</strong> 
+            (${cityStats[topCity].sessions} sessions, ${cityStats[topCity].farmers.toLocaleString()} farmers)
+        `;
+    }
+}
+
+function updateSessionTypeChart() {
+    let sessionTypeChart = document.getElementById('sessionTypeChart');
+    if (!sessionTypeChart && currentFilteredSessions.length > 0) {
+        // Create session type chart container if it doesn't exist
+        const analyticsGrid = document.querySelector('.analytics-grid');
+        if (analyticsGrid) {
+            analyticsGrid.innerHTML += `
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-pie"></i> Session Types</h3>
+                    <div id="sessionTypeChart" class="chart-container"></div>
+                    <div class="chart-note">
+                        <i class="fas fa-info-circle"></i> Distribution of session focus areas
+                    </div>
+                </div>
+            `;
+            sessionTypeChart = document.getElementById('sessionTypeChart');
+        }
+    }
+    
+    if (sessionTypeChart && currentFilteredSessions.length > 0) {
+        const typeStats = currentFilteredSessions.reduce((acc, session) => {
+            const type = session.type || 'other';
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+        }, {});
+        
+        const types = Object.keys(typeStats);
+        const maxCount = Math.max(...Object.values(typeStats));
+        
+        sessionTypeChart.innerHTML = types.map(type => {
+            const height = (typeStats[type] / maxCount) * 100;
+            const width = 100 / types.length;
+            
+            return `
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    <div style="height: ${height}px; width: ${width}%; background: linear-gradient(to top, #ff9800, #ffb74d); border-radius: 4px 4px 0 0; margin-top: auto;" 
+                         title="${type}: ${typeStats[type]} sessions"></div>
+                    <div style="margin-top: 5px; font-size: 10px; color: #666; text-align: center; width: 100%; overflow: hidden; text-overflow: ellipsis;">${type}</div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+function updatePerformanceMetrics() {
+    // These would come from sessions.json in a real implementation
+    const metrics = {
+        'Definite Intent': 89,
+        'Brand Loyalty': 77,
+        'Retention': 85,
+        'Adoption': 89
+    };
+    
+    const performanceCards = document.querySelectorAll('.performance-card');
+    Object.keys(metrics).forEach((metric, index) => {
+        if (performanceCards[index]) {
+            performanceCards[index].querySelector('.performance-value').textContent = `${metrics[metric]}%`;
+            performanceCards[index].querySelector('.performance-label').textContent = metric;
+        }
+    });
+}
+
+// EVENT LISTENERS
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
-    // Apply Filters Button - FIXED
+    // Apply Filters Button
     const applyBtn = document.getElementById('applyFilters');
     if (applyBtn) {
-        applyBtn.removeEventListener('click', applyFilters); // Remove old if exists
+        applyBtn.removeEventListener('click', applyFilters);
         applyBtn.addEventListener('click', applyFilters);
         console.log('Apply Filters button listener added');
     }
     
-    // Reset Filters Button - FIXED
+    // Reset Filters Button
     const resetBtn = document.getElementById('resetFilters');
     if (resetBtn) {
         resetBtn.removeEventListener('click', resetFilters);
@@ -474,15 +807,15 @@ function setupEventListeners() {
         console.log('Reset Filters button listener added');
     }
     
-    // Export Data Button - FIXED
+    // Export Data Button
     const exportBtn = document.getElementById('exportData');
     if (exportBtn) {
         exportBtn.removeEventListener('click', exportToCSV);
-        exportBtn.addEventListener('click', exportToCSV);
+        exportBtn.addEventListener('click', exportEnhancedData);
         console.log('Export Data button listener added');
     }
     
-    // Refresh Data Button - FIXED
+    // Refresh Data Button
     const refreshBtn = document.getElementById('refreshData');
     if (refreshBtn) {
         refreshBtn.removeEventListener('click', () => location.reload());
@@ -490,7 +823,7 @@ function setupEventListeners() {
         console.log('Refresh Data button listener added');
     }
     
-    // City Filter - FIXED
+    // City Filter
     const cityFilter = document.getElementById('cityFilter');
     if (cityFilter) {
         cityFilter.removeEventListener('change', applyFilters);
@@ -498,7 +831,7 @@ function setupEventListeners() {
         console.log('City filter listener added');
     }
     
-    // Date Filters - FIXED
+    // Date Filters
     const dateFrom = document.getElementById('dateFrom');
     const dateTo = document.getElementById('dateTo');
     if (dateFrom) {
@@ -511,7 +844,7 @@ function setupEventListeners() {
     }
     console.log('Date filter listeners added');
     
-    // Search Input - FIXED
+    // Search Input
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.removeEventListener('input', applyFilters);
@@ -519,14 +852,14 @@ function setupEventListeners() {
         console.log('Search input listener added');
     }
     
-    // Gallery Filter Buttons - FIXED
+    // Gallery Filter Buttons
     document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
         btn.removeEventListener('click', handleGalleryFilter);
         btn.addEventListener('click', handleGalleryFilter);
     });
     console.log('Gallery filter button listeners added');
     
-    // Pagination Buttons - FIXED
+    // Pagination Buttons
     const prevPageBtn = document.getElementById('prevPage');
     const nextPageBtn = document.getElementById('nextPage');
     
@@ -552,7 +885,104 @@ function setupEventListeners() {
         resetMapBtn.addEventListener('click', resetMapView);
     }
     
+    // Add quick filter handlers for overview cards
+    document.querySelectorAll('.overview-card').forEach((card, index) => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+            const cities = ['all', 'sukkur', 'dgk', 'faisalabad'];
+            filterByCity(cities[index]);
+        });
+    });
+    
     console.log('All event listeners set up successfully');
+}
+
+// FILTER FUNCTIONS
+function applyFilters() {
+    console.log('Applying filters...');
+    
+    // Get filter values
+    const cityValue = document.getElementById('cityFilter').value;
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+    const dateFromValue = document.getElementById('dateFrom').value;
+    const dateToValue = document.getElementById('dateTo').value;
+    
+    // Filter sessions
+    const startTime = performance.now();
+    currentFilteredSessions = allSessions.filter(session => {
+        // City filter
+        if (cityValue !== 'all' && session.city !== cityValue) return false;
+        
+        // Search filter
+        if (searchValue) {
+            const searchable = `${session.sessionNumber} ${session.cityName} ${session.spot} ${session.facilitator} ${session.focus || ''}`.toLowerCase();
+            if (!searchable.includes(searchValue)) return false;
+        }
+        
+        // Date filter
+        if (dateFromValue && session.date < dateFromValue) return false;
+        if (dateToValue && session.date > dateToValue) return false;
+        
+        return true;
+    });
+    
+    // Reset to first page
+    currentPage = 1;
+    
+    // Update everything
+    updateDashboardStats();
+    renderSessionsTable();
+    updateMapMarkers();
+    initializeAnalyticsCharts();
+    
+    const endTime = performance.now();
+    const duration = Math.round(endTime - startTime);
+    
+    showToast(`Found ${currentFilteredSessions.length} sessions in ${duration}ms`, 'success');
+}
+
+function resetFilters() {
+    console.log('Resetting all filters...');
+    
+    // Reset form values
+    document.getElementById('cityFilter').value = 'all';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('dateFrom').value = '2025-11-24';
+    document.getElementById('dateTo').value = '2025-12-12';
+    
+    // Reset filtered sessions
+    currentFilteredSessions = [...allSessions];
+    currentPage = 1;
+    
+    // Update everything
+    updateDashboardStats();
+    renderSessionsTable();
+    updateMapMarkers();
+    initializeAnalyticsCharts();
+    
+    showToast('All filters reset', 'success');
+}
+
+function filterByDate(date) {
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    
+    if (dateFrom && dateTo) {
+        dateFrom.value = date;
+        dateTo.value = date;
+        applyFilters();
+    }
+}
+
+function filterByCity(city) {
+    const cityFilter = document.getElementById('cityFilter');
+    if (cityFilter) {
+        cityFilter.value = city;
+        applyFilters();
+        
+        // Switch to map tab
+        document.querySelector('[data-tab="map"]').click();
+    }
 }
 
 function handleGalleryFilter() {
@@ -565,6 +995,32 @@ function handleGalleryFilter() {
     // Filter gallery
     const filter = this.getAttribute('data-filter');
     filterGallery(filter);
+}
+
+function filterGallery(filter) {
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    
+    galleryItems.forEach(item => {
+        const city = item.getAttribute('data-city');
+        
+        let showItem = false;
+        
+        switch (filter) {
+            case 'all':
+                showItem = true;
+                break;
+            case 'sukkur':
+            case 'dgk':
+            case 'faisalabad':
+            case 'gujranwala':
+                showItem = city === filter;
+                break;
+            default:
+                showItem = true;
+        }
+        
+        item.style.display = showItem ? 'block' : 'none';
+    });
 }
 
 function handlePrevPage() {
@@ -595,116 +1051,37 @@ function resetMapView() {
     }
 }
 
-// APPLY FILTERS - FIXED VERSION
-function applyFilters() {
-    console.log('Applying filters...');
-    
-    // Get filter values
-    const cityValue = document.getElementById('cityFilter').value;
-    const searchValue = document.getElementById('searchInput').value.toLowerCase();
-    const dateFromValue = document.getElementById('dateFrom').value;
-    const dateToValue = document.getElementById('dateTo').value;
-    
-    // Filter sessions
-    currentFilteredSessions = allSessions.filter(session => {
-        // City filter
-        if (cityValue !== 'all' && session.city !== cityValue) return false;
-        
-        // Search filter
-        if (searchValue) {
-            const searchable = `${session.sessionNumber} ${session.cityName} ${session.spot} ${session.facilitator} ${session.focus || ''}`.toLowerCase();
-            if (!searchable.includes(searchValue)) return false;
-        }
-        
-        // Date filter
-        if (dateFromValue && session.date < dateFromValue) return false;
-        if (dateToValue && session.date > dateToValue) return false;
-        
-        return true;
-    });
-    
-    // Reset to first page
-    currentPage = 1;
-    
-    // Update everything
-    updateDashboardStats();
-    renderSessionsTable();
-    updateMapMarkers();
-    initializeAnalyticsCharts();
-    
-    updateStatus(`${currentFilteredSessions.length} sessions found`, 'success');
-}
-
-function filterGallery(filter) {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    
-    galleryItems.forEach(item => {
-        const city = item.getAttribute('data-city');
-        
-        let showItem = false;
-        
-        switch (filter) {
-            case 'all':
-                showItem = true;
-                break;
-            case 'sukkur':
-            case 'dgk':
-            case 'faisalabad':
-            case 'gujranwala':
-                showItem = city === filter;
-                break;
-            default:
-                showItem = true;
-        }
-        
-        item.style.display = showItem ? 'block' : 'none';
-    });
-}
-
-// RESET FILTERS - FIXED
-function resetFilters() {
-    console.log('Resetting all filters...');
-    
-    // Reset form values
-    document.getElementById('cityFilter').value = 'all';
-    document.getElementById('searchInput').value = '';
-    document.getElementById('dateFrom').value = '2025-11-24';
-    document.getElementById('dateTo').value = '2025-12-12';
-    
-    // Reset filtered sessions
-    currentFilteredSessions = [...allSessions];
-    currentPage = 1;
-    
-    // Update everything
-    updateDashboardStats();
-    renderSessionsTable();
-    updateMapMarkers();
-    initializeAnalyticsCharts();
-    
-    updateStatus('All filters reset', 'success');
-}
-
-// EXPORT TO CSV - FIXED
-function exportToCSV() {
+// EXPORT FUNCTIONS
+function exportEnhancedData() {
     if (currentFilteredSessions.length === 0) {
-        alert('No data to export. Please adjust your filters.');
+        showToast('No data to export. Please adjust your filters.', 'warning');
         return;
     }
     
     try {
-        // Prepare CSV content
-        const headers = ['Session ID', 'City', 'Location', 'Date', 'Farmers', 'Acres', 'Facilitator', 'Focus Area'];
+        // Prepare enhanced CSV with more fields
+        const headers = [
+            'Session ID', 'City', 'City Name', 'Location', 
+            'Date', 'Day', 'Farmers', 'Acres', 'Latitude', 
+            'Longitude', 'Facilitator', 'Focus Area', 'Session Type'
+        ];
+        
         const csvRows = [
             headers.join(','),
             ...currentFilteredSessions.map(session => [
                 `"${session.sessionNumber}"`,
+                `"${session.city}"`,
                 `"${session.cityName}"`,
                 `"${session.spot}"`,
                 `"${session.date}"`,
+                `"${session.day}"`,
                 session.farmers || 0,
                 session.acres || 0,
+                session.latitude || '',
+                session.longitude || '',
                 `"${session.facilitator}"`,
-                `"${session.focus || ''}"`
+                `"${session.focus || ''}"`,
+                `"${session.type || ''}"`
             ].join(','))
         ];
         
@@ -712,8 +1089,9 @@ function exportToCSV() {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         
-        // Create filename
-        const filename = `buctril-sessions-export-${new Date().toISOString().slice(0,10)}.csv`;
+        // Create filename with timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `buctril-sessions-${timestamp}.csv`;
         
         if (navigator.msSaveBlob) {
             navigator.msSaveBlob(blob, filename);
@@ -728,16 +1106,20 @@ function exportToCSV() {
             URL.revokeObjectURL(url);
         }
         
-        updateStatus(`Exported ${currentFilteredSessions.length} sessions to CSV`, 'success');
+        showToast(`Exported ${currentFilteredSessions.length} sessions to ${filename}`, 'success');
         
     } catch (error) {
         console.error('Export failed:', error);
-        updateStatus('Failed to export data', 'error');
-        alert('Failed to export data. Please try again.');
+        showToast('Failed to export data', 'error');
     }
 }
 
-// TAB SWITCHING - FIXED VERSION
+// LEGACY EXPORT FUNCTION (for compatibility)
+function exportToCSV() {
+    exportEnhancedData();
+}
+
+// TAB SWITCHING
 function initializeTabs() {
     const tabs = document.querySelectorAll('.tab');
     const tabContents = document.querySelectorAll('#tabContent > section');
@@ -770,6 +1152,11 @@ function handleTabClick() {
         }, 100);
     }
     
+    // Special handling for gallery tab
+    if (tabId === 'gallery') {
+        setTimeout(lazyLoadMedia, 100);
+    }
+    
     console.log(`Switched to ${tabId} tab`);
 }
 
@@ -796,4 +1183,107 @@ function showError(message) {
     }
 }
 
-console.log('AgriVista Dashboard loaded successfully.');
+// TOAST NOTIFICATIONS
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto remove after duration
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// CAMPAIGN SUMMARY FUNCTIONS
+function generateCampaignSummary() {
+    const summary = {
+        totalSessions: currentFilteredSessions.length,
+        totalFarmers: currentFilteredSessions.reduce((sum, s) => sum + (s.farmers || 0), 0),
+        totalAcres: currentFilteredSessions.reduce((sum, s) => sum + (s.acres || 0), 0),
+        uniqueCities: [...new Set(currentFilteredSessions.map(s => s.cityName))].length,
+        dateRange: {
+            start: currentFilteredSessions.reduce((min, s) => s.date < min ? s.date : min, '9999-99-99'),
+            end: currentFilteredSessions.reduce((max, s) => s.date > max ? s.date : max, '0000-00-00')
+        },
+        topFacilitators: getTopFacilitators(5),
+        popularSessionTypes: getPopularSessionTypes()
+    };
+    
+    return summary;
+}
+
+function getTopFacilitators(limit = 5) {
+    const facilitatorStats = currentFilteredSessions.reduce((acc, session) => {
+        acc[session.facilitator] = (acc[session.facilitator] || 0) + 1;
+        return acc;
+    }, {});
+    
+    return Object.entries(facilitatorStats)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([name, count]) => ({ name, sessions: count }));
+}
+
+function getPopularSessionTypes() {
+    const typeStats = currentFilteredSessions.reduce((acc, session) => {
+        const type = session.type || 'other';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {});
+    
+    return Object.entries(typeStats)
+        .sort((a, b) => b[1] - a[1])
+        .map(([type, count]) => ({ type, count }));
+}
+
+function shareCampaignSummary() {
+    const summary = generateCampaignSummary();
+    const text = `
+🎯 Buctril Super Farmer Education Drive 2025 Summary:
+    
+• ${summary.totalSessions} training sessions conducted
+• ${summary.totalFarmers.toLocaleString()} farmers engaged
+• ${summary.totalAcres.toLocaleString()} acres covered
+• Across ${summary.uniqueCities} cities
+• Date range: ${summary.dateRange.start} to ${summary.dateRange.end}
+    
+Top facilitators: ${summary.topFacilitators.map(f => f.name).join(', ')}
+    
+View interactive dashboard: https://interactsolutions.github.io/WheatCampaign/
+    `.trim();
+    
+    // Try to copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Campaign summary copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Campaign summary copied to clipboard!', 'success');
+    });
+}
+
+// SESSION MODAL (Placeholder - implement as needed)
+function showSessionModal(sessionId) {
+    const session = allSessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    showToast(`Viewing session ${session.sessionNumber}`, 'info');
+    // Implement modal display logic here
+}
+
+console.log('AgriVista Dashboard Enhanced loaded successfully.');

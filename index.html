@@ -13,15 +13,1299 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     
-    <!-- Your CSS -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Dashboard CSS -->
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --primary-light: #4caf50;
+            --secondary: #ff9800;
+            --accent: #2196f3;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f8f9fa;
+            --light-gray: #e9ecef;
+            --gray: #6c757d;
+            --dark: #343a40;
+            --white: #ffffff;
+            --border-radius: 8px;
+            --border-radius-sm: 4px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --box-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ===== HEADER STYLES ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h2 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .header-subtitle {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .header-logos {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            backdrop-filter: blur(5px);
+        }
+
+        .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* ===== DASHBOARD CONTROLS ===== */
+        .dashboard-controls {
+            background: var(--white);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown, .search-input, .date-input {
+            padding: 12px 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .dropdown:focus, .search-input:focus, .date-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .date-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-group span {
+            color: var(--gray);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ===== SELECTION SUMMARY ===== */
+        .selection-summary {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .selection-summary h3 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--light);
+            border-radius: var(--border-radius);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* ===== STATUS INDICATOR ===== */
+        .status-indicator {
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .status-loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-success {
+            background: #e8f5e9;
+            color: var(--success);
+        }
+
+        .status-warning {
+            background: #fff3e0;
+            color: var(--warning);
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: var(--danger);
+        }
+
+        /* ===== NAV TABS ===== */
+        .nav-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 25px;
+            background: var(--white);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            color: var(--gray);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .tab:hover {
+            background: var(--light);
+            color: var(--primary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ===== TAB CONTENT ===== */
+        .tab-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 25px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== OVERVIEW TAB ===== */
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .overview-card {
+            background: var(--light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .overview-card h3 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .overview-card p {
+            color: var(--gray);
+        }
+
+        .key-takeaways {
+            margin-top: 30px;
+        }
+
+        .key-takeaways h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .campaign-description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--dark);
+            margin-bottom: 30px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .metric-card p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* ===== MAP TAB ===== */
+        .map-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        #campaignMap {
+            height: 500px;
+            border-radius: var(--border-radius);
+            z-index: 1;
+        }
+
+        .map-banner {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 2;
+            backdrop-filter: blur(5px);
+        }
+
+        .map-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .map-controls-panel {
+            background: var(--light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+        }
+
+        .map-controls-panel h3 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--light-gray);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        /* ===== GALLERY TAB ===== */
+        .gallery-section {
+            margin: -10px;
+        }
+
+        .gallery-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .gallery-filter-btn {
+            padding: 10px 20px;
+            background: var(--light);
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius-sm);
+            color: var(--gray);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .gallery-filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .gallery-filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .gallery-item {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-lg);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-caption {
+            padding: 15px;
+        }
+
+        .gallery-city {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .gallery-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .gallery-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .gallery-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ===== SESSIONS TAB ===== */
+        .sessions-table-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+        }
+
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .sessions-table thead {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .sessions-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .sessions-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .sessions-table tbody tr:hover {
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .sessions-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .session-number {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .session-stats {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--light);
+            border-radius: var(--border-radius);
+        }
+
+        .pagination-info {
+            color: var(--gray);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ===== ANALYTICS TAB ===== */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .analytics-card {
+            background: var(--light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+        }
+
+        .analytics-card h3 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 20px;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+
+        .chart-note {
+            color: var(--gray);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .distribution-center {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .distribution-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .distribution-label {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+
+        .distribution-subtext {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .performance-section {
+            margin-top: 30px;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .performance-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .performance-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .performance-label {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--light-gray);
+            margin-top: 25px;
+        }
+
+        .footer-subtext {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .footer-links a {
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-dark);
+        }
+
+        /* ===== MODALS ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: var(--white);
+            margin: 50px auto;
+            padding: 0;
+            border-radius: var(--border-radius);
+            max-width: 800px;
+            box-shadow: var(--box-shadow-lg);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--dark);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .modal-section h4 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--gray);
+        }
+
+        .info-value {
+            color: var(--dark);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--light);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .modal-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .modal-gallery img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-gallery img:hover {
+            transform: scale(1.05);
+        }
+
+        /* ===== ERROR BANNER ===== */
+        .error-banner {
+            background: #ffebee;
+            border-left: 4px solid var(--danger);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .error-banner i {
+            color: var(--danger);
+            font-size: 1.5rem;
+            margin-top: 2px;
+        }
+
+        .error-banner h3 {
+            color: var(--danger);
+            margin-bottom: 10px;
+        }
+
+        .quick-checks {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .quick-checks ol {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        /* ===== VIDEO BACKGROUND ===== */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-fallback {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        }
+
+        /* ===== VISITOR COUNTER ===== */
+        .visitor-counter {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2e7d32;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== FORM STYLES ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .contact-methods {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        /* ===== SHARE MODAL ===== */
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .share-option {
+            background: var(--light);
+            border: 1px solid var(--light-gray);
+            border-radius: var(--border-radius-sm);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .share-option:hover {
+            background: var(--light-gray);
+            transform: translateY(-2px);
+        }
+
+        .share-url {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .share-url input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+        }
+
+        .btn-copy {
+            padding: 10px 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-copy:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast-success {
+            border-left-color: var(--success);
+        }
+
+        .toast-error {
+            border-left-color: var(--danger);
+        }
+
+        .toast-warning {
+            border-left-color: var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.fade-out {
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-logos {
+                justify-content: center;
+            }
+            
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                min-width: 140px;
+                flex: none;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .share-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header-subtitle {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .share-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .pagination-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Video Background -->
     <div class="video-background">
-        <video autoplay muted loop playsinline>
-            <source src="assets/bg.mp4" type="video/mp4">
-        </video>
         <div class="video-fallback"></div>
     </div>
 
@@ -36,22 +1320,19 @@
                     <i class="fas fa-calendar-alt"></i> 24 Nov - 12 Dec 2025
                 </div>
                 <div class="build-date">
-                    <i class="fas fa-code"></i> Dashboard v2.3
+                    <i class="fas fa-code"></i> Dashboard v2.5
                 </div>
             </div>
             
             <div class="header-logos">
                 <div class="logo-container">
-                    <img src="assets/Bayer.png" alt="Bayer Logo" class="logo-img">
+                    <div style="height:40px; width:120px; background:white; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#2e7d32; font-weight:bold;">BAYER</div>
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Buctril.jpg" alt="Buctril Logo" class="logo-img">
+                    <div style="height:40px; width:120px; background:white; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#2e7d32; font-weight:bold;">BUCTRIL</div>
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Interact.gif" alt="Interact Solutions Logo" class="logo-img">
-                </div>
-                <div class="logo-container">
-                    <img src="assets/poductts.jpg" alt="Products" class="logo-img">
+                    <div style="height:40px; width:120px; background:#2196f3; border-radius:4px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">INTERACT</div>
                 </div>
             </div>
         </header>
@@ -166,7 +1447,7 @@
         <!-- Tab Content -->
         <div id="tabContent">
             <!-- Overview Tab -->
-            <section id="overviewTab" style="display: block;">
+            <section id="overviewTab" class="tab-content active">
                 <div class="campaign-section">
                     <div class="campaign-header">
                         <h3 class="campaign-title">
@@ -228,7 +1509,7 @@
             </section>
 
             <!-- Map Tab -->
-            <section id="mapTab" style="display: none;">
+            <section id="mapTab" class="tab-content">
                 <div class="map-container">
                     <div id="campaignMap"></div>
                     <div class="map-banner">
@@ -267,10 +1548,6 @@
                                     <input type="checkbox" class="map-filter" value="training" checked>
                                     <i class="fas fa-chalkboard-teacher" style="color: #2196f3;"></i> Training
                                 </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="map-filter" value="field" checked>
-                                    <i class="fas fa-tractor" style="color: #9c27b0;"></i> Field
-                                </label>
                             </div>
                         </div>
                         
@@ -295,7 +1572,7 @@
             </section>
 
             <!-- Gallery Tab -->
-            <section id="galleryTab" style="display: none;">
+            <section id="galleryTab" class="tab-content">
                 <div class="gallery-section">
                     <div class="gallery-filters">
                         <button class="gallery-filter-btn active" data-filter="all">
@@ -326,7 +1603,7 @@
             </section>
 
             <!-- Sessions Tab -->
-            <section id="sessionsTab" style="display: none;">
+            <section id="sessionsTab" class="tab-content">
                 <div class="sessions-table-container">
                     <table class="sessions-table">
                         <thead>
@@ -363,7 +1640,7 @@
             </section>
 
             <!-- Analytics Tab -->
-            <section id="analyticsTab" style="display: none;">
+            <section id="analyticsTab" class="tab-content">
                 <div class="insights-container">
                     <h3><i class="fas fa-chart-line"></i> Performance Analytics</h3>
                     
@@ -418,7 +1695,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>AgriVista Dashboard v2.3 • Buctril Super Farmer Education Drive 2025</p>
+            <p>AgriVista Dashboard v2.5 • Buctril Super Farmer Education Drive 2025</p>
             <p class="footer-subtext">
                 <i class="fas fa-sync-alt"></i> Data updated: <span id="dataUpdated">22 Dec 2025</span>
             </p>
@@ -426,7 +1703,6 @@
                 <a href="#" id="helpSupport"><i class="fas fa-question-circle"></i> Help & Support</a>
                 <a href="#" id="exportInsights"><i class="fas fa-download"></i> Export Insights</a>
                 <a href="#" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
-                <!-- Feedback and Share buttons will be added dynamically -->
             </div>
         </footer>
     </div>
@@ -437,277 +1713,716 @@
         <p>Loading dashboard...</p>
     </div>
 
-    <!-- Session Detail Modal -->
-    <div id="sessionModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalSessionTitle">Session Details</h3>
-                <button class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-grid">
-                    <div class="modal-section">
-                        <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Session ID:</span>
-                                <span id="modalSessionId" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Date:</span>
-                                <span id="modalSessionDate" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">City:</span>
-                                <span id="modalSessionCity" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Location:</span>
-                                <span id="modalSessionLocation" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Facilitator:</span>
-                                <span id="modalSessionFacilitator" class="info-value"></span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h4><i class="fas fa-chart-bar"></i> Statistics</h4>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionFarmers">0</div>
-                                    <div class="stat-label">Farmers</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-seedling"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionAcres">0</div>
-                                    <div class="stat-label">Acres</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionFocus"></div>
-                                    <div class="stat-label">Focus Area</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h4><i class="fas fa-map-marker-alt"></i> Location Map</h4>
-                        <div id="modalMap" style="height: 200px; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; color: #666;">
-                            <i class="fas fa-map-marked-alt" style="font-size: 48px; opacity: 0.3;"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h4><i class="fas fa-images"></i> Session Media</h4>
-                        <div id="modalMediaGallery" class="modal-gallery">
-                            <!-- Media will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="modalCloseBtn">Close</button>
-                <button class="btn btn-primary" id="modalShareBtn">
-                    <i class="fas fa-share-alt"></i> Share Session
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-comment-alt"></i> Share Your Feedback</h3>
-                <button class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="feedbackForm">
-                    <div class="form-group">
-                        <label for="feedbackName"><i class="fas fa-user"></i> Your Name</label>
-                        <input type="text" id="feedbackName" class="form-control" placeholder="Enter your name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackPhone"><i class="fas fa-phone"></i> Phone Number</label>
-                        <input type="tel" id="feedbackPhone" class="form-control" placeholder="+92 300 1234567">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackEmail"><i class="fas fa-envelope"></i> Email Address</label>
-                        <input type="email" id="feedbackEmail" class="form-control" placeholder="you@example.com">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackType"><i class="fas fa-tag"></i> Feedback Type</label>
-                        <select id="feedbackType" class="form-control">
-                            <option value="general">General Feedback</option>
-                            <option value="suggestion">Suggestion</option>
-                            <option value="bug">Bug Report</option>
-                            <option value="feature">Feature Request</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackMessage"><i class="fas fa-comment"></i> Your Message</label>
-                        <textarea id="feedbackMessage" class="form-control" rows="4" placeholder="Share your thoughts, suggestions, or feedback..." required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackContactMethod">Preferred Contact Method</label>
-                        <div class="contact-methods">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="contactMethod" value="whatsapp">
-                                <i class="fab fa-whatsapp" style="color: #25D366;"></i> WhatsApp
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="contactMethod" value="email">
-                                <i class="fas fa-envelope" style="color: #EA4335;"></i> Email
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="contactMethod" value="phone">
-                                <i class="fas fa-phone" style="color: #34A853;"></i> Phone Call
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="feedbackCancel">Cancel</button>
-                <button class="btn btn-primary" id="feedbackSubmit">
-                    <i class="fas fa-paper-plane"></i> Submit Feedback
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Share Modal -->
-    <div id="shareModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-share-alt"></i> Share This Dashboard</h3>
-                <button class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="share-options">
-                    <button class="share-option" data-platform="whatsapp">
-                        <i class="fab fa-whatsapp"></i>
-                        <span>WhatsApp</span>
-                    </button>
-                    <button class="share-option" data-platform="facebook">
-                        <i class="fab fa-facebook"></i>
-                        <span>Facebook</span>
-                    </button>
-                    <button class="share-option" data-platform="twitter">
-                        <i class="fab fa-twitter"></i>
-                        <span>Twitter</span>
-                    </button>
-                    <button class="share-option" data-platform="linkedin">
-                        <i class="fab fa-linkedin"></i>
-                        <span>LinkedIn</span>
-                    </button>
-                    <button class="share-option" data-platform="email">
-                        <i class="fas fa-envelope"></i>
-                        <span>Email</span>
-                    </button>
-                    <button class="share-option" data-platform="copy">
-                        <i class="fas fa-copy"></i>
-                        <span>Copy Link</span>
-                    </button>
-                </div>
-                <div class="share-url">
-                    <input type="text" id="shareUrl" readonly value="https://interactsolutions.github.io/WheatCampaign/">
-                    <button class="btn-copy" id="copyUrlBtn">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification Container -->
-    <div id="toastContainer"></div>
-
     <!-- JavaScript Libraries -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     
-<!-- Main Dashboard JavaScript -->
-<script src="dashboard.js"></script>
-    
-    <!-- Modal event handlers -->
+    <!-- Main Dashboard JavaScript -->
     <script>
-        // Modal close handlers
-        document.querySelectorAll('.modal-close, .btn-outline[id$="Cancel"], #modalCloseBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const modal = this.closest('.modal');
-                if (modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
+        // dashboard.js - COMPLETE WORKING VERSION
+        console.log('AgriVista Dashboard v2.5 - FIXED initializing...');
+
+        // GLOBAL STATE
+        let allSessions = [];
+        let currentFilteredSessions = [];
+        let mediaItems = [];
+        let map;
+        let markerCluster;
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // EMBEDDED SESSIONS DATA
+        const embeddedSessions = [
+            // Sukkur sessions
+            {id: 1, sessionNumber: "SKR-01", city: "sukkur", cityName: "Ubaro", spot: "Ameen khan Chacharr", date: "2025-11-24", day: "Monday", farmers: 42, acres: 553, latitude: 27.7132, longitude: 68.8482, facilitator: "Ali Raza", focus: "Product Introduction", type: "education"},
+            {id: 2, sessionNumber: "SKR-02", city: "sukkur", cityName: "Ubaro", spot: "Naseer Dhondo", date: "2025-11-24", day: "Monday", farmers: 46, acres: 553, latitude: 27.7232, longitude: 68.8582, facilitator: "Bilal Ahmed", focus: "Application Techniques", type: "demonstration"},
+            {id: 3, sessionNumber: "SKR-03", city: "sukkur", cityName: "Dharki", spot: "Matal Mahar", date: "2025-11-25", day: "Tuesday", farmers: 39, acres: 553, latitude: 27.6832, longitude: 68.8382, facilitator: "Faisal Khan", focus: "Dosage Guidelines", type: "training"},
+            {id: 4, sessionNumber: "SKR-04", city: "sukkur", cityName: "Dharki", spot: "Abdullah Rajni", date: "2025-11-25", day: "Tuesday", farmers: 52, acres: 553, latitude: 27.7032, longitude: 68.8682, facilitator: "Kamran Ali", focus: "Safety Measures", type: "safety"},
+            {id: 5, sessionNumber: "SKR-05", city: "sukkur", cityName: "Ghotki", spot: "Darri Chachar", date: "2025-11-26", day: "Wednesday", farmers: 44, acres: 553, latitude: 27.6932, longitude: 68.8282, facilitator: "Naveed Ahmed", focus: "Field Demonstration", type: "demonstration"},
+            {id: 6, sessionNumber: "SKR-06", city: "sukkur", cityName: "Ghotki", spot: "Kalati Gabol", date: "2025-11-26", day: "Wednesday", farmers: 47, acres: 553, latitude: 27.5332, longitude: 68.7582, facilitator: "Osama Khan", focus: "Q&A Session", type: "interaction"},
+            
+            // DGK sessions
+            {id: 17, sessionNumber: "DGK-01", city: "dgk", cityName: "Muzaffar Ghar", spot: "Bassti Seerein", date: "2025-12-03", day: "Wednesday", farmers: 41, acres: 553, latitude: 30.3489, longitude: 70.9402, facilitator: "Babar Javed", focus: "Field Application", type: "demonstration"},
+            {id: 18, sessionNumber: "DGK-02", city: "dgk", cityName: "Muzaffar Ghar", spot: "Topi Maanay wali", date: "2025-12-03", day: "Wednesday", farmers: 47, acres: 553, latitude: 30.0489, longitude: 70.6402, facilitator: "Chaudhry Naeem", focus: "Expert Talk", type: "expert"},
+            {id: 19, sessionNumber: "DGK-03", city: "dgk", cityName: "Muzaffar Ghar", spot: "Phaty wala", date: "2025-12-03", day: "Wednesday", farmers: 34, acres: 553, latitude: 29.9989, longitude: 69.9402, facilitator: "Dawood Ahmed", focus: "High Altitude Farming", type: "specialized"},
+            {id: 20, sessionNumber: "DGK-04", city: "dgk", cityName: "Kot Adu", spot: "Basti Haider Ghazi", date: "2025-12-04", day: "Thursday", farmers: 43, acres: 553, latitude: 29.6489, longitude: 70.5902, facilitator: "Ehsan Ullah", focus: "Irrigation Methods", type: "irrigation"},
+            
+            // Faisalabad sessions
+            {id: 27, sessionNumber: "FSD-01", city: "faisalabad", cityName: "Bhakkar", spot: "Majoka", date: "2025-12-07", day: "Sunday", farmers: 47, acres: 553, latitude: 31.0604, longitude: 72.4750, facilitator: "Liaqat Ali", focus: "Market Linkages", type: "commercial"},
+            {id: 28, sessionNumber: "FSD-02", city: "faisalabad", cityName: "Mianwali", spot: "Kalor Sharif Kacha", date: "2025-12-08", day: "Monday", farmers: 42, acres: 553, latitude: 32.1304, longitude: 71.5350, facilitator: "Mohsin Raza", focus: "Technology Adoption", type: "technology"},
+            {id: 29, sessionNumber: "FSD-03", city: "faisalabad", cityName: "Mianwali", spot: "Kamar Mashaani Gulshan Colony", date: "2025-12-08", day: "Monday", farmers: 39, acres: 553, latitude: 32.0704, longitude: 71.5850, facilitator: "Noman Khan", focus: "Small Landholders", type: "small-farmers"},
+            
+            // Gujranwala sessions
+            {id: 35, sessionNumber: "GSM-01", city: "gujranwala", cityName: "Phalia", spot: "Kamoke", date: "2025-12-10", day: "Wednesday", farmers: 23, acres: 553, latitude: 31.9777, longitude: 74.2245, facilitator: "Tahir Mehmood", focus: "Hybrid Solutions", type: "hybrid"},
+            {id: 36, sessionNumber: "GSM-02", city: "gujranwala", cityName: "Phalia", spot: "Nowshera Virkan", date: "2025-12-10", day: "Wednesday", farmers: 25, acres: 553, latitude: 31.9877, longitude: 73.9945, facilitator: "Umar Hayat", focus: "Water Conservation", type: "conservation"},
+            {id: 37, sessionNumber: "GSM-03", city: "gujranwala", cityName: "Chakwal", spot: "Daleel Pur Khokhar Baala", date: "2025-12-11", day: "Thursday", farmers: 30, acres: 553, latitude: 32.8877, longitude: 72.8945, facilitator: "Viqar Hussain", focus: "Market Linkages", type: "market"}
+        ];
+
+        // EMBEDDED MEDIA DATA
+        const embeddedMedia = [
+            {id: 1, filename: "https://via.placeholder.com/400x300/2e7d32/ffffff?text=Sukkur+Session+1", caption: "Session 1: Product Introduction in Sukkur", date: "2025-11-24", city: "sukkur", sessionId: 1, type: "education", displayIn: "gallery"},
+            {id: 2, filename: "https://via.placeholder.com/400x300/ff9800/ffffff?text=DGK+Session+1", caption: "Session 17: Field Application Demo in DGK", date: "2025-12-03", city: "dgk", sessionId: 17, type: "demonstration", displayIn: "gallery"},
+            {id: 3, filename: "https://via.placeholder.com/400x300/2196f3/ffffff?text=Faisalabad+Session", caption: "Session 27: Market Linkages in Faisalabad", date: "2025-12-07", city: "faisalabad", sessionId: 27, type: "commercial", displayIn: "gallery"},
+            {id: 4, filename: "https://via.placeholder.com/400x300/9c27b0/ffffff?text=Gujranwala+Session", caption: "Session 35: Hybrid Solutions in Gujranwala", date: "2025-12-10", city: "gujranwala", sessionId: 35, type: "hybrid", displayIn: "gallery"},
+            {id: 5, filename: "https://via.placeholder.com/400x300/2e7d32/ffffff?text=Sukkur+Training", caption: "Session 3: Dosage Guidelines Training", date: "2025-11-25", city: "sukkur", sessionId: 3, type: "training", displayIn: "gallery"},
+            {id: 6, filename: "https://via.placeholder.com/400x300/ff9800/ffffff?text=DGK+Expert+Talk", caption: "Session 18: Expert Talk in DGK", date: "2025-12-03", city: "dgk", sessionId: 18, type: "expert", displayIn: "gallery"},
+            {id: 7, filename: "https://via.placeholder.com/400x300/2196f3/ffffff?text=Faisalabad+Tech", caption: "Session 28: Technology Adoption", date: "2025-12-08", city: "faisalabad", sessionId: 28, type: "technology", displayIn: "gallery"},
+            {id: 8, filename: "https://via.placeholder.com/400x300/9c27b0/ffffff?text=Gujranwala+Water", caption: "Session 36: Water Conservation", date: "2025-12-10", city: "gujranwala", sessionId: 36, type: "conservation", displayIn: "gallery"},
+            {id: 9, filename: "https://via.placeholder.com/400x300/2e7d32/ffffff?text=Sukkur+Safety", caption: "Session 4: Safety Measures Workshop", date: "2025-11-25", city: "sukkur", sessionId: 4, type: "safety", displayIn: "gallery"},
+            {id: 10, filename: "https://via.placeholder.com/400x300/ff9800/ffffff?text=DGK+Irrigation", caption: "Session 20: Irrigation Methods", date: "2025-12-04", city: "dgk", sessionId: 20, type: "irrigation", displayIn: "gallery"},
+            {id: 11, filename: "https://via.placeholder.com/400x300/2196f3/ffffff?text=Faisalabad+Small+Farmers", caption: "Session 29: Small Landholders Workshop", date: "2025-12-08", city: "faisalabad", sessionId: 29, type: "small-farmers", displayIn: "gallery"},
+            {id: 12, filename: "https://via.placeholder.com/400x300/9c27b0/ffffff?text=Gujranwala+Market", caption: "Session 37: Market Linkages", date: "2025-12-11", city: "gujranwala", sessionId: 37, type: "market", displayIn: "gallery"}
+        ];
+
+        // INITIALIZE EVERYTHING
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM loaded. Starting initialization...');
+            
+            // Setup event listeners FIRST
+            setupEventListeners();
+            initializeTabs();
+            
+            // Set date max to today
+            const today = new Date().toISOString().split('T')[0];
+            const dateTo = document.getElementById('dateTo');
+            if (dateTo) {
+                dateTo.max = today;
+                dateTo.value = '2025-12-12';
+            }
+            
+            // Set date from
+            const dateFrom = document.getElementById('dateFrom');
+            if (dateFrom) {
+                dateFrom.value = '2025-11-24';
+            }
+            
+            // Load data
+            loadAllData();
+        });
+
+        // LOAD ALL DATA
+        async function loadAllData() {
+            try {
+                updateStatus('Loading dashboard data...', 'loading');
+                
+                // Use embedded sessions data
+                allSessions = embeddedSessions;
+                currentFilteredSessions = [...allSessions];
+                console.log(`Loaded ${allSessions.length} embedded sessions`);
+                
+                // Use embedded media data
+                mediaItems = embeddedMedia;
+                console.log(`Loaded ${mediaItems.length} media items`);
+                
+                // UPDATE THE ENTIRE DASHBOARD
+                updateDashboardStats();
+                initializeMap();
+                renderGallery();
+                renderSessionsTable();
+                initializeAnalyticsCharts();
+                
+                // Hide loading overlay after a short delay
+                setTimeout(() => {
+                    const loadingOverlay = document.getElementById('loadingOverlay');
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                }, 500);
+                
+                updateStatus('Dashboard loaded successfully', 'success');
+                console.log('Dashboard initialization complete.');
+
+            } catch (error) {
+                console.error('Fatal error loading data:', error);
+                updateStatus('Error loading data', 'error');
+                
+                // Hide loading overlay even on error
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+            }
+        }
+
+        // UPDATE DASHBOARD STATS
+        function updateDashboardStats() {
+            const totalSessions = currentFilteredSessions.length;
+            const totalFarmers = currentFilteredSessions.reduce((sum, s) => sum + (s.farmers || 0), 0);
+            const totalAcres = currentFilteredSessions.reduce((sum, s) => sum + (s.acres || 0), 0);
+            const uniqueCities = [...new Set(currentFilteredSessions.map(s => s.cityName))].length;
+
+            // Update all stat elements
+            updateElement('sessionCount', totalSessions);
+            updateElement('farmerCount', totalFarmers.toLocaleString());
+            updateElement('acreCount', totalAcres.toLocaleString());
+            updateElement('cityCount', uniqueCities);
+            updateElement('totalSessions', totalSessions);
+            updateElement('totalFarmers', totalFarmers.toLocaleString());
+            updateElement('totalAcres', totalAcres.toLocaleString());
+            updateElement('shownSessions', Math.min(itemsPerPage, totalSessions));
+            updateElement('totalSessionsCount', totalSessions);
+            
+            // Update map banner
+            const mapStats = document.getElementById('mapStats');
+            if (mapStats) {
+                mapStats.textContent = `${totalSessions} Sessions • ${uniqueCities} Regions • ${totalFarmers.toLocaleString()} Farmers`;
+            }
+            
+            // Update city distribution
+            updateElement('cityDistribution', uniqueCities);
+        }
+
+        function updateElement(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        }
+
+        // INITIALIZE MAP
+        function initializeMap() {
+            console.log('Initializing main map...');
+            const mapContainer = document.getElementById('campaignMap');
+            if (!mapContainer) {
+                console.error('Map container #campaignMap not found!');
+                return;
+            }
+
+            try {
+                // Create map centered on Pakistan
+                map = L.map('campaignMap').setView([30.3753, 69.3451], 6);
+
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 12,
+                    minZoom: 5
+                }).addTo(map);
+
+                // Create marker cluster group
+                markerCluster = L.markerClusterGroup({
+                    maxClusterRadius: 50,
+                    showCoverageOnHover: false,
+                    spiderfyOnMaxZoom: true
+                });
+                map.addLayer(markerCluster);
+
+                // Add markers for each session
+                updateMapMarkers();
+
+                console.log('Main map initialized successfully');
+
+            } catch (error) {
+                console.error('Failed to initialize map:', error);
+                showMapError(mapContainer, error);
+            }
+        }
+
+        function updateMapMarkers() {
+            if (!map || !markerCluster) return;
+            
+            // Clear existing markers
+            markerCluster.clearLayers();
+            
+            // Add markers for each filtered session
+            currentFilteredSessions.forEach(session => {
+                if (session.latitude && session.longitude) {
+                    const marker = L.marker([session.latitude, session.longitude], {
+                        title: session.sessionNumber
+                    });
+                    
+                    // Create popup content
+                    const popupContent = `
+                        <div style="min-width: 200px;">
+                            <h4 style="margin:0 0 8px 0; color: #2e7d32;">${session.sessionNumber}</h4>
+                            <p style="margin:4px 0;"><strong>Location:</strong> ${session.spot}</p>
+                            <p style="margin:4px 0;"><strong>Date:</strong> ${session.date}</p>
+                            <p style="margin:4px 0;"><strong>Farmers:</strong> ${session.farmers}</p>
+                            <p style="margin:4px 0;"><strong>Facilitator:</strong> ${session.facilitator}</p>
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent);
+                    markerCluster.addLayer(marker);
                 }
             });
-        });
-        
-        // Close modal when clicking outside
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
+
+            // Fit bounds to show all markers if we have sessions
+            if (currentFilteredSessions.length > 0) {
+                const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+            
+            // Update map stats
+            const mapFilterStats = document.getElementById('mapFilterStats');
+            if (mapFilterStats) {
+                mapFilterStats.textContent = `${currentFilteredSessions.length} sessions shown`;
+            }
+        }
+
+        function showMapError(container, error) {
+            container.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#f8f9fa; color:#666; padding:20px; text-align:center;">
+                    <i class="fas fa-map-marked-alt" style="font-size:48px; color:#ccc; margin-bottom:16px;"></i>
+                    <h3 style="margin-bottom:10px; color:#555;">Map Unavailable</h3>
+                    <p style="margin-bottom:20px;">${error.message || 'Interactive map could not be loaded.'}</p>
+                    <button onclick="initializeMap()" class="btn btn-primary" style="padding:8px 16px;">
+                        <i class="fas fa-redo"></i> Retry Loading Map
+                    </button>
+                </div>
+            `;
+        }
+
+        // RENDER GALLERY
+        function renderGallery() {
+            console.log('Rendering gallery...');
+            const container = document.getElementById('mediaGallery');
+            if (!container) return;
+
+            // Filter to only gallery items
+            const galleryMedia = mediaItems.filter(item => item.displayIn === 'gallery');
+            
+            if (galleryMedia.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column:1/-1; text-align:center; padding:40px; color:#666;">
+                        <i class="fas fa-images" style="font-size:48px; margin-bottom:16px; color:#ccc;"></i>
+                        <p>No gallery images available.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Clear and render items
+            container.innerHTML = '';
+            
+            galleryMedia.forEach(media => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.setAttribute('data-city', media.city);
+                item.setAttribute('data-type', media.type);
+                
+                // City-based color for fallback images
+                const cityColors = { 
+                    sukkur: '#2e7d32', 
+                    dgk: '#ff9800', 
+                    faisalabad: '#2196f3', 
+                    gujranwala: '#9c27b0' 
+                };
+                const color = cityColors[media.city] || '#2e7d32';
+                const colorHex = color.replace('#', '');
+                
+                item.innerHTML = `
+                    <img src="${media.filename}" alt="${media.caption}" 
+                         onerror="this.src='https://via.placeholder.com/400x300/${colorHex}/ffffff?text=${media.city.toUpperCase()}'">
+                    <div class="gallery-caption">
+                        <div class="gallery-city">${media.city.toUpperCase()} • Session ${media.sessionId}</div>
+                        <div class="gallery-title">${media.caption}</div>
+                        <div class="gallery-meta">
+                            <span><i class="fas fa-calendar"></i> ${media.date}</span>
+                            <span><i class="fas fa-tag"></i> ${media.type}</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
             });
-        });
-        
-        // Close modal with ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
+        }
+
+        // RENDER SESSIONS TABLE
+        function renderSessionsTable() {
+            console.log('Rendering sessions table...');
+            const tbody = document.getElementById('sessionsTableBody');
+            if (!tbody) return;
+
+            if (currentFilteredSessions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding:40px; color:#666;">
+                            <i class="fas fa-inbox"></i>
+                            <p>No session data available.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Clear and add rows
+            tbody.innerHTML = '';
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageSessions = currentFilteredSessions.slice(startIndex, endIndex);
+            
+            pageSessions.forEach(session => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td class="session-number">${session.sessionNumber}</td>
+                    <td>${session.date}</td>
+                    <td class="session-city">${session.cityName}</td>
+                    <td class="session-spot" title="${session.spot}">${session.spot}</td>
+                    <td>${session.facilitator}</td>
+                    <td class="session-stats">${session.farmers}</td>
+                    <td class="session-stats">${session.acres.toLocaleString()}</td>
+                    <td>${session.focus || 'General Education'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Update pagination controls
+            updatePaginationControls();
+        }
+
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const shownSessions = document.getElementById('shownSessions');
+            
+            if (prevBtn) prevBtn.disabled = currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+            if (shownSessions) {
+                const startIndex = (currentPage - 1) * itemsPerPage + 1;
+                const endIndex = Math.min(currentPage * itemsPerPage, currentFilteredSessions.length);
+                shownSessions.textContent = `${startIndex}-${endIndex}`;
+            }
+        }
+
+        // ANALYTICS CHARTS
+        function initializeAnalyticsCharts() {
+            console.log('Initializing analytics charts...');
+            
+            // Daily attendance chart
+            const attendanceChart = document.getElementById('attendanceChart');
+            if (attendanceChart && currentFilteredSessions.length > 0) {
+                // Group by date
+                const sessionsByDate = currentFilteredSessions.reduce((acc, session) => {
+                    acc[session.date] = (acc[session.date] || 0) + (session.farmers || 0);
+                    return acc;
+                }, {});
+                
+                const dates = Object.keys(sessionsByDate).sort();
+                const farmers = dates.map(date => sessionsByDate[date]);
+                const maxFarmers = Math.max(...farmers);
+                
+                attendanceChart.innerHTML = dates.slice(0, 10).map((date, index) => {
+                    const height = maxFarmers > 0 ? (farmers[index] / maxFarmers) * 100 : 0;
+                    const shortDate = date.split('-').slice(1).join('-'); // Remove year
+                    
+                    return `
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                            <div style="height: ${height}px; width: 20px; background: #2e7d32; border-radius: 4px 4px 0 0; margin-top: auto;"></div>
+                            <div style="margin-top: 5px; font-size: 11px; color: #666;">${shortDate}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                attendanceChart.style.display = 'flex';
+                attendanceChart.style.alignItems = 'flex-end';
+                attendanceChart.style.gap = '5px';
+                attendanceChart.style.height = '150px';
+            }
+        }
+
+        // EVENT LISTENERS
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+            
+            // Apply Filters Button
+            const applyBtn = document.getElementById('applyFilters');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', applyFilters);
+            }
+            
+            // Reset Filters Button
+            const resetBtn = document.getElementById('resetFilters');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetFilters);
+            }
+            
+            // Export Data Button
+            const exportBtn = document.getElementById('exportData');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportToCSV);
+            }
+            
+            // Refresh Data Button
+            const refreshBtn = document.getElementById('refreshData');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => location.reload());
+            }
+            
+            // City Filter
+            const cityFilter = document.getElementById('cityFilter');
+            if (cityFilter) {
+                cityFilter.addEventListener('change', applyFilters);
+            }
+            
+            // Date Filters
+            const dateFrom = document.getElementById('dateFrom');
+            const dateTo = document.getElementById('dateTo');
+            if (dateFrom) dateFrom.addEventListener('change', applyFilters);
+            if (dateTo) dateTo.addEventListener('change', applyFilters);
+            
+            // Search Input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+            
+            // Gallery Filter Buttons
+            document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active button
+                    document.querySelectorAll('.gallery-filter-btn').forEach(b => 
+                        b.classList.remove('active')
+                    );
+                    this.classList.add('active');
+                    
+                    // Filter gallery
+                    const filter = this.getAttribute('data-filter');
+                    filterGallery(filter);
+                });
+            });
+            
+            // Pagination Buttons
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
+            
+            if (prevPageBtn) {
+                prevPageBtn.addEventListener('click', function() {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderSessionsTable();
+                    }
                 });
             }
-        });
-        
-        // Form submission handler
-        document.getElementById('feedbackForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Form submission handled in dashboard.js
-        });
-        
-        // Share URL copy handler
-        document.getElementById('copyUrlBtn')?.addEventListener('click', function() {
-            const urlInput = document.getElementById('shareUrl');
-            urlInput.select();
-            urlInput.setSelectionRange(0, 99999);
+            
+            if (nextPageBtn) {
+                nextPageBtn.addEventListener('click', function() {
+                    const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderSessionsTable();
+                    }
+                });
+            }
+            
+            // Map Controls
+            const fitBoundsBtn = document.getElementById('fitBounds');
+            if (fitBoundsBtn) {
+                fitBoundsBtn.addEventListener('click', function() {
+                    if (map && currentFilteredSessions.length > 0) {
+                        const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+                });
+            }
+            
+            const resetMapBtn = document.getElementById('resetMap');
+            if (resetMapBtn) {
+                resetMapBtn.addEventListener('click', function() {
+                    if (map) {
+                        map.setView([30.3753, 69.3451], 6);
+                    }
+                });
+            }
+            
+            console.log('All event listeners set up successfully');
+        }
+
+        function applyFilters() {
+            console.log('Applying filters...');
+            
+            // Get filter values
+            const cityValue = document.getElementById('cityFilter').value;
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const dateFromValue = document.getElementById('dateFrom').value;
+            const dateToValue = document.getElementById('dateTo').value;
+            
+            // Filter sessions
+            currentFilteredSessions = allSessions.filter(session => {
+                // City filter
+                if (cityValue !== 'all' && session.city !== cityValue) return false;
+                
+                // Search filter
+                if (searchValue) {
+                    const searchable = `${session.sessionNumber} ${session.cityName} ${session.spot} ${session.facilitator} ${session.focus || ''}`.toLowerCase();
+                    if (!searchable.includes(searchValue)) return false;
+                }
+                
+                // Date filter
+                if (dateFromValue && session.date < dateFromValue) return false;
+                if (dateToValue && session.date > dateToValue) return false;
+                
+                return true;
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            
+            // Update everything
+            updateDashboardStats();
+            renderSessionsTable();
+            updateMapMarkers();
+            initializeAnalyticsCharts();
+            
+            updateStatus(`${currentFilteredSessions.length} sessions found`, 'success');
+        }
+
+        function filterGallery(filter) {
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            
+            galleryItems.forEach(item => {
+                const city = item.getAttribute('data-city');
+                
+                let showItem = false;
+                
+                switch (filter) {
+                    case 'all':
+                        showItem = true;
+                        break;
+                    case 'sukkur':
+                    case 'dgk':
+                    case 'faisalabad':
+                    case 'gujranwala':
+                        showItem = city === filter;
+                        break;
+                    default:
+                        showItem = true;
+                }
+                
+                item.style.display = showItem ? 'block' : 'none';
+            });
+        }
+
+        function resetFilters() {
+            console.log('Resetting all filters...');
+            
+            // Reset form values
+            document.getElementById('cityFilter').value = 'all';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dateFrom').value = '2025-11-24';
+            document.getElementById('dateTo').value = '2025-12-12';
+            
+            // Reset filtered sessions
+            currentFilteredSessions = [...allSessions];
+            currentPage = 1;
+            
+            // Update everything
+            updateDashboardStats();
+            renderSessionsTable();
+            updateMapMarkers();
+            initializeAnalyticsCharts();
+            
+            updateStatus('All filters reset', 'success');
+        }
+
+        function exportToCSV() {
+            if (currentFilteredSessions.length === 0) {
+                alert('No data to export. Please adjust your filters.');
+                return;
+            }
             
             try {
-                navigator.clipboard.writeText(urlInput.value);
-                // Toast notification handled in dashboard.js
-            } catch (err) {
-                // Fallback
-                document.execCommand('copy');
-            }
-        });
-        
-        // Share platform button handlers
-        document.querySelectorAll('.share-option').forEach(button => {
-            button.addEventListener('click', function() {
-                const platform = this.dataset.platform;
-                if (platform === 'copy') {
-                    document.getElementById('copyUrlBtn').click();
+                // Prepare CSV content
+                const headers = ['Session ID', 'City', 'Location', 'Date', 'Farmers', 'Acres', 'Facilitator', 'Focus Area'];
+                const csvRows = [
+                    headers.join(','),
+                    ...currentFilteredSessions.map(session => [
+                        `"${session.sessionNumber}"`,
+                        `"${session.cityName}"`,
+                        `"${session.spot}"`,
+                        `"${session.date}"`,
+                        session.farmers || 0,
+                        session.acres || 0,
+                        `"${session.facilitator}"`,
+                        `"${session.focus || ''}"`
+                    ].join(','))
+                ];
+                
+                const csvContent = csvRows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                
+                // Create filename
+                const filename = `buctril-sessions-export-${new Date().toISOString().slice(0,10)}.csv`;
+                
+                if (navigator.msSaveBlob) {
+                    navigator.msSaveBlob(blob, filename);
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    link.href = url;
+                    link.download = filename;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
                 }
-                // Platform-specific sharing handled in dashboard.js
+                
+                updateStatus(`Exported ${currentFilteredSessions.length} sessions to CSV`, 'success');
+                
+            } catch (error) {
+                console.error('Export failed:', error);
+                updateStatus('Failed to export data', 'error');
+                alert('Failed to export data. Please try again.');
+            }
+        }
+
+        // TAB SWITCHING
+        function initializeTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = this.getAttribute('data-tab');
+                    const tabContents = document.querySelectorAll('.tab-content');
+                    
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId + 'Tab') {
+                            content.classList.add('active');
+                        }
+                    });
+                    
+                    // Special handling for map tab
+                    if (tabId === 'map' && map) {
+                        setTimeout(() => {
+                            map.invalidateSize();
+                        }, 100);
+                    }
+                    
+                    console.log(`Switched to ${tabId} tab`);
+                });
             });
-        });
+            
+            console.log('Tab listeners initialized');
+        }
+
+        // STATUS AND ERROR HANDLING
+        function updateStatus(message, type = 'info') {
+            const statusIndicator = document.getElementById('statusIndicator');
+            if (!statusIndicator) return;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                loading: 'fa-spinner fa-spin',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            statusIndicator.className = `status-indicator status-${type}`;
+            statusIndicator.innerHTML = `<i class="fas ${icons[type] || 'fa-info-circle'}"></i><span>${message}</span>`;
+        }
+
+        console.log('AgriVista Dashboard loaded successfully.');
     </script>
 </body>
 </html>

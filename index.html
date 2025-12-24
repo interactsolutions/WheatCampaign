@@ -9,7 +9,7 @@
     <meta name="description" content="Buctril Super Farmer Education Drive 2025 - Interactive dashboard with session analytics, media gallery, and interactive maps">
     <meta property="og:title" content="AgriVista Dashboard - Buctril Super Farmer Education Drive 2025">
     <meta property="og:description" content="Interactive dashboard tracking 38 sessions, 1,454 farmers, and 22,128 acres across 17 districts">
-    <meta property="og:image" content="https://interactsolutions.github.io/WheatCampaign/assets/Buctril.jpg">
+    <meta property="og:image" content="https://interactsolutions.github.io/WheatCampaign/gallery/Buctril.jpg">
     <meta property="og:url" content="https://interactsolutions.github.io/WheatCampaign/">
     <meta name="twitter:card" content="summary_large_image">
     
@@ -29,13 +29,13 @@
     <link rel="stylesheet" href="style.css">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/Buctril.jpg">
+    <link rel="icon" type="image/x-icon" href="gallery/Buctril.jpg">
 </head>
 <body>
     <!-- Video Background -->
     <div class="video-background">
         <video autoplay muted loop playsinline>
-            <source src="assets/bg.mp4" type="video/mp4">
+            <source src="gallery/bg.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div class="video-fallback"></div>
@@ -69,16 +69,16 @@
             
             <div class="header-logos">
                 <div class="logo-container">
-                    <img src="assets/Bayer.png" alt="Bayer Logo" class="logo-img" loading="eager">
+                    <img src="gallery/Bayer.png" alt="Bayer Logo" class="logo-img" loading="eager">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Buctril.jpg" alt="Buctril Logo" class="logo-img" loading="eager">
+                    <img src="gallery/Buctril.jpg" alt="Buctril Logo" class="logo-img" loading="eager">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/Interact.gif" alt="Interact Solutions Logo" class="logo-img" loading="eager">
+                    <img src="gallery/Interact.gif" alt="Interact Solutions Logo" class="logo-img" loading="eager">
                 </div>
                 <div class="logo-container">
-                    <img src="assets/poductts.jpg" alt="Products" class="logo-img" loading="lazy">
+                    <img src="gallery/poductts.jpg" alt="Products" class="logo-img" loading="lazy">
                 </div>
             </div>
         </header>
@@ -211,7 +211,7 @@
                 <i class="fas fa-map-marked-alt"></i> Interactive Map
             </button>
             <button class="tab" data-tab="gallery">
-                <i class="fas fa-images"></i> Media Gallery (101)
+                <i class="fas fa-images"></i> Media Gallery (94)
             </button>
             <button class="tab" data-tab="sessions">
                 <i class="fas fa-table"></i> Session Details
@@ -436,7 +436,7 @@
                 <div class="gallery-section">
                     <div class="gallery-filters">
                         <button class="gallery-filter-btn active" data-filter="all">
-                            <i class="fas fa-th"></i> All Media (101)
+                            <i class="fas fa-th"></i> All Media (94)
                         </button>
                         <button class="gallery-filter-btn" data-filter="sukkur">
                             <i class="fas fa-map-pin"></i> Sukkur Region
@@ -469,8 +469,8 @@
                     <div class="gallery-footer">
                         <div class="gallery-stats">
                             <span><i class="fas fa-images"></i> 54 Images</span>
-                            <span><i class="fas fa-video"></i> 47 Videos</span>
-                            <span><i class="fas fa-folder"></i> 101 Total Files</span>
+                            <span><i class="fas fa-video"></i> 40 Videos</span>
+                            <span><i class="fas fa-folder"></i> 94 Total Files</span>
                         </div>
                         <p><i class="fas fa-info-circle"></i> Click on any image to view larger version. Images load progressively for better performance.</p>
                     </div>
@@ -734,7 +734,7 @@
         <footer class="footer">
             <p>AgriVista Dashboard v3.0 • Buctril Super Farmer Education Drive 2025 • Real Data Implementation</p>
             <p class="footer-subtext">
-                <i class="fas fa-sync-alt"></i> Data updated: <span id="dataUpdated">22 Dec 2025</span>
+                <i class="fas fa-sync-alt"></i> Data updated: <span id="dataUpdated">24 Dec 2025</span>
                 <span style="margin: 0 10px;">•</span>
                 <i class="fas fa-bolt"></i> Performance Optimized
                 <span style="margin: 0 10px;">•</span>
@@ -921,7 +921,7 @@
                     <button class="btn btn-outline" id="prevMedia">
                         <i class="fas fa-chevron-left"></i> Previous
                     </button>
-                    <span id="mediaCounter">1 of 101</span>
+                    <span id="mediaCounter">1 of 94</span>
                     <button class="btn btn-outline" id="nextMedia">
                         Next <i class="fas fa-chevron-right"></i>
                     </button>
@@ -996,6 +996,15 @@
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.style.display = 'none';
             });
+            
+            // Set current date for footer
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            document.getElementById('dataUpdated').textContent = formattedDate;
         });
         
         // Modal close handlers
@@ -1032,14 +1041,23 @@
         // Form submission handler
         document.getElementById('feedbackForm')?.addEventListener('submit', function(e) {
             e.preventDefault();
-            // Form submission handled in dashboard.js
+            const name = document.getElementById('feedbackName').value;
+            const message = document.getElementById('feedbackMessage').value;
+            
+            if (name && message) {
+                alert('Thank you for your feedback! We appreciate your input.');
+                document.getElementById('feedbackModal').style.display = 'none';
+                document.getElementById('feedbackForm').reset();
+            }
         });
         
         // Download report handlers
         document.querySelectorAll('.download-report').forEach(button => {
             button.addEventListener('click', function() {
                 const reportFile = this.dataset.report;
-                window.open(reportFile, '_blank');
+                // In a real app, this would generate/download the report
+                // For now, just show a message
+                alert('Report generation would create and download: ' + reportFile + '\n\nIn a production environment, this would trigger a server-side report generation.');
             });
         });
         
@@ -1095,6 +1113,21 @@
                 window.exportEnhancedData();
             }
         });
+        
+        // Add responsive table handling
+        function handleResponsiveTables() {
+            const tables = document.querySelectorAll('.sessions-table');
+            tables.forEach(table => {
+                if (window.innerWidth < 768) {
+                    table.classList.add('mobile-view');
+                } else {
+                    table.classList.remove('mobile-view');
+                }
+            });
+        }
+        
+        window.addEventListener('resize', handleResponsiveTables);
+        handleResponsiveTables();
     </script>
 </body>
 </html>

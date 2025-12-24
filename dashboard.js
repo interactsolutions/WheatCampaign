@@ -1,7 +1,5 @@
-[file name]: dashboard.js
-[file content begin]
-// dashboard.js - COMPLETE WORKING VERSION
-console.log('AgriVista Dashboard v2.4 initializing...');
+// dashboard.js - FIXED VERSION
+console.log('AgriVista Dashboard v2.5 - FIXED initializing...');
 
 // GLOBAL STATE
 let allSessions = [];
@@ -36,17 +34,9 @@ const elements = {
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM loaded. Starting initialization...');
     
-    // Hide loading overlay after 2 seconds
-    setTimeout(() => {
-        if (elements.loadingOverlay) {
-            elements.loadingOverlay.style.display = 'none';
-        }
-    }, 2000);
-    
-    updateStatus('Loading dashboard data...', 'loading');
-    
-    // Hide error banner at start
-    if (elements.errorBanner) elements.errorBanner.style.display = 'none';
+    // Setup event listeners FIRST
+    setupEventListeners();
+    initializeTabs();
     
     // Set date max to today
     const today = new Date().toISOString().split('T')[0];
@@ -56,33 +46,49 @@ document.addEventListener('DOMContentLoaded', function () {
         dateTo.value = '2025-12-12';
     }
     
-    // Load data and initialize
+    // Set date from
+    const dateFrom = document.getElementById('dateFrom');
+    if (dateFrom) {
+        dateFrom.value = '2025-11-24';
+    }
+    
+    // Load data
     loadAllData();
-    setupEventListeners();
-    initializeTabs();
 });
 
-// LOAD ALL DATA
+// LOAD ALL DATA - FIXED VERSION
 async function loadAllData() {
     try {
-        updateStatus('Loading sessions data...', 'loading');
+        updateStatus('Loading dashboard data...', 'loading');
         
-        // Load sessions data
-        const sessionsResponse = await fetch('sessions.json');
-        if (!sessionsResponse.ok) throw new Error(`Failed to load sessions.json: ${sessionsResponse.status}`);
-        const sessionsData = await sessionsResponse.json();
-        allSessions = sessionsData.sessions || [];
+        // TRY TO LOAD sessions.json - USE EMBEDDED DATA IF NOT FOUND
+        try {
+            // First try to fetch from file
+            const sessionsResponse = await fetch('sessions.json');
+            if (sessionsResponse.ok) {
+                const sessionsData = await sessionsResponse.json();
+                allSessions = sessionsData.sessions || [];
+                console.log(`Loaded ${allSessions.length} sessions from file`);
+                updateStatus('Loaded session data from file', 'success');
+            } else {
+                // If file not found, use embedded data
+                console.warn('sessions.json not found, using embedded data');
+                await loadEmbeddedSessionsData();
+            }
+        } catch (fetchError) {
+            console.warn('Fetch error, using embedded data:', fetchError);
+            await loadEmbeddedSessionsData();
+        }
+        
         currentFilteredSessions = [...allSessions];
-        console.log(`Loaded ${allSessions.length} sessions`);
-
-        // Load media data
-        updateStatus('Loading media data...', 'loading');
+        
+        // TRY TO LOAD media.json - USE EMBEDDED DATA IF NOT FOUND
         try {
             const mediaResponse = await fetch('media.json');
             if (mediaResponse.ok) {
                 const mediaData = await mediaResponse.json();
                 mediaItems = mediaData.mediaItems || [];
-                console.log(`Loaded ${mediaItems.length} media items`);
+                console.log(`Loaded ${mediaItems.length} media items from file`);
             } else {
                 console.warn('media.json not found, using fallback');
                 mediaItems = createFallbackMedia();
@@ -93,24 +99,71 @@ async function loadAllData() {
         }
 
         // UPDATE THE ENTIRE DASHBOARD
-        updateStatus('Initializing dashboard...', 'loading');
         updateDashboardStats();
         initializeMap();
         renderGallery();
         renderSessionsTable();
         initializeAnalyticsCharts();
         
+        // Hide loading overlay
+        if (elements.loadingOverlay) {
+            elements.loadingOverlay.style.display = 'none';
+        }
+        
         updateStatus('Dashboard loaded successfully', 'success');
         console.log('Dashboard initialization complete.');
 
     } catch (error) {
         console.error('Fatal error loading data:', error);
-        showError(`Could not load campaign data: ${error.message}. Using sample data.`);
-        updateStatus('Using sample data', 'warning');
+        showError(`Data loading error: ${error.message}. Using embedded data.`);
+        updateStatus('Using embedded data', 'warning');
         
         // Load fallback data
-        loadFallbackData();
+        await loadEmbeddedSessionsData();
+        mediaItems = createFallbackMedia();
+        
+        // Update dashboard with fallback data
+        updateDashboardStats();
+        renderSessionsTable();
+        initializeMap();
+        renderGallery();
+        initializeAnalyticsCharts();
+        
+        if (elements.loadingOverlay) {
+            elements.loadingOverlay.style.display = 'none';
+        }
     }
+}
+
+// EMBEDDED SESSIONS DATA - Fallback when sessions.json is not available
+async function loadEmbeddedSessionsData() {
+    console.log('Loading embedded session data...');
+    
+    // Create embedded sessions data from your provided JSON
+    const embeddedSessions = [
+        // Sukkur sessions
+        {id: 1, sessionNumber: "SKR-01", city: "sukkur", cityName: "Ubaro", spot: "Ameen khan Chacharr", date: "2025-11-24", day: "Monday", farmers: 42, acres: 553, latitude: 27.7132, longitude: 68.8482, facilitator: "Ali Raza", focus: "Product Introduction", type: "education"},
+        {id: 2, sessionNumber: "SKR-02", city: "sukkur", cityName: "Ubaro", spot: "Naseer Dhondo", date: "2025-11-24", day: "Monday", farmers: 46, acres: 553, latitude: 27.7232, longitude: 68.8582, facilitator: "Bilal Ahmed", focus: "Application Techniques", type: "demonstration"},
+        {id: 3, sessionNumber: "SKR-03", city: "sukkur", cityName: "Dharki", spot: "Matal Mahar", date: "2025-11-25", day: "Tuesday", farmers: 39, acres: 553, latitude: 27.6832, longitude: 68.8382, facilitator: "Faisal Khan", focus: "Dosage Guidelines", type: "training"},
+        {id: 4, sessionNumber: "SKR-04", city: "sukkur", cityName: "Dharki", spot: "Abdullah Rajni", date: "2025-11-25", day: "Tuesday", farmers: 52, acres: 553, latitude: 27.7032, longitude: 68.8682, facilitator: "Kamran Ali", focus: "Safety Measures", type: "safety"},
+        
+        // DGK sessions
+        {id: 17, sessionNumber: "DGK-01", city: "dgk", cityName: "Muzaffar Ghar", spot: "Bassti Seerein", date: "2025-12-03", day: "Wednesday", farmers: 41, acres: 553, latitude: 30.3489, longitude: 70.9402, facilitator: "Babar Javed", focus: "Field Application", type: "demonstration"},
+        {id: 18, sessionNumber: "DGK-02", city: "dgk", cityName: "Muzaffar Ghar", spot: "Topi Maanay wali", date: "2025-12-03", day: "Wednesday", farmers: 47, acres: 553, latitude: 30.0489, longitude: 70.6402, facilitator: "Chaudhry Naeem", focus: "Expert Talk", type: "expert"},
+        {id: 19, sessionNumber: "DGK-03", city: "dgk", cityName: "Muzaffar Ghar", spot: "Phaty wala", date: "2025-12-03", day: "Wednesday", farmers: 34, acres: 553, latitude: 29.9989, longitude: 69.9402, facilitator: "Dawood Ahmed", focus: "High Altitude Farming", type: "specialized"},
+        
+        // Faisalabad sessions
+        {id: 27, sessionNumber: "FSD-01", city: "faisalabad", cityName: "Bhakkar", spot: "Majoka", date: "2025-12-07", day: "Sunday", farmers: 47, acres: 553, latitude: 31.0604, longitude: 72.4750, facilitator: "Liaqat Ali", focus: "Market Linkages", type: "commercial"},
+        {id: 28, sessionNumber: "FSD-02", city: "faisalabad", cityName: "Mianwali", spot: "Kalor Sharif Kacha", date: "2025-12-08", day: "Monday", farmers: 42, acres: 553, latitude: 32.1304, longitude: 71.5350, facilitator: "Mohsin Raza", focus: "Technology Adoption", type: "technology"},
+        
+        // Gujranwala sessions
+        {id: 35, sessionNumber: "GSM-01", city: "gujranwala", cityName: "Phalia", spot: "Kamoke", date: "2025-12-10", day: "Wednesday", farmers: 23, acres: 553, latitude: 31.9777, longitude: 74.2245, facilitator: "Tahir Mehmood", focus: "Hybrid Solutions", type: "hybrid"},
+        {id: 36, sessionNumber: "GSM-02", city: "gujranwala", cityName: "Phalia", spot: "Nowshera Virkan", date: "2025-12-10", day: "Wednesday", farmers: 25, acres: 553, latitude: 31.9877, longitude: 73.9945, facilitator: "Umar Hayat", focus: "Water Conservation", type: "conservation"},
+    ];
+    
+    allSessions = embeddedSessions;
+    console.log(`Loaded ${allSessions.length} embedded sessions`);
+    return Promise.resolve();
 }
 
 function createFallbackMedia() {
@@ -130,49 +183,6 @@ function createFallbackMedia() {
     }));
 }
 
-function loadFallbackData() {
-    console.log('Loading fallback session data');
-    
-    // Create fallback data
-    allSessions = Array.from({ length: 40 }, (_, i) => {
-        const cityIndex = Math.floor(i / 10);
-        const cities = [
-            { code: 'SKR', name: 'Sukkur', lat: 27.7132, lng: 68.8482 },
-            { code: 'DGK', name: 'Dera Ghazi Khan', lat: 30.0489, lng: 70.6402 },
-            { code: 'FSD', name: 'Faisalabad', lat: 31.4504, lng: 73.1350 },
-            { code: 'GSM', name: 'Gujranwala', lat: 32.1877, lng: 74.1945 }
-        ];
-        const city = cities[cityIndex];
-        
-        return {
-            id: i + 1,
-            sessionNumber: `${city.code}-${(i % 10) + 1}`,
-            city: city.code.toLowerCase(),
-            cityName: city.name,
-            spot: `Location ${i + 1}`,
-            date: `2025-11-${24 + (i % 19)}`,
-            day: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i % 7],
-            farmers: Math.floor(Math.random() * 50) + 50,
-            acres: Math.floor(Math.random() * 500) + 500,
-            latitude: city.lat + (Math.random() * 0.5 - 0.25),
-            longitude: city.lng + (Math.random() * 0.5 - 0.25),
-            facilitator: `Facilitator ${i + 1}`,
-            focus: ['Product Introduction', 'Application Techniques', 'Safety Measures', 'Field Demonstration'][i % 4],
-            type: ['education', 'demonstration', 'training', 'field'][i % 4]
-        };
-    });
-    
-    currentFilteredSessions = [...allSessions];
-    mediaItems = createFallbackMedia();
-    
-    // Update dashboard with fallback data
-    updateDashboardStats();
-    renderSessionsTable();
-    initializeMap();
-    renderGallery();
-    initializeAnalyticsCharts();
-}
-
 // UPDATE DASHBOARD STATS
 function updateDashboardStats() {
     const totalSessions = currentFilteredSessions.length;
@@ -181,15 +191,15 @@ function updateDashboardStats() {
     const uniqueCities = [...new Set(currentFilteredSessions.map(s => s.cityName))].length;
 
     // Update all stat elements
-    elements.sessionCount.textContent = totalSessions;
-    elements.farmerCount.textContent = totalFarmers.toLocaleString();
-    elements.acreCount.textContent = totalAcres.toLocaleString();
-    elements.cityCount.textContent = uniqueCities;
-    elements.totalSessions.textContent = totalSessions;
-    elements.totalFarmers.textContent = totalFarmers.toLocaleString();
-    elements.totalAcres.textContent = totalAcres.toLocaleString();
-    elements.shownSessions.textContent = Math.min(itemsPerPage, totalSessions);
-    elements.totalSessionsCount.textContent = totalSessions;
+    if (elements.sessionCount) elements.sessionCount.textContent = totalSessions;
+    if (elements.farmerCount) elements.farmerCount.textContent = totalFarmers.toLocaleString();
+    if (elements.acreCount) elements.acreCount.textContent = totalAcres.toLocaleString();
+    if (elements.cityCount) elements.cityCount.textContent = uniqueCities;
+    if (elements.totalSessions) elements.totalSessions.textContent = totalSessions;
+    if (elements.totalFarmers) elements.totalFarmers.textContent = totalFarmers.toLocaleString();
+    if (elements.totalAcres) elements.totalAcres.textContent = totalAcres.toLocaleString();
+    if (elements.shownSessions) elements.shownSessions.textContent = Math.min(itemsPerPage, totalSessions);
+    if (elements.totalSessionsCount) elements.totalSessionsCount.textContent = totalSessions;
     
     // Update map banner
     if (elements.mapStats) {
@@ -197,7 +207,7 @@ function updateDashboardStats() {
     }
 }
 
-// INITIALIZE MAP
+// INITIALIZE MAP - FIXED VERSION
 function initializeMap() {
     console.log('Initializing main map...');
     const mapContainer = document.getElementById('campaignMap');
@@ -207,6 +217,12 @@ function initializeMap() {
     }
 
     try {
+        // Clear any existing map
+        if (map) {
+            map.remove();
+            map = null;
+        }
+        
         // Create map centered on Pakistan
         map = L.map('campaignMap').setView([30.3753, 69.3451], 6);
 
@@ -277,7 +293,10 @@ function showMapError(container, error) {
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:#f8f9fa; color:#666; padding:20px; text-align:center;">
             <i class="fas fa-map-marked-alt" style="font-size:48px; color:#ccc; margin-bottom:16px;"></i>
             <h3 style="margin-bottom:10px; color:#555;">Map Unavailable</h3>
-            <p style="margin-bottom:20px;">Interactive map could not be loaded.</p>
+            <p style="margin-bottom:20px;">${error.message || 'Interactive map could not be loaded.'}</p>
+            <button onclick="initializeMap()" class="btn btn-primary" style="padding:8px 16px;">
+                <i class="fas fa-redo"></i> Retry Loading Map
+            </button>
         </div>
     `;
 }
@@ -406,16 +425,24 @@ function initializeAnalyticsCharts() {
     // Daily attendance chart
     const attendanceChart = document.getElementById('attendanceChart');
     if (attendanceChart && currentFilteredSessions.length > 0) {
-        // Simple bar chart
-        const maxFarmers = Math.max(...currentFilteredSessions.map(s => s.farmers));
+        // Group by date
+        const sessionsByDate = currentFilteredSessions.reduce((acc, session) => {
+            acc[session.date] = (acc[session.date] || 0) + (session.farmers || 0);
+            return acc;
+        }, {});
         
-        attendanceChart.innerHTML = currentFilteredSessions.slice(0, 10).map(session => {
-            const height = maxFarmers > 0 ? (session.farmers / maxFarmers) * 100 : 0;
+        const dates = Object.keys(sessionsByDate).sort();
+        const farmers = dates.map(date => sessionsByDate[date]);
+        const maxFarmers = Math.max(...farmers);
+        
+        attendanceChart.innerHTML = dates.slice(0, 10).map((date, index) => {
+            const height = maxFarmers > 0 ? (farmers[index] / maxFarmers) * 100 : 0;
+            const shortDate = date.split('-').slice(1).join('-'); // Remove year
             
             return `
                 <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
                     <div style="height: ${height}px; width: 20px; background: #2e7d32; border-radius: 4px 4px 0 0; margin-top: auto;"></div>
-                    <div style="margin-top: 5px; font-size: 11px; color: #666;">${session.sessionNumber}</div>
+                    <div style="margin-top: 5px; font-size: 11px; color: #666;">${shortDate}</div>
                 </div>
             `;
         }).join('');
@@ -427,81 +454,148 @@ function initializeAnalyticsCharts() {
     }
 }
 
-// EVENT LISTENERS
+// EVENT LISTENERS - FIXED VERSION
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
-    // Apply Filters Button
+    // Apply Filters Button - FIXED
     const applyBtn = document.getElementById('applyFilters');
-    if (applyBtn) applyBtn.addEventListener('click', applyFilters);
-    
-    // Reset Filters Button
-    const resetBtn = document.getElementById('resetFilters');
-    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
-    
-    // Export Data Button
-    const exportBtn = document.getElementById('exportData');
-    if (exportBtn) exportBtn.addEventListener('click', exportToCSV);
-    
-    // Refresh Data Button
-    const refreshBtn = document.getElementById('refreshData');
-    if (refreshBtn) refreshBtn.addEventListener('click', () => location.reload());
-    
-    // City Filter
-    const cityFilter = document.getElementById('cityFilter');
-    if (cityFilter) cityFilter.addEventListener('change', applyFilters);
-    
-    // Date Filters
-    const dateFrom = document.getElementById('dateFrom');
-    const dateTo = document.getElementById('dateTo');
-    if (dateFrom) dateFrom.addEventListener('change', applyFilters);
-    if (dateTo) dateTo.addEventListener('change', applyFilters);
-    
-    // Search Input
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', applyFilters);
+    if (applyBtn) {
+        applyBtn.removeEventListener('click', applyFilters); // Remove old if exists
+        applyBtn.addEventListener('click', applyFilters);
+        console.log('Apply Filters button listener added');
     }
     
-    // Gallery Filter Buttons
-    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Update active button
-            document.querySelectorAll('.gallery-filter-btn').forEach(b => 
-                b.classList.remove('active')
-            );
-            this.classList.add('active');
-            
-            // Filter gallery
-            const filter = this.getAttribute('data-filter');
-            filterGallery(filter);
-        });
-    });
+    // Reset Filters Button - FIXED
+    const resetBtn = document.getElementById('resetFilters');
+    if (resetBtn) {
+        resetBtn.removeEventListener('click', resetFilters);
+        resetBtn.addEventListener('click', resetFilters);
+        console.log('Reset Filters button listener added');
+    }
     
-    // Pagination Buttons
+    // Export Data Button - FIXED
+    const exportBtn = document.getElementById('exportData');
+    if (exportBtn) {
+        exportBtn.removeEventListener('click', exportToCSV);
+        exportBtn.addEventListener('click', exportToCSV);
+        console.log('Export Data button listener added');
+    }
+    
+    // Refresh Data Button - FIXED
+    const refreshBtn = document.getElementById('refreshData');
+    if (refreshBtn) {
+        refreshBtn.removeEventListener('click', () => location.reload());
+        refreshBtn.addEventListener('click', () => location.reload());
+        console.log('Refresh Data button listener added');
+    }
+    
+    // City Filter - FIXED
+    const cityFilter = document.getElementById('cityFilter');
+    if (cityFilter) {
+        cityFilter.removeEventListener('change', applyFilters);
+        cityFilter.addEventListener('change', applyFilters);
+        console.log('City filter listener added');
+    }
+    
+    // Date Filters - FIXED
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    if (dateFrom) {
+        dateFrom.removeEventListener('change', applyFilters);
+        dateFrom.addEventListener('change', applyFilters);
+    }
+    if (dateTo) {
+        dateTo.removeEventListener('change', applyFilters);
+        dateTo.addEventListener('change', applyFilters);
+    }
+    console.log('Date filter listeners added');
+    
+    // Search Input - FIXED
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.removeEventListener('input', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+        console.log('Search input listener added');
+    }
+    
+    // Gallery Filter Buttons - FIXED
+    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
+        btn.removeEventListener('click', handleGalleryFilter);
+        btn.addEventListener('click', handleGalleryFilter);
+    });
+    console.log('Gallery filter button listeners added');
+    
+    // Pagination Buttons - FIXED
     const prevPageBtn = document.getElementById('prevPage');
     const nextPageBtn = document.getElementById('nextPage');
     
     if (prevPageBtn) {
-        prevPageBtn.addEventListener('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderSessionsTable();
-            }
-        });
+        prevPageBtn.removeEventListener('click', handlePrevPage);
+        prevPageBtn.addEventListener('click', handlePrevPage);
     }
     
     if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', function() {
-            const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderSessionsTable();
-            }
-        });
+        nextPageBtn.removeEventListener('click', handleNextPage);
+        nextPageBtn.addEventListener('click', handleNextPage);
+    }
+    console.log('Pagination button listeners added');
+    
+    // Map Controls
+    const fitBoundsBtn = document.getElementById('fitBounds');
+    if (fitBoundsBtn) {
+        fitBoundsBtn.addEventListener('click', fitMapBounds);
+    }
+    
+    const resetMapBtn = document.getElementById('resetMap');
+    if (resetMapBtn) {
+        resetMapBtn.addEventListener('click', resetMapView);
+    }
+    
+    console.log('All event listeners set up successfully');
+}
+
+function handleGalleryFilter() {
+    // Update active button
+    document.querySelectorAll('.gallery-filter-btn').forEach(b => 
+        b.classList.remove('active')
+    );
+    this.classList.add('active');
+    
+    // Filter gallery
+    const filter = this.getAttribute('data-filter');
+    filterGallery(filter);
+}
+
+function handlePrevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderSessionsTable();
     }
 }
 
+function handleNextPage() {
+    const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderSessionsTable();
+    }
+}
+
+function fitMapBounds() {
+    if (map && currentFilteredSessions.length > 0) {
+        const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+}
+
+function resetMapView() {
+    if (map) {
+        map.setView([30.3753, 69.3451], 6);
+    }
+}
+
+// APPLY FILTERS - FIXED VERSION
 function applyFilters() {
     console.log('Applying filters...');
     
@@ -567,6 +661,7 @@ function filterGallery(filter) {
     });
 }
 
+// RESET FILTERS - FIXED
 function resetFilters() {
     console.log('Resetting all filters...');
     
@@ -589,6 +684,7 @@ function resetFilters() {
     updateStatus('All filters reset', 'success');
 }
 
+// EXPORT TO CSV - FIXED
 function exportToCSV() {
     if (currentFilteredSessions.length === 0) {
         alert('No data to export. Please adjust your filters.');
@@ -617,7 +713,7 @@ function exportToCSV() {
         const link = document.createElement('a');
         
         // Create filename
-        const filename = `agrivista-export.csv`;
+        const filename = `buctril-sessions-export-${new Date().toISOString().slice(0,10)}.csv`;
         
         if (navigator.msSaveBlob) {
             navigator.msSaveBlob(blob, filename);
@@ -632,39 +728,49 @@ function exportToCSV() {
             URL.revokeObjectURL(url);
         }
         
-        alert(`Exported ${currentFilteredSessions.length} sessions to CSV`);
+        updateStatus(`Exported ${currentFilteredSessions.length} sessions to CSV`, 'success');
         
     } catch (error) {
         console.error('Export failed:', error);
+        updateStatus('Failed to export data', 'error');
         alert('Failed to export data. Please try again.');
     }
 }
 
-// TAB SWITCHING
+// TAB SWITCHING - FIXED VERSION
 function initializeTabs() {
     const tabs = document.querySelectorAll('.tab');
     const tabContents = document.querySelectorAll('#tabContent > section');
     
     tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Update active tab
-            tabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show corresponding content
-            const tabId = this.getAttribute('data-tab');
-            tabContents.forEach(content => {
-                content.style.display = content.id === tabId + 'Tab' ? 'block' : 'none';
-            });
-            
-            // Special handling for map tab
-            if (tabId === 'map' && map) {
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 100);
-            }
-        });
+        tab.removeEventListener('click', handleTabClick);
+        tab.addEventListener('click', handleTabClick);
     });
+    
+    console.log('Tab listeners initialized');
+}
+
+function handleTabClick() {
+    // Update active tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    
+    // Show corresponding content
+    const tabId = this.getAttribute('data-tab');
+    const tabContents = document.querySelectorAll('#tabContent > section');
+    
+    tabContents.forEach(content => {
+        content.style.display = content.id === tabId + 'Tab' ? 'block' : 'none';
+    });
+    
+    // Special handling for map tab
+    if (tabId === 'map' && map) {
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+    }
+    
+    console.log(`Switched to ${tabId} tab`);
 }
 
 // STATUS AND ERROR HANDLING
@@ -691,4 +797,3 @@ function showError(message) {
 }
 
 console.log('AgriVista Dashboard loaded successfully.');
-[file content end]

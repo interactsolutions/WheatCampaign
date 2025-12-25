@@ -1,5 +1,5 @@
-// dashboard.js - FIXED VERSION v6.0
-console.log('AgriVista Dashboard v6.0 - Fixed Media Paths initializing...');
+// dashboard.js - FIXED MEDIA PATHS v1.0
+console.log('AgriVista Dashboard v1.0 - Fixed Media Paths initializing...');
 
 // GLOBAL STATE
 let allSessions = [];
@@ -103,8 +103,6 @@ async function loadAllData() {
         
         console.log(`Loaded ${allSessions.length} sessions and ${mediaItems.length} media items`);
         
-        setTimeout(initializeLazyLoading, 1000);
-        
     } catch (error) {
         console.error('Error loading data:', error);
         showError(`Data loading error: ${error.message}. Using fallback data.`);
@@ -124,7 +122,7 @@ async function loadAllData() {
     }
 }
 
-// ===== UPDATED MEDIA HANDLING =====
+// ===== FIXED MEDIA LOADING =====
 async function loadMediaData() {
     try {
         console.log('Loading media data...');
@@ -132,21 +130,20 @@ async function loadMediaData() {
         const response = await fetch('media.json');
         if (response.ok) {
             const data = await response.json();
-            mediaItems = data.mediaItems || [];
             
-            console.log(`Loaded ${mediaItems.length} media items from media.json`);
+            // Get base path from JSON or use default
+            const basePath = data.mediaBasePath || 'assets/media/';
+            const items = data.mediaItems || [];
             
-            // Fix paths based on folder structure
-            mediaItems = mediaItems.map(item => {
-                if (item.filename && !item.filename.includes('/')) {
-                    // If no path specified, determine based on category
-                    const isBranding = ['brand', 'utility', 'logo'].includes(item.category);
-                    item.filename = isBranding ? 
-                        `assets/${item.filename}` : 
-                        `assets/gallery/${item.filename}`;
-                }
-                return item;
+            // Prepend base path to all filenames
+            mediaItems = items.map(item => {
+                return {
+                    ...item,
+                    filename: basePath + item.filename
+                };
             });
+            
+            console.log(`Loaded ${mediaItems.length} media items`);
             
         } else {
             throw new Error('media.json not found');
@@ -158,17 +155,115 @@ async function loadMediaData() {
 }
 
 function createFallbackMedia() {
+    const basePath = 'assets/media/';
     return [
-        { id: 1, filename: 'assets/Bayer.png', caption: 'Bayer Logo', category: 'brand', type: 'logo' },
-        { id: 2, filename: 'assets/Buctril.jpg', caption: 'Buctril Super', category: 'brand', type: 'product' },
-        { id: 3, filename: 'assets/Interact.gif', caption: 'Animation', category: 'brand', type: 'animation' },
-        { id: 4, filename: 'assets/poductts.jpg', caption: 'Product Range', category: 'brand', type: 'product-range' },
-        { id: 5, filename: 'assets/gallery/bg.mp4', caption: 'Background Video', category: 'brand', type: 'background' },
-        { id: 6, filename: 'assets/gallery/placeholder.svg', caption: 'Session Placeholder', category: 'session', type: 'photo', district: 'Ubaro', sessionId: 1 }
+        { id: 1, filename: basePath + 'Bayer.png', caption: 'Bayer Logo', category: 'brand', type: 'logo' },
+        { id: 2, filename: basePath + 'Buctril.jpg', caption: 'Buctril Super', category: 'brand', type: 'product' },
+        { id: 3, filename: basePath + 'Interact.gif', caption: 'Animation', category: 'brand', type: 'animation' },
+        { id: 4, filename: basePath + 'poductts.jpg', caption: 'Product Range', category: 'brand', type: 'product-range' },
+        { id: 5, filename: basePath + 'bg.mp4', caption: 'Background Video', category: 'brand', type: 'background' },
+        { id: 6, filename: basePath + 'placeholder.svg', caption: 'Placeholder', category: 'utility', type: 'placeholder' }
     ];
 }
 
-// ===== FIXED CSV PARSING =====
+// ===== SIMPLIFIED GALLERY RENDERING =====
+function renderGallery() {
+    const container = elements.mediaGallery;
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    if (mediaItems.length === 0) {
+        container.innerHTML = `
+            <div class="gallery-placeholder">
+                <i class="fas fa-image"></i>
+                <p>No media files found</p>
+                <small>Add media files to assets/media/ folder</small>
+            </div>
+        `;
+        return;
+    }
+    
+    const placeholder = 'assets/media/placeholder.svg';
+    
+    mediaItems.forEach((media, index) => {
+        // Determine media type
+        const isVideo = media.filename.endsWith('.mp4') || 
+                       media.filename.endsWith('.webm') ||
+                       media.type === 'video' ||
+                       media.type === 'background';
+        
+        const isImage = media.filename.endsWith('.jpeg') || 
+                       media.filename.endsWith('.jpg') ||
+                       media.filename.endsWith('.png') ||
+                       media.filename.endsWith('.gif') ||
+                       ['photo', 'logo', 'product', 'animation', 'product-range'].includes(media.type);
+        
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.setAttribute('data-index', index);
+        item.setAttribute('data-category', media.category || 'other');
+        item.setAttribute('data-type', media.type || 'unknown');
+        
+        if (isVideo) {
+            item.innerHTML = `
+                <div class="video-wrapper">
+                    <video muted playsinline preload="metadata" poster="${placeholder}">
+                        <source src="${media.filename}" type="video/mp4">
+                    </video>
+                    <div class="video-overlay">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="media-type-badge">
+                        <i class="fas fa-video"></i> Video
+                    </div>
+                </div>
+                <div class="gallery-caption">
+                    <div class="gallery-badge ${media.category}">${media.category}</div>
+                    <div class="gallery-title">${media.caption || 'Media Item'}</div>
+                    ${media.district ? `<div class="gallery-meta"><i class="fas fa-map-marker-alt"></i> ${media.district}</div>` : ''}
+                </div>
+            `;
+        } else if (isImage) {
+            item.innerHTML = `
+                <img src="${media.filename}" 
+                     alt="${media.caption || 'Media'}"
+                     loading="lazy"
+                     onerror="this.src='${placeholder}'">
+                <div class="media-type-badge">
+                    <i class="fas fa-image"></i> Image
+                </div>
+                <div class="gallery-caption">
+                    <div class="gallery-badge ${media.category}">${media.category}</div>
+                    <div class="gallery-title">${media.caption || 'Media Item'}</div>
+                    ${media.district ? `<div class="gallery-meta"><i class="fas fa-map-marker-alt"></i> ${media.district}</div>` : ''}
+                </div>
+            `;
+        } else {
+            item.innerHTML = `
+                <img src="${placeholder}" 
+                     alt="Placeholder"
+                     loading="lazy">
+                <div class="media-type-badge">
+                    <i class="fas fa-file"></i> File
+                </div>
+                <div class="gallery-caption">
+                    <div class="gallery-badge ${media.category}">${media.category}</div>
+                    <div class="gallery-title">${media.caption || 'Media Item'}</div>
+                </div>
+            `;
+        }
+        
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMediaViewer(index);
+        });
+        
+        container.appendChild(item);
+    });
+}
+
+// ===== CSV PARSING =====
 async function loadSessionsFromCSV() {
     try {
         console.log('Loading sessions from CSV...');
@@ -395,231 +490,52 @@ async function loadFallbackData() {
     currentFilteredSessions = [...allSessions];
 }
 
-// ===== GALLERY FUNCTIONS =====
-function renderGallery() {
-    const container = elements.mediaGallery;
-    if (!container) return;
-
-    container.innerHTML = '';
+// ===== MEDIA VIEWER =====
+function openMediaViewer(index) {
+    const media = mediaItems[index];
+    const modal = document.getElementById('mediaModal');
+    const viewer = document.getElementById('mediaViewer');
+    const title = document.getElementById('mediaModalTitle');
+    const counter = document.getElementById('mediaCounter');
     
-    if (mediaItems.length === 0) {
-        container.innerHTML = `
-            <div class="gallery-placeholder">
-                <i class="fas fa-image"></i>
-                <p>No media files found</p>
-                <small>Add media files to assets/gallery/ folder</small>
-            </div>
+    if (!modal || !viewer) return;
+    
+    title.textContent = media.caption || 'Media Viewer';
+    counter.textContent = `${index + 1} of ${mediaItems.length}`;
+    
+    const isVideo = media.filename.endsWith('.mp4') || media.type === 'video';
+    
+    if (isVideo) {
+        viewer.innerHTML = `
+            <video controls autoplay style="width:100%; max-height:70vh;">
+                <source src="${media.filename}" type="video/mp4">
+                Your browser does not support videos.
+            </video>
         `;
-        return;
+    } else {
+        viewer.innerHTML = `
+            <img src="${media.filename}" 
+                 alt="${media.caption}"
+                 style="width:100%; max-height:70vh; object-fit:contain;"
+                 onerror="this.src='assets/media/placeholder.svg'">
+        `;
     }
     
-    mediaItems.forEach((media, index) => {
-        const isVideo = media.filename.endsWith('.mp4') || 
-                       media.filename.endsWith('.webm') ||
-                       media.type === 'video' ||
-                       media.type === 'background';
-        
-        const item = document.createElement('div');
-        item.className = 'gallery-item';
-        item.setAttribute('data-index', index);
-        item.setAttribute('data-category', media.category || 'other');
-        item.setAttribute('data-type', media.type || 'unknown');
-        item.setAttribute('data-district', media.district || '');
-        item.setAttribute('data-session', media.sessionId || '');
-        
-        let mediaSrc = media.filename;
-        
-        // Check if file exists, otherwise use placeholder
-        if (!fileExists(media.filename)) {
-            mediaSrc = 'assets/gallery/placeholder.svg';
-        }
-        
-        if (isVideo) {
-            item.innerHTML = `
-                <div class="video-wrapper">
-                    <video muted playsinline preload="metadata" poster="assets/gallery/placeholder.svg">
-                        <source src="${mediaSrc}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="video-overlay">
-                        <i class="fas fa-play-circle"></i>
-                    </div>
-                    <div class="media-type-badge">
-                        <i class="fas fa-video"></i> ${media.type === 'background' ? 'Background' : 'Video'}
-                    </div>
-                </div>
-                <div class="gallery-caption">
-                    <div class="gallery-badge ${media.category || 'other'}">${media.category || 'Media'}</div>
-                    <div class="gallery-title" title="${media.caption || 'Media Item'}">
-                        ${(media.caption || 'Media Item').substring(0, 40)}
-                        ${(media.caption || '').length > 40 ? '...' : ''}
-                    </div>
-                    <div class="gallery-meta">
-                        ${media.sessionId ? `<span><i class="fas fa-hashtag"></i> Session ${media.sessionId}</span>` : ''}
-                        ${media.district ? `<span><i class="fas fa-map-marker-alt"></i> ${media.district}</span>` : ''}
-                        ${media.date ? `<span><i class="fas fa-calendar"></i> ${media.date}</span>` : ''}
-                    </div>
-                </div>
-            `;
-        } else {
-            item.innerHTML = `
-                <img src="${mediaSrc}" 
-                     alt="${media.caption || 'Campaign image'}"
-                     loading="lazy"
-                     onerror="this.src='assets/gallery/placeholder.svg'; this.onerror=null;"
-                     style="width:100%; height:180px; object-fit:cover; border-radius:8px 8px 0 0;">
-                <div class="media-type-badge">
-                    <i class="fas fa-image"></i> ${media.type === 'logo' ? 'Logo' : 'Image'}
-                </div>
-                <div class="gallery-caption">
-                    <div class="gallery-badge ${media.category || 'other'}">${media.category || 'Media'}</div>
-                    <div class="gallery-title" title="${media.caption || 'Media Item'}">
-                        ${(media.caption || 'Media Item').substring(0, 40)}
-                        ${(media.caption || '').length > 40 ? '...' : ''}
-                    </div>
-                    <div class="gallery-meta">
-                        ${media.sessionId ? `<span><i class="fas fa-hashtag"></i> Session ${media.sessionId}</span>` : ''}
-                        ${media.district ? `<span><i class="fas fa-map-marker-alt"></i> ${media.district}</span>` : ''}
-                        ${media.date ? `<span><i class="fas fa-calendar"></i> ${media.date}</span>` : ''}
-                    </div>
-                </div>
-            `;
-        }
-        
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openMediaViewer(index);
-        });
-        
-        container.appendChild(item);
-    });
+    modal.style.display = 'block';
     
-    // Initialize filter counts
-    updateMediaFilterCounts();
+    // Setup navigation
+    const prevBtn = document.getElementById('prevMedia');
+    const nextBtn = document.getElementById('nextMedia');
+    
+    if (prevBtn) prevBtn.onclick = () => navigateMedia(index - 1);
+    if (nextBtn) nextBtn.onclick = () => navigateMedia(index + 1);
 }
 
-function fileExists(url) {
-    // In a real app, you'd check if the file exists via AJAX
-    // For now, we'll assume placeholder for missing files
-    return url.includes('Bayer.png') || 
-           url.includes('Buctril.jpg') || 
-           url.includes('Interact.gif') || 
-           url.includes('poductts.jpg') ||
-           url.includes('bg.mp4') ||
-           url.includes('placeholder.svg');
-}
-
-// ===== MEDIA FILTERING =====
-function handleGalleryFilter(e) {
-    const filterBtn = e.currentTarget;
-    const filterValue = filterBtn.getAttribute('data-filter');
+function navigateMedia(newIndex) {
+    if (newIndex < 0) newIndex = mediaItems.length - 1;
+    if (newIndex >= mediaItems.length) newIndex = 0;
     
-    // Update active button
-    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    filterBtn.classList.add('active');
-    
-    // Filter gallery items
-    const items = document.querySelectorAll('.gallery-item');
-    let visibleCount = 0;
-    
-    items.forEach(item => {
-        const itemType = item.getAttribute('data-type');
-        const itemCategory = item.getAttribute('data-category');
-        const itemDistrict = item.getAttribute('data-district');
-        
-        let shouldShow = false;
-        
-        switch(filterValue) {
-            case 'all':
-                shouldShow = true;
-                break;
-            case 'brand':
-                shouldShow = itemCategory === 'brand' || itemCategory === 'utility';
-                break;
-            case 'session':
-                shouldShow = itemCategory === 'session';
-                break;
-            case 'videos':
-                shouldShow = itemType === 'video' || itemType === 'background';
-                break;
-            case 'images':
-                shouldShow = itemType === 'photo' || itemType === 'logo' || itemType === 'product' || itemType === 'animation';
-                break;
-            case 'district':
-                // This would show a district selector in real implementation
-                shouldShow = true;
-                break;
-            default:
-                if (filterValue && itemDistrict === filterValue) {
-                    shouldShow = true;
-                }
-        }
-        
-        if (shouldShow) {
-            item.style.display = 'block';
-            visibleCount++;
-        } else {
-            item.style.display = 'none';
-        }
-    });
-    
-    // Show message if no items
-    const container = elements.mediaGallery;
-    const placeholder = container.querySelector('.gallery-placeholder');
-    
-    if (visibleCount === 0) {
-        if (!placeholder) {
-            const emptyMsg = document.createElement('div');
-            emptyMsg.className = 'gallery-placeholder';
-            emptyMsg.innerHTML = `
-                <i class="fas fa-filter"></i>
-                <p>No media found for selected filter</p>
-                <small>Try another filter option</small>
-            `;
-            container.appendChild(emptyMsg);
-        }
-    } else if (placeholder) {
-        placeholder.remove();
-    }
-    
-    // Update counts in UI
-    document.getElementById('galleryCount').textContent = visibleCount;
-}
-
-function updateMediaFilterCounts() {
-    const counts = {
-        all: mediaItems.length,
-        brand: mediaItems.filter(m => m.category === 'brand' || m.category === 'utility').length,
-        session: mediaItems.filter(m => m.category === 'session').length,
-        videos: mediaItems.filter(m => m.type === 'video' || m.type === 'background').length,
-        images: mediaItems.filter(m => ['photo', 'logo', 'product', 'animation'].includes(m.type)).length
-    };
-    
-    // Update button counts
-    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
-        const filter = btn.getAttribute('data-filter');
-        const countSpan = btn.querySelector('.count');
-        if (countSpan && counts[filter]) {
-            countSpan.textContent = counts[filter];
-        }
-    });
-}
-
-function updateMediaCounts() {
-    const images = mediaItems.filter(m => 
-        ['photo', 'logo', 'product', 'animation'].includes(m.type)).length;
-    const videos = mediaItems.filter(m => 
-        m.type === 'video' || m.type === 'background').length;
-    
-    document.getElementById('galleryCount').textContent = mediaItems.length;
-    document.getElementById('allMediaCount').textContent = mediaItems.length;
-    document.getElementById('totalMediaCount').textContent = mediaItems.length;
-    document.getElementById('imageCount').textContent = images;
-    document.getElementById('videoCount').textContent = videos;
-    document.getElementById('footerMediaCount').textContent = mediaItems.length;
+    openMediaViewer(newIndex);
 }
 
 // ===== MAP FUNCTIONS =====
@@ -931,9 +847,7 @@ function updateProgress(percent, message) {
     if (elements.progressText) {
         elements.progressText.textContent = percent + '%';
     }
-    if (message) {
-        console.log(message);
-    }
+    console.log(message);
 }
 
 function updateStatus(message, type = 'info') {
@@ -952,10 +866,8 @@ function updateStatus(message, type = 'info') {
 }
 
 function showError(message) {
-    if (elements.errorBanner && elements.errorMessage) {
-        elements.errorMessage.textContent = message;
-        elements.errorBanner.style.display = 'flex';
-    }
+    console.error(message);
+    updateStatus(message, 'error');
 }
 
 function showToast(message, type = 'info', duration = 3000) {
@@ -1018,6 +930,13 @@ function setupEventListeners() {
     document.getElementById('fitBounds')?.addEventListener('click', fitMapBounds);
     document.getElementById('resetMap')?.addEventListener('click', resetMapView);
     document.getElementById('exportMap')?.addEventListener('click', captureMap);
+    
+    // Close modals
+    document.querySelectorAll('.modal-close, .btn-outline[id$="Cancel"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        });
+    });
 }
 
 function initializeTabs() {
@@ -1049,16 +968,93 @@ function initializeTabs() {
     });
 }
 
-// ===== STUB FUNCTIONS (to be implemented) =====
+// ===== MEDIA FILTERING =====
+function handleGalleryFilter(e) {
+    const filterBtn = e.currentTarget;
+    const filterValue = filterBtn.getAttribute('data-filter');
+    
+    // Update active button
+    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    filterBtn.classList.add('active');
+    
+    // Filter gallery items
+    const items = document.querySelectorAll('.gallery-item');
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+        const itemType = item.getAttribute('data-type');
+        const itemCategory = item.getAttribute('data-category');
+        
+        let shouldShow = false;
+        
+        switch(filterValue) {
+            case 'all':
+                shouldShow = true;
+                break;
+            case 'brand':
+                shouldShow = itemCategory === 'brand';
+                break;
+            case 'session':
+                shouldShow = itemCategory === 'session';
+                break;
+            case 'videos':
+                shouldShow = itemType === 'video' || itemType === 'background';
+                break;
+            case 'images':
+                shouldShow = ['photo', 'logo', 'product', 'animation', 'product-range'].includes(itemType);
+                break;
+        }
+        
+        if (shouldShow) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Show message if no items
+    const container = elements.mediaGallery;
+    const placeholder = container.querySelector('.gallery-placeholder');
+    
+    if (visibleCount === 0) {
+        if (!placeholder) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'gallery-placeholder';
+            emptyMsg.innerHTML = `
+                <i class="fas fa-filter"></i>
+                <p>No media found for selected filter</p>
+                <small>Try another filter option</small>
+            `;
+            container.appendChild(emptyMsg);
+        }
+    } else if (placeholder) {
+        placeholder.remove();
+    }
+    
+    // Update counts in UI
+    document.getElementById('galleryCount').textContent = visibleCount;
+}
+
+function updateMediaCounts() {
+    const images = mediaItems.filter(m => 
+        ['photo', 'logo', 'product', 'animation', 'product-range'].includes(m.type)).length;
+    const videos = mediaItems.filter(m => 
+        m.type === 'video' || m.type === 'background').length;
+    
+    document.getElementById('galleryCount').textContent = mediaItems.length;
+    document.getElementById('totalMediaCount').textContent = mediaItems.length;
+    document.getElementById('imageCount').textContent = images;
+    document.getElementById('videoCount').textContent = videos;
+    document.getElementById('footerMediaCount').textContent = mediaItems.length;
+}
+
+// ===== STUB FUNCTIONS =====
 function showSessionModal(sessionId) {
     console.log('Show session modal:', sessionId);
     alert(`Session ${sessionId} details would show here in a modal.`);
-}
-
-function openMediaViewer(index) {
-    console.log('Open media viewer:', index);
-    const media = mediaItems[index];
-    alert(`Media viewer: ${media.caption}\n\nPath: ${media.filename}`);
 }
 
 function initializeAnalyticsCharts() {
@@ -1120,8 +1116,4 @@ function filterByDistrict(district) {
     applyFilters();
 }
 
-function initializeLazyLoading() {
-    console.log('Lazy loading initialized');
-}
-
-console.log('AgriVista Dashboard v6.0 loaded successfully.');
+console.log('AgriVista Dashboard with fixed media paths loaded successfully.');

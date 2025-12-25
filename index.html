@@ -8,7 +8,7 @@
     <!-- SEO and Social Meta Tags -->
     <meta name="description" content="Buctril Super Farmer Education Drive 2025 - Interactive dashboard with session analytics, media gallery, and interactive maps">
     <meta property="og:title" content="AgriVista Dashboard - Buctril Super Farmer Education Drive 2025">
-    <meta property="og:description" content="Interactive dashboard tracking 40 sessions, 1,454 farmers, and 22,128 acres across 16 districts">
+    <meta property="og:description" content="Interactive dashboard tracking 40 sessions, 1,454 farmers, and 22,128 acres across 17 districts">
     <meta property="og:image" content="https://interactsolutions.github.io/WheatCampaign/assets/Buctril.jpg">
     <meta property="og:url" content="https://interactsolutions.github.io/WheatCampaign/">
     <meta name="twitter:card" content="summary_large_image">
@@ -33,74 +33,24 @@
 </head>
 <body>
     <!-- Video Background -->
-    <div class="video-background">
-        <video autoplay muted loop playsinline>
-            <source src="assets/atlantis.mp4" type="video/mp4">
+    <div class="video-bg-container">
+        <video autoplay muted loop playsinline id="bgVideo">
+            <source src="assets/gallery/bg.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
-        <div class="video-fallback"></div>
     </div>
 
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-main">
-                <div class="header-titles">
-                    <h1><i class="fas fa-seedling"></i> AgriVista Dashboard</h1>
-                    <h2>Buctril Super Farmer Education Drive 2025</h2>
-                </div>
-                
-                <div class="visitor-counter">
-                    <i class="fas fa-users"></i> <span id="liveCounter">1,454</span> Farmers Engaged
-                </div>
-            </div>
-            
-            <div class="header-subtitle">
-                <div class="campaign-duration">
-                    <i class="fas fa-calendar-alt"></i> 24 Nov - 12 Dec 2025
-                </div>
-                <div class="build-date">
-                    <i class="fas fa-code"></i> Dashboard v4.0 Media Fixed
-                </div>
-                <div class="data-source">
-                    <i class="fas fa-database"></i> 40 Sessions • 104 Media Files
-                </div>
-            </div>
-            
-            <div class="header-logos">
-                <div class="logo-container">
-                    <img src="assets/Bayer.png" alt="Bayer Logo" class="logo-img" loading="eager" onerror="this.src='assets/placeholder.svg'">
-                </div>
-                <div class="logo-container">
-                    <img src="assets/Buctril.jpg" alt="Buctril Logo" class="logo-img" loading="eager" onerror="this.src='assets/placeholder.svg'">
-                </div>
-                <div class="logo-container">
-                    <img src="assets/Interact.gif" alt="Interact Solutions Logo" class="logo-img" loading="eager" onerror="this.onerror=null;this.src='assets/placeholder.svg'">
-                </div>
-                <div class="logo-container">
-                    <img src="assets/poductts.jpg" alt="Products" class="logo-img" loading="lazy" onerror="this.src='assets/placeholder.svg'">
-                </div>
-            </div>
-        </header>
-
-        <!-- Error Banner -->
-        <div id="errorBanner" class="error-banner" style="display: none;">
-            <i class="fas fa-exclamation-triangle"></i>
-            <div>
-                <h3 id="errorMessage">Error loading data</h3>
-                <div class="quick-checks">
-                    <p>Quick checks:</p>
-                    <ol>
-                        <li>Check if sessions.json exists</li>
-                        <li>Check if media.json exists</li>
-                        <li>Verify your internet connection</li>
-                    </ol>
-                </div>
-            </div>
+    <header class="main-header">
+        <div id="header-brand-videos" class="brand-video-row"></div>
+        <div class="header-content">
+            <h1>Buctril Super Farmer Education Drive 2025</h1>
+            <p>40 Sessions • 1,454 Farmers • 22,128 Acres</p>
         </div>
+    </header>
 
+    <main id="dashboard-grid" class="container">
         <!-- Dashboard Controls -->
-        <div class="dashboard-controls">
+        <section class="dashboard-controls">
             <div class="control-grid">
                 <div class="control-group">
                     <label for="cityFilter"><i class="fas fa-city"></i> Filter by District</label>
@@ -138,18 +88,6 @@
                         <input type="date" id="dateTo" class="date-input" value="2025-12-12">
                     </div>
                 </div>
-                
-                <div class="control-group">
-                    <label><i class="fas fa-filter"></i> Session Type</label>
-                    <select id="sessionTypeFilter" class="dropdown">
-                        <option value="all">All Session Types</option>
-                        <option value="education">Education</option>
-                        <option value="demonstration">Demonstration</option>
-                        <option value="training">Training</option>
-                        <option value="safety">Safety</option>
-                        <option value="field">Field Session</option>
-                    </select>
-                </div>
             </div>
             
             <div class="button-group">
@@ -162,20 +100,14 @@
                 <button id="exportData" class="btn btn-secondary">
                     <i class="fas fa-download"></i> Export CSV
                 </button>
-                <button id="refreshData" class="btn btn-outline">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-                <button id="shareSummaryBtn" class="btn btn-outline">
-                    <i class="fas fa-share-alt"></i> Share Summary
-                </button>
             </div>
-        </div>
+        </section>
 
         <!-- Selection Summary -->
-        <div class="selection-summary">
+        <section class="selection-summary">
             <h3><i class="fas fa-chart-line"></i> Campaign Overview</h3>
             <div class="summary-stats">
-                <div class="stat-item" onclick="filterByDistrict('all')" style="cursor: pointer;">
+                <div class="stat-item">
                     <div class="stat-value" id="sessionCount">0</div>
                     <div class="stat-label">Sessions</div>
                     <div class="stat-subtext">40 Total</div>
@@ -193,560 +125,157 @@
                 <div class="stat-item">
                     <div class="stat-value" id="districtCount">0</div>
                     <div class="stat-label">Districts</div>
-                    <div class="stat-subtext">16 Total</div>
-                </div>
-                <div id="statusIndicator" class="status-indicator status-loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Loading real session data...</span>
+                    <div class="stat-subtext">17 Total</div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-            <button class="tab active" data-tab="overview">
-                <i class="fas fa-home"></i> Overview
-            </button>
-            <button class="tab" data-tab="map">
-                <i class="fas fa-map-marked-alt"></i> Interactive Map
-            </button>
-            <button class="tab" data-tab="gallery">
-                <i class="fas fa-images"></i> Media Gallery (<span id="galleryCount">104</span>)
-            </button>
-            <button class="tab" data-tab="sessions">
-                <i class="fas fa-table"></i> Session Details
-            </button>
-            <button class="tab" data-tab="analytics">
-                <i class="fas fa-chart-bar"></i> Analytics
-            </button>
-            <button class="tab" data-tab="reports">
-                <i class="fas fa-file-alt"></i> Reports
-            </button>
-        </div>
+        <!-- Media Gallery -->
+        <section class="gallery-section">
+            <h3><i class="fas fa-images"></i> Session Media Gallery</h3>
+            <p class="section-description">Visual documentation from all 40 sessions across 17 districts</p>
+            
+            <div class="gallery-filters">
+                <button class="gallery-filter-btn active" data-filter="all">
+                    <i class="fas fa-th"></i> All Media
+                </button>
+                <button class="gallery-filter-btn" data-filter="session">
+                    <i class="fas fa-calendar"></i> Session Photos
+                </button>
+                <button class="gallery-filter-btn" data-filter="field">
+                    <i class="fas fa-tractor"></i> Field Sessions
+                </button>
+                <button class="gallery-filter-btn" data-filter="presentation">
+                    <i class="fas fa-chalkboard-teacher"></i> Presentations
+                </button>
+            </div>
+            
+            <div id="mediaGallery" class="gallery-grid">
+                <!-- Gallery items will be loaded here -->
+                <div class="gallery-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading session media gallery...</p>
+                </div>
+            </div>
+            
+            <div class="gallery-footer">
+                <div class="gallery-stats">
+                    <span><i class="fas fa-images"></i> <span id="imageCount">0</span> Images</span>
+                    <span><i class="fas fa-video"></i> <span id="videoCount">0</span> Videos</span>
+                    <span><i class="fas fa-folder"></i> <span id="totalMediaCount">0</span> Session Files</span>
+                </div>
+            </div>
+        </section>
 
-        <!-- Tab Content -->
-        <div id="tabContent">
-            <!-- Overview Tab -->
-            <section id="overviewTab" style="display: block;">
-                <div class="campaign-section">
-                    <div class="campaign-header">
-                        <h3 class="campaign-title">
-                            <i class="fas fa-tractor"></i> Campaign Performance Summary
-                        </h3>
-                        <div class="campaign-badge">
-                            <i class="fas fa-bullseye"></i> 40 Sessions Completed
-                        </div>
-                    </div>
-                    
-                    <div class="overview-stats">
-                        <div class="overview-card" onclick="filterByDistrict('all')">
-                            <h3 id="totalSessions">40</h3>
-                            <p>Total Sessions</p>
-                            <small>24 Nov - 12 Dec 2025</small>
-                        </div>
-                        <div class="overview-card performance-high">
-                            <h3>1,303</h3>
-                            <p>Farmers Will Use Buctril</p>
-                            <small>90.4% Definite Intent</small>
-                        </div>
-                        <div class="overview-card performance-high">
-                            <h3>21,187</h3>
-                            <p>Estimated Buctril Acres</p>
-                            <small>From Campaign Sessions</small>
-                        </div>
-                        <div class="overview-card">
-                            <h3>77%</h3>
-                            <p>Brand Awareness</p>
-                            <small>1,120 farmers know Buctril</small>
-                        </div>
+        <!-- Sessions Table -->
+        <section class="sessions-section">
+            <h3><i class="fas fa-table"></i> Session Details</h3>
+            
+            <div class="sessions-table-container">
+                <table class="sessions-table">
+                    <thead>
+                        <tr>
+                            <th>SN</th>
+                            <th>Date</th>
+                            <th>District</th>
+                            <th>Location</th>
+                            <th>Facilitator</th>
+                            <th>Farmers</th>
+                            <th>Acres</th>
+                            <th>Definite Use</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionsTableBody">
+                        <!-- Sessions will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination-controls">
+                <div class="pagination-info">
+                    Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                </div>
+                <div class="pagination-buttons">
+                    <button id="prevPage" class="btn btn-outline" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <button id="nextPage" class="btn btn-outline" disabled>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="analytics-section">
+            <h3><i class="fas fa-chart-bar"></i> Campaign Analytics</h3>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4><i class="fas fa-users"></i> Farmer Engagement</h4>
+                    <div class="chart-container" id="attendanceChart">
+                        <!-- Chart placeholder -->
                     </div>
                 </div>
                 
-                <!-- Key Takeaways -->
-                <div class="key-takeaways">
-                    <h2><i class="fas fa-lightbulb"></i> Key Campaign Insights</h2>
-                    <p class="campaign-description">
-                        Buctril Super Farmer Education Drive 2025 successfully conducted 40 sessions across 16 districts,
-                        engaging 1,454 farmers and covering 22,128 acres. The campaign demonstrated
-                        strong farmer trust in Bayer with 74.2% citing this as their main reason to use Buctril.
-                    </p>
-                    
-                    <div class="metrics-grid">
-                        <div class="metric-card performance-high">
-                            <div class="metric-value">90.4%</div>
-                            <p>Definite Use Rate</p>
-                            <small>1,303 farmers</small>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-value">74.2%</div>
-                            <p>Trust in Bayer</p>
-                            <small>Top reason for use</small>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-value">2.8/3.0</div>
-                            <p>Understanding Score</p>
-                            <small>Farmer comprehension</small>
-                        </div>
-                        <div class="metric-card performance-warning">
-                            <div class="metric-value">18.3%</div>
-                            <p>Price Concern</p>
-                            <small>Main barrier to adoption</small>
-                        </div>
+                <div class="analytics-card">
+                    <h4><i class="fas fa-map"></i> District Coverage</h4>
+                    <div class="distribution-center">
+                        <div class="distribution-value" id="districtDistribution">16</div>
+                        <div class="distribution-label">Districts Covered</div>
                     </div>
                 </div>
                 
-                <!-- Quick District Stats -->
-                <div class="district-quickview">
-                    <h3><i class="fas fa-map-pin"></i> Top Performing Districts</h3>
-                    <div class="district-grid">
-                        <div class="district-card" onclick="filterByDistrict('Ghotki')">
-                            <div class="district-name">Ghotki</div>
-                            <div class="district-stats">4 sessions • 136 farmers • 2,842 acres</div>
-                            <div class="district-metric">
-                                <span class="metric-label">Awareness:</span>
-                                <span class="metric-value">90.3%</span>
-                            </div>
-                        </div>
-                        <div class="district-card" onclick="filterByDistrict('Ubaro')">
-                            <div class="district-name">Ubaro</div>
-                            <div class="district-stats">2 sessions • 70 farmers • 2,416 acres</div>
-                            <div class="district-metric">
-                                <span class="metric-label">Definite Use:</span>
-                                <span class="metric-value">85.0%</span>
-                            </div>
-                        </div>
-                        <div class="district-card" onclick="filterByDistrict('Dharki')">
-                            <div class="district-name">Dharki</div>
-                            <div class="district-stats">2 sessions • 67 farmers • 1,197 acres</div>
-                            <div class="district-metric">
-                                <span class="metric-label">Used Last Year:</span>
-                                <span class="metric-value">70.5%</span>
-                            </div>
-                        </div>
-                        <div class="district-card" onclick="filterByDistrict('Mianwali')">
-                            <div class="district-name">Mianwali</div>
-                            <div class="district-stats">3 sessions • 101 farmers • 1,086 acres</div>
-                            <div class="district-metric">
-                                <span class="metric-label">Price Concern:</span>
-                                <span class="metric-value">High</span>
-                            </div>
-                        </div>
+                <div class="analytics-card">
+                    <h4><i class="fas fa-percentage"></i> Adoption Rate</h4>
+                    <div class="performance-highlight">
+                        <div class="highlight-value">90.4%</div>
+                        <div class="highlight-label">Definite Intent</div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Map Tab -->
-            <section id="mapTab" style="display: none;">
-                <div class="map-container">
-                    <div id="campaignMap"></div>
-                    <div class="map-banner">
-                        <span id="mapStats">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Loading map data...
-                        </span>
-                    </div>
+        <!-- Interactive Map -->
+        <section class="map-section">
+            <h3><i class="fas fa-map-marked-alt"></i> Interactive Campaign Map</h3>
+            
+            <div class="map-container">
+                <div id="campaignMap"></div>
+                <div class="map-banner">
+                    <span id="mapStats">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Loading map data...
+                    </span>
                 </div>
-                
-                <div class="map-controls-grid">
-                    <div class="map-controls-panel">
-                        <h3><i class="fas fa-sliders-h"></i> Map Controls</h3>
-                        <div class="control-section">
-                            <label>Attendance Filter</label>
-                            <input type="range" id="attendanceRange" class="range-slider" min="20" max="70" value="20" step="5">
-                            <div class="range-labels">
-                                <span>20+ farmers</span>
-                                <span id="rangeValue">All sizes</span>
-                                <span>70+ farmers</span>
-                            </div>
-                        </div>
-                        
-                        <div class="control-section">
-                            <label>Session Performance</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="map-filter" value="high" checked>
-                                    <i class="fas fa-circle" style="color: #2e7d32;"></i> High (>85% definite use)
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="map-filter" value="medium" checked>
-                                    <i class="fas fa-circle" style="color: #ff9800;"></i> Medium (70-85%)
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="map-filter" value="low" checked>
-                                    <i class="fas fa-circle" style="color: #f44336;"></i> Low (<70%)
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="control-section">
-                            <label>Price Concern Level</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="price-filter" value="high" checked>
-                                    <i class="fas fa-money-bill-wave" style="color: #f44336;"></i> High Concern
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" class="price-filter" value="low" checked>
-                                    <i class="fas fa-money-bill-wave" style="color: #2e7d32;"></i> Low Concern
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="button-group" style="margin-top: 20px;">
-                            <button id="fitBounds" class="btn btn-primary">
-                                <i class="fas fa-search-plus"></i> Fit to Sessions
-                            </button>
-                            <button id="resetMap" class="btn btn-outline">
-                                <i class="fas fa-globe-asia"></i> Reset View
-                            </button>
-                            <button id="exportMap" class="btn btn-outline">
-                                <i class="fas fa-camera"></i> Capture Map
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="map-controls-panel">
-                        <h3><i class="fas fa-info-circle"></i> Map Statistics</h3>
-                        <div id="mapFilterStats" class="distribution-value">0 sessions shown</div>
-                        <div class="distribution-subtext">
-                            <p><strong>Color Legend:</strong></p>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #2e7d32;"></span>
-                                <span>High Performance (>85% definite use)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #ff9800;"></span>
-                                <span>Medium Performance (70-85%)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #f44336;"></span>
-                                <span>Low Performance (<70%)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #9c27b0;"></span>
-                                <span>Price Concern Highlighted</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </div>
+            
+            <div class="map-controls">
+                <button id="fitBounds" class="btn btn-primary">
+                    <i class="fas fa-search-plus"></i> Fit to Sessions
+                </button>
+                <button id="resetMap" class="btn btn-outline">
+                    <i class="fas fa-globe-asia"></i> Reset View
+                </button>
+            </div>
+        </section>
+    </main>
 
-            <!-- Gallery Tab -->
-            <section id="galleryTab" style="display: none;">
-                <div class="gallery-section">
-                    <div class="gallery-filters">
-                        <button class="gallery-filter-btn active" data-filter="all">
-                            <i class="fas fa-th"></i> All Media (<span id="galleryCount">0</span>)
-                        </button>
-                        <button class="gallery-filter-btn" data-filter="brand">
-                            <i class="fas fa-tag"></i> Brand Assets
-                        </button>
-                        <button class="gallery-filter-btn" data-filter="session">
-                            <i class="fas fa-calendar"></i> Session Media
-                        </button>
-                        <button class="gallery-filter-btn" data-filter="videos">
-                            <i class="fas fa-video"></i> Videos Only
-                        </button>
-                        <button class="gallery-filter-btn" data-filter="images">
-                            <i class="fas fa-image"></i> Images Only
-                        </button>
-                    </div>
-                    
-                    <div id="mediaGallery" class="gallery-grid">
-                        <!-- Gallery items will be loaded here -->
-                        <div class="gallery-placeholder">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Loading media gallery...</p>
-                        </div>
-                    </div>
-                    
-                    <div class="gallery-footer">
-                        <div class="gallery-stats">
-                            <span><i class="fas fa-images"></i> <span id="imageCount">59</span> Images</span>
-                            <span><i class="fas fa-video"></i> <span id="videoCount">45</span> Videos</span>
-                            <span><i class="fas fa-folder"></i> <span id="totalMediaCount">104</span> Total Files</span>
-                        </div>
-                        <p><i class="fas fa-info-circle"></i> Click on any image to view larger version. Videos will play on click. Missing files show placeholder.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Sessions Tab -->
-            <section id="sessionsTab" style="display: none;">
-                <div class="sessions-header">
-                    <h3><i class="fas fa-table"></i> Session Details</h3>
-                    <div class="session-summary">
-                        Showing <span id="shownSessions">0</span> of <span id="totalSessionsCount">0</span> sessions
-                        <span class="session-summary-detail">
-                            • <span id="totalFarmersCount">0</span> farmers • <span id="totalAcresCount">0</span> acres
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="sessions-table-container">
-                    <table class="sessions-table">
-                        <thead>
-                            <tr>
-                                <th>SN</th>
-                                <th>Date</th>
-                                <th>District</th>
-                                <th>Location</th>
-                                <th>Village</th>
-                                <th>Facilitator</th>
-                                <th>Farmers</th>
-                                <th>Acres</th>
-                                <th>Definite Use</th>
-                                <th>Awareness</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sessionsTableBody">
-                            <!-- Sessions will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="pagination-controls">
-                    <div class="pagination-info">
-                        Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
-                    </div>
-                    <div class="pagination-buttons">
-                        <button id="prevPage" class="btn btn-outline" disabled>
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </button>
-                        <button id="nextPage" class="btn btn-outline" disabled>
-                            Next <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Analytics Tab -->
-            <section id="analyticsTab" style="display: none;">
-                <div class="insights-container">
-                    <h3><i class="fas fa-chart-line"></i> Performance Analytics</h3>
-                    
-                    <div class="analytics-grid">
-                        <div class="analytics-card">
-                            <h3><i class="fas fa-users"></i> Farmer Attendance by Date</h3>
-                            <div id="attendanceChart" class="chart-container">
-                                <!-- Chart will be generated here -->
-                            </div>
-                            <div class="chart-note">
-                                <i class="fas fa-info-circle"></i> Shows farmer attendance per session date. Click bars to filter by date.
-                            </div>
-                        </div>
-                        
-                        <div class="analytics-card">
-                            <h3><i class="fas fa-chart-pie"></i> District Distribution</h3>
-                            <div class="distribution-center">
-                                <div class="distribution-value" id="districtDistribution">16</div>
-                                <div class="distribution-label">Districts Covered</div>
-                                <div class="distribution-subtext" id="districtTopPerformers">
-                                    Top districts: Ghotki, Ubaro, Dharki
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="analytics-card">
-                            <h3><i class="fas fa-star"></i> Understanding Scores</h3>
-                            <div id="understandingChart" class="chart-container">
-                                <!-- Understanding scores chart -->
-                            </div>
-                            <div class="chart-note">
-                                <i class="fas fa-info-circle"></i> Average understanding scores out of 3
-                            </div>
-                        </div>
-                        
-                        <div class="analytics-card">
-                            <h3><i class="fas fa-tags"></i> Reasons to Use Buctril</h3>
-                            <div id="reasonsChart" class="chart-container">
-                                <!-- Reasons chart -->
-                            </div>
-                            <div class="chart-note">
-                                <i class="fas fa-info-circle"></i> Top reasons farmers choose Buctril
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Performance Metrics -->
-                <div class="performance-section">
-                    <h3><i class="fas fa-tachometer-alt"></i> Key Performance Metrics</h3>
-                    <div class="performance-grid">
-                        <div class="performance-card performance-high">
-                            <div class="performance-value">90.4%</div>
-                            <div class="performance-label">Definite Intent</div>
-                            <div class="performance-change">+24.4% from last year</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">77.2%</div>
-                            <div class="performance-label">Awareness Rate</div>
-                            <div class="performance-change">1,120 farmers know Buctril</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">67.1%</div>
-                            <div class="performance-label">Used Last Year</div>
-                            <div class="performance-change">968 repeat customers</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">74.2%</div>
-                            <div class="performance-label">Trust in Bayer</div>
-                            <div class="performance-change">Top reason for use</div>
-                        </div>
-                        <div class="performance-card performance-warning">
-                            <div class="performance-value">18.3%</div>
-                            <div class="performance-label">Price Concern</div>
-                            <div class="performance-change">Main barrier to adoption</div>
-                        </div>
-                        <div class="performance-card">
-                            <div class="performance-value">2.8/3.0</div>
-                            <div class="performance-label">Understanding Score</div>
-                            <div class="performance-change">Good product knowledge</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Top Sessions -->
-                <div class="top-sessions">
-                    <h3><i class="fas fa-trophy"></i> Top Performing Sessions</h3>
-                    <div class="top-sessions-grid">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Reports Tab -->
-            <section id="reportsTab" style="display: none;">
-                <div class="reports-container">
-                    <h3><i class="fas fa-file-alt"></i> Download Reports</h3>
-                    <p class="reports-description">
-                        Access detailed campaign reports and export data for further analysis. All reports are generated from the actual session data.
-                    </p>
-                    
-                    <div class="reports-grid">
-                        <div class="report-card">
-                            <div class="report-icon">
-                                <i class="fas fa-file-csv"></i>
-                            </div>
-                            <div class="report-content">
-                                <h4>Complete Session Data</h4>
-                                <p>Full dataset of all 40 sessions with farmer details, acreage, and performance metrics.</p>
-                                <div class="report-details">
-                                    <span><i class="fas fa-database"></i> 40 sessions</span>
-                                    <span><i class="fas fa-users"></i> 1,454 farmers</span>
-                                </div>
-                                <button class="btn btn-primary download-report" data-report="session_summary.csv">
-                                    <i class="fas fa-download"></i> Download CSV
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card">
-                            <div class="report-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <div class="report-content">
-                                <h4>District Performance Summary</h4>
-                                <p>Aggregated performance metrics by district with comparison analysis.</p>
-                                <div class="report-details">
-                                    <span><i class="fas fa-map"></i> 16 districts</span>
-                                    <span><i class="fas fa-chart-line"></i> Performance trends</span>
-                                </div>
-                                <button class="btn btn-primary download-report" data-report="district_performance.csv">
-                                    <i class="fas fa-download"></i> Download CSV
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card">
-                            <div class="report-icon">
-                                <i class="fas fa-lightbulb"></i>
-                            </div>
-                            <div class="report-content">
-                                <h4>Key Insights Report</h4>
-                                <p>Actionable insights and recommendations based on campaign data analysis.</p>
-                                <div class="report-details">
-                                    <span><i class="fas fa-bullseye"></i> 10+ insights</span>
-                                    <span><i class="fas fa-check-circle"></i> Recommendations</span>
-                                </div>
-                                <button class="btn btn-primary download-report" data-report="key_insights.csv">
-                                    <i class="fas fa-download"></i> Download CSV
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card">
-                            <div class="report-icon">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <div class="report-content">
-                                <h4>Media Catalog Report</h4>
-                                <p>Complete catalog of 104 media files with session mapping and metadata.</p>
-                                <div class="report-details">
-                                    <span><i class="fas fa-images"></i> 104 files</span>
-                                    <span><i class="fas fa-map-pin"></i> 16 districts</span>
-                                </div>
-                                <button class="btn btn-primary download-report" data-report="media_catalog.csv">
-                                    <i class="fas fa-download"></i> Download CSV
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="custom-report">
-                        <h4><i class="fas fa-cogs"></i> Generate Custom Report</h4>
-                        <div class="custom-report-form">
-                            <div class="form-group">
-                                <label for="reportType">Report Type:</label>
-                                <select id="reportType" class="form-control">
-                                    <option value="performance">Performance Analysis</option>
-                                    <option value="geographic">Geographic Distribution</option>
-                                    <option value="farmer">Farmer Segmentation</option>
-                                    <option value="product">Product Adoption</option>
-                                    <option value="media">Media Coverage</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="dateRange">Date Range:</label>
-                                <select id="dateRange" class="form-control">
-                                    <option value="all">Full Campaign (24 Nov - 12 Dec)</option>
-                                    <option value="week1">Week 1 (24-30 Nov)</option>
-                                    <option value="week2">Week 2 (1-7 Dec)</option>
-                                    <option value="week3">Week 3 (8-12 Dec)</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-secondary" id="generateCustomReport">
-                                <i class="fas fa-magic"></i> Generate Custom Report
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>AgriVista Dashboard v4.0 • Buctril Super Farmer Education Drive 2025 • Complete Media Integration</p>
-            <p class="footer-subtext">
-                <i class="fas fa-sync-alt"></i> Data updated: <span id="dataUpdated">24 Dec 2025</span>
-                <span style="margin: 0 10px;">•</span>
-                <i class="fas fa-images"></i> <span id="footerMediaCount">104</span> media files
-                <span style="margin: 0 10px;">•</span>
-                <i class="fas fa-map-marker-alt"></i> 16 districts covered
-            </p>
+    <footer class="main-footer">
+        <div id="footer-brand-images" class="brand-image-row"></div>
+        <div class="footer-content">
+            <p>&copy; 2025 Bayer Crop Science | Powered by Interact Solutions</p>
             <div class="footer-links">
                 <a href="#" id="helpSupport"><i class="fas fa-question-circle"></i> Help & Support</a>
                 <a href="#" id="exportInsights"><i class="fas fa-download"></i> Export Insights</a>
                 <a href="#" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
-                <a href="#" id="feedbackBtn"><i class="fas fa-comment"></i> Feedback</a>
-                <a href="#" id="shareBtn"><i class="fas fa-share-alt"></i> Share</a>
             </div>
             <div class="footer-credits">
-                <small>Data Source: Field Session Records • Media: Complete Campaign Documentation • Implementation: Interact Solutions</small>
+                <small>AgriVista Dashboard v5.0 • Complete Media Integration • Real-time Session Data</small>
             </div>
-        </footer>
-    </div>
+        </div>
+    </footer>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
@@ -758,224 +287,7 @@
             </div>
             <span id="progressText">0%</span>
         </div>
-        <p style="font-size: 14px; color: #666; margin-top: 20px;">Processing 40 sessions, 104 media files, 1,454 farmers...</p>
     </div>
-
-    <!-- Session Detail Modal -->
-    <div id="sessionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalSessionTitle">Session Details</h3>
-                <button class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-grid">
-                    <div class="modal-section">
-                        <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Session ID:</span>
-                                <span id="modalSessionId" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Date:</span>
-                                <span id="modalSessionDate" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">District:</span>
-                                <span id="modalSessionDistrict" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Location:</span>
-                                <span id="modalSessionLocation" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Village/Mauza:</span>
-                                <span id="modalSessionVillage" class="info-value"></span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Tehsil:</span>
-                                <span id="modalSessionTehsil" class="info-value"></span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h4><i class="fas fa-chart-bar"></i> Statistics</h4>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionFarmers">0</div>
-                                    <div class="stat-label">Total Farmers</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-wheat-awn"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionWheatFarmers">0</div>
-                                    <div class="stat-label">Wheat Farmers</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-seedling"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionAcres">0</div>
-                                    <div class="stat-label">Wheat Acres</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="fas fa-percentage"></i></div>
-                                <div class="stat-content">
-                                    <div class="stat-number" id="modalSessionDefiniteUse">0%</div>
-                                    <div class="stat-label">Definite Use</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h4><i class="fas fa-star"></i> Understanding Scores</h4>
-                        <div class="score-grid">
-                            <div class="score-item">
-                                <span class="score-label">Yield Loss:</span>
-                                <div class="score-bar">
-                                    <div class="score-fill" id="scoreYieldLoss"></div>
-                                </div>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">Golden Period:</span>
-                                <div class="score-bar">
-                                    <div class="score-fill" id="scoreGoldenPeriod"></div>
-                                </div>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">Buctril Broadleaf:</span>
-                                <div class="score-bar">
-                                    <div class="score-fill" id="scoreBroadleaf"></div>
-                                </div>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">Combine Benefit:</span>
-                                <div class="score-bar">
-                                    <div class="score-fill" id="scoreCombineBenefit"></div>
-                                </div>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">Safety PPE:</span>
-                                <div class="score-bar">
-                                    <div class="score-fill" id="scoreSafetyPPE"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h4><i class="fas fa-map-marker-alt"></i> Location Details</h4>
-                        <div id="modalMap" style="height: 200px; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; color: #666;">
-                            <i class="fas fa-map-marked-alt" style="font-size: 48px; opacity: 0.3;"></i>
-                        </div>
-                        <div class="location-details">
-                            <div class="location-item">
-                                <i class="fas fa-compass"></i>
-                                <span>Coordinates: </span>
-                                <span id="modalCoordinates"></span>
-                            </div>
-                            <div class="location-item">
-                                <i class="fas fa-user-tie"></i>
-                                <span>Dealer: </span>
-                                <span id="modalDealer"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="modalCloseBtn">Close</button>
-                <button class="btn btn-primary" id="modalShareBtn">
-                    <i class="fas fa-share-alt"></i> Share Session
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Media Viewer Modal -->
-    <div id="mediaModal" class="modal">
-        <div class="modal-content" style="max-width: 90vw;">
-            <div class="modal-header">
-                <h3 id="mediaModalTitle">Media Viewer</h3>
-                <button class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-            <div class="modal-body" style="padding: 0;">
-                <div id="mediaViewer">
-                    <!-- Media will be loaded here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div class="media-navigation">
-                    <button class="btn btn-outline" id="prevMedia">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                    <span id="mediaCounter">1 of 104</span>
-                    <button class="btn btn-outline" id="nextMedia">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-comment-alt"></i> Share Your Feedback</h3>
-                <button class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="feedbackForm">
-                    <div class="form-group">
-                        <label for="feedbackName"><i class="fas fa-user"></i> Your Name</label>
-                        <input type="text" id="feedbackName" class="form-control" placeholder="Enter your name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackPhone"><i class="fas fa-phone"></i> Phone Number</label>
-                        <input type="tel" id="feedbackPhone" class="form-control" placeholder="+92 300 1234567">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackEmail"><i class="fas fa-envelope"></i> Email Address</label>
-                        <input type="email" id="feedbackEmail" class="form-control" placeholder="you@example.com">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackType"><i class="fas fa-tag"></i> Feedback Type</label>
-                        <select id="feedbackType" class="form-control">
-                            <option value="general">General Feedback</option>
-                            <option value="suggestion">Suggestion</option>
-                            <option value="bug">Bug Report</option>
-                            <option value="feature">Feature Request</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="feedbackMessage"><i class="fas fa-comment"></i> Your Message</label>
-                        <textarea id="feedbackMessage" class="form-control" rows="4" placeholder="Share your thoughts, suggestions, or feedback..." required></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="feedbackCancel">Cancel</button>
-                <button class="btn btn-primary" id="feedbackSubmit">
-                    <i class="fas fa-paper-plane"></i> Submit Feedback
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification Container -->
-    <div id="toastContainer"></div>
 
     <!-- JavaScript Libraries -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -983,145 +295,5 @@
     
     <!-- Main Dashboard JavaScript -->
     <script src="dashboard.js"></script>
-    
-    <!-- Modal event handlers -->
-    <script>
-        // Initialize all modals as hidden
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.style.display = 'none';
-            });
-            
-            // Set current date for footer
-            const now = new Date();
-            const formattedDate = now.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-            document.getElementById('dataUpdated').textContent = formattedDate;
-            
-            // Update media counts from metadata
-            document.getElementById('footerMediaCount').textContent = '104';
-            document.getElementById('galleryCount').textContent = '104';
-            document.getElementById('totalMediaCount').textContent = '104';
-            document.getElementById('imageCount').textContent = '59';
-            document.getElementById('videoCount').textContent = '45';
-        });
-        
-        // Modal close handlers
-        document.querySelectorAll('.modal-close, .btn-outline[id$="Cancel"], #modalCloseBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const modal = this.closest('.modal');
-                if (modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            });
-        });
-        
-        // Close modal when clicking outside
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            });
-        });
-        
-        // Close modal with ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                });
-            }
-        });
-        
-        // Form submission handler
-        document.getElementById('feedbackForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('feedbackName').value;
-            const message = document.getElementById('feedbackMessage').value;
-            
-            if (name && message) {
-                alert('Thank you for your feedback! We appreciate your input.');
-                document.getElementById('feedbackModal').style.display = 'none';
-                document.getElementById('feedbackForm').reset();
-            }
-        });
-        
-        // Download report handlers
-        document.querySelectorAll('.download-report').forEach(button => {
-            button.addEventListener('click', function() {
-                const reportFile = this.dataset.report;
-                alert('Report generation would create and download: ' + reportFile + '\n\nIn a production environment, this would trigger a server-side report generation.');
-            });
-        });
-        
-        // Generate custom report handler
-        document.getElementById('generateCustomReport')?.addEventListener('click', function() {
-            const reportType = document.getElementById('reportType').value;
-            const dateRange = document.getElementById('dateRange').value;
-            alert(`Custom report for ${reportType} in ${dateRange} would be generated here. This feature requires backend implementation.`);
-        });
-        
-        // Feedback button
-        document.getElementById('feedbackBtn')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('feedbackModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        });
-        
-        // Share button
-        document.getElementById('shareBtn')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            const text = `Check out the Buctril Super Farmer Education Drive 2025 Dashboard: ${window.location.href}`;
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Buctril Super Farmer Education Drive 2025',
-                    text: text,
-                    url: window.location.href
-                });
-            } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Link copied to clipboard!');
-            }
-        });
-        
-        // Help & Support
-        document.getElementById('helpSupport')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('Help & Support: For assistance, please contact:\n\n' +
-                  '• Technical Support: support@interactsolutions.com\n' +
-                  '• Campaign Questions: buctril.campaign@bayer.com\n' +
-                  '• Data Issues: data.team@interactsolutions.com');
-        });
-        
-        // Export Insights
-        document.getElementById('exportInsights')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (window.exportEnhancedData) {
-                window.exportEnhancedData();
-            }
-        });
-        
-        // Add responsive table handling
-        function handleResponsiveTables() {
-            const tables = document.querySelectorAll('.sessions-table');
-            tables.forEach(table => {
-                if (window.innerWidth < 768) {
-                    table.classList.add('mobile-view');
-                } else {
-                    table.classList.remove('mobile-view');
-                }
-            });
-        }
-        
-        window.addEventListener('resize', handleResponsiveTables);
-        handleResponsiveTables();
-    </script>
 </body>
 </html>

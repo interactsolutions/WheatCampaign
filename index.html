@@ -1,1562 +1,1143 @@
-// dashboard.js - COMPLETE FIXED VERSION v4.0 - Media Integration Fixed
-console.log('AgriVista Dashboard v4.0 - Complete Fixed Media Integration initializing...');
-
-// GLOBAL STATE
-let allSessions = [];
-let currentFilteredSessions = [];
-let mediaItems = [];
-let map;
-let markerCluster;
-let currentPage = 1;
-const itemsPerPage = 10;
-let districtCoordinates = {};
-
-// DOM ELEMENTS
-const elements = {
-    sessionCount: document.getElementById('sessionCount'),
-    farmerCount: document.getElementById('farmerCount'),
-    acreCount: document.getElementById('acreCount'),
-    districtCount: document.getElementById('districtCount'),
-    totalSessions: document.getElementById('totalSessions'),
-    shownSessions: document.getElementById('shownSessions'),
-    totalSessionsCount: document.getElementById('totalSessionsCount'),
-    totalFarmersCount: document.getElementById('totalFarmersCount'),
-    totalAcresCount: document.getElementById('totalAcresCount'),
-    currentPage: document.getElementById('currentPage'),
-    totalPages: document.getElementById('totalPages'),
-    statusIndicator: document.getElementById('statusIndicator'),
-    mapStats: document.getElementById('mapStats'),
-    mediaGallery: document.getElementById('mediaGallery'),
-    sessionsTableBody: document.getElementById('sessionsTableBody'),
-    errorBanner: document.getElementById('errorBanner'),
-    errorMessage: document.getElementById('errorMessage'),
-    loadingOverlay: document.getElementById('loadingOverlay'),
-    progressFill: document.getElementById('progressFill'),
-    progressText: document.getElementById('progressText')
-};
-
-// INITIALIZE EVERYTHING
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM loaded. Starting initialization with complete media integration...');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriVista Dashboard - Buctril Super Farmer Education Drive 2025</title>
     
-    // Setup event listeners FIRST
-    setupEventListeners();
-    initializeTabs();
+    <!-- SEO and Social Meta Tags -->
+    <meta name="description" content="Buctril Super Farmer Education Drive 2025 - Interactive dashboard with session analytics, media gallery, and interactive maps">
+    <meta property="og:title" content="AgriVista Dashboard - Buctril Super Farmer Education Drive 2025">
+    <meta property="og:description" content="Interactive dashboard tracking 40 sessions, 1,454 farmers, and 22,128 acres across 16 districts">
+    <meta property="og:image" content="https://interactsolutions.github.io/WheatCampaign/gallery/Buctril.jpg">
+    <meta property="og:url" content="https://interactsolutions.github.io/WheatCampaign/">
+    <meta name="twitter:card" content="summary_large_image">
     
-    // Set date max to today
-    const today = new Date().toISOString().split('T')[0];
-    const dateTo = document.getElementById('dateTo');
-    if (dateTo) {
-        dateTo.max = today;
-        dateTo.value = '2025-12-12';
-    }
+    <!-- Preconnect for external resources -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com">
     
-    // Set date from
-    const dateFrom = document.getElementById('dateFrom');
-    if (dateFrom) {
-        dateFrom.value = '2025-11-24';
-    }
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    // Load real data
-    loadAllData();
-});
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="gallery/Buctril.jpg">
+</head>
+<body>
+    <!-- Video Background -->
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="gallery/bg.mp4" type="video/mp4">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" class="fallback-video">
+            Your browser does not support the video tag.
+        </video>
+        <div class="video-fallback"></div>
+    </div>
 
-// LOAD ALL DATA WITH PROGRESS
-async function loadAllData() {
-    try {
-        updateProgress(0, 'Starting data load...');
-        updateStatus('Loading campaign data and media...', 'loading');
-        
-        // Load sessions data
-        await loadSessionsData();
-        updateProgress(30, 'Sessions data loaded...');
-        
-        // Load media data
-        await loadMediaData();
-        updateProgress(60, 'Media data loaded...');
-        
-        // Validate and fix media files
-        await validateAndFixMediaFiles();
-        updateProgress(70, 'Media validation complete...');
-        
-        // Initialize district coordinates
-        initializeDistrictCoordinates();
-        updateProgress(75, 'Mapping data prepared...');
-        
-        currentFilteredSessions = [...allSessions];
-        
-        // Initialize components
-        updateDashboardStats();
-        updateProgress(80, 'Dashboard stats updated...');
-        
-        // Initialize map
-        await initializeMap();
-        updateProgress(85, 'Map initialized...');
-        
-        // Initialize gallery
-        safeRenderGallery();
-        updateProgress(90, 'Gallery loaded...');
-        
-        renderSessionsTable();
-        updateProgress(95, 'Sessions table ready...');
-        
-        initializeAnalyticsCharts();
-        updateProgress(98, 'Analytics complete...');
-        
-        // Update media counts in UI
-        updateMediaCounts();
-        updateProgress(99, 'Media counts updated...');
-        
-        // Hide loading overlay with fade
-        setTimeout(() => {
-            if (elements.loadingOverlay) {
-                elements.loadingOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    elements.loadingOverlay.style.display = 'none';
-                }, 300);
-            }
-        }, 500);
-        
-        updateProgress(100, 'Dashboard ready!');
-        updateStatus('Dashboard loaded successfully with media integration', 'success');
-        
-        console.log(`Loaded ${allSessions.length} sessions and ${mediaItems.length} media items`);
-        
-        // Initialize lazy loading
-        setTimeout(initializeLazyLoading, 1000);
-        
-    } catch (error) {
-        console.error('Fatal error loading data:', error);
-        showError(`Data loading error: ${error.message}. Using embedded data as fallback.`);
-        
-        // Load fallback embedded data
-        await loadEmbeddedSessionsData();
-        mediaItems = createFallbackMedia();
-        
-        // Initialize with fallback data
-        updateDashboardStats();
-        renderSessionsTable();
-        initializeMap();
-        safeRenderGallery();
-        initializeAnalyticsCharts();
-        updateMediaCounts();
-        
-        if (elements.loadingOverlay) {
-            elements.loadingOverlay.style.display = 'none';
-        }
-    }
-}
-
-// LOAD REAL SESSIONS DATA FROM JSON
-async function loadSessionsData() {
-    try {
-        console.log('Loading sessions data from JSON...');
-        
-        const response = await fetch('sessions.json');
-        if (response.ok) {
-            const data = await response.json();
-            allSessions = data.sessions || [];
-            console.log(`Loaded ${allSessions.length} sessions from sessions.json`);
-            
-            // If sessions.json is empty or invalid, use fallback
-            if (allSessions.length === 0) {
-                throw new Error('No sessions found in JSON');
-            }
-        } else {
-            throw new Error('sessions.json not found or inaccessible');
-        }
-    } catch (error) {
-        console.error('Error loading sessions from JSON:', error);
-        console.log('Creating embedded sessions data...');
-        allSessions = createEmbeddedSessions();
-    }
-}
-
-// LOAD MEDIA DATA WITH FIXED JSON PARSING
-async function loadMediaData() {
-    try {
-        console.log('Loading media data from media.json...');
-        
-        const response = await fetch('media.json');
-        if (response.ok) {
-            const data = await response.json();
-            
-            // Handle the array structure of your JSON
-            if (Array.isArray(data) && data.length > 0) {
-                // Your JSON is an array with one object containing mediaItems
-                mediaItems = data[0].mediaItems || [];
-            } else if (data.mediaItems) {
-                // Direct object with mediaItems property
-                mediaItems = data.mediaItems;
-            } else if (Array.isArray(data)) {
-                // JSON is directly an array of media items
-                mediaItems = data;
-            } else {
-                mediaItems = [];
-            }
-            
-            console.log(`Loaded ${mediaItems.length} media items from media.json`);
-            
-            // Ensure all media items have proper paths
-            mediaItems = mediaItems.map(item => {
-                // If filename doesn't start with gallery/, add it
-                if (item.filename && !item.filename.startsWith('gallery/') && !item.filename.startsWith('http')) {
-                    item.filename = 'gallery/' + item.filename;
-                }
-                return item;
-            });
-            
-        } else {
-            throw new Error('media.json not found or inaccessible');
-        }
-    } catch (error) {
-        console.error('Error loading media from JSON:', error);
-        console.log('Creating media data from media.json structure...');
-        mediaItems = createMediaFromStructure();
-    }
-}
-
-// VALIDATE AND FIX MEDIA FILES
-async function validateAndFixMediaFiles() {
-    console.log('Validating media files...');
-    
-    const updatedMediaItems = [];
-    const missingFiles = [];
-    
-    for (const media of mediaItems) {
-        if (!media.filename) {
-            updatedMediaItems.push(media);
-            continue;
-        }
-        
-        // If it's already an external URL, keep it
-        if (media.filename.startsWith('http')) {
-            updatedMediaItems.push(media);
-            continue;
-        }
-        
-        // Check if file exists
-        try {
-            const response = await fetch(media.filename, { method: 'HEAD' });
-            if (response.ok) {
-                updatedMediaItems.push(media);
-            } else {
-                missingFiles.push(media.filename);
-                // Use placeholder for missing files
-                const updatedMedia = { ...media };
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-main">
+                <div class="header-titles">
+                    <h1><i class="fas fa-seedling"></i> AgriVista Dashboard</h1>
+                    <h2>Buctril Super Farmer Education Drive 2025</h2>
+                </div>
                 
-                if (media.filename.endsWith('.mp4') || media.filename.endsWith('.webm')) {
-                    // Use fallback video
-                    updatedMedia.filename = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-                    updatedMedia.isFallback = true;
-                } else {
-                    // Use placeholder image
-                    updatedMedia.filename = 'gallery/placeholder.svg';
-                    updatedMedia.isFallback = true;
-                }
-                updatedMediaItems.push(updatedMedia);
-            }
-        } catch {
-            missingFiles.push(media.filename);
-            // Use placeholder for missing files
-            const updatedMedia = { ...media };
-            updatedMedia.filename = 'gallery/placeholder.svg';
-            updatedMedia.isFallback = true;
-            updatedMediaItems.push(updatedMedia);
-        }
-    }
-    
-    mediaItems = updatedMediaItems;
-    
-    if (missingFiles.length > 0) {
-        console.warn(`Missing ${missingFiles.length} media files:`, missingFiles.slice(0, 5));
-        if (missingFiles.length > 5) {
-            console.warn(`... and ${missingFiles.length - 5} more`);
-        }
-        showToast(`${missingFiles.length} media files are missing or not accessible. Using placeholders.`, 'warning');
-    }
-}
-
-// UPDATE MEDIA COUNTS IN UI
-function updateMediaCounts() {
-    const totalMedia = mediaItems.length;
-    const images = mediaItems.filter(m => 
-        m.filename.endsWith('.jpeg') || 
-        m.filename.endsWith('.jpg') || 
-        m.filename.endsWith('.png') || 
-        m.filename.endsWith('.gif') ||
-        m.filename.endsWith('.svg')
-    ).length;
-    const videos = mediaItems.filter(m => 
-        m.filename.endsWith('.mp4') || 
-        m.filename.endsWith('.webm') ||
-        m.type === 'video'
-    ).length;
-    
-    // Update all media count elements
-    const elementsToUpdate = [
-        'galleryCount', 'allMediaCount', 'totalMediaCount', 
-        'footerMediaCount', 'imageCount', 'videoCount'
-    ];
-    
-    elementsToUpdate.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            if (id.includes('image')) {
-                element.textContent = images;
-            } else if (id.includes('video')) {
-                element.textContent = videos;
-            } else {
-                element.textContent = totalMedia;
-            }
-        }
-    });
-}
-
-// CREATE EMBEDDED SESSIONS (FALLBACK)
-function createEmbeddedSessions() {
-    const sessions = [];
-    const districts = [
-        'Ubaro', 'Dharki', 'Ghotki', 'Jaferabad', 'Ranipur', 
-        'Mehrabpur', 'Dadu', 'Muzaffar Ghar', 'Kot Adu', 
-        'Karor Lal esan', 'Bhakkar', 'Mianwali', 'Sargodha', 
-        'Phalia', 'Chakwal', 'Toba take singh'
-    ];
-    
-    for (let i = 1; i <= 40; i++) {
-        const districtIndex = Math.floor((i - 1) / 3) % districts.length;
-        const district = districts[districtIndex];
-        
-        sessions.push({
-            id: i,
-            sessionNumber: `S${i}`,
-            city: district,
-            cityName: district,
-            spot: `Location ${i}`,
-            date: `2025-${11 + Math.floor((i-1)/15)}-${24 + ((i-1) % 10)}`,
-            day: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][(i-1) % 7],
-            farmers: Math.floor(Math.random() * 30) + 20,
-            wheatFarmers: Math.floor(Math.random() * 30) + 20,
-            acres: Math.floor(Math.random() * 500) + 300,
-            latitude: 30.3753 + (Math.random() * 5 - 2.5),
-            longitude: 69.3451 + (Math.random() * 5 - 2.5),
-            facilitator: 'Field Facilitator',
-            focus: 'Product Education',
-            type: ['education', 'demonstration', 'training', 'safety', 'field'][i % 5],
-            village: `Village ${i}`,
-            tehsil: district,
-            awarenessRate: 75 + Math.random() * 20,
-            usedLastYearRate: 60 + Math.random() * 20,
-            definiteUseRate: 85 + Math.random() * 10,
-            maybeRate: 10,
-            notInterestedRate: 5,
-            estimatedAcresPerFarmer: 25,
-            understandingScore: 2.5 + Math.random() * 0.5,
-            topReasonUse: 'Trust in Bayer',
-            topReasonNotUse: Math.random() > 0.7 ? 'Price Too High' : '',
-            dealer: 'Local Dealer'
-        });
-    }
-    
-    console.log(`Created ${sessions.length} embedded sessions`);
-    return sessions;
-}
-
-// CREATE MEDIA FROM STRUCTURE (FALLBACK)
-function createMediaFromStructure() {
-    const media = [];
-    
-    // Create brand assets
-    media.push({
-        id: 1,
-        filename: 'gallery/Bayer.png',
-        caption: 'Bayer Corporation Logo',
-        category: 'brand',
-        type: 'logo'
-    });
-    
-    media.push({
-        id: 2,
-        filename: 'gallery/Buctril.jpg',
-        caption: 'Buctril Super Herbicide Product',
-        category: 'brand',
-        type: 'product'
-    });
-    
-    media.push({
-        id: 3,
-        filename: 'gallery/Interact.gif',
-        caption: 'Interact Solutions Animation',
-        category: 'brand',
-        type: 'animation'
-    });
-    
-    media.push({
-        id: 4,
-        filename: 'gallery/poductts.jpg',
-        caption: 'Bayer Agricultural Product Range',
-        category: 'brand',
-        type: 'product-range'
-    });
-    
-    // Create session media (1-40)
-    for (let i = 1; i <= 40; i++) {
-        const districtIndex = Math.floor((i - 1) / 3) % 16;
-        const districts = [
-            'Ubaro', 'Dharki', 'Ghotki', 'Jaferabad', 'Ranipur', 
-            'Mehrabpur', 'Dadu', 'Muzaffar Ghar', 'Kot Adu', 
-            'Karor Lal esan', 'Bhakkar', 'Mianwali', 'Sargodha', 
-            'Phalia', 'Chakwal', 'Toba take singh'
-        ];
-        const district = districts[districtIndex];
-        
-        // Image
-        media.push({
-            id: 7 + (i-1)*2 + 1,
-            filename: `gallery/${i}.jpeg`,
-            caption: `Session ${i}: ${district} District Field Session`,
-            category: 'session',
-            type: 'photo',
-            district: district,
-            sessionId: i,
-            displayIn: ['gallery']
-        });
-        
-        // Video
-        media.push({
-            id: 7 + (i-1)*2 + 2,
-            filename: `gallery/${i}.mp4`,
-            caption: `Session ${i}: ${district} District Field Demonstration`,
-            category: 'session',
-            type: 'video',
-            district: district,
-            sessionId: i,
-            displayIn: ['gallery']
-        });
-    }
-    
-    console.log(`Created ${media.length} media items from structure`);
-    return media;
-}
-
-// CREATE FALLBACK MEDIA
-function createFallbackMedia() {
-    const media = [];
-    
-    // Basic placeholder media
-    for (let i = 1; i <= 104; i++) {
-        media.push({
-            id: i,
-            filename: 'gallery/placeholder.svg',
-            caption: `Media Item ${i}: Campaign Documentation`,
-            category: i <= 7 ? 'brand' : i <= 87 ? 'session' : 'additional',
-            type: i % 2 === 0 ? 'video' : 'photo',
-            isFallback: true
-        });
-    }
-    
-    console.log(`Created ${media.length} fallback media items`);
-    return media;
-}
-
-// INITIALIZE DISTRICT COORDINATES
-function initializeDistrictCoordinates() {
-    districtCoordinates = {
-        'Ubaro': { lat: 28.1537, lng: 69.8166 },
-        'Dharki': { lat: 28.0328, lng: 69.7041 },
-        'Ghotki': { lat: 28.0330, lng: 69.3818 },
-        'Jaferabad': { lat: 28.2844, lng: 68.4496 },
-        'Ranipur': { lat: 27.2878, lng: 68.5064 },
-        'Mehrabpur': { lat: 27.1066, lng: 68.0188 },
-        'Dadu': { lat: 26.7319, lng: 67.7750 },
-        'Muzaffar Ghar': { lat: 30.0722, lng: 71.1933 },
-        'Kot Adu': { lat: 30.4708, lng: 70.9664 },
-        'Karor Lal esan': { lat: 31.2233, lng: 70.9511 },
-        'Bhakkar': { lat: 31.6253, lng: 71.0656 },
-        'Mianwali': { lat: 32.5851, lng: 71.5436 },
-        'Sargodha': { lat: 32.0836, lng: 72.6711 },
-        'Phalia': { lat: 32.4311, lng: 73.5792 },
-        'Chakwal': { lat: 32.9333, lng: 72.8583 },
-        'Toba take singh': { lat: 30.9747, lng: 72.4867 }
-    };
-}
-
-// UPDATE DASHBOARD STATS
-function updateDashboardStats() {
-    const totalSessions = currentFilteredSessions.length;
-    const totalFarmers = currentFilteredSessions.reduce((sum, s) => sum + (s.farmers || 0), 0);
-    const totalAcres = currentFilteredSessions.reduce((sum, s) => sum + (s.acres || 0), 0);
-    const uniqueDistricts = [...new Set(currentFilteredSessions.map(s => s.city))].length;
-
-    // Update all stat elements
-    if (elements.sessionCount) elements.sessionCount.textContent = totalSessions;
-    if (elements.farmerCount) elements.farmerCount.textContent = totalFarmers.toLocaleString();
-    if (elements.acreCount) elements.acreCount.textContent = totalAcres.toLocaleString();
-    if (elements.districtCount) elements.districtCount.textContent = uniqueDistricts;
-    if (elements.totalSessions) elements.totalSessions.textContent = totalSessions;
-    if (elements.shownSessions) elements.shownSessions.textContent = Math.min(itemsPerPage, totalSessions);
-    if (elements.totalSessionsCount) elements.totalSessionsCount.textContent = totalSessions;
-    if (elements.totalFarmersCount) elements.totalFarmersCount.textContent = totalFarmers.toLocaleString();
-    if (elements.totalAcresCount) elements.totalAcresCount.textContent = totalAcres.toLocaleString();
-    
-    // Update map banner
-    if (elements.mapStats) {
-        elements.mapStats.innerHTML = `
-            <i class="fas fa-map-marker-alt"></i>
-            ${totalSessions} Sessions • ${uniqueDistricts} Districts • ${totalFarmers.toLocaleString()} Farmers • ${totalAcres.toLocaleString()} Acres
-        `;
-    }
-    
-    // Update pagination info
-    const totalPages = Math.ceil(totalSessions / itemsPerPage);
-    if (elements.currentPage) elements.currentPage.textContent = currentPage;
-    if (elements.totalPages) elements.totalPages.textContent = totalPages;
-}
-
-// SAFE RENDER GALLERY WITH ERROR HANDLING
-function safeRenderGallery() {
-    try {
-        const container = elements.mediaGallery;
-        if (!container) return;
-
-        // Filter to gallery items
-        const galleryMedia = mediaItems.filter(item => {
-            // Check if displayIn exists and includes 'gallery'
-            if (item.displayIn && Array.isArray(item.displayIn)) {
-                return item.displayIn.includes('gallery');
-            }
-            // Fallback: include all items for now
-            return true;
-        });
-        
-        if (galleryMedia.length === 0) {
-            container.innerHTML = `
-                <div class="gallery-placeholder">
-                    <i class="fas fa-images" style="font-size: 48px; margin-bottom: 16px; color: #ccc;"></i>
-                    <p>No gallery media found.</p>
-                    <small>Check media.json file and ensure media files exist in gallery/ folder</small>
+                <div class="visitor-counter">
+                    <i class="fas fa-users"></i> <span id="liveCounter">1,454</span> Farmers Engaged
                 </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = '';
-        
-        galleryMedia.forEach((media, index) => {
-            const isVideo = media.filename.endsWith('.mp4') || 
-                           media.filename.endsWith('.webm') ||
-                           media.type === 'video';
-            const isImage = !isVideo;
+            </div>
             
-            const item = document.createElement('div');
-            item.className = 'gallery-item';
-            item.setAttribute('data-index', index);
-            item.setAttribute('data-category', media.category || 'other');
-            item.setAttribute('data-type', media.type || 'unknown');
-            if (media.district) item.setAttribute('data-district', media.district);
-            
-            // Use correct path
-            let mediaPath = media.filename;
-            
-            // Create the media element
-            if (isVideo) {
-                item.innerHTML = `
-                    <div class="video-wrapper">
-                        <video muted playsinline preload="metadata" poster="gallery/placeholder.svg">
-                            <source src="${mediaPath}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <div class="video-overlay">
-                            <i class="fas fa-play-circle"></i>
-                        </div>
-                        ${media.isFallback ? '<div class="fallback-badge">Sample Video</div>' : ''}
-                    </div>
-                    <div class="gallery-caption">
-                        <div class="gallery-badge ${media.category || 'other'}">${media.category || 'Media'}</div>
-                        <div class="gallery-title" title="${media.caption || 'Media Item'}">
-                            ${(media.caption || 'Media Item').substring(0, 50)}
-                            ${(media.caption || '').length > 50 ? '...' : ''}
-                        </div>
-                        <div class="gallery-meta">
-                            ${media.sessionId ? `<span><i class="fas fa-hashtag"></i> Session ${media.sessionId}</span>` : ''}
-                            ${media.district ? `<span><i class="fas fa-map-marker-alt"></i> ${media.district}</span>` : ''}
-                            ${media.date ? `<span><i class="fas fa-calendar"></i> ${media.date}</span>` : ''}
-                            ${isVideo ? '<span><i class="fas fa-video"></i> Video</span>' : ''}
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Image or other file type
-                item.innerHTML = `
-                    <img data-src="${mediaPath}" 
-                         src="gallery/placeholder.svg"
-                         alt="${media.caption || 'Campaign image'}"
-                         loading="lazy"
-                         onerror="this.src='gallery/placeholder.svg'; this.onerror=null;">
-                    ${media.isFallback ? '<div class="fallback-badge">Placeholder</div>' : ''}
-                    <div class="gallery-caption">
-                        <div class="gallery-badge ${media.category || 'other'}">${media.category || 'Media'}</div>
-                        <div class="gallery-title" title="${media.caption || 'Media Item'}">
-                            ${(media.caption || 'Media Item').substring(0, 50)}
-                            ${(media.caption || '').length > 50 ? '...' : ''}
-                        </div>
-                        <div class="gallery-meta">
-                            ${media.sessionId ? `<span><i class="fas fa-hashtag"></i> Session ${media.sessionId}</span>` : ''}
-                            ${media.district ? `<span><i class="fas fa-map-marker-alt"></i> ${media.district}</span>` : ''}
-                            ${media.date ? `<span><i class="fas fa-calendar"></i> ${media.date}</span>` : ''}
-                            <span><i class="fas fa-image"></i> Image</span>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                openMediaViewer(index);
-            });
-            
-            container.appendChild(item);
-        });
-        
-        // Initialize lazy loading
-        initializeLazyLoading();
-        
-    } catch (error) {
-        console.error('Gallery rendering failed:', error);
-        if (elements.mediaGallery) {
-            elements.mediaGallery.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Gallery failed to load: ${error.message}</p>
-                    <button onclick="safeRenderGallery()" class="btn btn-small">Retry</button>
+            <div class="header-subtitle">
+                <div class="campaign-duration">
+                    <i class="fas fa-calendar-alt"></i> 24 Nov - 12 Dec 2025
                 </div>
-            `;
-        }
-    }
-}
+                <div class="build-date">
+                    <i class="fas fa-code"></i> Dashboard v4.0 Media Fixed
+                </div>
+                <div class="data-source">
+                    <i class="fas fa-database"></i> 40 Sessions • 104 Media Files
+                </div>
+            </div>
+            
+            <div class="header-logos">
+                <div class="logo-container">
+                    <img src="gallery/Bayer.png" alt="Bayer Logo" class="logo-img" loading="eager" onerror="this.src='gallery/placeholder.svg'">
+                </div>
+                <div class="logo-container">
+                    <img src="gallery/Buctril.jpg" alt="Buctril Logo" class="logo-img" loading="eager" onerror="this.src='gallery/placeholder.svg'">
+                </div>
+                <div class="logo-container">
+                    <img src="gallery/Interact.gif" alt="Interact Solutions Logo" class="logo-img" loading="eager" onerror="this.onerror=null;this.src='gallery/placeholder.svg'">
+                </div>
+                <div class="logo-container">
+                    <img src="gallery/poductts.jpg" alt="Products" class="logo-img" loading="lazy" onerror="this.src='gallery/placeholder.svg'">
+                </div>
+            </div>
+        </header>
 
-// INITIALIZE LAZY LOADING
-function initializeLazyLoading() {
-    const lazyImages = document.querySelectorAll('img[data-src]');
-    
-    if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
-                    observer.unobserve(img);
-                }
-            });
-        }, { rootMargin: '50px 0px', threshold: 0.1 });
-        
-        lazyImages.forEach(img => observer.observe(img));
-    } else {
-        // Fallback for older browsers
-        lazyImages.forEach(img => {
-            img.src = img.dataset.src;
-            img.removeAttribute('data-src');
-        });
-    }
-}
+        <!-- Error Banner -->
+        <div id="errorBanner" class="error-banner" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <h3 id="errorMessage">Error loading data</h3>
+                <div class="quick-checks">
+                    <p>Quick checks:</p>
+                    <ol>
+                        <li>Check if sessions.json exists</li>
+                        <li>Check if media.json exists</li>
+                        <li>Verify your internet connection</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
 
-// RENDER SESSIONS TABLE
-function renderSessionsTable() {
-    const tbody = elements.sessionsTableBody;
-    if (!tbody) return;
-
-    if (currentFilteredSessions.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="11" style="text-align:center; padding:40px; color:#666;">
-                    <i class="fas fa-inbox"></i>
-                    <p>No session data available for the current filters.</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = '';
-    
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pageSessions = currentFilteredSessions.slice(startIndex, endIndex);
-    
-    pageSessions.forEach(session => {
-        const row = document.createElement('tr');
-        row.style.cursor = 'pointer';
-        row.onclick = () => showSessionModal(session.id);
-        
-        // Determine performance class
-        let performanceClass = 'session-high';
-        if (session.definiteUseRate < 70) performanceClass = 'session-low';
-        else if (session.definiteUseRate < 85) performanceClass = 'session-medium';
-        
-        row.innerHTML = `
-            <td class="session-number">${session.sessionNumber}</td>
-            <td>${session.date}</td>
-            <td class="session-city">${session.city}</td>
-            <td class="session-spot" title="${session.spot}">${session.spot.substring(0, 20)}${session.spot.length > 20 ? '...' : ''}</td>
-            <td title="${session.village}">${session.village.substring(0, 15)}${session.village.length > 15 ? '...' : ''}</td>
-            <td>${session.facilitator}</td>
-            <td class="session-stats">${session.farmers}</td>
-            <td class="session-stats">${session.acres.toLocaleString()}</td>
-            <td class="${performanceClass}">${session.definiteUseRate}%</td>
-            <td>${session.awarenessRate}%</td>
-            <td>
-                <button class="btn-table" onclick="event.stopPropagation(); showSessionModal(${session.id})">
-                    <i class="fas fa-eye"></i>
+        <!-- Dashboard Controls -->
+        <div class="dashboard-controls">
+            <div class="control-grid">
+                <div class="control-group">
+                    <label for="cityFilter"><i class="fas fa-city"></i> Filter by District</label>
+                    <select id="cityFilter" class="dropdown">
+                        <option value="all">All Districts (16)</option>
+                        <option value="Ubaro">Ubaro</option>
+                        <option value="Dharki">Dharki</option>
+                        <option value="Ghotki">Ghotki</option>
+                        <option value="Jaferabad">Jaferabad</option>
+                        <option value="Ranipur">Ranipur</option>
+                        <option value="Mehrabpur">Mehrabpur</option>
+                        <option value="Dadu">Dadu</option>
+                        <option value="Muzaffar Ghar">Muzaffar Ghar</option>
+                        <option value="Kot Adu">Kot Adu</option>
+                        <option value="Karor Lal esan">Karor Lal esan</option>
+                        <option value="Bhakkar">Bhakkar</option>
+                        <option value="Mianwali">Mianwali</option>
+                        <option value="Sargodha">Sargodha</option>
+                        <option value="Phalia">Phalia</option>
+                        <option value="Chakwal">Chakwal</option>
+                        <option value="Toba take singh">Toba take singh</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="searchInput"><i class="fas fa-search"></i> Search Sessions</label>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by location, facilitator, village...">
+                </div>
+                
+                <div class="control-group">
+                    <label><i class="fas fa-calendar"></i> Date Range</label>
+                    <div class="date-group">
+                        <input type="date" id="dateFrom" class="date-input" value="2025-11-24">
+                        <span>to</span>
+                        <input type="date" id="dateTo" class="date-input" value="2025-12-12">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label><i class="fas fa-filter"></i> Session Type</label>
+                    <select id="sessionTypeFilter" class="dropdown">
+                        <option value="all">All Session Types</option>
+                        <option value="education">Education</option>
+                        <option value="demonstration">Demonstration</option>
+                        <option value="training">Training</option>
+                        <option value="safety">Safety</option>
+                        <option value="field">Field Session</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="applyFilters" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Apply Filters
                 </button>
-                <button class="btn-table" onclick="event.stopPropagation(); exportSessionData(${session.id})">
-                    <i class="fas fa-download"></i>
+                <button id="resetFilters" class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Reset All
                 </button>
-            </td>
-        `;
-        
-        tbody.appendChild(row);
-    });
-    
-    updatePaginationControls();
-}
+                <button id="exportData" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+                <button id="refreshData" class="btn btn-outline">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button id="shareSummaryBtn" class="btn btn-outline">
+                    <i class="fas fa-share-alt"></i> Share Summary
+                </button>
+            </div>
+        </div>
 
-// UPDATE PAGINATION CONTROLS
-function updatePaginationControls() {
-    const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
-    
-    if (prevBtn) prevBtn.disabled = currentPage <= 1;
-    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-    
-    if (elements.currentPage) elements.currentPage.textContent = currentPage;
-    if (elements.totalPages) elements.totalPages.textContent = totalPages;
-}
+        <!-- Selection Summary -->
+        <div class="selection-summary">
+            <h3><i class="fas fa-chart-line"></i> Campaign Overview</h3>
+            <div class="summary-stats">
+                <div class="stat-item" onclick="filterByDistrict('all')" style="cursor: pointer;">
+                    <div class="stat-value" id="sessionCount">0</div>
+                    <div class="stat-label">Sessions</div>
+                    <div class="stat-subtext">40 Total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="farmerCount">0</div>
+                    <div class="stat-label">Farmers Reached</div>
+                    <div class="stat-subtext">1,454 Total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="acreCount">0</div>
+                    <div class="stat-label">Acres Covered</div>
+                    <div class="stat-subtext">22,128 Total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="districtCount">0</div>
+                    <div class="stat-label">Districts</div>
+                    <div class="stat-subtext">16 Total</div>
+                </div>
+                <div id="statusIndicator" class="status-indicator status-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading real session data...</span>
+                </div>
+            </div>
+        </div>
 
-// SETUP EVENT LISTENERS
-function setupEventListeners() {
-    // Apply Filters Button
-    document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
-    
-    // Reset Filters Button
-    document.getElementById('resetFilters')?.addEventListener('click', resetFilters);
-    
-    // Export Data Button
-    document.getElementById('exportData')?.addEventListener('click', exportEnhancedData);
-    
-    // Refresh Data Button
-    document.getElementById('refreshData')?.addEventListener('click', () => location.reload());
-    
-    // Share Summary Button
-    document.getElementById('shareSummaryBtn')?.addEventListener('click', shareCampaignSummary);
-    
-    // City Filter
-    document.getElementById('cityFilter')?.addEventListener('change', applyFilters);
-    
-    // Session Type Filter
-    document.getElementById('sessionTypeFilter')?.addEventListener('change', applyFilters);
-    
-    // Date Filters
-    document.getElementById('dateFrom')?.addEventListener('change', applyFilters);
-    document.getElementById('dateTo')?.addEventListener('change', applyFilters);
-    
-    // Search Input
-    document.getElementById('searchInput')?.addEventListener('input', applyFilters);
-    
-    // Gallery Filter Buttons
-    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
-        btn.addEventListener('click', handleGalleryFilter);
-    });
-    
-    // Pagination Buttons
-    document.getElementById('prevPage')?.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            renderSessionsTable();
-        }
-    });
-    
-    document.getElementById('nextPage')?.addEventListener('click', () => {
-        const totalPages = Math.ceil(currentFilteredSessions.length / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            renderSessionsTable();
-        }
-    });
-    
-    // Map Controls
-    document.getElementById('fitBounds')?.addEventListener('click', fitMapBounds);
-    document.getElementById('resetMap')?.addEventListener('click', resetMapView);
-    document.getElementById('exportMap')?.addEventListener('click', captureMap);
-}
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab active" data-tab="overview">
+                <i class="fas fa-home"></i> Overview
+            </button>
+            <button class="tab" data-tab="map">
+                <i class="fas fa-map-marked-alt"></i> Interactive Map
+            </button>
+            <button class="tab" data-tab="gallery">
+                <i class="fas fa-images"></i> Media Gallery (<span id="galleryCount">104</span>)
+            </button>
+            <button class="tab" data-tab="sessions">
+                <i class="fas fa-table"></i> Session Details
+            </button>
+            <button class="tab" data-tab="analytics">
+                <i class="fas fa-chart-bar"></i> Analytics
+            </button>
+            <button class="tab" data-tab="reports">
+                <i class="fas fa-file-alt"></i> Reports
+            </button>
+        </div>
 
-// FILTER FUNCTIONS
-function applyFilters() {
-    const districtValue = document.getElementById('cityFilter').value;
-    const searchValue = document.getElementById('searchInput').value.toLowerCase();
-    const dateFromValue = document.getElementById('dateFrom').value;
-    const dateToValue = document.getElementById('dateTo').value;
-    const sessionTypeValue = document.getElementById('sessionTypeFilter').value;
-    
-    currentFilteredSessions = allSessions.filter(session => {
-        // District filter
-        if (districtValue !== 'all' && session.city !== districtValue) return false;
-        
-        // Search filter
-        if (searchValue) {
-            const searchable = `${session.sessionNumber} ${session.city} ${session.spot} ${session.village} ${session.facilitator} ${session.focus || ''}`.toLowerCase();
-            if (!searchable.includes(searchValue)) return false;
-        }
-        
-        // Date filter
-        if (dateFromValue && session.date < dateFromValue) return false;
-        if (dateToValue && session.date > dateToValue) return false;
-        
-        // Session type filter
-        if (sessionTypeValue !== 'all') {
-            if (!session.type || !session.type.toLowerCase().includes(sessionTypeValue.toLowerCase())) return false;
-        }
-        
-        return true;
-    });
-    
-    currentPage = 1;
-    
-    // Update everything
-    updateDashboardStats();
-    renderSessionsTable();
-    updateMapMarkers();
-    initializeAnalyticsCharts();
-    
-    showToast(`Found ${currentFilteredSessions.length} sessions`, 'success');
-}
+        <!-- Tab Content -->
+        <div id="tabContent">
+            <!-- Overview Tab -->
+            <section id="overviewTab" style="display: block;">
+                <div class="campaign-section">
+                    <div class="campaign-header">
+                        <h3 class="campaign-title">
+                            <i class="fas fa-tractor"></i> Campaign Performance Summary
+                        </h3>
+                        <div class="campaign-badge">
+                            <i class="fas fa-bullseye"></i> 40 Sessions Completed
+                        </div>
+                    </div>
+                    
+                    <div class="overview-stats">
+                        <div class="overview-card" onclick="filterByDistrict('all')">
+                            <h3 id="totalSessions">40</h3>
+                            <p>Total Sessions</p>
+                            <small>24 Nov - 12 Dec 2025</small>
+                        </div>
+                        <div class="overview-card performance-high">
+                            <h3>1,303</h3>
+                            <p>Farmers Will Use Buctril</p>
+                            <small>90.4% Definite Intent</small>
+                        </div>
+                        <div class="overview-card performance-high">
+                            <h3>21,187</h3>
+                            <p>Estimated Buctril Acres</p>
+                            <small>From Campaign Sessions</small>
+                        </div>
+                        <div class="overview-card">
+                            <h3>77%</h3>
+                            <p>Brand Awareness</p>
+                            <small>1,120 farmers know Buctril</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Key Takeaways -->
+                <div class="key-takeaways">
+                    <h2><i class="fas fa-lightbulb"></i> Key Campaign Insights</h2>
+                    <p class="campaign-description">
+                        Buctril Super Farmer Education Drive 2025 successfully conducted 40 sessions across 16 districts,
+                        engaging 1,454 farmers and covering 22,128 acres. The campaign demonstrated
+                        strong farmer trust in Bayer with 74.2% citing this as their main reason to use Buctril.
+                    </p>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-card performance-high">
+                            <div class="metric-value">90.4%</div>
+                            <p>Definite Use Rate</p>
+                            <small>1,303 farmers</small>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">74.2%</div>
+                            <p>Trust in Bayer</p>
+                            <small>Top reason for use</small>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">2.8/3.0</div>
+                            <p>Understanding Score</p>
+                            <small>Farmer comprehension</small>
+                        </div>
+                        <div class="metric-card performance-warning">
+                            <div class="metric-value">18.3%</div>
+                            <p>Price Concern</p>
+                            <small>Main barrier to adoption</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick District Stats -->
+                <div class="district-quickview">
+                    <h3><i class="fas fa-map-pin"></i> Top Performing Districts</h3>
+                    <div class="district-grid">
+                        <div class="district-card" onclick="filterByDistrict('Ghotki')">
+                            <div class="district-name">Ghotki</div>
+                            <div class="district-stats">4 sessions • 136 farmers • 2,842 acres</div>
+                            <div class="district-metric">
+                                <span class="metric-label">Awareness:</span>
+                                <span class="metric-value">90.3%</span>
+                            </div>
+                        </div>
+                        <div class="district-card" onclick="filterByDistrict('Ubaro')">
+                            <div class="district-name">Ubaro</div>
+                            <div class="district-stats">2 sessions • 70 farmers • 2,416 acres</div>
+                            <div class="district-metric">
+                                <span class="metric-label">Definite Use:</span>
+                                <span class="metric-value">85.0%</span>
+                            </div>
+                        </div>
+                        <div class="district-card" onclick="filterByDistrict('Dharki')">
+                            <div class="district-name">Dharki</div>
+                            <div class="district-stats">2 sessions • 67 farmers • 1,197 acres</div>
+                            <div class="district-metric">
+                                <span class="metric-label">Used Last Year:</span>
+                                <span class="metric-value">70.5%</span>
+                            </div>
+                        </div>
+                        <div class="district-card" onclick="filterByDistrict('Mianwali')">
+                            <div class="district-name">Mianwali</div>
+                            <div class="district-stats">3 sessions • 101 farmers • 1,086 acres</div>
+                            <div class="district-metric">
+                                <span class="metric-label">Price Concern:</span>
+                                <span class="metric-value">High</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-function resetFilters() {
-    document.getElementById('cityFilter').value = 'all';
-    document.getElementById('searchInput').value = '';
-    document.getElementById('dateFrom').value = '2025-11-24';
-    document.getElementById('dateTo').value = '2025-12-12';
-    document.getElementById('sessionTypeFilter').value = 'all';
-    
-    currentFilteredSessions = [...allSessions];
-    currentPage = 1;
-    
-    updateDashboardStats();
-    renderSessionsTable();
-    updateMapMarkers();
-    initializeAnalyticsCharts();
-    
-    showToast('All filters reset', 'success');
-}
-
-function filterByDistrict(district) {
-    const cityFilter = document.getElementById('cityFilter');
-    if (cityFilter) {
-        cityFilter.value = district;
-        applyFilters();
-        document.querySelector('[data-tab="map"]').click();
-    }
-}
-
-function handleGalleryFilter() {
-    document.querySelectorAll('.gallery-filter-btn').forEach(b => 
-        b.classList.remove('active')
-    );
-    this.classList.add('active');
-    
-    const filter = this.getAttribute('data-filter');
-    filterGallery(filter);
-}
-
-function filterGallery(filter) {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    
-    galleryItems.forEach(item => {
-        const category = item.getAttribute('data-category');
-        const type = item.getAttribute('data-type');
-        const district = item.getAttribute('data-district');
-        
-        let showItem = false;
-        
-        switch (filter) {
-            case 'all':
-                showItem = true;
-                break;
-            case 'brand':
-                showItem = category === 'brand';
-                break;
-            case 'session':
-                showItem = category === 'session';
-                break;
-            case 'additional':
-                showItem = category === 'additional';
-                break;
-            case 'videos':
-                showItem = type === 'video' || item.querySelector('video') !== null;
-                break;
-            case 'images':
-                showItem = type !== 'video' && item.querySelector('video') === null;
-                break;
-            case 'district':
-                showItem = district !== null;
-                break;
-            default:
-                showItem = true;
-        }
-        
-        item.style.display = showItem ? 'block' : 'none';
-    });
-}
-
-// INITIALIZE MAP
-function initializeMap() {
-    return new Promise((resolve) => {
-        try {
-            const mapContainer = document.getElementById('campaignMap');
-            if (!mapContainer) {
-                console.error('Map container not found');
-                resolve();
-                return;
-            }
-            
-            // Create map centered on Pakistan
-            map = L.map('campaignMap', {
-                center: [30.3753, 69.3451],
-                zoom: 6,
-                zoomControl: false,
-                preferCanvas: true
-            });
-
-            // Add tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap',
-                maxZoom: 12
-            }).addTo(map);
-
-            // Add zoom control
-            L.control.zoom({ position: 'topright' }).addTo(map);
-
-            // Create marker cluster
-            markerCluster = L.markerClusterGroup();
-            map.addLayer(markerCluster);
-
-            // Add markers
-            updateMapMarkers();
-            
-            console.log('Map initialized successfully');
-            resolve();
-
-        } catch (error) {
-            console.error('Failed to initialize map:', error);
-            resolve();
-        }
-    });
-}
-
-// UPDATE MAP MARKERS
-function updateMapMarkers() {
-    if (!map || !markerCluster) return;
-    
-    markerCluster.clearLayers();
-    
-    currentFilteredSessions.forEach(session => {
-        if (session.latitude && session.longitude) {
-            // Determine marker color based on performance
-            let markerColor = '#2e7d32'; // Default green for high performance
-            if (session.definiteUseRate < 70) markerColor = '#f44336'; // Red for low
-            else if (session.definiteUseRate < 85) markerColor = '#ff9800'; // Orange for medium
-            
-            const icon = L.divIcon({
-                className: 'custom-marker',
-                html: `
-                    <div style="
-                        background-color: ${markerColor};
-                        width: 16px;
-                        height: 16px;
-                        border-radius: 50%;
-                        border: 3px solid white;
-                        box-shadow: 0 0 8px rgba(0,0,0,0.3);
-                        cursor: pointer;
-                    "></div>
-                `,
-                iconSize: [22, 22],
-                iconAnchor: [11, 11]
-            });
-            
-            const marker = L.marker([session.latitude, session.longitude], {
-                title: session.sessionNumber,
-                icon: icon
-            });
-            
-            const popupContent = `
-                <div style="min-width: 280px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h4 style="margin:0; color: ${markerColor}; font-weight: 700;">${session.sessionNumber}</h4>
-                        <span style="background: ${markerColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                            ${session.definiteUseRate}% Definite
+            <!-- Map Tab -->
+            <section id="mapTab" style="display: none;">
+                <div class="map-container">
+                    <div id="campaignMap"></div>
+                    <div class="map-banner">
+                        <span id="mapStats">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Loading map data...
                         </span>
                     </div>
-                    <p style="margin:8px 0;"><strong>Location:</strong> ${session.spot}</p>
-                    <p style="margin:8px 0;"><strong>District:</strong> ${session.city}</p>
-                    <p style="margin:8px 0;"><strong>Date:</strong> ${session.date}</p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0;">
-                        <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; text-align: center;">
-                            <div style="font-size: 20px; font-weight: 700; color: #2e7d32;">${session.farmers}</div>
-                            <div style="font-size: 11px; color: #666;">Farmers</div>
+                </div>
+                
+                <div class="map-controls-grid">
+                    <div class="map-controls-panel">
+                        <h3><i class="fas fa-sliders-h"></i> Map Controls</h3>
+                        <div class="control-section">
+                            <label>Attendance Filter</label>
+                            <input type="range" id="attendanceRange" class="range-slider" min="20" max="70" value="20" step="5">
+                            <div class="range-labels">
+                                <span>20+ farmers</span>
+                                <span id="rangeValue">All sizes</span>
+                                <span>70+ farmers</span>
+                            </div>
                         </div>
-                        <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; text-align: center;">
-                            <div style="font-size: 20px; font-weight: 700; color: #2e7d32;">${session.acres.toLocaleString()}</div>
-                            <div style="font-size: 11px; color: #666;">Acres</div>
+                        
+                        <div class="control-section">
+                            <label>Session Performance</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="map-filter" value="high" checked>
+                                    <i class="fas fa-circle" style="color: #2e7d32;"></i> High (>85% definite use)
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="map-filter" value="medium" checked>
+                                    <i class="fas fa-circle" style="color: #ff9800;"></i> Medium (70-85%)
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="map-filter" value="low" checked>
+                                    <i class="fas fa-circle" style="color: #f44336;"></i> Low (<70%)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="control-section">
+                            <label>Price Concern Level</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="price-filter" value="high" checked>
+                                    <i class="fas fa-money-bill-wave" style="color: #f44336;"></i> High Concern
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="price-filter" value="low" checked>
+                                    <i class="fas fa-money-bill-wave" style="color: #2e7d32;"></i> Low Concern
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="button-group" style="margin-top: 20px;">
+                            <button id="fitBounds" class="btn btn-primary">
+                                <i class="fas fa-search-plus"></i> Fit to Sessions
+                            </button>
+                            <button id="resetMap" class="btn btn-outline">
+                                <i class="fas fa-globe-asia"></i> Reset View
+                            </button>
+                            <button id="exportMap" class="btn btn-outline">
+                                <i class="fas fa-camera"></i> Capture Map
+                            </button>
                         </div>
                     </div>
-                    <button onclick="showSessionModal(${session.id})" style="
-                        margin-top: 12px;
-                        width: 100%;
-                        background: ${markerColor};
-                        color: white;
-                        border: none;
-                        padding: 10px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        transition: all 0.2s;
-                    " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-                        <i class="fas fa-info-circle"></i> View Session Details
+                    
+                    <div class="map-controls-panel">
+                        <h3><i class="fas fa-info-circle"></i> Map Statistics</h3>
+                        <div id="mapFilterStats" class="distribution-value">0 sessions shown</div>
+                        <div class="distribution-subtext">
+                            <p><strong>Color Legend:</strong></p>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #2e7d32;"></span>
+                                <span>High Performance (>85% definite use)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #ff9800;"></span>
+                                <span>Medium Performance (70-85%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #f44336;"></span>
+                                <span>Low Performance (<70%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #9c27b0;"></span>
+                                <span>Price Concern Highlighted</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gallery Tab -->
+            <section id="galleryTab" style="display: none;">
+                <div class="gallery-section">
+                    <div class="gallery-filters">
+                        <button class="gallery-filter-btn active" data-filter="all">
+                            <i class="fas fa-th"></i> All Media (<span id="allMediaCount">104</span>)
+                        </button>
+                        <button class="gallery-filter-btn" data-filter="brand">
+                            <i class="fas fa-tag"></i> Brand Assets
+                        </button>
+                        <button class="gallery-filter-btn" data-filter="session">
+                            <i class="fas fa-calendar"></i> Session Media
+                        </button>
+                        <button class="gallery-filter-btn" data-filter="additional">
+                            <i class="fas fa-plus"></i> Additional
+                        </button>
+                        <button class="gallery-filter-btn" data-filter="videos">
+                            <i class="fas fa-video"></i> Videos Only
+                        </button>
+                        <button class="gallery-filter-btn" data-filter="images">
+                            <i class="fas fa-image"></i> Images Only
+                        </button>
+                        <button class="gallery-filter-btn" data-filter="district">
+                            <i class="fas fa-map-pin"></i> By District
+                        </button>
+                    </div>
+                    
+                    <div id="mediaGallery" class="gallery-grid">
+                        <!-- Gallery items will be loaded here -->
+                        <div class="gallery-placeholder">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading media gallery...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-footer">
+                        <div class="gallery-stats">
+                            <span><i class="fas fa-images"></i> <span id="imageCount">59</span> Images</span>
+                            <span><i class="fas fa-video"></i> <span id="videoCount">45</span> Videos</span>
+                            <span><i class="fas fa-folder"></i> <span id="totalMediaCount">104</span> Total Files</span>
+                        </div>
+                        <p><i class="fas fa-info-circle"></i> Click on any image to view larger version. Videos will play on click. Missing files show placeholder.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sessions Tab -->
+            <section id="sessionsTab" style="display: none;">
+                <div class="sessions-header">
+                    <h3><i class="fas fa-table"></i> Session Details</h3>
+                    <div class="session-summary">
+                        Showing <span id="shownSessions">0</span> of <span id="totalSessionsCount">0</span> sessions
+                        <span class="session-summary-detail">
+                            • <span id="totalFarmersCount">0</span> farmers • <span id="totalAcresCount">0</span> acres
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="sessions-table-container">
+                    <table class="sessions-table">
+                        <thead>
+                            <tr>
+                                <th>SN</th>
+                                <th>Date</th>
+                                <th>District</th>
+                                <th>Location</th>
+                                <th>Village</th>
+                                <th>Facilitator</th>
+                                <th>Farmers</th>
+                                <th>Acres</th>
+                                <th>Definite Use</th>
+                                <th>Awareness</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessionsTableBody">
+                            <!-- Sessions will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination-controls">
+                    <div class="pagination-info">
+                        Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                    </div>
+                    <div class="pagination-buttons">
+                        <button id="prevPage" class="btn btn-outline" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <button id="nextPage" class="btn btn-outline" disabled>
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Tab -->
+            <section id="analyticsTab" style="display: none;">
+                <div class="insights-container">
+                    <h3><i class="fas fa-chart-line"></i> Performance Analytics</h3>
+                    
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3><i class="fas fa-users"></i> Farmer Attendance by Date</h3>
+                            <div id="attendanceChart" class="chart-container">
+                                <!-- Chart will be generated here -->
+                            </div>
+                            <div class="chart-note">
+                                <i class="fas fa-info-circle"></i> Shows farmer attendance per session date. Click bars to filter by date.
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-card">
+                            <h3><i class="fas fa-chart-pie"></i> District Distribution</h3>
+                            <div class="distribution-center">
+                                <div class="distribution-value" id="districtDistribution">16</div>
+                                <div class="distribution-label">Districts Covered</div>
+                                <div class="distribution-subtext" id="districtTopPerformers">
+                                    Top districts: Ghotki, Ubaro, Dharki
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-card">
+                            <h3><i class="fas fa-star"></i> Understanding Scores</h3>
+                            <div id="understandingChart" class="chart-container">
+                                <!-- Understanding scores chart -->
+                            </div>
+                            <div class="chart-note">
+                                <i class="fas fa-info-circle"></i> Average understanding scores out of 3
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-card">
+                            <h3><i class="fas fa-tags"></i> Reasons to Use Buctril</h3>
+                            <div id="reasonsChart" class="chart-container">
+                                <!-- Reasons chart -->
+                            </div>
+                            <div class="chart-note">
+                                <i class="fas fa-info-circle"></i> Top reasons farmers choose Buctril
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Performance Metrics -->
+                <div class="performance-section">
+                    <h3><i class="fas fa-tachometer-alt"></i> Key Performance Metrics</h3>
+                    <div class="performance-grid">
+                        <div class="performance-card performance-high">
+                            <div class="performance-value">90.4%</div>
+                            <div class="performance-label">Definite Intent</div>
+                            <div class="performance-change">+24.4% from last year</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">77.2%</div>
+                            <div class="performance-label">Awareness Rate</div>
+                            <div class="performance-change">1,120 farmers know Buctril</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">67.1%</div>
+                            <div class="performance-label">Used Last Year</div>
+                            <div class="performance-change">968 repeat customers</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">74.2%</div>
+                            <div class="performance-label">Trust in Bayer</div>
+                            <div class="performance-change">Top reason for use</div>
+                        </div>
+                        <div class="performance-card performance-warning">
+                            <div class="performance-value">18.3%</div>
+                            <div class="performance-label">Price Concern</div>
+                            <div class="performance-change">Main barrier to adoption</div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-value">2.8/3.0</div>
+                            <div class="performance-label">Understanding Score</div>
+                            <div class="performance-change">Good product knowledge</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Sessions -->
+                <div class="top-sessions">
+                    <h3><i class="fas fa-trophy"></i> Top Performing Sessions</h3>
+                    <div class="top-sessions-grid">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Tab -->
+            <section id="reportsTab" style="display: none;">
+                <div class="reports-container">
+                    <h3><i class="fas fa-file-alt"></i> Download Reports</h3>
+                    <p class="reports-description">
+                        Access detailed campaign reports and export data for further analysis. All reports are generated from the actual session data.
+                    </p>
+                    
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <div class="report-icon">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <div class="report-content">
+                                <h4>Complete Session Data</h4>
+                                <p>Full dataset of all 40 sessions with farmer details, acreage, and performance metrics.</p>
+                                <div class="report-details">
+                                    <span><i class="fas fa-database"></i> 40 sessions</span>
+                                    <span><i class="fas fa-users"></i> 1,454 farmers</span>
+                                </div>
+                                <button class="btn btn-primary download-report" data-report="session_summary.csv">
+                                    <i class="fas fa-download"></i> Download CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="report-card">
+                            <div class="report-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="report-content">
+                                <h4>District Performance Summary</h4>
+                                <p>Aggregated performance metrics by district with comparison analysis.</p>
+                                <div class="report-details">
+                                    <span><i class="fas fa-map"></i> 16 districts</span>
+                                    <span><i class="fas fa-chart-line"></i> Performance trends</span>
+                                </div>
+                                <button class="btn btn-primary download-report" data-report="district_performance.csv">
+                                    <i class="fas fa-download"></i> Download CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="report-card">
+                            <div class="report-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="report-content">
+                                <h4>Key Insights Report</h4>
+                                <p>Actionable insights and recommendations based on campaign data analysis.</p>
+                                <div class="report-details">
+                                    <span><i class="fas fa-bullseye"></i> 10+ insights</span>
+                                    <span><i class="fas fa-check-circle"></i> Recommendations</span>
+                                </div>
+                                <button class="btn btn-primary download-report" data-report="key_insights.csv">
+                                    <i class="fas fa-download"></i> Download CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="report-card">
+                            <div class="report-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="report-content">
+                                <h4>Media Catalog Report</h4>
+                                <p>Complete catalog of 104 media files with session mapping and metadata.</p>
+                                <div class="report-details">
+                                    <span><i class="fas fa-images"></i> 104 files</span>
+                                    <span><i class="fas fa-map-pin"></i> 16 districts</span>
+                                </div>
+                                <button class="btn btn-primary download-report" data-report="media_catalog.csv">
+                                    <i class="fas fa-download"></i> Download CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="custom-report">
+                        <h4><i class="fas fa-cogs"></i> Generate Custom Report</h4>
+                        <div class="custom-report-form">
+                            <div class="form-group">
+                                <label for="reportType">Report Type:</label>
+                                <select id="reportType" class="form-control">
+                                    <option value="performance">Performance Analysis</option>
+                                    <option value="geographic">Geographic Distribution</option>
+                                    <option value="farmer">Farmer Segmentation</option>
+                                    <option value="product">Product Adoption</option>
+                                    <option value="media">Media Coverage</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dateRange">Date Range:</label>
+                                <select id="dateRange" class="form-control">
+                                    <option value="all">Full Campaign (24 Nov - 12 Dec)</option>
+                                    <option value="week1">Week 1 (24-30 Nov)</option>
+                                    <option value="week2">Week 2 (1-7 Dec)</option>
+                                    <option value="week3">Week 3 (8-12 Dec)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-secondary" id="generateCustomReport">
+                                <i class="fas fa-magic"></i> Generate Custom Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>AgriVista Dashboard v4.0 • Buctril Super Farmer Education Drive 2025 • Complete Media Integration</p>
+            <p class="footer-subtext">
+                <i class="fas fa-sync-alt"></i> Data updated: <span id="dataUpdated">24 Dec 2025</span>
+                <span style="margin: 0 10px;">•</span>
+                <i class="fas fa-images"></i> <span id="footerMediaCount">104</span> media files
+                <span style="margin: 0 10px;">•</span>
+                <i class="fas fa-map-marker-alt"></i> 16 districts covered
+            </p>
+            <div class="footer-links">
+                <a href="#" id="helpSupport"><i class="fas fa-question-circle"></i> Help & Support</a>
+                <a href="#" id="exportInsights"><i class="fas fa-download"></i> Export Insights</a>
+                <a href="#" onclick="window.print()"><i class="fas fa-print"></i> Print Report</a>
+                <a href="#" id="feedbackBtn"><i class="fas fa-comment"></i> Feedback</a>
+                <a href="#" id="shareBtn"><i class="fas fa-share-alt"></i> Share</a>
+            </div>
+            <div class="footer-credits">
+                <small>Data Source: Field Session Records • Media: Complete Campaign Documentation • Implementation: Interact Solutions</small>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loader"></div>
+        <p>Loading campaign data and media...</p>
+        <div class="loading-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span id="progressText">0%</span>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-top: 20px;">Processing 40 sessions, 104 media files, 1,454 farmers...</p>
+    </div>
+
+    <!-- Session Detail Modal -->
+    <div id="sessionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalSessionTitle">Session Details</h3>
+                <button class="modal-close" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <div class="modal-section">
+                        <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Session ID:</span>
+                                <span id="modalSessionId" class="info-value"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Date:</span>
+                                <span id="modalSessionDate" class="info-value"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">District:</span>
+                                <span id="modalSessionDistrict" class="info-value"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Location:</span>
+                                <span id="modalSessionLocation" class="info-value"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Village/Mauza:</span>
+                                <span id="modalSessionVillage" class="info-value"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Tehsil:</span>
+                                <span id="modalSessionTehsil" class="info-value"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <h4><i class="fas fa-chart-bar"></i> Statistics</h4>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="modalSessionFarmers">0</div>
+                                    <div class="stat-label">Total Farmers</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-wheat-awn"></i></div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="modalSessionWheatFarmers">0</div>
+                                    <div class="stat-label">Wheat Farmers</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-seedling"></i></div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="modalSessionAcres">0</div>
+                                    <div class="stat-label">Wheat Acres</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                                <div class="stat-content">
+                                    <div class="stat-number" id="modalSessionDefiniteUse">0%</div>
+                                    <div class="stat-label">Definite Use</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <h4><i class="fas fa-star"></i> Understanding Scores</h4>
+                        <div class="score-grid">
+                            <div class="score-item">
+                                <span class="score-label">Yield Loss:</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="scoreYieldLoss"></div>
+                                </div>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Golden Period:</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="scoreGoldenPeriod"></div>
+                                </div>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Buctril Broadleaf:</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="scoreBroadleaf"></div>
+                                </div>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Combine Benefit:</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="scoreCombineBenefit"></div>
+                                </div>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Safety PPE:</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="scoreSafetyPPE"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <h4><i class="fas fa-map-marker-alt"></i> Location Details</h4>
+                        <div id="modalMap" style="height: 200px; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; color: #666;">
+                            <i class="fas fa-map-marked-alt" style="font-size: 48px; opacity: 0.3;"></i>
+                        </div>
+                        <div class="location-details">
+                            <div class="location-item">
+                                <i class="fas fa-compass"></i>
+                                <span>Coordinates: </span>
+                                <span id="modalCoordinates"></span>
+                            </div>
+                            <div class="location-item">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Dealer: </span>
+                                <span id="modalDealer"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="modalCloseBtn">Close</button>
+                <button class="btn btn-primary" id="modalShareBtn">
+                    <i class="fas fa-share-alt"></i> Share Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Viewer Modal -->
+    <div id="mediaModal" class="modal">
+        <div class="modal-content" style="max-width: 90vw;">
+            <div class="modal-header">
+                <h3 id="mediaModalTitle">Media Viewer</h3>
+                <button class="modal-close" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <div id="mediaViewer">
+                    <!-- Media will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="media-navigation">
+                    <button class="btn btn-outline" id="prevMedia">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span id="mediaCounter">1 of 104</span>
+                    <button class="btn btn-outline" id="nextMedia">
+                        Next <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
-            `;
-            
-            marker.bindPopup(popupContent, {
-                maxWidth: 300,
-                minWidth: 280
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-comment-alt"></i> Share Your Feedback</h3>
+                <button class="modal-close" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="feedbackForm">
+                    <div class="form-group">
+                        <label for="feedbackName"><i class="fas fa-user"></i> Your Name</label>
+                        <input type="text" id="feedbackName" class="form-control" placeholder="Enter your name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedbackPhone"><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" id="feedbackPhone" class="form-control" placeholder="+92 300 1234567">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedbackEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                        <input type="email" id="feedbackEmail" class="form-control" placeholder="you@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedbackType"><i class="fas fa-tag"></i> Feedback Type</label>
+                        <select id="feedbackType" class="form-control">
+                            <option value="general">General Feedback</option>
+                            <option value="suggestion">Suggestion</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="feature">Feature Request</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedbackMessage"><i class="fas fa-comment"></i> Your Message</label>
+                        <textarea id="feedbackMessage" class="form-control" rows="4" placeholder="Share your thoughts, suggestions, or feedback..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="feedbackCancel">Cancel</button>
+                <button class="btn btn-primary" id="feedbackSubmit">
+                    <i class="fas fa-paper-plane"></i> Submit Feedback
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <!-- Main Dashboard JavaScript -->
+    <script src="dashboard.js"></script>
+    
+    <!-- Modal event handlers -->
+    <script>
+        // Initialize all modals as hidden
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
             });
             
-            markerCluster.addLayer(marker);
-        }
-    });
-
-    // Fit bounds if we have sessions
-    if (currentFilteredSessions.length > 0 && currentFilteredSessions[0].latitude) {
-        const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
-        map.fitBounds(bounds, { 
-            padding: [50, 50],
-            animate: true,
-            duration: 1
-        });
-    }
-}
-
-function fitMapBounds() {
-    if (map && currentFilteredSessions.length > 0 && currentFilteredSessions[0].latitude) {
-        const bounds = L.latLngBounds(currentFilteredSessions.map(s => [s.latitude, s.longitude]));
-        map.fitBounds(bounds, { padding: [50, 50] });
-    }
-}
-
-function resetMapView() {
-    if (map) {
-        map.setView([30.3753, 69.3451], 6);
-    }
-}
-
-function captureMap() {
-    if (map) {
-        map.once('rendercomplete', function() {
-            window.open(map.getContainer().toDataURL('image/png'), '_blank');
-        });
-        map.invalidateSize();
-    }
-}
-
-// EXPORT FUNCTIONS
-function exportEnhancedData() {
-    if (currentFilteredSessions.length === 0) {
-        showToast('No data to export. Please adjust your filters.', 'warning');
-        return;
-    }
-    
-    try {
-        const headers = [
-            'Session ID', 'District', 'Location', 'Village', 'Date',
-            'Farmers', 'Wheat Farmers', 'Acres', 'Definite Use Rate',
-            'Awareness Rate', 'Used Last Year Rate', 'Facilitator',
-            'Focus Area', 'Dealer', 'Top Reason to Use', 'Top Reason Not to Use'
-        ];
-        
-        const csvRows = [
-            headers.join(','),
-            ...currentFilteredSessions.map(session => [
-                `"${session.sessionNumber}"`,
-                `"${session.city}"`,
-                `"${session.spot}"`,
-                `"${session.village}"`,
-                `"${session.date}"`,
-                session.farmers || 0,
-                session.wheatFarmers || 0,
-                session.acres || 0,
-                `${session.definiteUseRate}%`,
-                `${session.awarenessRate}%`,
-                `${session.usedLastYearRate}%`,
-                `"${session.facilitator}"`,
-                `"${session.focus || ''}"`,
-                `"${session.dealer || ''}"`,
-                `"${session.topReasonUse || ''}"`,
-                `"${session.topReasonNotUse || ''}"`
-            ].join(','))
-        ];
-        
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-        const filename = `buctril-sessions-${timestamp}.csv`;
-        
-        if (navigator.msSaveBlob) {
-            navigator.msSaveBlob(blob, filename);
-        } else {
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.download = filename;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-        
-        showToast(`Exported ${currentFilteredSessions.length} sessions to ${filename}`, 'success');
-        
-    } catch (error) {
-        console.error('Export failed:', error);
-        showToast('Failed to export data', 'error');
-    }
-}
-
-function exportSessionData(sessionId) {
-    const session = allSessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    const data = {
-        'Session ID': session.sessionNumber,
-        'District': session.city,
-        'Location': session.spot,
-        'Village': session.village,
-        'Date': session.date,
-        'Farmers': session.farmers,
-        'Wheat Farmers': session.wheatFarmers,
-        'Acres': session.acres,
-        'Definite Use Rate': `${session.definiteUseRate}%`,
-        'Awareness Rate': `${session.awarenessRate}%`,
-        'Used Last Year Rate': `${session.usedLastYearRate}%`,
-        'Facilitator': session.facilitator,
-        'Focus Area': session.focus,
-        'Dealer': session.dealer,
-        'Top Reason to Use': session.topReasonUse,
-        'Top Reason Not to Use': session.topReasonNotUse
-    };
-    
-    const csvContent = Object.entries(data).map(([key, value]) => `"${key}","${value}"`).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const filename = `session-${session.sessionNumber}-details.csv`;
-    
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    showToast(`Exported session ${session.sessionNumber} details`, 'success');
-}
-
-// TAB SWITCHING
-function initializeTabs() {
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('#tabContent > section');
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Update active tab
-            tabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show corresponding content
-            const tabId = this.getAttribute('data-tab');
-            tabContents.forEach(content => {
-                content.style.display = content.id === tabId + 'Tab' ? 'block' : 'none';
+            // Set current date for footer
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
             });
+            document.getElementById('dataUpdated').textContent = formattedDate;
             
-            // Special handling for map tab
-            if (tabId === 'map' && map) {
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 100);
+            // Update media counts from metadata
+            document.getElementById('footerMediaCount').textContent = '104';
+            document.getElementById('galleryCount').textContent = '104';
+            document.getElementById('allMediaCount').textContent = '104';
+            document.getElementById('totalMediaCount').textContent = '104';
+            document.getElementById('imageCount').textContent = '59';
+            document.getElementById('videoCount').textContent = '45';
+        });
+        
+        // Modal close handlers
+        document.querySelectorAll('.modal-close, .btn-outline[id$="Cancel"], #modalCloseBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+        
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+        
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                });
             }
+        });
+        
+        // Form submission handler
+        document.getElementById('feedbackForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('feedbackName').value;
+            const message = document.getElementById('feedbackMessage').value;
             
-            // Special handling for gallery tab
-            if (tabId === 'gallery') {
-                setTimeout(initializeLazyLoading, 100);
+            if (name && message) {
+                alert('Thank you for your feedback! We appreciate your input.');
+                document.getElementById('feedbackModal').style.display = 'none';
+                document.getElementById('feedbackForm').reset();
             }
         });
-    });
-}
-
-// SESSION MODAL
-function showSessionModal(sessionId) {
-    const session = allSessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    const modal = document.getElementById('sessionModal');
-    if (!modal) return;
-    
-    // Update modal content
-    document.getElementById('modalSessionTitle').textContent = `Session ${session.sessionNumber} Details`;
-    document.getElementById('modalSessionId').textContent = session.sessionNumber;
-    document.getElementById('modalSessionDate').textContent = session.date;
-    document.getElementById('modalSessionDistrict').textContent = session.city;
-    document.getElementById('modalSessionLocation').textContent = session.spot;
-    document.getElementById('modalSessionVillage').textContent = session.village;
-    document.getElementById('modalSessionTehsil').textContent = session.tehsil;
-    document.getElementById('modalSessionFarmers').textContent = session.farmers;
-    document.getElementById('modalSessionWheatFarmers').textContent = session.wheatFarmers;
-    document.getElementById('modalSessionAcres').textContent = session.acres.toLocaleString();
-    document.getElementById('modalSessionDefiniteUse').textContent = `${session.definiteUseRate}%`;
-    document.getElementById('modalCoordinates').textContent = `${session.latitude?.toFixed(4) || 'N/A'}, ${session.longitude?.toFixed(4) || 'N/A'}`;
-    document.getElementById('modalDealer').textContent = session.dealer || 'Not specified';
-    
-    // Update understanding scores
-    const scores = ['scoreYieldLoss', 'scoreGoldenPeriod', 'scoreBroadleaf', 'scoreCombineBenefit', 'scoreSafetyPPE'];
-    scores.forEach((scoreId, index) => {
-        const element = document.getElementById(scoreId);
-        if (element) {
-            const score = session.understandingScore || 2.8;
-            element.style.width = `${(score / 3) * 100}%`;
-        }
-    });
-    
-    // Show modal
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-// MEDIA VIEWER
-function openMediaViewer(index) {
-    const galleryItems = Array.from(document.querySelectorAll('.gallery-item'));
-    if (index < 0 || index >= galleryItems.length) return;
-    
-    const modal = document.getElementById('mediaModal');
-    const viewer = document.getElementById('mediaViewer');
-    const title = document.getElementById('mediaModalTitle');
-    const counter = document.getElementById('mediaCounter');
-    
-    if (!modal || !viewer || !title || !counter) return;
-    
-    const item = galleryItems[index];
-    const isVideo = item.querySelector('video');
-    const img = item.querySelector('img');
-    const caption = item.querySelector('.gallery-title')?.textContent || '';
-    
-    if (isVideo) {
-        const videoSrc = isVideo.querySelector('source')?.src || isVideo.src;
-        viewer.innerHTML = `
-            <video controls autoplay style="width: 100%; max-height: 70vh;">
-                <source src="${videoSrc}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        `;
-    } else if (img) {
-        viewer.innerHTML = `<img src="${img.src}" alt="${caption}" style="max-width: 100%; max-height: 70vh; display: block; margin: 0 auto;">`;
-    }
-    
-    title.textContent = caption;
-    counter.textContent = `${index + 1} of ${galleryItems.length}`;
-    
-    // Setup navigation
-    document.getElementById('prevMedia').onclick = () => {
-        const prevIndex = (index - 1 + galleryItems.length) % galleryItems.length;
-        openMediaViewer(prevIndex);
-    };
-    
-    document.getElementById('nextMedia').onclick = () => {
-        const nextIndex = (index + 1) % galleryItems.length;
-        openMediaViewer(nextIndex);
-    };
-    
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-// ANALYTICS CHARTS
-function initializeAnalyticsCharts() {
-    updateAttendanceChart();
-    updateDistrictDistribution();
-    updateUnderstandingChart();
-    updateReasonsChart();
-}
-
-function updateAttendanceChart() {
-    const attendanceChart = document.getElementById('attendanceChart');
-    if (!attendanceChart || currentFilteredSessions.length === 0) return;
-    
-    // Group by date
-    const sessionsByDate = currentFilteredSessions.reduce((acc, session) => {
-        if (!acc[session.date]) {
-            acc[session.date] = {
-                farmers: 0,
-                sessions: 0,
-                acres: 0
-            };
-        }
-        acc[session.date].farmers += session.farmers || 0;
-        acc[session.date].sessions += 1;
-        acc[session.date].acres += session.acres || 0;
-        return acc;
-    }, {});
-    
-    const dates = Object.keys(sessionsByDate).sort();
-    const farmers = dates.map(date => sessionsByDate[date].farmers);
-    const maxFarmers = Math.max(...farmers, 1);
-    
-    attendanceChart.innerHTML = dates.map((date, index) => {
-        const height = (farmers[index] / maxFarmers) * 150;
-        const shortDate = date.split('-').slice(1).join('-');
-        const tooltip = `
-            Date: ${date}<br>
-            Sessions: ${sessionsByDate[date].sessions}<br>
-            Farmers: ${farmers[index]}<br>
-            Acres: ${sessionsByDate[date].acres.toLocaleString()}
-        `;
         
-        return `
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                <div class="chart-bar" 
-                     style="height: ${height}px; width: 24px; background: linear-gradient(to top, #2e7d32, #4caf50); border-radius: 6px 6px 0 0; margin-top: auto; cursor: pointer;"
-                     title="${tooltip}"
-                     onclick="filterByDate('${date}')">
-                </div>
-                <div style="margin-top: 8px; font-size: 11px; color: #666; transform: rotate(-45deg); transform-origin: left top; white-space: nowrap;">${shortDate}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-function updateDistrictDistribution() {
-    const districtDistribution = document.getElementById('districtDistribution');
-    if (!districtDistribution) return;
-    
-    const uniqueDistricts = [...new Set(currentFilteredSessions.map(s => s.city))].length;
-    districtDistribution.textContent = uniqueDistricts;
-    
-    // Update top performers
-    const districtStats = currentFilteredSessions.reduce((acc, session) => {
-        if (!acc[session.city]) {
-            acc[session.city] = {
-                sessions: 0,
-                farmers: 0,
-                acres: 0,
-                avgDefiniteUse: 0,
-                count: 0
-            };
-        }
-        acc[session.city].sessions += 1;
-        acc[session.city].farmers += session.farmers || 0;
-        acc[session.city].acres += session.acres || 0;
-        acc[session.city].avgDefiniteUse += session.definiteUseRate || 0;
-        acc[session.city].count += 1;
-        return acc;
-    }, {});
-    
-    // Calculate top performers by definite use rate
-    const topDistricts = Object.entries(districtStats)
-        .map(([district, stats]) => ({
-            district,
-            avgDefiniteUse: stats.avgDefiniteUse / stats.count,
-            farmers: stats.farmers
-        }))
-        .sort((a, b) => b.avgDefiniteUse - a.avgDefiniteUse)
-        .slice(0, 3)
-        .map(d => d.district)
-        .join(', ');
-    
-    const subtext = document.getElementById('districtTopPerformers');
-    if (subtext) {
-        subtext.textContent = `Top districts: ${topDistricts}`;
-    }
-}
-
-function updateUnderstandingChart() {
-    const understandingChart = document.getElementById('understandingChart');
-    if (!understandingChart || currentFilteredSessions.length === 0) return;
-    
-    const scores = ['Yield Loss', 'Golden Period', 'Buctril Broadleaf', 'Combine Benefit', 'Safety PPE'];
-    const avgScores = [2.8, 2.9, 2.9, 2.6, 2.8];
-    const maxScore = Math.max(...avgScores, 3);
-    
-    understandingChart.innerHTML = scores.map((score, index) => {
-        const height = (avgScores[index] / maxScore) * 150;
-        const percentage = Math.round((avgScores[index] / 3) * 100);
-        
-        return `
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                <div style="height: ${height}px; width: 30px; background: linear-gradient(to top, #2196f3, #64b5f6); border-radius: 6px 6px 0 0; margin-top: auto;" 
-                     title="${score}: ${avgScores[index].toFixed(1)}/3.0 (${percentage}%)"></div>
-                <div style="margin-top: 8px; font-size: 10px; color: #666; text-align: center; width: 60px; overflow: hidden; text-overflow: ellipsis;">${score}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-function updateReasonsChart() {
-    const reasonsChart = document.getElementById('reasonsChart');
-    if (!reasonsChart || currentFilteredSessions.length === 0) return;
-    
-    const reasons = [
-        { name: 'Trust in Bayer', value: 1071 },
-        { name: 'Better Weed Control', value: 893 },
-        { name: 'Safe on Crop', value: 884 },
-        { name: 'Good Past Experience', value: 877 }
-    ];
-    
-    const maxValue = Math.max(...reasons.map(r => r.value));
-    
-    reasonsChart.innerHTML = reasons.map(reason => {
-        const height = (reason.value / maxValue) * 150;
-        const percentage = Math.round((reason.value / 1454) * 100);
-        
-        return `
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-                <div style="height: ${height}px; width: 40px; background: linear-gradient(to top, #ff9800, #ffb74d); border-radius: 6px 6px 0 0; margin-top: auto;" 
-                     title="${reason.name}: ${reason.value} farmers (${percentage}%)"></div>
-                <div style="margin-top: 8px; font-size: 10px; color: #666; text-align: center; width: 60px; overflow: hidden; text-overflow: ellipsis;">${reason.name.split(' ')[0]}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-// HELPER FUNCTIONS
-function updateProgress(percent, message) {
-    if (elements.progressFill) {
-        elements.progressFill.style.width = percent + '%';
-    }
-    if (elements.progressText) {
-        elements.progressText.textContent = percent + '%';
-    }
-    if (message) {
-        console.log(message);
-    }
-}
-
-function updateStatus(message, type = 'info') {
-    if (!elements.statusIndicator) return;
-    
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        loading: 'fa-spinner fa-spin',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-    
-    elements.statusIndicator.className = `status-indicator status-${type}`;
-    elements.statusIndicator.innerHTML = `<i class="fas ${icons[type] || 'fa-info-circle'}"></i><span>${message}</span>`;
-}
-
-function showError(message) {
-    if (elements.errorBanner && elements.errorMessage) {
-        elements.errorMessage.textContent = message;
-        elements.errorBanner.style.display = 'flex';
-    }
-}
-
-function showToast(message, type = 'info', duration = 3000) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-}
-
-// CAMPAIGN SUMMARY
-function generateCampaignSummary() {
-    const totalFarmers = currentFilteredSessions.reduce((sum, s) => sum + (s.farmers || 0), 0);
-    const totalAcres = currentFilteredSessions.reduce((sum, s) => sum + (s.acres || 0), 0);
-    const uniqueDistricts = [...new Set(currentFilteredSessions.map(s => s.city))].length;
-    
-    return {
-        totalSessions: currentFilteredSessions.length,
-        totalFarmers,
-        totalAcres,
-        uniqueDistricts,
-        totalMedia: mediaItems.length
-    };
-}
-
-function shareCampaignSummary() {
-    const summary = generateCampaignSummary();
-    const text = `
-🎯 Buctril Super Farmer Education Drive 2025 - Complete Summary:
-
-• ${summary.totalSessions} training sessions conducted
-• ${summary.totalFarmers.toLocaleString()} farmers engaged
-• ${summary.totalAcres.toLocaleString()} acres covered
-• ${summary.totalMedia} media files documented
-• Across ${summary.uniqueDistricts} districts
-• Date range: 24 Nov - 12 Dec 2025
-
-Key Insights:
-• 90.4% definite intent to use Buctril
-• 74.2% farmers cited Trust in Bayer as main reason
-• 2.8/3.0 average understanding score
-• Price concern mentioned by 18.3% farmers
-
-View interactive dashboard: ${window.location.href}
-    `.trim();
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Buctril Campaign Summary 2025',
-            text: text,
-            url: window.location.href
+        // Download report handlers
+        document.querySelectorAll('.download-report').forEach(button => {
+            button.addEventListener('click', function() {
+                const reportFile = this.dataset.report;
+                // In a real app, this would generate/download the report
+                // For now, just show a message
+                alert('Report generation would create and download: ' + reportFile + '\n\nIn a production environment, this would trigger a server-side report generation.');
+            });
         });
-    } else {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Campaign summary copied to clipboard!', 'success');
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast('Campaign summary copied to clipboard!', 'success');
+        
+        // Generate PDF handler
+        document.getElementById('generatePDF')?.addEventListener('click', function() {
+            alert('PDF generation would be implemented here. For now, you can print the page using Ctrl+P or use the Print Report link.');
         });
-    }
-}
-
-// LOAD EMBEDDED SESSIONS DATA (LEGACY FALLBACK)
-async function loadEmbeddedSessionsData() {
-    allSessions = createEmbeddedSessions();
-}
-
-// FILTER BY DATE HELPER
-function filterByDate(date) {
-    document.getElementById('dateFrom').value = date;
-    document.getElementById('dateTo').value = date;
-    applyFilters();
-}
-
-console.log('AgriVista Dashboard v4.0 Complete Fixed Version with Media Integration loaded successfully.');
+        
+        // Generate custom report handler
+        document.getElementById('generateCustomReport')?.addEventListener('click', function() {
+            const reportType = document.getElementById('reportType').value;
+            const dateRange = document.getElementById('dateRange').value;
+            alert(`Custom report for ${reportType} in ${dateRange} would be generated here. This feature requires backend implementation.`);
+        });
+        
+        // Feedback button
+        document.getElementById('feedbackBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('feedbackModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+        
+        // Share button
+        document.getElementById('shareBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = `Check out the Buctril Super Farmer Education Drive 2025 Dashboard: ${window.location.href}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Buctril Super Farmer Education Drive 2025',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            }
+        });
+        
+        // Help & Support
+        document.getElementById('helpSupport')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Help & Support: For assistance, please contact:\n\n' +
+                  '• Technical Support: support@interactsolutions.com\n' +
+                  '• Campaign Questions: buctril.campaign@bayer.com\n' +
+                  '• Data Issues: data.team@interactsolutions.com');
+        });
+        
+        // Export Insights
+        document.getElementById('exportInsights')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            // This will be handled by the export function in dashboard.js
+            if (window.exportEnhancedData) {
+                window.exportEnhancedData();
+            }
+        });
+        
+        // Add responsive table handling
+        function handleResponsiveTables() {
+            const tables = document.querySelectorAll('.sessions-table');
+            tables.forEach(table => {
+                if (window.innerWidth < 768) {
+                    table.classList.add('mobile-view');
+                } else {
+                    table.classList.remove('mobile-view');
+                }
+            });
+        }
+        
+        window.addEventListener('resize', handleResponsiveTables);
+        handleResponsiveTables();
+    </script>
+</body>
+</html>

@@ -35,8 +35,7 @@
     <!-- Video Background -->
     <div class="video-background">
         <video autoplay muted loop playsinline>
-            <source src="gallery/bg.mp4" type="video/mp4">
-            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" class="fallback-video">
+            <source src="assets/bg.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div class="video-fallback"></div>
@@ -437,7 +436,7 @@
                 <div class="gallery-section">
                     <div class="gallery-filters">
                         <button class="gallery-filter-btn active" data-filter="all">
-                            <i class="fas fa-th"></i> All Media (<span id="allMediaCount">104</span>)
+                            <i class="fas fa-th"></i> All Media (<span id="galleryCount">0</span>)
                         </button>
                         <button class="gallery-filter-btn" data-filter="brand">
                             <i class="fas fa-tag"></i> Brand Assets
@@ -445,17 +444,11 @@
                         <button class="gallery-filter-btn" data-filter="session">
                             <i class="fas fa-calendar"></i> Session Media
                         </button>
-                        <button class="gallery-filter-btn" data-filter="additional">
-                            <i class="fas fa-plus"></i> Additional
-                        </button>
                         <button class="gallery-filter-btn" data-filter="videos">
                             <i class="fas fa-video"></i> Videos Only
                         </button>
                         <button class="gallery-filter-btn" data-filter="images">
                             <i class="fas fa-image"></i> Images Only
-                        </button>
-                        <button class="gallery-filter-btn" data-filter="district">
-                            <i class="fas fa-map-pin"></i> By District
                         </button>
                     </div>
                     
@@ -1011,7 +1004,6 @@
             // Update media counts from metadata
             document.getElementById('footerMediaCount').textContent = '104';
             document.getElementById('galleryCount').textContent = '104';
-            document.getElementById('allMediaCount').textContent = '104';
             document.getElementById('totalMediaCount').textContent = '104';
             document.getElementById('imageCount').textContent = '59';
             document.getElementById('videoCount').textContent = '45';

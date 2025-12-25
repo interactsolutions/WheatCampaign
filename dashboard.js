@@ -132,7 +132,7 @@ async function loadMediaData() {
             const data = await response.json();
             
             // Get base path from JSON or use default
-            const basePath = data.mediaBasePath || 'assets/media/';
+            const basePath = data.mediaBasePath || 'assets/';
             const items = data.mediaItems || [];
             
             // Prepend base path to all filenames
@@ -155,13 +155,13 @@ async function loadMediaData() {
 }
 
 function createFallbackMedia() {
-    const basePath = 'assets/media/';
+    const basePath = 'assets/';
     return [
         { id: 1, filename: basePath + 'Bayer.png', caption: 'Bayer Logo', category: 'brand', type: 'logo' },
         { id: 2, filename: basePath + 'Buctril.jpg', caption: 'Buctril Super', category: 'brand', type: 'product' },
         { id: 3, filename: basePath + 'Interact.gif', caption: 'Animation', category: 'brand', type: 'animation' },
         { id: 4, filename: basePath + 'poductts.jpg', caption: 'Product Range', category: 'brand', type: 'product-range' },
-        { id: 5, filename: basePath + 'bg.mp4', caption: 'Background Video', category: 'brand', type: 'background' },
+        { id: 5, filename: basePath + 'atlantis.mp4', caption: 'Background Video', category: 'brand', type: 'background' },
         { id: 6, filename: basePath + 'placeholder.svg', caption: 'Placeholder', category: 'utility', type: 'placeholder' }
     ];
 }
@@ -178,13 +178,13 @@ function renderGallery() {
             <div class="gallery-placeholder">
                 <i class="fas fa-image"></i>
                 <p>No media files found</p>
-                <small>Add media files to assets/media/ folder</small>
+                <small>Add media files to assets/ folder</small>
             </div>
         `;
         return;
     }
     
-    const placeholder = 'assets/media/placeholder.svg';
+    const placeholder = 'assets/placeholder.svg';
     
     mediaItems.forEach((media, index) => {
         // Determine media type
@@ -517,7 +517,7 @@ function openMediaViewer(index) {
             <img src="${media.filename}" 
                  alt="${media.caption}"
                  style="width:100%; max-height:70vh; object-fit:contain;"
-                 onerror="this.src='assets/media/placeholder.svg'">
+                 onerror="this.src='assets/placeholder.svg'">
         `;
     }
     

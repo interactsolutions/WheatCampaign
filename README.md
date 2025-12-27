@@ -1,58 +1,25 @@
-# AgriVista Dashboard - Buctril Super Farmer Education Drive 2025
+# INTERACT Multi‑Campaign Field Intelligence Dashboard (v2)
 
-A comprehensive dashboard for visualizing and analyzing the Buctril Super Farmer Education Drive campaign data across 4 major agricultural regions in Pakistan.
+## What this fixes
+- **Totals/KPIs mismatch** caused by the spreadsheet's **top summary row**:
+  - This build computes totals strictly from **session rows only** (40 sessions), matching the XLSX and expected campaign totals.
+- **iPhone / mobile rendering**:
+  - Mobile-first layout, safe-area support, table-to-card fallback, reduced-motion, and iOS video autoplay fallback.
+- **Session Score**:
+  - 35% Definite Use + 25% Awareness + 15% Used Last Year + 25% Understanding (normalized from 0–3 to 0–100).
 
-## Features
+## Multi-campaign
+1. Add a campaign folder: `data/<campaignId>/`
+2. Place:
+   - `sessions.json`
+   - `media.json`
+3. Register it in `data/campaigns.json`
 
-- **Interactive Map**: Visualize all 40 education sessions across Pakistan
-- **Media Gallery**: View campaign photos and documentation
-- **Data Analytics**: Performance metrics and insights
-- **Filtering & Search**: Filter sessions by city, date, attendance, and search
-- **Export Data**: Export filtered data to CSV
-- **Responsive Design**: Works on desktop and mobile devices
+## Deploy
+Copy these files/folders to your GitHub Pages repo root:
+- `index.html`
+- `style.css`
+- `dashboard.js`
+- `data/`
+Keep your existing `assets/` folder as-is (images/videos/gallery).
 
-## Deployment to GitHub Pages
-
-1. Create a new GitHub repository named `WheatCampaign`
-2. Upload all files from this folder to the repository
-3. Go to Repository Settings → Pages
-4. Set Source to "Deploy from a branch"
-5. Select branch: `main` and folder: `/ (root)`
-6. Click Save
-7. Your site will be available at: `https://interactsolutions.github.io/WheatCampaign/`
-
-## File Structure
-WheatCampaign/
-├── index.html # Main HTML file
-├── style.css # CSS styles
-├── dashboard.js # JavaScript functionality
-├── sessions.json # Campaign session data
-├── media.json # Media gallery data
-└── README.md # This file
-
-## Data Sources
-
-- **sessions.json**: Contains all 40 education sessions with location, attendance, and facilitator data
-- **media.json**: Contains gallery images and branding assets
-
-## Technologies Used
-
-- HTML5, CSS3, JavaScript (ES6+)
-- Leaflet.js for interactive maps
-- Font Awesome for icons
-- OpenStreetMap for map tiles
-
-## Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## License
-
-For internal use only. Campaign data property of Bayer AG.
-
-## Contact
-
-For support or questions about the dashboard, please contact the AgriVista team.

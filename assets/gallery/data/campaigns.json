@@ -1,0 +1,12 @@
+{
+  "agency": "INTERACT",
+  "campaigns": [
+    {
+      "id": "buctril-2025",
+      "name": "Buctril Super Farmer Education Drive 2025",
+      "startDate": "2025-11-24",
+      "endDate": "2025-12-12",
+      "dataPath": "data/buctril-2025"
+    }
+  ]
+}

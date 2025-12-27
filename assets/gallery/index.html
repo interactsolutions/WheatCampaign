@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>INTERACT • Field Intelligence Dashboard</title>
+
+  <meta name="description" content="INTERACT Field Intelligence Dashboard — multi-campaign analytics, media, and maps." />
+  <meta property="og:title" content="INTERACT • Field Intelligence Dashboard" />
+  <meta property="og:description" content="Multi-campaign analytics, media, and maps." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#2e7d32" />
+
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+  <link rel="preconnect" href="https://unpkg.com" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="assets/Bayer.png" />
+</head>
+
+<body>
+  <!-- Background (disabled automatically on iOS low-power / reduced motion) -->
+  <div class="bg" aria-hidden="true">
+    <video id="bgVideo" autoplay muted loop playsinline>
+      <source src="assets/gallery/bg.mp4" type="video/mp4" />
+    </video>
+    <div class="bg-overlay"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">INTERACT</div>
+      <div class="brand-sub">Field Intelligence Dashboard</div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="campaign-picker">
+        <label class="sr-only" for="campaignSelect">Campaign</label>
+        <select id="campaignSelect" class="select"></select>
+      </div>
+
+      <a class="btn btn-ghost" href="#" id="shareLink" title="Copy share link">
+        <i class="fa-solid fa-link"></i><span>Share</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-left">
+        <h1 id="campaignTitle">Loading…</h1>
+        <p class="hero-meta" id="campaignMeta">Fetching campaign data…</p>
+        <div class="hero-badges">
+          <span class="badge"><i class="fa-solid fa-shield"></i> Data from Sum Sheet (row-level)</span>
+          <span class="badge"><i class="fa-solid fa-location-dot"></i> Geo-tagged Sessions</span>
+          <span class="badge"><i class="fa-solid fa-images"></i> Evidence Media</span>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="kpi-grid" id="kpiGrid">
+          <div class="kpi">
+            <div class="kpi-value" id="kpiSessions">—</div>
+            <div class="kpi-label">Sessions</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value" id="kpiFarmers">—</div>
+            <div class="kpi-label">Farmers Reached</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value" id="kpiAcres">—</div>
+            <div class="kpi-label">Acres Covered</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value" id="kpiDistricts">—</div>
+            <div class="kpi-label">Districts</div>
+          </div>
+        </div>
+
+        <div class="score-explainer">
+          <div class="score-title">Session Score Formula</div>
+          <div class="score-formula">
+            35% Definite Use + 25% Awareness + 15% Used Last Year + 25% Understanding
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2><i class="fa-solid fa-filter"></i> Filters</h2>
+        <div class="panel-actions">
+          <button class="btn btn-primary" id="applyFilters"><i class="fa-solid fa-filter"></i>Apply</button>
+          <button class="btn btn-outline" id="resetFilters"><i class="fa-solid fa-rotate-right"></i>Reset</button>
+          <button class="btn btn-secondary" id="exportCsv"><i class="fa-solid fa-download"></i>Export CSV</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="field">
+          <label for="districtFilter">District</label>
+          <select id="districtFilter" class="select">
+            <option value="all">All Districts</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="searchInput">Search</label>
+          <input id="searchInput" class="input" type="search" placeholder="Location, facilitator, dealer, village…" />
+        </div>
+
+        <div class="field">
+          <label for="dateFrom">From</label>
+          <input id="dateFrom" class="input" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="dateTo">To</label>
+          <input id="dateTo" class="input" type="date" />
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <section class="panel">
+        <div class="panel-head">
+          <h2><i class="fa-solid fa-map"></i> Coverage Map</h2>
+          <div class="legend">
+            <span class="dot dot-good"></span> High Score
+            <span class="dot dot-mid"></span> Medium
+            <span class="dot dot-low"></span> Low
+          </div>
+        </div>
+        <div id="map" class="map"></div>
+      </section>
+
+      <section class="panel insights">
+        <div class="panel-head">
+          <h2><i class="fa-solid fa-bolt"></i> Auto-Insights</h2>
+        </div>
+        <div id="insightsList" class="insights-list">
+          <div class="skeleton">Computing insights…</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2><i class="fa-solid fa-table"></i> Sessions</h2>
+        <div class="view-toggle">
+          <button class="chip active" data-view="exec"><i class="fa-solid fa-chart-line"></i> Executive</button>
+          <button class="chip" data-view="field"><i class="fa-solid fa-people-group"></i> Field</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" id="sessionsTableWrap">
+        <table class="table" id="sessionsTable" aria-label="Sessions table">
+          <thead id="sessionsThead"></thead>
+          <tbody id="sessionsTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <div class="pager-info">Page <span id="pageNow">1</span> of <span id="pageTotal">1</span></div>
+        <div class="pager-actions">
+          <button class="btn btn-outline" id="prevPage" disabled><i class="fa-solid fa-chevron-left"></i>Prev</button>
+          <button class="btn btn-outline" id="nextPage" disabled>Next<i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2><i class="fa-solid fa-images"></i> Media Gallery</h2>
+        <div class="gallery-stats">
+          <span><i class="fa-regular fa-image"></i> <span id="imgCount">0</span></span>
+          <span><i class="fa-solid fa-video"></i> <span id="vidCount">0</span></span>
+          <span><i class="fa-solid fa-folder"></i> <span id="allCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="gallery-filters">
+        <button class="chip active" data-media="all">All</button>
+        <button class="chip" data-media="photo">Photos</button>
+        <button class="chip" data-media="video">Videos</button>
+        <button class="chip" data-media="brand">Brand</button>
+      </div>
+
+      <div id="gallery" class="gallery">
+        <div class="skeleton">Loading media…</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>© <span id="year"></span> INTERACT • Built for repeatable multi-campaign reporting</div>
+      <div class="muted">Tip: use <code>?campaign=buctril-2025</code> for direct links</div>
+    </footer>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" aria-hidden="true" role="dialog" aria-label="Details modal">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card">
+      <button class="modal-close" title="Close" data-close="1"><i class="fa-solid fa-xmark"></i></button>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

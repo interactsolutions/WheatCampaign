@@ -14,8 +14,8 @@
         "sessions": 40,
         "farmers": 1454,
         "wheatFarmers": 1442,
-        "acres": 22128,
-        "estimatedBuctrilAcres": 21187,
+        "acres": 22128.0,
+        "estimatedBuctrilAcres": 21187.0,
         "keyInfluencers": 265
       }
     }

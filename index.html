@@ -12,6 +12,11 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
+  <div class="video-bg-container" aria-hidden="true">
+    <video id="bgVideo" autoplay muted loop playsinline preload="metadata">
+      <source src="assets/bg.mp4" type="video/mp4" />
+    </video>
+  </div>
   <header class="topbar">
     <div class="brand">
       <div class="brand-mark">INTERACT</div>
@@ -22,6 +27,7 @@
       <button id="exportBtn" class="btn btn-primary" type="button">Export CSV</button>
     </div>
   </header>
+  <div class="header-media" id="headerMedia" aria-label="Brand header media"></div>
 
   <main class="container">
     <div id="errorBanner" class="error-banner hidden" role="alert">

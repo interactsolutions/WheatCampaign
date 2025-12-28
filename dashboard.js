@@ -429,7 +429,7 @@
     }
 
     const base = state.media.mediaBasePath || '';
-    const placeholder = abs('assets/gallery/placeholder.svg');
+    const placeholder = abs(state.media?.assets?.placeholder || 'assets/placeholder.svg');
 
     const items = state.media.mediaItems.filter((m) => {
       const kind = (m.type || '').toLowerCase();
@@ -648,6 +648,74 @@
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
+  function applyCampaignAssets() {
+    // Header videos + background video are configured per-campaign in media.json under `assets`.
+    const media = state.media || {};
+    const assets = media.assets || {};
+
+    // 1) Background video
+    const bg = assets.backgroundVideo || 'assets/bg.mp4';
+    const bgVideo = document.getElementById('bgVideo');
+    if (bgVideo) {
+      const src = bgVideo.querySelector('source');
+      if (src) {
+        const next = abs(bg);
+        if (src.getAttribute('src') !== next) {
+          src.setAttribute('src', next);
+          try { bgVideo.load(); } catch (_) {}
+        }
+      }
+      // iOS autoplay guard
+      bgVideo.play().catch(() => {
+        // If autoplay is blocked, hide the video container (CSS backdrop remains)
+        const container = document.querySelector('.video-bg-container');
+        if (container) container.style.display = 'none';
+      });
+    }
+
+    // 2) Header brand strip
+    const wrap = document.getElementById('headerMedia');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    const headerVideos = Array.isArray(assets.headerVideos) ? assets.headerVideos : [
+      'assets/bayer.mp4', 'assets/interact.mp4', 'assets/buctril.mp4', 'assets/atlantis.mp4'
+    ];
+
+    const brandImages = Array.isArray(assets.brandImages) ? assets.brandImages : [
+      'assets/interact.gif', 'assets/bayer.jpg', 'assets/Buctril.jpg', 'assets/Atlantis.jpg', 'assets/products.jpg'
+    ];
+
+    // Build media tiles; if a header video is missing, fallback to a related brand image when possible.
+    headerVideos.forEach((v, idx) => {
+      const tile = el('div', { class: 'hmedia' }, []);
+      const url = abs(v);
+
+      const vid = el('video', { muted: '', autoplay: '', loop: '', playsinline: '', preload: 'metadata' }, []);
+      const source = el('source', { src: url, type: 'video/mp4' }, []);
+      vid.appendChild(source);
+
+      vid.addEventListener('error', () => {
+        const fallback = brandImages[idx] || brandImages[0] || 'assets/placeholder.svg';
+        const img = el('img', { src: abs(fallback), alt: 'Brand media' }, []);
+        tile.innerHTML = '';
+        tile.appendChild(img);
+      });
+
+      // If autoplay is blocked on iOS, also fallback to image
+      vid.play().catch(() => {
+        const fallback = brandImages[idx] || brandImages[0] || 'assets/placeholder.svg';
+        const img = el('img', { src: abs(fallback), alt: 'Brand media' }, []);
+        tile.innerHTML = '';
+        tile.appendChild(img);
+      });
+
+      tile.appendChild(vid);
+      wrap.appendChild(tile);
+    });
+  }
+
+
   async function load() {
     hideError();
 
@@ -682,6 +750,9 @@
     state.sessions = sessions;
     state.media = mediaObj;
     state.filtered = [...sessions];
+
+    // Apply per-campaign media settings (header + background)
+    applyCampaignAssets();
 
     // Build district dropdown now that sessions exist
     renderDistrictDropdown();

@@ -1,255 +1,218 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>INTERACT | Multi‑Campaign Field Intelligence</title>
-  <meta name="description" content="INTERACT multi-campaign field intelligence dashboard: sessions, media, maps, and analytics." />
-
-  <meta property="og:title" content="INTERACT | Field Intelligence Dashboard" />
-  <meta property="og:description" content="Multi-campaign dashboard with session analytics, media gallery, and interactive maps." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://interactsolutions.github.io/WheatCampaign/" />
+  <meta name="description" content="INTERACT — Field Intelligence Dashboard (multi-campaign) with session analytics, map coverage, and media proof." />
+  <title>INTERACT | Field Intelligence Dashboard</title>
 
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
   <link rel="preconnect" href="https://unpkg.com" />
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/png" href="assets/Bayer.png" />
+  <link rel="icon" href="assets/gallery/placeholder.svg" type="image/svg+xml">
 </head>
 
 <body>
-  <!-- Background (video optional, gracefully disabled on iOS / reduced-motion) -->
   <div class="bg">
-    <video id="bgVideo" class="bg__video" autoplay muted loop playsinline>
+    <video id="bgVideo" class="bg__video" muted loop playsinline preload="metadata">
       <source src="assets/gallery/bg.mp4" type="video/mp4" />
     </video>
     <div class="bg__overlay"></div>
   </div>
 
   <header class="topbar">
-    <div class="topbar__safe">
+    <div class="topbar__inner">
       <div class="brand">
-        <div class="brand__mark">INTERACT</div>
-        <div class="brand__sub">Field Intelligence</div>
+        <div class="brand__badge">INTERACT</div>
+        <div class="brand__meta">
+          <div class="brand__title">Field Intelligence Dashboard</div>
+          <div class="brand__subtitle" id="campaignSubtitle">Loading campaign…</div>
+        </div>
       </div>
 
       <div class="topbar__controls">
-        <div class="control control--inline">
-          <label class="control__label" for="campaignSelect">Campaign</label>
-          <select id="campaignSelect" class="select"></select>
-        </div>
+        <label class="select">
+          <span class="select__label"><i class="fa-solid fa-layer-group"></i> Campaign</span>
+          <select id="campaignSelect"></select>
+        </label>
 
-        <button id="btnShare" class="btn btn--ghost" title="Copy share link">
-          <i class="fa-solid fa-link"></i><span class="btn__text">Share</span>
-        </button>
-
-        <button id="btnExport" class="btn btn--primary" title="Export filtered sessions to CSV">
-          <i class="fa-solid fa-download"></i><span class="btn__text">Export</span>
+        <button class="btn btn--ghost" id="btnExport">
+          <i class="fa-solid fa-file-arrow-down"></i> Export CSV
         </button>
       </div>
     </div>
   </header>
 
-  <main class="shell">
-    <section class="hero">
-      <div class="hero__left">
-        <h1 id="campaignTitle" class="hero__title">Loading…</h1>
-        <div id="campaignMeta" class="hero__meta">Preparing dashboard</div>
-
-        <div class="kpiGrid">
-          <div class="kpi">
-            <div class="kpi__label">Sessions</div>
-            <div id="kpiSessions" class="kpi__value">–</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi__label">Farmers</div>
-            <div id="kpiFarmers" class="kpi__value">–</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi__label">Acres</div>
-            <div id="kpiAcres" class="kpi__value">–</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi__label">Key Influencers</div>
-            <div id="kpiInfluencers" class="kpi__value">–</div>
+  <main class="wrap">
+    <section class="card card--hero">
+      <div class="hero">
+        <div class="hero__left">
+          <h1 id="campaignTitle">Campaign</h1>
+          <p class="muted" id="campaignRange">—</p>
+          <div class="hero__kpis">
+            <div class="kpi">
+              <div class="kpi__label">Sessions</div>
+              <div class="kpi__value" id="kpiSessions">—</div>
+              <div class="kpi__sub">Totals recomputed from session rows</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi__label">Farmers</div>
+              <div class="kpi__value" id="kpiFarmers">—</div>
+              <div class="kpi__sub">Wheat farmers: <span id="kpiWheatFarmers">—</span></div>
+            </div>
+            <div class="kpi">
+              <div class="kpi__label">Acres</div>
+              <div class="kpi__value" id="kpiAcres">—</div>
+              <div class="kpi__sub">Est. Buctril acres: <span id="kpiBuctrilAcres">—</span></div>
+            </div>
+            <div class="kpi">
+              <div class="kpi__label">Key Influencers</div>
+              <div class="kpi__value" id="kpiInfluencers">—</div>
+              <div class="kpi__sub">Highlighted names</div>
+            </div>
           </div>
         </div>
 
-        <div id="dataHealth" class="notice notice--ok" hidden>
-          <i class="fa-solid fa-circle-check"></i>
-          <div>
-            <div class="notice__title">Data integrity: OK</div>
-            <div class="notice__text" id="dataHealthText"></div>
+        <div class="hero__right">
+          <div class="filters">
+            <div class="field">
+              <label for="districtFilter"><i class="fa-solid fa-location-dot"></i> District</label>
+              <select id="districtFilter">
+                <option value="all">All</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="q"><i class="fa-solid fa-magnifying-glass"></i> Search</label>
+              <input id="q" type="text" placeholder="Location, facilitator, host, dealer…" />
+            </div>
+
+            <div class="field field--row">
+              <div>
+                <label for="from"><i class="fa-regular fa-calendar"></i> From</label>
+                <input id="from" type="date" />
+              </div>
+              <div>
+                <label for="to"><i class="fa-regular fa-calendar"></i> To</label>
+                <input id="to" type="date" />
+              </div>
+            </div>
+
+            <div class="filters__actions">
+              <button class="btn" id="btnApply"><i class="fa-solid fa-filter"></i> Apply</button>
+              <button class="btn btn--ghost" id="btnReset"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+            </div>
+
+            <div class="note">
+              <div class="note__title">Session Score (0–100)</div>
+              <div class="note__body">
+                35% Definite + 25% Awareness + 15% Used-Last-Year + 25% Understanding (0–3 normalized).
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="hero__right">
-        <div class="scoreLegend">
-          <div class="scoreLegend__title">Session Score</div>
-          <div class="scoreLegend__items">
-            <div class="pill pill--good">High (≥ 85)</div>
-            <div class="pill pill--mid">Medium (70–84)</div>
-            <div class="pill pill--low">Low (&lt; 70)</div>
-          </div>
-          <div class="scoreLegend__formula">
-            35% Definite Use + 25% Awareness + 15% Used Last Year + 25% Understanding
-          </div>
-        </div>
-      </div>
+      <div class="status" id="statusBar" aria-live="polite"></div>
     </section>
 
-    <section class="panel">
-      <div class="panel__head">
-        <div class="panel__title"><i class="fa-solid fa-sliders"></i> Filters</div>
-        <div class="panel__subtitle">Apply filters to sessions, map, media, and analytics</div>
-      </div>
+    <section class="grid">
+      <section class="card">
+        <div class="card__head">
+          <h2><i class="fa-solid fa-map"></i> Coverage Map</h2>
+          <div class="pill" id="mapPill">Markers: —</div>
+        </div>
+        <div class="map" id="map"></div>
+        <div class="card__foot muted">
+          Marker color is driven by Session Score: High ≥ 85, Medium 70–84.9, Low &lt; 70.
+        </div>
+      </section>
 
-      <div class="filters">
-        <div class="control">
-          <label class="control__label" for="districtFilter">District</label>
-          <select id="districtFilter" class="select">
-            <option value="all">All districts</option>
-          </select>
+      <section class="card">
+        <div class="card__head">
+          <h2><i class="fa-solid fa-images"></i> Media Gallery</h2>
+          <div class="pill" id="mediaPill">—</div>
         </div>
 
-        <div class="control">
-          <label class="control__label" for="dateFrom">Date from</label>
-          <input id="dateFrom" type="date" class="input" />
+        <div class="gallery__filters">
+          <button class="chip chip--active" data-media-filter="all">All</button>
+          <button class="chip" data-media-filter="photo">Photos</button>
+          <button class="chip" data-media-filter="video">Videos</button>
+          <button class="chip" data-media-filter="brand">Brand</button>
         </div>
 
-        <div class="control">
-          <label class="control__label" for="dateTo">Date to</label>
-          <input id="dateTo" type="date" class="input" />
+        <div class="gallery" id="gallery">
+          <div class="skeleton">Loading media…</div>
         </div>
-
-        <div class="control control--wide">
-          <label class="control__label" for="search">Search</label>
-          <input id="search" type="search" class="input" placeholder="Location, facilitator, dealer, host…" />
-        </div>
-
-        <div class="control control--actions">
-          <button id="btnApply" class="btn btn--primary"><i class="fa-solid fa-filter"></i> Apply</button>
-          <button id="btnReset" class="btn btn--ghost"><i class="fa-solid fa-rotate-left"></i> Reset</button>
-        </div>
-      </div>
+      </section>
     </section>
 
-    <section class="tabs">
-      <button class="tab tab--active" data-tab="overview"><i class="fa-solid fa-chart-column"></i> Overview</button>
-      <button class="tab" data-tab="map"><i class="fa-solid fa-map-location-dot"></i> Map</button>
-      <button class="tab" data-tab="sessions"><i class="fa-solid fa-table"></i> Sessions</button>
-      <button class="tab" data-tab="media"><i class="fa-solid fa-images"></i> Media</button>
-    </section>
-
-    <section id="tab-overview" class="panel tabPanel tabPanel--active">
-      <div class="panel__head">
-        <div class="panel__title"><i class="fa-solid fa-bullseye"></i> Decision Insights</div>
-        <div class="panel__subtitle">Auto-generated from filtered sessions</div>
+    <section class="card">
+      <div class="card__head">
+        <h2><i class="fa-solid fa-table"></i> Sessions</h2>
+        <div class="pill" id="sessionsPill">—</div>
       </div>
 
-      <div class="insights" id="insights"></div>
-      <div class="miniGrid">
-        <div class="miniCard">
-          <div class="miniCard__title">Score Distribution</div>
-          <canvas id="chartScore"></canvas>
-        </div>
-        <div class="miniCard">
-          <div class="miniCard__title">Top Districts by Acres</div>
-          <canvas id="chartDistrictAcres"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <section id="tab-map" class="panel tabPanel">
-      <div class="panel__head">
-        <div class="panel__title"><i class="fa-solid fa-map"></i> Coverage Map</div>
-        <div class="panel__subtitle">Markers are colored by Session Score</div>
-      </div>
-      <div class="mapWrap">
-        <div id="map" class="map"></div>
-        <div class="mapHint">
-          Tip: tap a marker to view the mini session card and open the session detail.
-        </div>
-      </div>
-    </section>
-
-    <section id="tab-sessions" class="panel tabPanel">
-      <div class="panel__head">
-        <div class="panel__title"><i class="fa-solid fa-list-check"></i> Session Register</div>
-        <div class="panel__subtitle">Desktop table + mobile cards, both sourced from the same data</div>
-      </div>
-
-      <div class="viewToggle">
-        <button class="btn btn--ghost btn--sm viewBtn viewBtn--active" data-view="exec">Executive view</button>
-        <button class="btn btn--ghost btn--sm viewBtn" data-view="field">Field view</button>
-      </div>
-
+      <!-- Desktop table -->
       <div class="tableWrap">
         <table class="table" id="sessionsTable">
-          <thead id="sessionsThead"></thead>
+          <thead>
+            <tr>
+              <th>SN</th>
+              <th>Date</th>
+              <th>District</th>
+              <th>Location</th>
+              <th>Farmers</th>
+              <th>Acres</th>
+              <th>Definite %</th>
+              <th>Awareness %</th>
+              <th>Score</th>
+            </tr>
+          </thead>
           <tbody id="sessionsTbody"></tbody>
         </table>
       </div>
 
-      <div id="sessionsCards" class="cards"></div>
+      <!-- Mobile cards -->
+      <div class="cards" id="sessionCards"></div>
     </section>
 
-    <section id="tab-media" class="panel tabPanel">
-      <div class="panel__head">
-        <div class="panel__title"><i class="fa-solid fa-photo-film"></i> Media Evidence</div>
-        <div class="panel__subtitle">Grouped by session. Placeholders are flagged as “pending”.</div>
+    <section class="card">
+      <div class="card__head">
+        <h2><i class="fa-solid fa-lightbulb"></i> Auto-Insights</h2>
       </div>
-
-      <div class="mediaBar">
-        <div class="pill pill--neutral" id="mediaCount">0 items</div>
-        <div class="pill pill--neutral" id="mediaMissing">0 pending</div>
-      </div>
-
-      <div id="mediaGrid" class="mediaGrid"></div>
-    </section>
-
-    <section class="panel footer">
-      <div class="footer__left">
-        <div class="footer__brand">INTERACT</div>
-        <div class="footer__note">Multi‑campaign framework (add campaigns under <code>data/</code> and register in <code>data/campaigns.json</code>).</div>
-      </div>
-      <div class="footer__right">
-        <a class="link" href="#" id="openSourceInfo">Data sources & scoring</a>
+      <div class="insights" id="insights">
+        <div class="skeleton">Computing insights…</div>
       </div>
     </section>
+
+    <footer class="footer muted">
+      Built by <strong>INTERACT</strong> — multi-campaign field intelligence. Data and KPIs are recomputed from session rows (summary row ignored).
+    </footer>
   </main>
 
-  <!-- Session Detail Modal -->
-  <div id="modal" class="modal" hidden>
+  <!-- Modals -->
+  <div class="modal" id="modal" aria-hidden="true">
     <div class="modal__backdrop" data-close></div>
-    <div class="modal__panel" role="dialog" aria-modal="true">
-      <div class="modal__head">
-        <div class="modal__title" id="modalTitle">Session</div>
-        <button class="btn btn--ghost btn--sm" data-close><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal__body" id="modalBody"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Details">
+      <button class="modal__close" title="Close" data-close>&times;</button>
+      <div class="modal__content" id="modalContent"></div>
     </div>
   </div>
 
-  <!-- Lightbox -->
-  <div id="lightbox" class="lightbox" hidden>
-    <div class="lightbox__backdrop" data-close></div>
-    <div class="lightbox__panel">
-      <button class="btn btn--ghost btn--sm lightbox__close" data-close><i class="fa-solid fa-xmark"></i></button>
-      <div id="lightboxBody" class="lightbox__body"></div>
-    </div>
-  </div>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="dashboard.js"></script>
+  <script src="dashboard.js" defer></script>
 </body>
 </html>

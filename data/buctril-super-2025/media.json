@@ -45,8 +45,8 @@
     },
     {
       "id": 6,
-      "filename": "placeholder.svg",
-      "caption": "Placeholder Image",
+      "filename": "gallery/placeholder.svg",
+      "caption": "Placeholder",
       "type": "placeholder",
       "category": "utility",
       "priority": 4
@@ -1011,5 +1011,6 @@
       "category": "session",
       "priority": 1
     }
-  ]
+  ],
+  "campaignId": "buctril-super-2025"
 }

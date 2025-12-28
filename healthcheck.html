@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>INTERACT | Healthcheck</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">INTERACT</div>
+      <div class="brand-sub">Healthcheck</div>
+    </div>
+    <div class="top-actions">
+      <a class="link" href="./index.html">Back to dashboard</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="panel-head">
+        <h1>Healthcheck</h1>
+        <div class="panel-sub">This page verifies that required files are reachable and JSON is valid. Use it when the dashboard is stuck on “Loading…”.</div>
+      </div>
+
+      <div class="controls">
+        <div class="control">
+          <label for="campaignInput">Campaign ID</label>
+          <input id="campaignInput" type="text" placeholder="e.g., buctril-super-2025" />
+        </div>
+        <div class="control control-actions">
+          <label>&nbsp;</label>
+          <div class="btn-row">
+            <button id="runBtn" class="btn btn-secondary" type="button">Run</button>
+            <button id="openDashBtn" class="btn btn-primary" type="button">Open dashboard</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="results" class="insights" style="margin-top:12px">
+        <div class="muted">Ready.</div>
+      </div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const qs = new URLSearchParams(location.search);
+  const campaignId = qs.get('campaign') || qs.get('campaignId') || 'buctril-super-2025';
+  $('#campaignInput').value = campaignId;
+
+  const scriptBase = new URL('./', location.href);
+  const abs = (p) => new URL(p, scriptBase).href;
+
+  function card(title, body, ok){
+    const div = document.createElement('div');
+    div.className = 'insight';
+    div.innerHTML = '<h3>' + (ok ? '✅ ' : '❌ ') + title + '</h3><p>' + body.replaceAll('<','&lt;') + '</p>';
+    return div;
+  }
+
+  async function head(url){
+    try{
+      const res = await fetch(url, {method:'GET', cache:'no-store'});
+      const text = await res.text();
+      return {ok: res.ok, status: res.status, text};
+    }catch(e){
+      return {ok:false, status:0, text:String(e)};
+    }
+  }
+
+  async function run(){
+    const out = $('#results');
+    out.innerHTML = '';
+    const id = $('#campaignInput').value.trim() || 'buctril-super-2025';
+
+    const urls = [
+      {name:'index.html', url: abs('./index.html'), json:false},
+      {name:'dashboard.js', url: abs('./dashboard.js'), json:false},
+      {name:'style.css', url: abs('./style.css'), json:false},
+      {name:'data/campaigns.json', url: abs('./data/campaigns.json'), json:true},
+      {name:`data/${id}/sessions.json`, url: abs(`./data/${id}/sessions.json`), json:true},
+      {name:`data/${id}/media.json`, url: abs(`./data/${id}/media.json`), json:true},
+    ];
+
+    for (const u of urls){
+      const r = await head(u.url);
+      if (!r.ok){
+        out.appendChild(card(u.name, `HTTP ${r.status} — ${u.url}\n${r.text.slice(0,200)}`, false));
+        continue;
+      }
+      if (u.json){
+        try{
+          JSON.parse(r.text);
+          out.appendChild(card(u.name, `OK (valid JSON) — ${u.url}`, true));
+        }catch(e){
+          out.appendChild(card(u.name, `Invalid JSON — ${u.url}\n${String(e)}\nFirst 200 chars:\n${r.text.slice(0,200)}`, false));
+        }
+      } else {
+        out.appendChild(card(u.name, `OK — ${u.url}`, true));
+      }
+    }
+  }
+
+  $('#runBtn').addEventListener('click', run);
+  $('#openDashBtn').addEventListener('click', () => {
+    const id = $('#campaignInput').value.trim() || 'buctril-super-2025';
+    location.href = abs('./index.html') + '?campaign=' + encodeURIComponent(id) + '&debug=1';
+  });
+
+  run();
+})();
+</script>
+</body>
+</html>

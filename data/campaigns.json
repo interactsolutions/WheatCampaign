@@ -1,34 +1,26 @@
 {
-  "agency": {
-    "name": "INTERACT",
-    "tagline": "Field Intelligence Dashboards"
-  },
-  "defaultCampaignId": "buctril-super-2025",
+  "agency": "INTERACT",
+  "version": "1.0",
   "campaigns": [
     {
       "id": "buctril-super-2025",
-      "title": "Buctril Super Farmer Education Drive 2025",
-      "dateRange": {
-        "from": "2025-11-24",
-        "to": "2025-12-12"
-      },
-      "data": {
-        "sessions": "data/buctril-super-2025/sessions.json",
-        "media": "data/buctril-super-2025/media.json"
-      },
-      "hero": {
-        "kpis": [
-          "sessions",
-          "farmers",
-          "acres"
-        ],
-        "backgroundVideo": "assets/gallery/bg.mp4",
-        "brandImages": [
-          "assets/Bayer.png",
-          "assets/Buctril.jpg",
-          "assets/Interact.gif"
-        ]
+      "name": "Buctril Super Farmer Education Drive 2025",
+      "region": "Sindh, Pakistan",
+      "startDate": "2025-11-24",
+      "endDate": "2025-12-24",
+      "sessionsPath": "data/buctril-super-2025/sessions.json",
+      "mediaPath": "data/buctril-super-2025/media.json",
+      "expectedTotals": {
+        "sessions": 40,
+        "farmers": 1454,
+        "wheatFarmers": 1442,
+        "acres": 22128,
+        "estimatedBuctrilAcres": 21187,
+        "keyInfluencers": 265
       }
     }
-  ]
+  ],
+  "defaults": {
+    "campaignId": "buctril-super-2025"
+  }
 }

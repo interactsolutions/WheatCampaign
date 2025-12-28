@@ -1,26 +1,50 @@
 {
   "agency": "INTERACT",
-  "version": "1.0",
   "campaigns": [
     {
       "id": "buctril-super-2025",
       "name": "Buctril Super Farmer Education Drive 2025",
-      "region": "Sindh, Pakistan",
-      "startDate": "2025-11-24",
-      "endDate": "2025-12-24",
+      "description": "Field activations dashboard for Bayer Pakistan wheat campaign. KPIs recomputed from session rows (summary row excluded).",
       "sessionsPath": "data/buctril-super-2025/sessions.json",
       "mediaPath": "data/buctril-super-2025/media.json",
-      "expectedTotals": {
-        "sessions": 40,
-        "farmers": 1454,
-        "wheatFarmers": 1442,
-        "acres": 22128.0,
-        "estimatedBuctrilAcres": 21187.0,
-        "keyInfluencers": 265
+      "assets": {
+        "backgroundVideo": "assets/bg.mp4",
+        "headerVideos": [
+          {
+            "src": "assets/bayer.mp4",
+            "altSrc": "assets/Bayer.mp4",
+            "fallback": "assets/Bayer.png",
+            "label": "Bayer"
+          },
+          {
+            "src": "assets/Interact.mp4",
+            "altSrc": "assets/interact.mp4",
+            "fallback": "assets/Interact.gif",
+            "label": "INTERACT"
+          },
+          {
+            "src": "assets/buctril.mp4",
+            "altSrc": "assets/Buctril.mp4",
+            "fallback": "assets/Buctril.jpg",
+            "label": "Buctril"
+          },
+          {
+            "src": "assets/atlantis.mp4",
+            "altSrc": "assets/Atlantis.mp4",
+            "fallback": "assets/Atlantis.jpg",
+            "label": "Atlantis"
+          }
+        ],
+        "brandImages": {
+          "interact": "assets/Interact.gif",
+          "bayer": "assets/Bayer.png",
+          "buctril": "assets/Buctril.jpg",
+          "atlantis": "assets/Atlantis.jpg",
+          "products": "assets/poducts.jpg"
+        },
+        "placeholder": "assets/placeholder.svg",
+        "galleryBase": "assets/"
       }
     }
-  ],
-  "defaults": {
-    "campaignId": "buctril-super-2025"
-  }
+  ]
 }

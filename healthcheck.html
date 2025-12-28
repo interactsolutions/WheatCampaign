@@ -3,114 +3,97 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>INTERACT | Healthcheck</title>
-  <link rel="stylesheet" href="./style.css" />
+  <title>Healthcheck | INTERACT Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body{background:#0b0f14}
+    .hc{max-width:900px;margin:18px auto;padding:0 16px;color:#fff}
+    .hc h1{margin:0 0 6px 0}
+    .hc p{margin:0 0 14px 0;opacity:.85}
+    .panel{background:rgba(255,255,255,.92);color:#0f172a;border-radius:14px;border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 26px rgba(0,0,0,.18);padding:14px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid rgba(15,23,42,.08);text-align:left}
+    th{font-weight:900}
+    .ok{color:#1b5e20;font-weight:900}
+    .bad{color:#8a1b1b;font-weight:900}
+    code{background:rgba(15,23,42,.04);padding:2px 6px;border-radius:8px}
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">INTERACT</div>
-      <div class="brand-sub">Healthcheck</div>
+  <div class="hc">
+    <h1>Healthcheck</h1>
+    <p>This page verifies that your campaign JSON and core assets are reachable on GitHub Pages. Use it whenever the dashboard shows “Data loading issue”.</p>
+
+    <div class="panel">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div><strong>Base URL:</strong> <code id="baseUrl">—</code></div>
+        <div><a class="btn btn-outline" href="./">Back to dashboard</a></div>
+      </div>
+
+      <h3 style="margin:14px 0 6px 0">Checks</h3>
+      <table>
+        <thead>
+          <tr><th>Resource</th><th>Status</th><th>Notes</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <div style="margin-top:12px;color:#64748b;font-weight:650">
+        If a resource fails (404/403), verify that the file exists in your repo at that path, and that GitHub Pages is deploying the correct branch/folder.
+      </div>
     </div>
-    <div class="top-actions">
-      <a class="link" href="./index.html">Back to dashboard</a>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="panel">
-      <div class="panel-head">
-        <h1>Healthcheck</h1>
-        <div class="panel-sub">This page verifies that required files are reachable and JSON is valid. Use it when the dashboard is stuck on “Loading…”.</div>
-      </div>
-
-      <div class="controls">
-        <div class="control">
-          <label for="campaignInput">Campaign ID</label>
-          <input id="campaignInput" type="text" placeholder="e.g., buctril-super-2025" />
-        </div>
-        <div class="control control-actions">
-          <label>&nbsp;</label>
-          <div class="btn-row">
-            <button id="runBtn" class="btn btn-secondary" type="button">Run</button>
-            <button id="openDashBtn" class="btn btn-primary" type="button">Open dashboard</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="results" class="insights" style="margin-top:12px">
-        <div class="muted">Ready.</div>
-      </div>
-    </section>
-  </main>
+  </div>
 
 <script>
 (() => {
-  const $ = (s) => document.querySelector(s);
-  const qs = new URLSearchParams(location.search);
-  const campaignId = qs.get('campaign') || qs.get('campaignId') || 'buctril-super-2025';
-  $('#campaignInput').value = campaignId;
+  const base = new URL('./', document.baseURI);
+  document.getElementById('baseUrl').textContent = base.toString();
 
-  const scriptBase = new URL('./', location.href);
-  const abs = (p) => new URL(p, scriptBase).href;
+  const resources = [
+    'data/campaigns.json',
+    'data/buctril-super-2025/sessions.json',
+    'data/buctril-super-2025/media.json',
+    'assets/bg.mp4',
+    'assets/bayer.mp4',
+    'assets/Interact.mp4',
+    'assets/interact.mp4',
+    'assets/buctril.mp4',
+    'assets/atlantis.mp4',
+    'assets/Atlantis.mp4',
+    'assets/Interact.gif',
+    'assets/Bayer.png',
+    'assets/Buctril.jpg',
+    'assets/Atlantis.jpg',
+    'assets/placeholder.svg',
+  ];
 
-  function card(title, body, ok){
-    const div = document.createElement('div');
-    div.className = 'insight';
-    div.innerHTML = '<h3>' + (ok ? '✅ ' : '❌ ') + title + '</h3><p>' + body.replaceAll('<','&lt;') + '</p>';
-    return div;
-  }
+  const rows = document.getElementById('rows');
+  const addRow = (res, ok, note) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><code>${res}</code></td>
+      <td class="${ok ? 'ok':'bad'}">${ok ? 'OK' : 'FAIL'}</td>
+      <td>${note || ''}</td>
+    `;
+    rows.appendChild(tr);
+  };
 
-  async function head(url){
-    try{
-      const res = await fetch(url, {method:'GET', cache:'no-store'});
-      const text = await res.text();
-      return {ok: res.ok, status: res.status, text};
-    }catch(e){
-      return {ok:false, status:0, text:String(e)};
-    }
-  }
-
-  async function run(){
-    const out = $('#results');
-    out.innerHTML = '';
-    const id = $('#campaignInput').value.trim() || 'buctril-super-2025';
-
-    const urls = [
-      {name:'index.html', url: abs('./index.html'), json:false},
-      {name:'dashboard.js', url: abs('./dashboard.js'), json:false},
-      {name:'style.css', url: abs('./style.css'), json:false},
-      {name:'data/campaigns.json', url: abs('./data/campaigns.json'), json:true},
-      {name:`data/${id}/sessions.json`, url: abs(`./data/${id}/sessions.json`), json:true},
-      {name:`data/${id}/media.json`, url: abs(`./data/${id}/media.json`), json:true},
-    ];
-
-    for (const u of urls){
-      const r = await head(u.url);
-      if (!r.ok){
-        out.appendChild(card(u.name, `HTTP ${r.status} — ${u.url}\n${r.text.slice(0,200)}`, false));
-        continue;
-      }
-      if (u.json){
-        try{
-          JSON.parse(r.text);
-          out.appendChild(card(u.name, `OK (valid JSON) — ${u.url}`, true));
-        }catch(e){
-          out.appendChild(card(u.name, `Invalid JSON — ${u.url}\n${String(e)}\nFirst 200 chars:\n${r.text.slice(0,200)}`, false));
+  (async () => {
+    for (const res of resources) {
+      try {
+        const url = new URL(res, base).toString();
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) {
+          addRow(res, false, `HTTP ${r.status}`);
+          continue;
         }
-      } else {
-        out.appendChild(card(u.name, `OK — ${u.url}`, true));
+        const type = r.headers.get('content-type') || '';
+        addRow(res, true, type);
+      } catch (e) {
+        addRow(res, false, e.message);
       }
     }
-  }
-
-  $('#runBtn').addEventListener('click', run);
-  $('#openDashBtn').addEventListener('click', () => {
-    const id = $('#campaignInput').value.trim() || 'buctril-super-2025';
-    location.href = abs('./index.html') + '?campaign=' + encodeURIComponent(id) + '&debug=1';
-  });
-
-  run();
+  })();
 })();
 </script>
 </body>

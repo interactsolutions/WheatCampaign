@@ -1,49 +1,67 @@
 {
-  "agency": "INTERACT",
+  "agency": {
+    "name": "INTERACT",
+    "email": "interact@paksaf.com",
+    "phone": "+92355223233",
+    "whatsapp": "+923303570463"
+  },
   "campaigns": [
     {
       "id": "buctril-super-2025",
       "name": "Buctril Super Farmer Education Drive 2025",
-      "description": "Field activations dashboard for Bayer Pakistan wheat campaign. KPIs recomputed from session rows (summary row excluded).",
-      "sessionsPath": "data/buctril-super-2025/sessions.json",
-      "mediaPath": "data/buctril-super-2025/media.json",
+      "subtitle": "Field education sessions across Sindh & Punjab — Nov–Dec 2025",
+      "dateRange": {
+        "from": "2025-11-24",
+        "to": "2025-12-12"
+      },
+      "sessionsUrl": "data/buctril-super-2025/sessions.json",
       "assets": {
         "backgroundVideo": "assets/bg.mp4",
         "headerVideos": [
           {
+            "label": "Bayer",
             "src": "assets/bayer.mp4",
-            "altSrc": "assets/Bayer.mp4",
-            "fallback": "assets/Bayer.png",
-            "label": "Bayer"
+            "fallback": "assets/Bayer.png"
           },
           {
+            "label": "INTERACT",
             "src": "assets/Interact.mp4",
-            "altSrc": "assets/interact.mp4",
-            "fallback": "assets/Interact.gif",
-            "label": "INTERACT"
+            "fallback": "assets/Interact.gif"
           },
           {
+            "label": "Buctril",
             "src": "assets/buctril.mp4",
-            "altSrc": "assets/Buctril.mp4",
-            "fallback": "assets/Buctril.jpg",
-            "label": "Buctril"
+            "fallback": "assets/Buctril.jpg"
           },
           {
+            "label": "Atlantis",
             "src": "assets/atlantis.mp4",
-            "altSrc": "assets/Atlantis.mp4",
-            "fallback": "assets/Atlantis.jpg",
-            "label": "Atlantis"
+            "fallback": "assets/Atlantis.jpg"
           }
         ],
-        "brandImages": {
-          "interact": "assets/Interact.gif",
-          "bayer": "assets/Bayer.png",
-          "buctril": "assets/Buctril.jpg",
-          "atlantis": "assets/Atlantis.jpg",
-          "products": "assets/poducts.jpg"
-        },
-        "placeholder": "assets/placeholder.svg",
-        "galleryBase": "assets/"
+        "brandImages": [
+          {
+            "label": "Bayer",
+            "src": "assets/Bayer.png"
+          },
+          {
+            "label": "Buctril",
+            "src": "assets/Buctril.jpg"
+          },
+          {
+            "label": "Atlantis",
+            "src": "assets/Atlantis.jpg"
+          },
+          {
+            "label": "Products",
+            "src": "assets/poducts.jpg"
+          },
+          {
+            "label": "INTERACT",
+            "src": "assets/Interact.gif"
+          }
+        ],
+        "placeholder": "assets/placeholder.svg"
       }
     }
   ]

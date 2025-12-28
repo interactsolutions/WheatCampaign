@@ -1,276 +1,349 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>INTERACT | Field Intelligence Dashboard</title>
-  <meta name="description" content="INTERACT multi-campaign field intelligence dashboard. Bayer wheat activations: coverage, intent, understanding, media proof, and actionable insights." />
+  <title>INTERACT Campaign Dashboard</title>
+
+  <meta name="description" content="Interactive campaign dashboard: sessions, reach, adoption funnel, and field media." />
+  <meta property="og:title" content="INTERACT Campaign Dashboard" />
+  <meta property="og:description" content="Field activation performance, insights, and media — filter by district and session." />
+  <meta property="og:image" content="assets/Buctril.jpg" />
+
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
   <link rel="preconnect" href="https://unpkg.com" />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
   <link rel="stylesheet" href="style.css" />
-  <!-- Leaflet (Map) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Chart.js (Graphs) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script defer src="dashboard.js"></script>
+  <link rel="icon" type="image/png" href="assets/Bayer.png" />
 </head>
 <body>
-  <div class="video-bg-container" aria-hidden="true">
-    <video id="bgVideo" muted playsinline loop preload="metadata"></video>
-    <div class="video-bg-overlay"></div>
+  <div class="bg">
+    <video id="bgVideo" class="bg-video" autoplay muted loop playsinline>
+      <source id="bgVideoSrc" src="assets/bg.mp4" type="video/mp4" />
+    </video>
+    <div class="bg-overlay"></div>
   </div>
 
-  <header class="main-header">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">I</div>
-        <div>
-          <div class="brand-name">INTERACT</div>
-          <div class="brand-tag">Field Intelligence Dashboard</div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brandstrip" id="headerBrandStrip" aria-label="Brand videos"></div>
+
+      <div class="headline">
+        <div class="headline-left">
+          <div class="badge">INTERACT</div>
+          <h1 id="campaignTitle">Campaign Dashboard</h1>
+          <p id="campaignSubtitle" class="subtitle">Insights, coverage and field media — built for teams, partners and the community.</p>
+          <div class="meta">
+            <span class="meta-item"><i class="fa-solid fa-calendar-days"></i> <span id="campaignDateRange">—</span></span>
+            <span class="meta-item"><i class="fa-solid fa-location-dot"></i> <span id="campaignDistricts">—</span> districts</span>
+            <span class="meta-item"><i class="fa-solid fa-users"></i> <span id="campaignFarmers">—</span> farmers</span>
+          </div>
         </div>
-      </div>
 
-      <nav class="topnav">
-        <a class="navlink" href="healthcheck.html" id="healthcheckLink">Healthcheck</a>
-        <button class="btn btn-outline" id="exportBtn" type="button">Export (CSV)</button>
-      </nav>
-    </div>
-
-    <div class="header-strip" id="headerStrip" aria-label="Header brand videos">
-      <!-- Populated by JS (sequence is enforced) -->
-    </div>
-
-    <div class="hero">
-      <h1 id="campaignTitle">Loading campaign…</h1>
-      <p id="campaignDesc">Preparing dashboard…</p>
-
-      <div class="hero-badges">
-        <span class="badge" id="badgeSessions">Sessions: —</span>
-        <span class="badge" id="badgeFarmers">Farmers: —</span>
-        <span class="badge" id="badgeAcres">Acres: —</span>
-        <span class="badge badge-soft" id="badgeScore">Avg Session Score: —</span>
+        <div class="headline-right">
+          <div class="campaign-picker">
+            <label for="campaignSelect">Campaign</label>
+            <select id="campaignSelect"></select>
+          </div>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <div id="errorBanner" class="error-banner hidden" role="alert">
-      <div class="error-title">Data loading issue</div>
-      <div class="error-body" id="errorText">—</div>
-      <div class="error-actions">
-        <a class="btn btn-secondary" href="healthcheck.html">Open Healthcheck</a>
-        <button class="btn btn-outline" id="dismissErrorBtn" type="button">Dismiss</button>
-      </div>
-    </div>
-
-    <section class="controls-card">
-      <div class="controls-grid">
+    <section class="controls">
+      <div class="control-row">
         <div class="control">
-          <label for="campaignSelect">Campaign</label>
-          <select id="campaignSelect" class="field"></select>
+          <label for="districtFilter"><i class="fa-solid fa-city"></i> District</label>
+          <select id="districtFilter"></select>
         </div>
 
         <div class="control">
-          <label for="districtSelect">District</label>
-          <select id="districtSelect" class="field">
-            <option value="__all__">All</option>
-          </select>
+          <label for="searchInput"><i class="fa-solid fa-magnifying-glass"></i> Search</label>
+          <input id="searchInput" type="text" placeholder="Location, host, dealer, village…" />
         </div>
 
         <div class="control">
-          <label for="searchInput">Search</label>
-          <input id="searchInput" class="field" type="search" placeholder="Host / Dealer / Location / Session ID" />
-        </div>
-
-        <div class="control">
-          <label>Date range</label>
+          <label><i class="fa-solid fa-calendar"></i> Date range</label>
           <div class="date-range">
-            <input id="dateFrom" class="field" type="date" />
-            <span class="to">to</span>
-            <input id="dateTo" class="field" type="date" />
+            <input id="dateFrom" type="date" />
+            <span>to</span>
+            <input id="dateTo" type="date" />
           </div>
         </div>
-      </div>
 
-      <div class="controls-actions">
-        <button class="btn btn-primary" id="applyBtn" type="button">Apply</button>
-        <button class="btn btn-outline" id="resetBtn" type="button">Reset</button>
-      </div>
-
-      <div class="controls-hint">
-        KPIs, charts, map, sessions and gallery update together based on your filters.
-      </div>
-    </section>
-
-    <section class="kpi-grid" aria-label="Key metrics">
-      <div class="kpi">
-        <div class="kpi-label">Sessions</div>
-        <div class="kpi-value" id="kpiSessions">—</div>
-        <div class="kpi-sub" id="kpiSessionsSub">Totals recomputed from session rows</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Farmers reached</div>
-        <div class="kpi-value" id="kpiFarmers">—</div>
-        <div class="kpi-sub" id="kpiWheatFarmers">Wheat farmers: —</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Acres covered</div>
-        <div class="kpi-value" id="kpiAcres">—</div>
-        <div class="kpi-sub" id="kpiEstAcres">Est. Buctril acres: —</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Key influencers</div>
-        <div class="kpi-value" id="kpiInfluencers">—</div>
-        <div class="kpi-sub">Highlighted names in field notes</div>
-      </div>
-    </section>
-
-    <section class="value-card">
-      <h2>What a Bayer marketing team gets from this dashboard</h2>
-      <div class="value-grid">
-        <div class="value-item">
-          <div class="value-title">Demand signal</div>
-          <div class="value-text">Definite intent, maybe intent and non-interest—weighted by audience size—by district and by session.</div>
-        </div>
-        <div class="value-item">
-          <div class="value-title">Message effectiveness</div>
-          <div class="value-text">Understanding scores (Yield loss, Golden period, Broadleaf control, Buctril+Atlantis benefit, Safety/PPE) with an overall Session Score.</div>
-        </div>
-        <div class="value-item">
-          <div class="value-title">Drivers & barriers</div>
-          <div class="value-text">Top reasons to use (e.g., Trust in Bayer) and blockers (e.g., Price too high) based on field responses.</div>
-        </div>
-        <div class="value-item">
-          <div class="value-title">Proof of execution</div>
-          <div class="value-text">Session media (photos/videos) linked to district and session, usable for internal reporting and social proof.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="charts">
-      <div class="section-head">
-        <h2>Performance analytics</h2>
-        <p class="muted">Charts reflect your current selection (All / District / Search / Date range).</p>
-      </div>
-
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>Adoption funnel</h3>
-          <canvas id="chartFunnel" height="220"></canvas>
-          <div class="chart-fallback hidden" id="chartFunnelFallback"></div>
-        </div>
-
-        <div class="chart-card">
-          <h3>District coverage</h3>
-          <canvas id="chartDistrict" height="220"></canvas>
-          <div class="chart-fallback hidden" id="chartDistrictFallback"></div>
-        </div>
-
-        <div class="chart-card">
-          <h3>Understanding (avg)</h3>
-          <canvas id="chartUnderstanding" height="220"></canvas>
-          <div class="chart-fallback hidden" id="chartUnderstandingFallback"></div>
-        </div>
-
-        <div class="chart-card">
-          <h3>Top reasons to use</h3>
-          <canvas id="chartReasons" height="220"></canvas>
-          <div class="chart-fallback hidden" id="chartReasonsFallback"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="map-gallery">
-      <div class="map-card">
-        <div class="section-head">
-          <h2>Coverage map</h2>
-          <div class="muted" id="mapMeta">Markers: —</div>
-        </div>
-        <div id="map" class="map"></div>
-        <div class="map-fallback hidden" id="mapFallback">
-          Map library did not load (Leaflet). You can still browse sessions and media below.
+        <div class="control actions">
+          <button id="applyFilters" class="btn primary"><i class="fa-solid fa-filter"></i> Apply</button>
+          <button id="resetFilters" class="btn ghost"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+          <button id="exportCsv" class="btn secondary"><i class="fa-solid fa-file-arrow-down"></i> Export</button>
         </div>
       </div>
 
-      <div class="gallery-card">
-        <div class="section-head">
-          <h2>Media gallery</h2>
-          <div class="muted" id="galleryMeta">—</div>
+      <div class="selection" id="selectionSummary">
+        <div class="selection-left">
+          <div class="selection-title"><i class="fa-solid fa-bullseye"></i> Current selection</div>
+          <div class="selection-sub" id="selectionText">All districts • All dates</div>
         </div>
-
-        <div class="gallery-filters">
-          <button class="chip active" data-media-filter="all" type="button">All</button>
-          <button class="chip" data-media-filter="photos" type="button">Photos</button>
-          <button class="chip" data-media-filter="videos" type="button">Videos</button>
+        <div class="selection-right">
+          <div class="chip"><span class="chip-num" id="selSessions">—</span><span class="chip-label">Sessions</span></div>
+          <div class="chip"><span class="chip-num" id="selFarmers">—</span><span class="chip-label">Farmers</span></div>
+          <div class="chip"><span class="chip-num" id="selAcres">—</span><span class="chip-label">Acres</span></div>
+          <div class="chip"><span class="chip-num" id="selScore">—</span><span class="chip-label">Avg Score</span></div>
         </div>
-
-        <div id="galleryGrid" class="gallery-grid">
-          <div class="gallery-placeholder">Loading media…</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="sessions">
-      <div class="section-head">
-        <h2>Sessions</h2>
-        <div class="muted" id="sessionsMeta">—</div>
-      </div>
-
-      <div class="sessions-table-wrap" id="sessionsTableWrap">
-        <table class="sessions-table" id="sessionsTable">
-          <thead>
-            <tr>
-              <th>SN</th>
-              <th>Date</th>
-              <th>District</th>
-              <th>Location</th>
-              <th>Farmers</th>
-              <th>Acres</th>
-              <th>Definite %</th>
-              <th>Awareness %</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody id="sessionsTbody">
-            <tr><td colspan="9" class="muted">Loading sessions…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="sessions-cards" id="sessionsCards" aria-label="Sessions (mobile)">
-        <!-- JS -->
       </div>
     </section>
 
     <section class="insights">
       <div class="section-head">
-        <h2>Auto-insights</h2>
-        <p class="muted">Computed from current selection to help action planning.</p>
+        <h2>Campaign insights at a glance</h2>
+        <p>Clear, comparable metrics for stakeholder decisions: awareness, intent, understanding, and coverage.</p>
       </div>
-      <div id="insightsBox" class="insights-box">Computing insights…</div>
+
+      <div class="donut-grid">
+        <article class="donut-card">
+          <div class="donut-top">
+            <h3>Adoption intent</h3>
+            <div class="donut-kpi" id="kpiDefinite">—%</div>
+          </div>
+          <canvas id="chartIntent" height="190"></canvas>
+          <div class="donut-foot" id="legendIntent"></div>
+        </article>
+
+        <article class="donut-card">
+          <div class="donut-top">
+            <h3>Brand awareness</h3>
+            <div class="donut-kpi" id="kpiAwareness">—%</div>
+          </div>
+          <canvas id="chartAwareness" height="190"></canvas>
+          <div class="donut-foot" id="legendAwareness"></div>
+        </article>
+
+        <article class="donut-card">
+          <div class="donut-top">
+            <h3>Message understanding</h3>
+            <div class="donut-kpi" id="kpiUnderstanding">—/3</div>
+          </div>
+          <canvas id="chartUnderstanding" height="190"></canvas>
+          <div class="donut-foot small">
+            Average understanding across 5 key messages (0–3 scale).
+          </div>
+        </article>
+
+        <article class="donut-card">
+          <div class="donut-top">
+            <h3>Coverage by acres</h3>
+            <div class="donut-kpi" id="kpiCoverage">—</div>
+          </div>
+          <canvas id="chartCoverage" height="190"></canvas>
+          <div class="donut-foot" id="legendCoverage"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="map-sessions">
+      <div class="map-wrap">
+        <div class="section-head tight">
+          <h2>Map view</h2>
+          <p>Spots are shown by default. Tap a spot to open the session profile with people, performance and media.</p>
+        </div>
+        <div class="map-card">
+          <div id="campaignMap" class="map"></div>
+          <div class="map-stats" id="mapStats"><i class="fa-solid fa-location-dot"></i> Loading map…</div>
+          <div class="map-actions">
+            <button id="fitMap" class="btn primary small"><i class="fa-solid fa-maximize"></i> Fit</button>
+            <button id="resetMap" class="btn ghost small"><i class="fa-solid fa-globe"></i> Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="drawer" id="sessionDrawer" aria-label="Session details" aria-hidden="true">
+        <div class="drawer-head">
+          <div>
+            <div class="drawer-kicker" id="drawerKicker">Session</div>
+            <div class="drawer-title" id="drawerTitle">—</div>
+            <div class="drawer-sub" id="drawerSub">—</div>
+          </div>
+          <button class="iconbtn" id="drawerClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="drawer-body">
+          <div class="drawer-grid">
+            <div class="kv">
+              <div class="kv-label">Host</div>
+              <div class="kv-value" id="drawerHost">—</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Sales rep</div>
+              <div class="kv-value" id="drawerSales">—</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Dealer</div>
+              <div class="kv-value" id="drawerDealer">—</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Competitors mentioned</div>
+              <div class="kv-value" id="drawerCompetitors">—</div>
+            </div>
+          </div>
+
+          <div class="drawer-metrics">
+            <div class="metric">
+              <div class="metric-num" id="drawerFarmers">—</div>
+              <div class="metric-label">Farmers</div>
+            </div>
+            <div class="metric">
+              <div class="metric-num" id="drawerAcres">—</div>
+              <div class="metric-label">Wheat acres</div>
+            </div>
+            <div class="metric">
+              <div class="metric-num" id="drawerDefinite">—%</div>
+              <div class="metric-label">Definite</div>
+            </div>
+            <div class="metric">
+              <div class="metric-num" id="drawerScore">—</div>
+              <div class="metric-label">Session score</div>
+            </div>
+          </div>
+
+          <div class="drawer-insights">
+            <div class="insight">
+              <div class="insight-label">Top reason to use</div>
+              <div class="insight-value" id="drawerReasonUse">—</div>
+            </div>
+            <div class="insight">
+              <div class="insight-label">Top reason not to use</div>
+              <div class="insight-value" id="drawerReasonNo">—</div>
+            </div>
+          </div>
+
+          <div class="drawer-media">
+            <div class="drawer-media-head">
+              <h3>Session media</h3>
+              <button class="btn ghost small" id="drawerShareAll"><i class="fa-solid fa-share-nodes"></i> Share</button>
+            </div>
+            <div id="drawerMediaStrip" class="media-strip"></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="sessions">
+      <div class="section-head">
+        <h2>Sessions</h2>
+        <p>Filter by district and date to view exact sessions and their outcomes.</p>
+      </div>
+
+      <div id="sessionsList" class="sessions-list"></div>
+      <div class="pager">
+        <button id="prevPage" class="btn ghost" disabled><i class="fa-solid fa-chevron-left"></i> Prev</button>
+        <div class="pager-info">Page <span id="pageNow">1</span> / <span id="pageTotal">1</span></div>
+        <button id="nextPage" class="btn ghost" disabled>Next <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <section class="gallery">
+      <div class="section-head">
+        <h2>Media wall</h2>
+        <p>Animated cards combine each session’s photo and video. Only items from <code>assets/gallery/</code> are shown.</p>
+      </div>
+
+      <div class="gallery-stats">
+        <div class="stat"><span id="galSessions">—</span><small>Sessions shown</small></div>
+        <div class="stat"><span id="galImages">—</span><small>Images</small></div>
+        <div class="stat"><span id="galVideos">—</span><small>Videos</small></div>
+      </div>
+
+      <div id="mediaWall" class="media-wall"></div>
+    </section>
+
+    <section class="feedback" id="feedback">
+      <div class="section-head">
+        <h2>Share feedback</h2>
+        <p>Help us improve field activations. Provide your email or phone and send feedback to INTERACT.</p>
+      </div>
+
+      <div class="feedback-card">
+        <form id="feedbackForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="fbName">Name (optional)</label>
+              <input id="fbName" type="text" placeholder="Your name" />
+            </div>
+            <div class="field">
+              <label for="fbEmail">Email</label>
+              <input id="fbEmail" type="email" placeholder="name@example.com" />
+            </div>
+            <div class="field">
+              <label for="fbPhone">Phone</label>
+              <input id="fbPhone" type="tel" placeholder="+92 3xx xxx xxxx" />
+            </div>
+            <div class="field full">
+              <label for="fbMessage">Feedback</label>
+              <textarea id="fbMessage" rows="5" placeholder="What worked well? What should we improve? Any observations from the field?"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <div class="form-note">
+              Send to <strong>interact@paksaf.com</strong> • Contact <strong>+92355223233</strong>
+              <span id="fbError" class="error" role="alert" aria-live="polite"></span>
+            </div>
+
+            <div class="form-buttons">
+              <button type="submit" class="btn primary">
+                <i class="fa-solid fa-envelope"></i> Email feedback
+              </button>
+              <button type="button" id="fbWhatsApp" class="btn whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp feedback
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </section>
 
     <footer class="footer">
-      Built by <strong>INTERACT</strong> — multi-campaign field intelligence. Data and KPIs are recomputed from session rows (summary row ignored).
+      <div class="footer-inner">
+        <div class="footer-brand" id="footerBrandImages"></div>
+        <div class="footer-meta">
+          <div class="footer-title">Powered by INTERACT</div>
+          <div class="footer-sub">Field intelligence dashboards for multi-campaign execution.</div>
+          <div class="footer-links">
+            <a href="#feedback"><i class="fa-solid fa-message"></i> Feedback</a>
+            <a href="#" id="sharePage"><i class="fa-solid fa-share-nodes"></i> Share page</a>
+            <a href="#" onclick="window.print(); return false;"><i class="fa-solid fa-print"></i> Print</a>
+          </div>
+        </div>
+      </div>
     </footer>
   </main>
 
-  <!-- Session drawer -->
-  <aside class="drawer" id="drawer" aria-hidden="true">
-    <div class="drawer-head">
-      <div>
-        <div class="drawer-title" id="drawerTitle">Session</div>
-        <div class="drawer-sub" id="drawerSub">—</div>
+  <!-- Media Modal -->
+  <div class="modal" id="mediaModal" aria-hidden="true">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div>
+          <div class="modal-kicker" id="modalKicker">Media</div>
+          <div class="modal-title" id="modalTitle">—</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost small" id="modalShare"><i class="fa-solid fa-share-nodes"></i> Share</button>
+          <button class="iconbtn" id="modalClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
       </div>
-      <button class="icon-btn" id="drawerCloseBtn" aria-label="Close session details" type="button">✕</button>
+      <div class="modal-body" id="modalBody"></div>
     </div>
+  </div>
 
-    <div class="drawer-body" id="drawerBody">
-      <!-- JS -->
-    </div>
-  </aside>
-
-  <div class="backdrop hidden" id="backdrop"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>

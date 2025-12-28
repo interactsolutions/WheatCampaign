@@ -1,3228 +1,2695 @@
 {
-  "campaign": "Buctril Super Farmer Education Drive 2025",
-  "description": "Session-level dataset derived from XLSX SUM (row-level). Summary row excluded; totals recomputed.",
-  "lastUpdated": "2025-12-28T14:51:03Z",
-  "totalSessions": 40,
-  "totalFarmers": 1454,
-  "totalWheatFarmers": 1442,
-  "totalAcres": 22128,
-  "estimatedBuctrilAcres": 21187,
-  "keyInfluencers": 265,
+  "campaignId": "buctril-super-2025",
+  "generatedAt": "2025-12-28T16:42:16.456633Z",
+  "note": "Totals computed from session rows only; CSV summary row excluded.",
+  "totals": {
+    "sessions": 40,
+    "farmers": 1454,
+    "wheatFarmers": 1442,
+    "wheatAcres": 22128,
+    "estimatedBuctrilAcres": 21187,
+    "keyInfluencers": 265,
+    "districts": 15
+  },
   "sessions": [
     {
-      "id": 1,
-      "sessionId": "D1S1",
-      "sessionNumber": 1,
+      "sn": 1,
+      "sessionRef": "D1S1",
+      "date": "2025-11-24",
       "district": "Ubaro",
       "location": "Ameen khan Chacharr",
-      "date": "2025-11-24",
-      "dayIndex": 1,
-      "facilitator": "Sadiq Hussain",
-      "facilitatorContact": "0301-2124357",
-      "host": "Hakim Ali Chachar",
-      "hostContact": "0306-8250645",
-      "dealerShop": "Amar Lal, Amar Lal Pesticides",
-      "dealerName": "Amar Lal",
-      "dealerContact": "0300-3263827",
-      "sessionType": "0",
       "village": "Ameen khan Chacharr",
-      "coordinates": "28°09'13.2\"N 69°48'59.7\"E",
-      "latitude": 28.1537,
-      "longitude": 69.8166,
-      "farmers": 29,
-      "wheatFarmers": 29,
-      "acres": 1002,
-      "performance": {
-        "knowBuctril": 22,
-        "awarenessRate": 75.9,
-        "usedLastYear": 18,
-        "usedLastYearRate": 62.1,
-        "willDefinitelyUse": 26,
-        "definiteUseRate": 89.7,
-        "maybe": 3,
-        "maybeRate": 10.3,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Sadiq Hussain",
+        "phone": "0301-2124357"
+      },
+      "host": {
+        "name": "Hakim Ali Chachar",
+        "phone": "0306-8250645"
+      },
+      "dealer": {
+        "name": "Amar Lal",
+        "phone": "0300-3263827"
+      },
+      "coords": {
+        "lat": 28.153666666666666,
+        "lng": 69.81658333333333,
+        "raw": "28°09'13.2\"N 69°48'59.7\"E"
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 1002,
         "estimatedBuctrilAcres": 929,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 3.0
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 22,
-          "trustInBayer": 28,
-          "goodPastExperience": 18,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 22,
+        "usedLastYear": 18,
+        "definite": 26,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 76.0,
+          "usedLastYear": 62.0,
+          "definite": 90.0,
+          "maybe": 10.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 3.0
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 84.8
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/1.jpeg"
+          "assets/gallery/1.jpeg",
+          "assets/gallery/1a.jpeg"
         ],
         "videos": [
-          "gallery/1.mp4"
-        ],
-        "total": 2
+          "assets/gallery/1.mp4",
+          "assets/gallery/1a.mp4"
+        ]
       }
     },
     {
-      "id": 2,
-      "sessionId": "D1S2",
-      "sessionNumber": 2,
+      "sn": 2,
+      "sessionRef": "D1S2",
+      "date": "2025-11-24",
       "district": "Ubaro",
       "location": "Naseer Dhondo",
-      "date": "2025-11-24",
-      "dayIndex": 1,
-      "facilitator": "Jam Wali",
-      "facilitatorContact": "0300 - 3267636",
-      "host": "Jam Wali Dhino",
-      "hostContact": "0300-3267636",
-      "dealerShop": "Amar Lal, Amar Lal Pesticides",
-      "dealerName": "Amar Lal",
-      "dealerContact": "0300-3263827",
-      "sessionType": "0",
       "village": "Naseer Dhondo",
-      "coordinates": "28°08'04.8\"N 69°50'12.1\"E",
-      "latitude": 28.1347,
-      "longitude": 69.8367,
-      "farmers": 41,
-      "wheatFarmers": 40,
-      "acres": 1414,
-      "performance": {
-        "knowBuctril": 35,
-        "awarenessRate": 85.4,
-        "usedLastYear": 20,
-        "usedLastYearRate": 48.8,
-        "willDefinitelyUse": 33,
-        "definiteUseRate": 80.5,
-        "maybe": 8,
-        "maybeRate": 19.5,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Jam Wali",
+        "phone": "0300 - 3267636"
+      },
+      "host": {
+        "name": "Jam Wali Dhino",
+        "phone": "0300-3267636"
+      },
+      "dealer": {
+        "name": "Amar Lal",
+        "phone": "0300-3263827"
+      },
+      "coords": {
+        "lat": 28.134666666666668,
+        "lng": 69.83669444444443,
+        "raw": "28°08'04.8\"N 69°50'12.1\"E"
+      },
+      "metrics": {
+        "farmers": 41,
+        "wheatFarmers": 40,
+        "wheatAcres": 1414,
         "estimatedBuctrilAcres": 1371,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 30,
-          "safeOnCrop": 20,
-          "trustInBayer": 41,
-          "goodPastExperience": 20,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 35,
+        "usedLastYear": 20,
+        "definite": 33,
+        "maybe": 8,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 85.0,
+          "usedLastYear": 49.0,
+          "definite": 80.0,
+          "maybe": 20.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 79.9
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/2.jpeg"
+          "assets/gallery/2.jpeg",
+          "assets/gallery/2a.jpeg"
         ],
         "videos": [
-          "gallery/2.mp4"
-        ],
-        "total": 2
+          "assets/gallery/2.mp4",
+          "assets/gallery/2a.mp4"
+        ]
       }
     },
     {
-      "id": 3,
-      "sessionId": "D2S1",
-      "sessionNumber": 3,
+      "sn": 3,
+      "sessionRef": "D2S1",
+      "date": "2025-11-25",
       "district": "Dharki",
       "location": "Matal Mahar",
-      "date": "2025-11-25",
-      "dayIndex": 2,
-      "facilitator": "waqar Ahmad",
-      "facilitatorContact": "0311-2121427",
-      "host": "M. Moosa",
-      "hostContact": "0300-3660064",
-      "dealerShop": "Papu Ram, New Darvaish Pesicide",
-      "dealerName": "Papu Ram",
-      "dealerContact": "0333-7248105",
-      "sessionType": "0",
       "village": "Matal Mahar",
-      "coordinates": "28°01'58.2\"N 69°42'14.7\"E",
-      "latitude": 28.0328,
-      "longitude": 69.7041,
-      "farmers": 30,
-      "wheatFarmers": 30,
-      "acres": 750,
-      "performance": {
-        "knowBuctril": 21,
-        "awarenessRate": 70.0,
-        "usedLastYear": 19,
-        "usedLastYearRate": 63.3,
-        "willDefinitelyUse": 27,
-        "definiteUseRate": 90.0,
-        "maybe": 3,
-        "maybeRate": 10.0,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "waqar Ahmad",
+        "phone": "0311-2121427"
+      },
+      "host": {
+        "name": "M. Moosa",
+        "phone": "0300-3660064"
+      },
+      "dealer": {
+        "name": "Papu Ram",
+        "phone": "0333-7248105"
+      },
+      "coords": {
+        "lat": 28.032833333333333,
+        "lng": 69.70408333333333,
+        "raw": "28°01'58.2\"N 69°42'14.7\"E"
+      },
+      "metrics": {
+        "farmers": 30,
+        "wheatFarmers": 30,
+        "wheatAcres": 750,
         "estimatedBuctrilAcres": 700,
-        "keyInfluencers": 7,
-        "planYes": 6,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 3.0
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 17,
-          "safeOnCrop": 15,
-          "trustInBayer": 28,
-          "goodPastExperience": 19,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 21,
+        "usedLastYear": 19,
+        "definite": 27,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 70.0,
+          "usedLastYear": 63.0,
+          "definite": 90.0,
+          "maybe": 10.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 3.0
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 83.5
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/3.jpeg"
+          "assets/gallery/3.jpeg",
+          "assets/gallery/3a.jpeg"
         ],
         "videos": [
-          "gallery/3.mp4"
-        ],
-        "total": 2
+          "assets/gallery/3.mp4",
+          "assets/gallery/3a.mp4"
+        ]
       }
     },
     {
-      "id": 4,
-      "sessionId": "D2S2",
-      "sessionNumber": 4,
+      "sn": 4,
+      "sessionRef": "D2S2",
+      "date": "2025-11-25",
       "district": "Dharki",
       "location": "Abdullah Rajni",
-      "date": "2025-11-25",
-      "dayIndex": 2,
-      "facilitator": "Tanveer Ahmed",
-      "facilitatorContact": "0320-1323046",
-      "host": "Shafique Ahmed",
-      "hostContact": "0309-3897158",
-      "dealerShop": "Papu Ram, New Darvaish Pesicide",
-      "dealerName": "Papu Ram",
-      "dealerContact": "0333-7248105",
-      "sessionType": "0",
       "village": "Abdullah Rajni",
-      "coordinates": "28°00'29.6\"N 69°43'34.1\"E",
-      "latitude": 28.0082,
-      "longitude": 69.7261,
-      "farmers": 37,
-      "wheatFarmers": 37,
-      "acres": 447,
-      "performance": {
-        "knowBuctril": 32,
-        "awarenessRate": 86.5,
-        "usedLastYear": 29,
-        "usedLastYearRate": 78.4,
-        "willDefinitelyUse": 33,
-        "definiteUseRate": 89.2,
-        "maybe": 4,
-        "maybeRate": 10.8,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Tanveer Ahmed",
+        "phone": "0320-1323046"
+      },
+      "host": {
+        "name": "Shafique Ahmed",
+        "phone": "0309-3897158"
+      },
+      "dealer": {
+        "name": "Papu Ram",
+        "phone": "0333-7248105"
+      },
+      "coords": {
+        "lat": 28.008222222222223,
+        "lng": 69.7261388888889,
+        "raw": "28°00'29.6\"N 69°43'34.1\"E"
+      },
+      "metrics": {
+        "farmers": 37,
+        "wheatFarmers": 37,
+        "wheatAcres": 447,
         "estimatedBuctrilAcres": 420,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 3.0
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 25,
-          "safeOnCrop": 30,
-          "trustInBayer": 35,
-          "goodPastExperience": 28,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 32,
+        "usedLastYear": 29,
+        "definite": 33,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 86.0,
+          "usedLastYear": 78.0,
+          "definite": 89.0,
+          "maybe": 11.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 3.0
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 89.3
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/4.jpeg"
+          "assets/gallery/4.jpeg",
+          "assets/gallery/4a.jpeg"
         ],
         "videos": [
-          "gallery/4.mp4"
-        ],
-        "total": 2
+          "assets/gallery/4.mp4",
+          "assets/gallery/4a.mp4"
+        ]
       }
     },
     {
-      "id": 5,
-      "sessionId": "D3S1",
-      "sessionNumber": 5,
+      "sn": 5,
+      "sessionRef": "D3S1",
+      "date": "2025-11-26",
       "district": "Ghotki",
       "location": "Abdullah Laakhan",
-      "date": "2025-11-26",
-      "dayIndex": 3,
-      "facilitator": "Farooq Ahmad",
-      "facilitatorContact": "0305-3014237",
-      "host": "Ali Nawaz",
-      "hostContact": "0300-3117949",
-      "dealerShop": "Ameer Bukhash, Ameer Bukhsh Pest",
-      "dealerName": "Ameer Bukhash",
-      "dealerContact": "0302-3157094",
-      "sessionType": "0",
       "village": "Abdullah Laakhan",
-      "coordinates": "28°01'58.6\"N 69°22'54.6\"E",
-      "latitude": 28.0329,
-      "longitude": 69.3818,
-      "farmers": 39,
-      "wheatFarmers": 39,
-      "acres": 1075,
-      "performance": {
-        "knowBuctril": 33,
-        "awarenessRate": 84.6,
-        "usedLastYear": 28,
-        "usedLastYearRate": 71.8,
-        "willDefinitelyUse": 35,
-        "definiteUseRate": 89.7,
-        "maybe": 4,
-        "maybeRate": 10.3,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Farooq Ahmad",
+        "phone": "0305-3014237"
+      },
+      "host": {
+        "name": "Ali Nawaz",
+        "phone": "0300-3117949"
+      },
+      "dealer": {
+        "name": "Ameer Bukhash",
+        "phone": "0302-3157094"
+      },
+      "coords": {
+        "lat": 28.032944444444443,
+        "lng": 69.38183333333333,
+        "raw": "28°01'58.6\"N 69°22'54.6\"E"
+      },
+      "metrics": {
+        "farmers": 39,
+        "wheatFarmers": 39,
+        "wheatAcres": 1075,
         "estimatedBuctrilAcres": 990,
-        "keyInfluencers": 7,
-        "planYes": 6,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 2,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 25,
-          "safeOnCrop": 20,
-          "trustInBayer": 32,
-          "goodPastExperience": 28,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 33,
+        "usedLastYear": 28,
+        "definite": 35,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 85.0,
+          "usedLastYear": 72.0,
+          "definite": 90.0,
+          "maybe": 10.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 2,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 85.2
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/5.jpeg"
+          "assets/gallery/5.jpeg",
+          "assets/gallery/5a.jpeg"
         ],
         "videos": [
-          "gallery/5.mp4"
-        ],
-        "total": 2
+          "assets/gallery/5.mp4",
+          "assets/gallery/5a.mp4"
+        ]
       }
     },
     {
-      "id": 6,
-      "sessionId": "D3S2",
-      "sessionNumber": 6,
+      "sn": 6,
+      "sessionRef": "D3S2",
+      "date": "2025-11-26",
       "district": "Ghotki",
       "location": "M. Qasim Ghooto",
-      "date": "2025-11-26",
-      "dayIndex": 3,
-      "facilitator": "Hizbullah",
-      "facilitatorContact": "0315-7810700",
-      "host": "Raeis M. Punal",
-      "hostContact": "0300-3262285",
-      "dealerShop": "Ameer Bukhash, Ameer Bukhsh Pest",
-      "dealerName": "Ameer Bukhash",
-      "dealerContact": "0302-3157094",
-      "sessionType": "0",
       "village": "M. Qasim Ghooto",
-      "coordinates": "28°02'06.1\"N 69°15'52.7\"E",
-      "latitude": 28.035,
-      "longitude": 69.2646,
-      "farmers": 29,
-      "wheatFarmers": 29,
-      "acres": 459,
-      "performance": {
-        "knowBuctril": 27,
-        "awarenessRate": 93.1,
-        "usedLastYear": 25,
-        "usedLastYearRate": 86.2,
-        "willDefinitelyUse": 26,
-        "definiteUseRate": 89.7,
-        "maybe": 3,
-        "maybeRate": 10.3,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Hizbullah",
+        "phone": "0315-7810700"
+      },
+      "host": {
+        "name": "Raeis M. Punal",
+        "phone": "0300-3262285"
+      },
+      "dealer": {
+        "name": "Ameer Bukhash",
+        "phone": "0302-3157094"
+      },
+      "coords": {
+        "lat": 28.03502777777778,
+        "lng": 69.26463888888888,
+        "raw": "28°02'06.1\"N 69°15'52.7\"E"
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 459,
         "estimatedBuctrilAcres": 419,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 25,
-          "safeOnCrop": 23,
-          "trustInBayer": 26,
-          "goodPastExperience": 25,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 27,
+        "usedLastYear": 25,
+        "definite": 26,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 93.0,
+          "usedLastYear": 86.0,
+          "definite": 90.0,
+          "maybe": 10.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 91.0
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/6.jpeg"
+          "assets/gallery/6.jpeg",
+          "assets/gallery/6a.jpeg"
         ],
         "videos": [
-          "gallery/6.mp4"
-        ],
-        "total": 2
+          "assets/gallery/6.mp4",
+          "assets/gallery/6a.mp4"
+        ]
       }
     },
     {
-      "id": 7,
-      "sessionId": "D4S1",
-      "sessionNumber": 7,
+      "sn": 7,
+      "sessionRef": "D4S1",
+      "date": "2025-11-27",
       "district": "Ghotki",
       "location": "Darri Chachar",
-      "date": "2025-11-27",
-      "dayIndex": 4,
-      "facilitator": "Imtiaz Ahmad",
-      "facilitatorContact": "0307-2235762",
-      "host": "Fayaz Ahmed",
-      "hostContact": "0300-2326598",
-      "dealerShop": "Sahil Kumar, SSD Evergreen",
-      "dealerName": "Sahil Kumar",
-      "dealerContact": "0300-4218988",
-      "sessionType": "0",
       "village": "Darri Chachar",
-      "coordinates": "27°52'42.7\"N 69°15'44.7\"E",
-      "latitude": 27.8785,
-      "longitude": 69.2624,
-      "farmers": 33,
-      "wheatFarmers": 33,
-      "acres": 245,
-      "performance": {
-        "knowBuctril": 31,
-        "awarenessRate": 93.9,
-        "usedLastYear": 30,
-        "usedLastYearRate": 90.9,
-        "willDefinitelyUse": 32,
-        "definiteUseRate": 97.0,
-        "maybe": 1,
-        "maybeRate": 3.0,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Imtiaz Ahmad",
+        "phone": "0307-2235762"
+      },
+      "host": {
+        "name": "Fayaz Ahmed",
+        "phone": "0300-2326598"
+      },
+      "dealer": {
+        "name": "Sahil Kumar",
+        "phone": "0300-4218988"
+      },
+      "coords": {
+        "lat": 27.87852777777778,
+        "lng": 69.26241666666667,
+        "raw": "27°52'42.7\"N 69°15'44.7\"E"
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 33,
+        "wheatAcres": 245,
         "estimatedBuctrilAcres": 825,
-        "keyInfluencers": 7,
-        "planYes": 1,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 29,
-          "safeOnCrop": 30,
-          "trustInBayer": 32,
-          "goodPastExperience": 30,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 31,
+        "usedLastYear": 30,
+        "definite": 32,
+        "maybe": 1,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 94.0,
+          "usedLastYear": 91.0,
+          "definite": 97.0,
+          "maybe": 3.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 94.4
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/7.jpeg"
+          "assets/gallery/7.jpeg",
+          "assets/gallery/7a.jpeg"
         ],
         "videos": [
-          "gallery/7.mp4"
-        ],
-        "total": 2
+          "assets/gallery/7.mp4",
+          "assets/gallery/7a.mp4"
+        ]
       }
     },
     {
-      "id": 8,
-      "sessionId": "D4S2",
-      "sessionNumber": 8,
+      "sn": 8,
+      "sessionRef": "D4S2",
+      "date": "2025-11-27",
       "district": "Ghotki",
       "location": "Kalati Gabol",
-      "date": "2025-11-27",
-      "dayIndex": 4,
-      "facilitator": "Bahadur Ali",
-      "facilitatorContact": "0300-9316971",
-      "host": "Abdul Rasheed",
-      "hostContact": "0300-3194825",
-      "dealerShop": "Ravi Kumar, SSD Evergreen",
-      "dealerName": "Ravi Kumar",
-      "dealerContact": "0300-3292555",
-      "sessionType": "0",
       "village": "Kalati Gabol",
-      "coordinates": "27°50'55.0\"N 69°26'10.0\"E",
-      "latitude": 27.8486,
-      "longitude": 69.4361,
-      "farmers": 35,
-      "wheatFarmers": 35,
-      "acres": 1063,
-      "performance": {
-        "knowBuctril": 31,
-        "awarenessRate": 88.6,
-        "usedLastYear": 28,
-        "usedLastYearRate": 80.0,
-        "willDefinitelyUse": 33,
-        "definiteUseRate": 94.3,
-        "maybe": 2,
-        "maybeRate": 5.7,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Bahadur Ali",
+        "phone": "0300-9316971"
+      },
+      "host": {
+        "name": "Abdul Rasheed",
+        "phone": "0300-3194825"
+      },
+      "dealer": {
+        "name": "Ravi Kumar",
+        "phone": "0300-3292555"
+      },
+      "coords": {
+        "lat": 27.84861111111111,
+        "lng": 69.43611111111112,
+        "raw": "27°50'55.0\"N 69°26'10.0\"E"
+      },
+      "metrics": {
+        "farmers": 35,
+        "wheatFarmers": 35,
+        "wheatAcres": 1063,
         "estimatedBuctrilAcres": 1000,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 2,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 28,
-          "safeOnCrop": 30,
-          "trustInBayer": 32,
-          "goodPastExperience": 28,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 31,
+        "usedLastYear": 28,
+        "definite": 33,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 89.0,
+          "usedLastYear": 80.0,
+          "definite": 94.0,
+          "maybe": 6.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 2,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 88.8
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/8.jpeg"
+          "assets/gallery/8.jpeg",
+          "assets/gallery/8a.jpeg"
         ],
         "videos": [
-          "gallery/8.mp4"
-        ],
-        "total": 2
+          "assets/gallery/8.mp4",
+          "assets/gallery/8a.mp4"
+        ]
       }
     },
     {
-      "id": 9,
-      "sessionId": "D5S1",
-      "sessionNumber": 9,
+      "sn": 9,
+      "sessionRef": "D5S1",
+      "date": "2025-11-28",
       "district": "Jaferabad",
       "location": "Haji Darya Khan",
-      "date": "2025-11-28",
-      "dayIndex": 5,
-      "facilitator": "Khuda Bukhsh",
-      "facilitatorContact": "0300-1156695",
-      "host": "Haji Darya khan",
-      "hostContact": "0300-8920333",
-      "dealerShop": "Putab Raay, Sanjay Fertilizers",
-      "dealerName": "Putab Raay",
-      "dealerContact": "0300-317/018",
-      "sessionType": "0",
       "village": "Haji Darya Khan",
-      "coordinates": "28°12'34.3\"N 68°34'34.3\"E",
-      "latitude": 28.2095,
-      "longitude": 68.5762,
-      "farmers": 34,
-      "wheatFarmers": 32,
-      "acres": 625,
-      "performance": {
-        "knowBuctril": 23,
-        "awarenessRate": 67.6,
-        "usedLastYear": 19,
-        "usedLastYearRate": 55.9,
-        "willDefinitelyUse": 26,
-        "definiteUseRate": 76.5,
-        "maybe": 8,
-        "maybeRate": 23.5,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Khuda Bukhsh",
+        "phone": "0300-1156695"
+      },
+      "host": {
+        "name": "Haji Darya khan",
+        "phone": "0300-8920333"
+      },
+      "dealer": {
+        "name": "Putab Raay",
+        "phone": "0300-317/018"
+      },
+      "coords": {
+        "lat": 28.209527777777776,
+        "lng": 68.57619444444444,
+        "raw": "28°12'34.3\"N 68°34'34.3\"E"
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 32,
+        "wheatAcres": 625,
         "estimatedBuctrilAcres": 558,
-        "keyInfluencers": 7,
-        "planYes": 6,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 2,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 18,
-          "safeOnCrop": 20,
-          "trustInBayer": 25,
-          "goodPastExperience": 19,
-          "dealerRecommending": 15,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 23,
+        "usedLastYear": 19,
+        "definite": 26,
+        "maybe": 8,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 68.0,
+          "usedLastYear": 56.0,
+          "definite": 76.0,
+          "maybe": 24.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 2,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 73.7
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/9.jpeg"
+          "assets/gallery/9.jpeg",
+          "assets/gallery/9a.jpeg"
         ],
         "videos": [
-          "gallery/9.mp4"
-        ],
-        "total": 2
+          "assets/gallery/9.mp4",
+          "assets/gallery/9a.mp4"
+        ]
       }
     },
     {
-      "id": 10,
-      "sessionId": "D5S2",
-      "sessionNumber": 10,
+      "sn": 10,
+      "sessionRef": "D5S2",
+      "date": "2025-11-28",
       "district": "Jaferabad",
       "location": "Qaeim Khan Khossa 2",
-      "date": "2025-11-28",
-      "dayIndex": 5,
-      "facilitator": "Khuda Bukhsh",
-      "facilitatorContact": "0300-1156695",
-      "host": "Haji ShahaL khan",
-      "hostContact": "0300-3174711",
-      "dealerShop": "Purtab Roy, Sanjay Fertilizer Agency",
-      "dealerName": "Purtab Roy",
-      "dealerContact": "030-317/018",
-      "sessionType": "0",
       "village": "Qaeim Khan Khossa 2",
-      "coordinates": "28°11'22.1\"N 68°35'18.0\"E",
-      "latitude": 28.1895,
-      "longitude": 68.5883,
-      "farmers": 33,
-      "wheatFarmers": 30,
-      "acres": 641,
-      "performance": {
-        "knowBuctril": 20,
-        "awarenessRate": 60.6,
-        "usedLastYear": 18,
-        "usedLastYearRate": 54.5,
-        "willDefinitelyUse": 25,
-        "definiteUseRate": 75.8,
-        "maybe": 5,
-        "maybeRate": 15.2,
-        "notInterested": 3,
-        "notInterestedRate": 9.1,
+      "salesRep": {
+        "name": "Khuda Bukhsh",
+        "phone": "0300-1156695"
+      },
+      "host": {
+        "name": "Haji ShahaL khan",
+        "phone": "0300-3174711"
+      },
+      "dealer": {
+        "name": "Purtab Roy",
+        "phone": "030-317/018"
+      },
+      "coords": {
+        "lat": 28.18947222222222,
+        "lng": 68.58833333333332,
+        "raw": "28°11'22.1\"N 68°35'18.0\"E"
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 30,
+        "wheatAcres": 641,
         "estimatedBuctrilAcres": 550,
-        "keyInfluencers": 7,
-        "planYes": 6,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 2,
-        "averageScore": 2.4
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 18,
-          "safeOnCrop": 20,
-          "trustInBayer": 25,
-          "goodPastExperience": 18,
-          "dealerRecommending": 25,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 20,
+        "usedLastYear": 18,
+        "definite": 25,
+        "maybe": 5,
+        "notInterested": 3,
+        "rates": {
+          "awareness": 61.0,
+          "usedLastYear": 55.0,
+          "definite": 76.0,
+          "maybe": 15.0,
+          "notInterested": 9.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 2,
+          "avg": 2.4
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 70.1
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/10.jpeg"
+          "assets/gallery/10.jpeg",
+          "assets/gallery/10a.jpeg"
         ],
         "videos": [
-          "gallery/10.mp4"
-        ],
-        "total": 2
+          "assets/gallery/10.mp4",
+          "assets/gallery/10a.mp4"
+        ]
       }
     },
     {
-      "id": 11,
-      "sessionId": "D6S1",
-      "sessionNumber": 11,
+      "sn": 11,
+      "sessionRef": "D6S1",
+      "date": "2025-11-29",
       "district": "Ranipur",
       "location": "Allah Wadhayo",
-      "date": "2025-11-29",
-      "dayIndex": 6,
-      "facilitator": "Shafqat Ali Solangi",
-      "facilitatorContact": "0307-3422299",
-      "host": "Ali Dino",
-      "hostContact": "0300-3727407",
-      "dealerShop": "Shah M. Mangi, Mangi Fertilizers",
-      "dealerName": "Shah M. Mangi",
-      "dealerContact": "0300-9348853",
-      "sessionType": "0",
       "village": "Allah Wadhayo",
-      "coordinates": "27°05'41.2\"N 68°35'22.9\"E",
-      "latitude": 27.0948,
-      "longitude": 68.5897,
-      "farmers": 59,
-      "wheatFarmers": 56,
-      "acres": 1871,
-      "performance": {
-        "knowBuctril": 20,
-        "awarenessRate": 33.9,
-        "usedLastYear": 13,
-        "usedLastYearRate": 22.0,
-        "willDefinitelyUse": 45,
-        "definiteUseRate": 76.3,
-        "maybe": 10,
-        "maybeRate": 16.9,
-        "notInterested": 4,
-        "notInterestedRate": 6.8,
+      "salesRep": {
+        "name": "Shafqat Ali Solangi",
+        "phone": "0307-3422299"
+      },
+      "host": {
+        "name": "Ali Dino",
+        "phone": "0300-3727407"
+      },
+      "dealer": {
+        "name": "Shah M. Mangi",
+        "phone": "0300-9348853"
+      },
+      "coords": {
+        "lat": 27.094777777777775,
+        "lng": 68.58969444444443,
+        "raw": "27°05'41.2\"N 68°35'22.9\"E"
+      },
+      "metrics": {
+        "farmers": 59,
+        "wheatFarmers": 56,
+        "wheatAcres": 1871,
         "estimatedBuctrilAcres": 1466,
-        "keyInfluencers": 7,
-        "planYes": 3,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 12,
-          "safeOnCrop": 13,
-          "trustInBayer": 20,
-          "goodPastExperience": 13,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 20,
+        "usedLastYear": 13,
+        "definite": 45,
+        "maybe": 10,
+        "notInterested": 4,
+        "rates": {
+          "awareness": 34.0,
+          "usedLastYear": 22.0,
+          "definite": 76.0,
+          "maybe": 17.0,
+          "notInterested": 7.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 61.7
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/11.jpeg"
+          "assets/gallery/11.jpeg",
+          "assets/gallery/11a.jpeg"
         ],
         "videos": [
-          "gallery/11.mp4"
-        ],
-        "total": 2
+          "assets/gallery/11.mp4",
+          "assets/gallery/11a.mp4"
+        ]
       }
     },
     {
-      "id": 12,
-      "sessionId": "D6S2",
-      "sessionNumber": 12,
+      "sn": 12,
+      "sessionRef": "D6S2",
+      "date": "2025-11-29",
       "district": "Ranipur",
       "location": "Haji Khabar Malaha",
-      "date": "2025-11-29",
-      "dayIndex": 6,
-      "facilitator": "Muhammad Yahya",
-      "facilitatorContact": "0300-3197088",
-      "host": "Anwar Ali",
-      "hostContact": "0305-3691795",
-      "dealerShop": "Shah M. Mangi, Mangi Fertilizers",
-      "dealerName": "Shah M. Mangi",
-      "dealerContact": "0300-9348853",
-      "sessionType": "0",
       "village": "Haji Khabar Malaha",
-      "coordinates": "27°02'26.2\"N 68°33'47.6\"E",
-      "latitude": 27.0406,
-      "longitude": 68.5632,
-      "farmers": 33,
-      "wheatFarmers": 33,
-      "acres": 582,
-      "performance": {
-        "knowBuctril": 28,
-        "awarenessRate": 84.8,
-        "usedLastYear": 25,
-        "usedLastYearRate": 75.8,
-        "willDefinitelyUse": 32,
-        "definiteUseRate": 97.0,
-        "maybe": 1,
-        "maybeRate": 3.0,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Muhammad Yahya",
+        "phone": "0300-3197088"
+      },
+      "host": {
+        "name": "Anwar Ali",
+        "phone": "0305-3691795"
+      },
+      "dealer": {
+        "name": "Shah M. Mangi",
+        "phone": "0300-9348853"
+      },
+      "coords": {
+        "lat": 27.04061111111111,
+        "lng": 68.56322222222222,
+        "raw": "27°02'26.2\"N 68°33'47.6\"E"
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 33,
+        "wheatAcres": 582,
         "estimatedBuctrilAcres": 572,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 24,
-          "safeOnCrop": 25,
-          "trustInBayer": 28,
-          "goodPastExperience": 24,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 28,
+        "usedLastYear": 25,
+        "definite": 32,
+        "maybe": 1,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 85.0,
+          "usedLastYear": 76.0,
+          "definite": 97.0,
+          "maybe": 3.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 89.9
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/12.jpeg"
+          "assets/gallery/12.jpeg",
+          "assets/gallery/12a.jpeg"
         ],
         "videos": [
-          "gallery/12.mp4"
-        ],
-        "total": 2
+          "assets/gallery/12.mp4",
+          "assets/gallery/12a.mp4"
+        ]
       }
     },
     {
-      "id": 13,
-      "sessionId": "D7S1",
-      "sessionNumber": 13,
+      "sn": 13,
+      "sessionRef": "D7S1",
+      "date": "2025-12-01",
       "district": "Mehrabpur",
       "location": "Saein Daad Marri",
-      "date": "2025-12-01",
-      "dayIndex": 7,
-      "facilitator": "Farhan All Urar",
-      "facilitatorContact": "0300-2198404",
-      "host": "Ghulam Abbas",
-      "hostContact": "0304-0187132",
-      "dealerShop": "Shalid Rajput, Zain Pesticide Shop",
-      "dealerName": "Shalid Rajput",
-      "dealerContact": "0308-3213080",
-      "sessionType": "0",
       "village": "Saein Daad Marri",
-      "coordinates": "27°09'37.4\"N 68°19'48.3\"E",
-      "latitude": 27.1604,
-      "longitude": 68.3301,
-      "farmers": 34,
-      "wheatFarmers": 32,
-      "acres": 1158,
-      "performance": {
-        "knowBuctril": 22,
-        "awarenessRate": 64.7,
-        "usedLastYear": 12,
-        "usedLastYearRate": 35.3,
-        "willDefinitelyUse": 27,
-        "definiteUseRate": 79.4,
-        "maybe": 5,
-        "maybeRate": 14.7,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Farhan All Urar",
+        "phone": "0300-2198404"
+      },
+      "host": {
+        "name": "Ghulam Abbas",
+        "phone": "0304-0187132"
+      },
+      "dealer": {
+        "name": "Shalid Rajput",
+        "phone": "0308-3213080"
+      },
+      "coords": {
+        "lat": 27.16038888888889,
+        "lng": 68.33008333333333,
+        "raw": "27°09'37.4\"N 68°19'48.3\"E"
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 32,
+        "wheatAcres": 1158,
         "estimatedBuctrilAcres": 1112,
-        "keyInfluencers": 6,
-        "planYes": 4,
-        "planMaybe": 2,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 10,
-          "safeOnCrop": 11,
-          "trustInBayer": 20,
-          "goodPastExperience": 12,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 22,
+        "usedLastYear": 12,
+        "definite": 27,
+        "maybe": 5,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 65.0,
+          "usedLastYear": 35.0,
+          "definite": 79.0,
+          "maybe": 15.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 72.5
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/13.jpeg"
+          "assets/gallery/13.jpeg",
+          "assets/gallery/13a.jpeg"
         ],
         "videos": [
-          "gallery/13.mp4"
-        ],
-        "total": 2
+          "assets/gallery/13.mp4",
+          "assets/gallery/13a.mp4"
+        ]
       }
     },
     {
-      "id": 14,
-      "sessionId": "D7S2",
-      "sessionNumber": 14,
+      "sn": 14,
+      "sessionRef": "D7S2",
+      "date": "2025-12-01",
       "district": "Mehrabpur",
       "location": "Pir Watiyo",
-      "date": "2025-12-01",
-      "dayIndex": 7,
-      "facilitator": "Muhammad Saleem",
-      "facilitatorContact": "0302-112607",
-      "host": "Ghulam Sarwar",
-      "hostContact": "0304-1783160",
-      "dealerShop": "Shalid Rajput, Zain Pesticide Shop",
-      "dealerName": "Shalid Rajput",
-      "dealerContact": "0308-3213080",
-      "sessionType": "0",
       "village": "Pir Watiyo",
-      "coordinates": "27°07'17.9\"N 68°19'59.2\"E",
-      "latitude": 27.1216,
-      "longitude": 68.3331,
-      "farmers": 36,
-      "wheatFarmers": 35,
-      "acres": 411,
-      "performance": {
-        "knowBuctril": 20,
-        "awarenessRate": 55.6,
-        "usedLastYear": 14,
-        "usedLastYearRate": 38.9,
-        "willDefinitelyUse": 29,
-        "definiteUseRate": 80.6,
-        "maybe": 6,
-        "maybeRate": 16.7,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Muhammad Saleem",
+        "phone": "0302-112607"
+      },
+      "host": {
+        "name": "Ghulam Sarwar",
+        "phone": "0304-1783160"
+      },
+      "dealer": {
+        "name": "Shalid Rajput",
+        "phone": "0308-3213080"
+      },
+      "coords": {
+        "lat": 27.12163888888889,
+        "lng": 68.33311111111111,
+        "raw": "27°07'17.9\"N 68°19'59.2\"E"
+      },
+      "metrics": {
+        "farmers": 36,
+        "wheatFarmers": 35,
+        "wheatAcres": 411,
         "estimatedBuctrilAcres": 375,
-        "keyInfluencers": 6,
-        "planYes": 5,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 3.0
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 12,
-          "safeOnCrop": 14,
-          "trustInBayer": 20,
-          "goodPastExperience": 14,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 20,
+        "usedLastYear": 14,
+        "definite": 29,
+        "maybe": 6,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 56.0,
+          "usedLastYear": 39.0,
+          "definite": 81.0,
+          "maybe": 17.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 3.0
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 73.2
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/14.jpeg"
+          "assets/gallery/14.jpeg",
+          "assets/gallery/14a.jpeg"
         ],
         "videos": [
-          "gallery/14.mp4"
-        ],
-        "total": 2
+          "assets/gallery/14.mp4",
+          "assets/gallery/14a.mp4"
+        ]
       }
     },
     {
-      "id": 15,
-      "sessionId": "D8S1",
-      "sessionNumber": 15,
+      "sn": 15,
+      "sessionRef": "D8S1",
+      "date": "2025-11-29",
       "district": "Dadu",
       "location": "Manali",
-      "date": "2025-11-29",
-      "dayIndex": 8,
-      "facilitator": "Farooq Ahmad",
-      "facilitatorContact": "0303-3796871",
-      "host": "Abdul Razzaq",
-      "hostContact": "0300-3212418",
-      "dealerShop": "Dilep Kumar, Tilani Barai Markaz",
-      "dealerName": "Dilep Kumar",
-      "dealerContact": "0300-8317220",
-      "sessionType": "0",
       "village": "Manali",
-      "coordinates": "26°44'08.8\"N 68°00'37.7\"E",
-      "latitude": 26.7358,
-      "longitude": 68.0105,
-      "farmers": 49,
-      "wheatFarmers": 49,
-      "acres": 857,
-      "performance": {
-        "knowBuctril": 40,
-        "awarenessRate": 81.6,
-        "usedLastYear": 35,
-        "usedLastYearRate": 71.4,
-        "willDefinitelyUse": 46,
-        "definiteUseRate": 93.9,
-        "maybe": 3,
-        "maybeRate": 6.1,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Farooq Ahmad",
+        "phone": "0303-3796871"
+      },
+      "host": {
+        "name": "Abdul Razzaq",
+        "phone": "0300-3212418"
+      },
+      "dealer": {
+        "name": "Dilep Kumar",
+        "phone": "0300-8317220"
+      },
+      "coords": {
+        "lat": 26.735777777777777,
+        "lng": 68.01047222222222,
+        "raw": "26°44'08.8\"N 68°00'37.7\"E"
+      },
+      "metrics": {
+        "farmers": 49,
+        "wheatFarmers": 49,
+        "wheatAcres": 857,
         "estimatedBuctrilAcres": 825,
-        "keyInfluencers": 7,
-        "planYes": 6,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 30,
-          "safeOnCrop": 32,
-          "trustInBayer": 40,
-          "goodPastExperience": 34,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 40,
+        "usedLastYear": 35,
+        "definite": 46,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 82.0,
+          "usedLastYear": 71.0,
+          "definite": 94.0,
+          "maybe": 6.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 87.4
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/15.jpeg"
+          "assets/gallery/15.jpeg",
+          "assets/gallery/15a.jpeg"
         ],
         "videos": [
-          "gallery/15.mp4"
-        ],
-        "total": 2
+          "assets/gallery/15.mp4",
+          "assets/gallery/15a.mp4"
+        ]
       }
     },
     {
-      "id": 16,
-      "sessionId": "D8S2",
-      "sessionNumber": 16,
+      "sn": 16,
+      "sessionRef": "D8S2",
+      "date": "2025-11-29",
       "district": "Dadu",
       "location": "Golo Potho",
-      "date": "2025-11-29",
-      "dayIndex": 8,
-      "facilitator": "Farooq Ahmad",
-      "facilitatorContact": "0303-3796871",
-      "host": "Jewan Abro",
-      "hostContact": "0300-3137977",
-      "dealerShop": "Dilep Kumar, Tilani Zarai Markaz",
-      "dealerName": "Dilep Kumar",
-      "dealerContact": "0301-837/920",
-      "sessionType": "0",
       "village": "Golo Potho",
-      "coordinates": "26°43'18.6\"N 67°59'10.0\"E",
-      "latitude": 26.7218,
-      "longitude": 67.9861,
-      "farmers": 43,
-      "wheatFarmers": 43,
-      "acres": 899,
-      "performance": {
-        "knowBuctril": 30,
-        "awarenessRate": 69.8,
-        "usedLastYear": 28,
-        "usedLastYearRate": 65.1,
-        "willDefinitelyUse": 40,
-        "definiteUseRate": 93.0,
-        "maybe": 3,
-        "maybeRate": 7.0,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Farooq Ahmad",
+        "phone": "0303-3796871"
+      },
+      "host": {
+        "name": "Jewan Abro",
+        "phone": "0300-3137977"
+      },
+      "dealer": {
+        "name": "Dilep Kumar",
+        "phone": "0301-837/920"
+      },
+      "coords": {
+        "lat": 26.721833333333333,
+        "lng": 67.98611111111111,
+        "raw": "26°43'18.6\"N 67°59'10.0\"E"
+      },
+      "metrics": {
+        "farmers": 43,
+        "wheatFarmers": 43,
+        "wheatAcres": 899,
         "estimatedBuctrilAcres": 860,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 25,
-          "safeOnCrop": 22,
-          "trustInBayer": 28,
-          "goodPastExperience": 26,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 30,
+        "usedLastYear": 28,
+        "definite": 40,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 70.0,
+          "usedLastYear": 65.0,
+          "definite": 93.0,
+          "maybe": 7.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 83.1
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/16.jpeg"
+          "assets/gallery/16.jpeg",
+          "assets/gallery/16a.jpeg"
         ],
         "videos": [
-          "gallery/16.mp4"
-        ],
-        "total": 2
+          "assets/gallery/16.mp4",
+          "assets/gallery/16a.mp4"
+        ]
       }
     },
     {
-      "id": 17,
-      "sessionId": "D9S1",
-      "sessionNumber": 17,
+      "sn": 17,
+      "sessionRef": "D9S1",
+      "date": "2025-12-03",
       "district": "Muzaffar Ghar",
       "location": "Bassti Seerein",
-      "date": "2025-12-03",
-      "dayIndex": 9,
-      "facilitator": "Táriq Husain",
-      "facilitatorContact": "0301-4590967",
-      "host": "Bilal Gorai",
-      "hostContact": "0307-6344702",
-      "dealerShop": "M. Sari Ahmed, Al Sarn & Brother",
-      "dealerName": "M. Sari Ahmed",
-      "dealerContact": "0300-4936442",
-      "sessionType": "0",
       "village": "Bassti Seerein",
-      "coordinates": "30°01'07.0\"N 71°07'10.7\"E",
-      "latitude": 30.0186,
-      "longitude": 71.1196,
-      "farmers": 28,
-      "wheatFarmers": 28,
-      "acres": 320,
-      "performance": {
-        "knowBuctril": 25,
-        "awarenessRate": 89.3,
-        "usedLastYear": 22,
-        "usedLastYearRate": 78.6,
-        "willDefinitelyUse": 26,
-        "definiteUseRate": 92.9,
-        "maybe": 2,
-        "maybeRate": 7.1,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Táriq Husain",
+        "phone": "0301-4590967"
+      },
+      "host": {
+        "name": "Bilal Gorai",
+        "phone": "0307-6344702"
+      },
+      "dealer": {
+        "name": "M. Sari Ahmed",
+        "phone": "0300-4936442"
+      },
+      "coords": {
+        "lat": 30.01861111111111,
+        "lng": 71.11963888888889,
+        "raw": "30°01'07.0\"N 71°07'10.7\"E"
+      },
+      "metrics": {
+        "farmers": 28,
+        "wheatFarmers": 28,
+        "wheatAcres": 320,
         "estimatedBuctrilAcres": 305,
-        "keyInfluencers": 7,
-        "planYes": 0,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 21,
-          "trustInBayer": 25,
-          "goodPastExperience": 22,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 25,
+        "usedLastYear": 22,
+        "definite": 26,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 89.0,
+          "usedLastYear": 79.0,
+          "definite": 93.0,
+          "maybe": 7.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 90.0
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/17.jpeg"
+          "assets/gallery/17.jpeg",
+          "assets/gallery/17a.jpeg"
         ],
         "videos": [
-          "gallery/17.mp4"
-        ],
-        "total": 2
+          "assets/gallery/17.mp4",
+          "assets/gallery/17a.mp4"
+        ]
       }
     },
     {
-      "id": 18,
-      "sessionId": "D9S2",
-      "sessionNumber": 18,
+      "sn": 18,
+      "sessionRef": "D9S2",
+      "date": "2025-12-03",
       "district": "Muzaffar Ghar",
       "location": "Topi Maanay wali",
-      "date": "2025-12-03",
-      "dayIndex": 9,
-      "facilitator": "Takes Bbbas",
-      "facilitatorContact": "0300-3738100",
-      "host": "M. Bilal Chandio",
-      "hostContact": "0345-7352033",
-      "dealerShop": "M. Shahzed Khan, Khan Agro Services",
-      "dealerName": "M. Shahzed Khan",
-      "dealerContact": "0303-2193472",
-      "sessionType": "0",
       "village": "Topi Maanay wali",
-      "coordinates": "29°59'24.2\"N 71°06'37.1\"E",
-      "latitude": 29.9901,
-      "longitude": 71.1103,
-      "farmers": 42,
-      "wheatFarmers": 42,
-      "acres": 410,
-      "performance": {
-        "knowBuctril": 35,
-        "awarenessRate": 83.3,
-        "usedLastYear": 34,
-        "usedLastYearRate": 81.0,
-        "willDefinitelyUse": 38,
-        "definiteUseRate": 90.5,
-        "maybe": 4,
-        "maybeRate": 9.5,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Takes Bbbas",
+        "phone": "0300-3738100"
+      },
+      "host": {
+        "name": "M. Bilal Chandio",
+        "phone": "0345-7352033"
+      },
+      "dealer": {
+        "name": "M. Shahzed Khan",
+        "phone": "0303-2193472"
+      },
+      "coords": {
+        "lat": 29.990055555555557,
+        "lng": 71.11030555555556,
+        "raw": "29°59'24.2\"N 71°06'37.1\"E"
+      },
+      "metrics": {
+        "farmers": 42,
+        "wheatFarmers": 42,
+        "wheatAcres": 410,
         "estimatedBuctrilAcres": 390,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 30,
-          "safeOnCrop": 32,
-          "trustInBayer": 35,
-          "goodPastExperience": 34,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 35,
+        "usedLastYear": 34,
+        "definite": 38,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 83.0,
+          "usedLastYear": 81.0,
+          "definite": 90.0,
+          "maybe": 10.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 87.7
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/18.jpeg"
+          "assets/gallery/18.jpeg",
+          "assets/gallery/18a.jpeg"
         ],
         "videos": [
-          "gallery/18.mp4"
-        ],
-        "total": 2
+          "assets/gallery/18.mp4",
+          "assets/gallery/18a.mp4"
+        ]
       }
     },
     {
-      "id": 19,
-      "sessionId": "D9S3",
-      "sessionNumber": 19,
+      "sn": 19,
+      "sessionRef": "D9S3",
+      "date": "2025-12-03",
       "district": "Muzaffar Ghar",
       "location": "Phaty wala",
-      "date": "2025-12-03",
-      "dayIndex": 9,
-      "facilitator": "Ghukem Murtaxa",
-      "facilitatorContact": "0313-7879 858",
-      "host": "Mujahid Hussain",
-      "hostContact": "0302-6131374",
-      "dealerShop": "M. Ali Hajish, Balcoh Agro Services",
-      "dealerName": "M. Ali Hajish",
-      "dealerContact": "0345-7171771",
-      "sessionType": "0",
       "village": "Phaty wala",
-      "coordinates": "30°10'30.0\"N 71°03'49.5\"E",
-      "latitude": 30.175,
-      "longitude": 71.0637,
-      "farmers": 54,
-      "wheatFarmers": 54,
-      "acres": 337,
-      "performance": {
-        "knowBuctril": 40,
-        "awarenessRate": null,
-        "usedLastYear": 39,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 50,
-        "definiteUseRate": null,
-        "maybe": 4,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Ghukem Murtaxa",
+        "phone": "0313-7879 858"
+      },
+      "host": {
+        "name": "Mujahid Hussain",
+        "phone": "0302-6131374"
+      },
+      "dealer": {
+        "name": "M. Ali Hajish",
+        "phone": "0345-7171771"
+      },
+      "coords": {
+        "lat": 30.175,
+        "lng": 71.06375,
+        "raw": "30°10'30.0\"N 71°03'49.5\"E"
+      },
+      "metrics": {
+        "farmers": 54,
+        "wheatFarmers": 54,
+        "wheatAcres": 337,
         "estimatedBuctrilAcres": 310,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 3.0
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 35,
-          "safeOnCrop": 32,
-          "trustInBayer": 40,
-          "goodPastExperience": 39,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 40,
+        "usedLastYear": 39,
+        "definite": 50,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 74.1,
+          "usedLastYear": 72.2,
+          "definite": 92.6,
+          "maybe": 7.4,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 3.0
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 86.8
       },
-      "mediaFiles": {
-        "images": [],
-        "videos": [],
-        "total": 0
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
+        "images": [
+          "assets/gallery/19.jpeg",
+          "assets/gallery/19a.jpeg"
+        ],
+        "videos": [
+          "assets/gallery/19.mp4",
+          "assets/gallery/19a.mp4"
+        ]
       }
     },
     {
-      "id": 20,
-      "sessionId": "D10S1",
-      "sessionNumber": 20,
+      "sn": 20,
+      "sessionRef": "D10S1",
+      "date": "2025-12-04",
       "district": "Kot Adu",
       "location": "Basti Haider Ghazi",
-      "date": "2025-12-04",
-      "dayIndex": 10,
-      "facilitator": "M. Junaid",
-      "facilitatorContact": "0348-0636385",
-      "host": "Ghulan Hailer",
-      "hostContact": "0343 - 1349093",
-      "dealerShop": "Mudavar Farcoa, Haji & Sons",
-      "dealerName": "Mudavar Farcoa",
-      "dealerContact": "345-8541301",
-      "sessionType": "0",
       "village": "Basti Haider Ghazi",
-      "coordinates": "30°32'20.2\"N 70°58'33.1\"E",
-      "latitude": 30.5389,
-      "longitude": 70.9759,
-      "farmers": 37,
-      "wheatFarmers": 37,
-      "acres": 376,
-      "performance": {
-        "knowBuctril": 27,
-        "awarenessRate": 73.0,
-        "usedLastYear": 21,
-        "usedLastYearRate": 56.8,
-        "willDefinitelyUse": 35,
-        "definiteUseRate": 94.6,
-        "maybe": 2,
-        "maybeRate": 5.4,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "M. Junaid",
+        "phone": "0348-0636385"
+      },
+      "host": {
+        "name": "Ghulan Hailer",
+        "phone": "0343 - 1349093"
+      },
+      "dealer": {
+        "name": "Mudavar Farcoa",
+        "phone": "345-8541301"
+      },
+      "coords": {
+        "lat": 30.538944444444446,
+        "lng": 70.97586111111112,
+        "raw": "30°32'20.2\"N 70°58'33.1\"E"
+      },
+      "metrics": {
+        "farmers": 37,
+        "wheatFarmers": 37,
+        "wheatAcres": 376,
         "estimatedBuctrilAcres": 356,
-        "keyInfluencers": 7,
-        "planYes": 0,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 19,
-          "trustInBayer": 20,
-          "goodPastExperience": 21,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 27,
+        "usedLastYear": 21,
+        "definite": 35,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 73.0,
+          "usedLastYear": 57.0,
+          "definite": 95.0,
+          "maybe": 5.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to Use: Good Past Experience",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 83.4
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Good Past Experience",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/19.jpeg"
+          "assets/gallery/20.jpeg",
+          "assets/gallery/20a.jpeg"
         ],
         "videos": [
-          "gallery/19.mp4"
-        ],
-        "total": 2
+          "assets/gallery/20.mp4",
+          "assets/gallery/20a.mp4"
+        ]
       }
     },
     {
-      "id": 21,
-      "sessionId": "D10S2",
-      "sessionNumber": 21,
+      "sn": 21,
+      "sessionRef": "D10S2",
+      "date": "2025-12-04",
       "district": "Kot Adu",
       "location": "Hanjrai Bangla Chaah Phaati wala",
-      "date": "2025-12-04",
-      "dayIndex": 10,
-      "facilitator": "Gulam Yasin",
-      "facilitatorContact": "0341-8606797",
-      "host": "Naveed Ahmed",
-      "hostContact": "0344-1073974",
-      "dealerShop": "Nasir Ahmad, Uzair Khan Traders",
-      "dealerName": "Nasir Ahmad",
-      "dealerContact": "0342-382/088",
-      "sessionType": "0",
       "village": "Hanjrai Bangla Chaah Phaati wala",
-      "coordinates": "30°36'43.1\"N 70°55'01.8\"E",
-      "latitude": 30.612,
-      "longitude": 70.9172,
-      "farmers": 34,
-      "wheatFarmers": 34,
-      "acres": 275,
-      "performance": {
-        "knowBuctril": 24,
-        "awarenessRate": 70.6,
-        "usedLastYear": 18,
-        "usedLastYearRate": 52.9,
-        "willDefinitelyUse": 30,
-        "definiteUseRate": 88.2,
-        "maybe": 4,
-        "maybeRate": 11.8,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Gulam Yasin",
+        "phone": "0341-8606797"
+      },
+      "host": {
+        "name": "Naveed Ahmed",
+        "phone": "0344-1073974"
+      },
+      "dealer": {
+        "name": "Nasir Ahmad",
+        "phone": "0342-382/088"
+      },
+      "coords": {
+        "lat": 30.611972222222224,
+        "lng": 70.91716666666667,
+        "raw": "30°36'43.1\"N 70°55'01.8\"E"
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 34,
+        "wheatAcres": 275,
         "estimatedBuctrilAcres": 254,
-        "keyInfluencers": 7,
-        "planYes": 1,
-        "planMaybe": 2,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 17,
-          "safeOnCrop": 15,
-          "trustInBayer": 20,
-          "goodPastExperience": 18,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 24,
+        "usedLastYear": 18,
+        "definite": 30,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 71.0,
+          "usedLastYear": 53.0,
+          "definite": 88.0,
+          "maybe": 12.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 78.2
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/20.jpeg"
+          "assets/gallery/21.jpeg",
+          "assets/gallery/21a.jpeg"
         ],
         "videos": [
-          "gallery/20.mp4"
-        ],
-        "total": 2
+          "assets/gallery/21.mp4",
+          "assets/gallery/21a.mp4"
+        ]
       }
     },
     {
-      "id": 22,
-      "sessionId": "D11S1",
-      "sessionNumber": 22,
+      "sn": 22,
+      "sessionRef": "D11S1",
+      "date": "2025-12-05",
       "district": "Karor Lal esan",
       "location": "Basti joya",
-      "date": "2025-12-05",
-      "dayIndex": 11,
-      "facilitator": "M. Aslam",
-      "facilitatorContact": "0300-9875514",
-      "host": "Mushtaq  Hussain",
-      "hostContact": "0306-8513786",
-      "dealerShop": "M. Azhar Hussain, Achas Comision Shop",
-      "dealerName": "M. Azhar Hussain",
-      "dealerContact": "0308-205622",
-      "sessionType": "0",
       "village": "Basti joya",
-      "coordinates": "31°09'39.5\"N 70°56'28.0\"E",
-      "latitude": 31.161,
-      "longitude": 70.9411,
-      "farmers": 32,
-      "wheatFarmers": 32,
-      "acres": 256,
-      "performance": {
-        "knowBuctril": 25,
-        "awarenessRate": null,
-        "usedLastYear": 24,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 30,
-        "definiteUseRate": null,
-        "maybe": 2,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "M. Aslam",
+        "phone": "0300-9875514"
+      },
+      "host": {
+        "name": "Mushtaq  Hussain",
+        "phone": "0306-8513786"
+      },
+      "dealer": {
+        "name": "M. Azhar Hussain",
+        "phone": "0308-205622"
+      },
+      "coords": {
+        "lat": 31.16097222222222,
+        "lng": 70.94111111111111,
+        "raw": "31°09'39.5\"N 70°56'28.0\"E"
+      },
+      "metrics": {
+        "farmers": 32,
+        "wheatFarmers": 32,
+        "wheatAcres": 256,
         "estimatedBuctrilAcres": 248,
-        "keyInfluencers": 7,
-        "planYes": 1,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 22,
-          "trustInBayer": 24,
-          "goodPastExperience": 22,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 25,
+        "usedLastYear": 24,
+        "definite": 30,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 78.1,
+          "usedLastYear": 75.0,
+          "definite": 93.8,
+          "maybe": 6.2,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 85.3
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/21.jpeg"
+          "assets/gallery/22.jpeg",
+          "assets/gallery/22a.jpeg"
         ],
         "videos": [
-          "gallery/21.mp4"
-        ],
-        "total": 2
+          "assets/gallery/22.mp4",
+          "assets/gallery/22a.mp4"
+        ]
       }
     },
     {
-      "id": 23,
-      "sessionId": "D11S2",
-      "sessionNumber": 23,
+      "sn": 23,
+      "sessionRef": "D11S2",
+      "date": "2025-12-05",
       "district": "Karor Lal esan",
       "location": "Chak 106 TDA",
-      "date": "2025-12-05",
-      "dayIndex": 11,
-      "facilitator": "M. Shafi",
-      "facilitatorContact": "0344 - 7144162",
-      "host": "Mulazim Hussain",
-      "hostContact": "0307-8802008",
-      "dealerShop": "M. Azhar Hussain, Achas Comision Shop",
-      "dealerName": "M. Azhar Hussain",
-      "dealerContact": "0308-205622",
-      "sessionType": "0",
       "village": "Chak 106 TDA",
-      "coordinates": "31°08'42.9\"N 71°01'52.8\"E",
-      "latitude": 31.1453,
-      "longitude": 71.0313,
-      "farmers": 51,
-      "wheatFarmers": 51,
-      "acres": 335,
-      "performance": {
-        "knowBuctril": 40,
-        "awarenessRate": null,
-        "usedLastYear": 35,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 46,
-        "definiteUseRate": null,
-        "maybe": 5,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "M. Shafi",
+        "phone": "0344 - 7144162"
+      },
+      "host": {
+        "name": "Mulazim Hussain",
+        "phone": "0307-8802008"
+      },
+      "dealer": {
+        "name": "M. Azhar Hussain",
+        "phone": "0308-205622"
+      },
+      "coords": {
+        "lat": 31.14525,
+        "lng": 71.03133333333334,
+        "raw": "31°08'42.9\"N 71°01'52.8\"E"
+      },
+      "metrics": {
+        "farmers": 51,
+        "wheatFarmers": 51,
+        "wheatAcres": 335,
         "estimatedBuctrilAcres": 317,
-        "keyInfluencers": 7,
-        "planYes": 2,
-        "planMaybe": 1,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 30,
-          "safeOnCrop": 32,
-          "trustInBayer": 35,
-          "goodPastExperience": 30,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 40,
+        "usedLastYear": 35,
+        "definite": 46,
+        "maybe": 5,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 78.4,
+          "usedLastYear": 68.6,
+          "definite": 90.2,
+          "maybe": 9.8,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 84.8
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/22.jpeg"
+          "assets/gallery/23.jpeg",
+          "assets/gallery/23a.jpeg"
         ],
         "videos": [
-          "gallery/22.mp4"
-        ],
-        "total": 2
+          "assets/gallery/23.mp4",
+          "assets/gallery/23a.mp4"
+        ]
       }
     },
     {
-      "id": 24,
-      "sessionId": "D11S3",
-      "sessionNumber": 24,
+      "sn": 24,
+      "sessionRef": "D11S3",
+      "date": "2025-12-05",
       "district": "Karor Lal esan",
       "location": "Bassti Maachi Buchi wala",
-      "date": "2025-12-05",
-      "dayIndex": 11,
-      "facilitator": "Irfan Hussain",
-      "facilitatorContact": "0304-9365914",
-      "host": "M. SULEMAN",
-      "hostContact": "0308-1405556",
-      "dealerShop": "Atta ullah, Ehsan Zarai Services",
-      "dealerName": "Atta ullah",
-      "dealerContact": "0301-4998520",
-      "sessionType": "0",
       "village": "Bassti Maachi Buchi wala",
-      "coordinates": "31°21'20.7\"N 70°57'03.9\"E",
-      "latitude": 31.3558,
-      "longitude": 70.9511,
-      "farmers": 66,
-      "wheatFarmers": 66,
-      "acres": 675,
-      "performance": {
-        "knowBuctril": 50,
-        "awarenessRate": null,
-        "usedLastYear": 46,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 60,
-        "definiteUseRate": null,
-        "maybe": 6,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Irfan Hussain",
+        "phone": "0304-9365914"
+      },
+      "host": {
+        "name": "M. SULEMAN",
+        "phone": "0308-1405556"
+      },
+      "dealer": {
+        "name": "Atta ullah",
+        "phone": "0301-4998520"
+      },
+      "coords": {
+        "lat": 31.35575,
+        "lng": 70.95108333333333,
+        "raw": "31°21'20.7\"N 70°57'03.9\"E"
+      },
+      "metrics": {
+        "farmers": 66,
+        "wheatFarmers": 66,
+        "wheatAcres": 675,
         "estimatedBuctrilAcres": 632,
-        "keyInfluencers": 7,
-        "planYes": 1,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 35,
-          "safeOnCrop": 40,
-          "trustInBayer": 45,
-          "goodPastExperience": 41,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 50,
+        "usedLastYear": 46,
+        "definite": 60,
+        "maybe": 6,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 75.8,
+          "usedLastYear": 69.7,
+          "definite": 90.9,
+          "maybe": 9.1,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 82.9
       },
-      "mediaFiles": {
-        "images": [],
-        "videos": [],
-        "total": 0
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
+        "images": [
+          "assets/gallery/24.jpeg",
+          "assets/gallery/24a.jpeg"
+        ],
+        "videos": [
+          "assets/gallery/24.mp4",
+          "assets/gallery/24a.mp4"
+        ]
       }
     },
     {
-      "id": 25,
-      "sessionId": "D12S1",
-      "sessionNumber": 25,
+      "sn": 25,
+      "sessionRef": "D12S1",
+      "date": "2025-12-06",
       "district": "Bhakkar",
       "location": "Kandani",
-      "date": "2025-12-06",
-      "dayIndex": 12,
-      "facilitator": "Zeeshan Khan",
-      "facilitatorContact": "0371-0397214",
-      "host": "Zahoor Khan",
-      "hostContact": "0345-7659279",
-      "dealerShop": "Ghazanfer, Ghazanfer Traderrs",
-      "dealerName": "Ghazanfer",
-      "dealerContact": "0317-7998764",
-      "sessionType": "0",
       "village": "Kandani",
-      "coordinates": "31°28'50.4\"N 70°59'34.0\"E",
-      "latitude": 31.4807,
-      "longitude": 70.9928,
-      "farmers": 34,
-      "wheatFarmers": 34,
-      "acres": 631,
-      "performance": {
-        "knowBuctril": 30,
-        "awarenessRate": null,
-        "usedLastYear": 22,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 29,
-        "definiteUseRate": null,
-        "maybe": 1,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Zeeshan Khan",
+        "phone": "0371-0397214"
+      },
+      "host": {
+        "name": "Zahoor Khan",
+        "phone": "0345-7659279"
+      },
+      "dealer": {
+        "name": "Ghazanfer",
+        "phone": "0317-7998764"
+      },
+      "coords": {
+        "lat": 31.480666666666664,
+        "lng": 70.99277777777777,
+        "raw": "31°28'50.4\"N 70°59'34.0\"E"
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 34,
+        "wheatAcres": 631,
         "estimatedBuctrilAcres": 602,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 21,
-          "trustInBayer": 22,
-          "goodPastExperience": 21,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 30,
+        "usedLastYear": 22,
+        "definite": 29,
+        "maybe": 1,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 88.2,
+          "usedLastYear": 64.7,
+          "definite": 85.3,
+          "maybe": 2.9,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 84.9
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/23.jpeg"
+          "assets/gallery/25.jpeg",
+          "assets/gallery/25a.jpeg"
         ],
         "videos": [
-          "gallery/23.mp4"
-        ],
-        "total": 2
+          "assets/gallery/25.mp4",
+          "assets/gallery/25a.mp4"
+        ]
       }
     },
     {
-      "id": 26,
-      "sessionId": "D12S2",
-      "sessionNumber": 26,
+      "sn": 26,
+      "sessionRef": "D12S2",
+      "date": "2025-12-06",
       "district": "Bhakkar",
       "location": "54-ML",
-      "date": "2025-12-06",
-      "dayIndex": 12,
-      "facilitator": "Syed Tasawar Abbas",
-      "facilitatorContact": "0336-6631214",
-      "host": "Ch. Ghulam Murtaza",
-      "hostContact": "0315-6603754",
-      "dealerShop": "Ghazanfer, Ghazanfer Traderrs",
-      "dealerName": "Ghazanfer",
-      "dealerContact": "0317-7998764",
-      "sessionType": "0",
       "village": "54-ML",
-      "coordinates": "31°43'58.9\"N 71°18'26.5\"E",
-      "latitude": 31.733,
-      "longitude": 71.3074,
-      "farmers": 27,
-      "wheatFarmers": 27,
-      "acres": 535,
-      "performance": {
-        "knowBuctril": 20,
-        "awarenessRate": null,
-        "usedLastYear": 15,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 24,
-        "definiteUseRate": null,
-        "maybe": 3,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Syed Tasawar Abbas",
+        "phone": "0336-6631214"
+      },
+      "host": {
+        "name": "Ch. Ghulam Murtaza",
+        "phone": "0315-6603754"
+      },
+      "dealer": {
+        "name": "Ghazanfer",
+        "phone": "0317-7998764"
+      },
+      "coords": {
+        "lat": 31.733027777777775,
+        "lng": 71.3073611111111,
+        "raw": "31°43'58.9\"N 71°18'26.5\"E"
+      },
+      "metrics": {
+        "farmers": 27,
+        "wheatFarmers": 27,
+        "wheatAcres": 535,
         "estimatedBuctrilAcres": 512,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 14,
-          "safeOnCrop": 13,
-          "trustInBayer": 15,
-          "goodPastExperience": 12,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 20,
+        "usedLastYear": 15,
+        "definite": 24,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 74.1,
+          "usedLastYear": 55.6,
+          "definite": 88.9,
+          "maybe": 11.1,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 79.6
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/24.jpeg"
+          "assets/gallery/26.jpeg",
+          "assets/gallery/26a.jpeg"
         ],
         "videos": [
-          "gallery/24.mp4"
-        ],
-        "total": 2
+          "assets/gallery/26.mp4",
+          "assets/gallery/26a.mp4"
+        ]
       }
     },
     {
-      "id": 27,
-      "sessionId": "D12S3",
-      "sessionNumber": 27,
+      "sn": 27,
+      "sessionRef": "D12S3",
+      "date": "2025-12-06",
       "district": "Bhakkar",
       "location": "Majoka",
-      "date": "2025-12-06",
-      "dayIndex": 12,
-      "facilitator": "M. Tahir",
-      "facilitatorContact": "0307-5115767",
-      "host": "Nazar Abbas",
-      "hostContact": "0310-7789111",
-      "dealerShop": "M. Asghar, Akhter Traders",
-      "dealerName": "M. Asghar",
-      "dealerContact": "0301-55277000",
-      "sessionType": "0",
       "village": "Majoka",
-      "coordinates": "31°46'33.4\"N 71°01'47.5\"E",
-      "latitude": 31.7759,
-      "longitude": 71.0299,
-      "farmers": 35,
-      "wheatFarmers": 35,
-      "acres": 290,
-      "performance": {
-        "knowBuctril": 26,
-        "awarenessRate": null,
-        "usedLastYear": 21,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 31,
-        "definiteUseRate": null,
-        "maybe": 4,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "M. Tahir",
+        "phone": "0307-5115767"
+      },
+      "host": {
+        "name": "Nazar Abbas",
+        "phone": "0310-7789111"
+      },
+      "dealer": {
+        "name": "M. Asghar",
+        "phone": "0301-55277000"
+      },
+      "coords": {
+        "lat": 31.775944444444445,
+        "lng": 71.02986111111112,
+        "raw": "31°46'33.4\"N 71°01'47.5\"E"
+      },
+      "metrics": {
+        "farmers": 35,
+        "wheatFarmers": 35,
+        "wheatAcres": 290,
         "estimatedBuctrilAcres": 278,
-        "keyInfluencers": 7,
-        "planYes": 0,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 19,
-          "trustInBayer": 21,
-          "goodPastExperience": 16,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 26,
+        "usedLastYear": 21,
+        "definite": 31,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 74.3,
+          "usedLastYear": 60.0,
+          "definite": 88.6,
+          "maybe": 11.4,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 0,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 0,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 81.9
       },
-      "mediaFiles": {
-        "images": [],
-        "videos": [],
-        "total": 0
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "",
+        "competitorsMentioned": ""
+      },
+      "media": {
+        "images": [
+          "assets/gallery/27.jpeg",
+          "assets/gallery/27a.jpeg"
+        ],
+        "videos": [
+          "assets/gallery/27.mp4",
+          "assets/gallery/27a.mp4"
+        ]
       }
     },
     {
-      "id": 28,
-      "sessionId": "D13S1",
-      "sessionNumber": 28,
+      "sn": 28,
+      "sessionRef": "D13S1",
+      "date": "2025-12-08",
       "district": "Mianwali",
       "location": "Kalor Sharif Kacha",
-      "date": "2025-12-08",
-      "dayIndex": 13,
-      "facilitator": "Arif Khan",
-      "facilitatorContact": "0306-5306565",
-      "host": "Abid Hussain",
-      "hostContact": "0301-2068770",
-      "dealerShop": "Waseem Khan, Awais & Brothers",
-      "dealerName": "Waseem Khan",
-      "dealerContact": "0300-0232627",
-      "sessionType": "0",
       "village": "Kalor Sharif Kacha",
-      "coordinates": "32°44'03.5\"N 71°16'39.9\"E",
-      "latitude": 32.7343,
-      "longitude": 71.2777,
-      "farmers": 32,
-      "wheatFarmers": 32,
-      "acres": 441,
-      "performance": {
-        "knowBuctril": 29,
-        "awarenessRate": null,
-        "usedLastYear": 27,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 31,
-        "definiteUseRate": null,
-        "maybe": 1,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Arif Khan",
+        "phone": "0306-5306565"
+      },
+      "host": {
+        "name": "Abid Hussain",
+        "phone": "0301-2068770"
+      },
+      "dealer": {
+        "name": "Waseem Khan",
+        "phone": "0300-0232627"
+      },
+      "coords": {
+        "lat": 32.73430555555556,
+        "lng": 71.27775,
+        "raw": "32°44'03.5\"N 71°16'39.9\"E"
+      },
+      "metrics": {
+        "farmers": 32,
+        "wheatFarmers": 32,
+        "wheatAcres": 441,
         "estimatedBuctrilAcres": 436,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 25,
-          "safeOnCrop": 27,
-          "trustInBayer": 29,
-          "goodPastExperience": 25,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 29,
+        "usedLastYear": 27,
+        "definite": 31,
+        "maybe": 1,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 90.6,
+          "usedLastYear": 84.4,
+          "definite": 96.9,
+          "maybe": 3.1,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 20,
-          "happyWithGeneric": 5,
-          "fearOfBurn": 15,
-          "noMoney": 5,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 92.6
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/25.jpeg"
+          "assets/gallery/28.jpeg",
+          "assets/gallery/28a.jpeg"
         ],
         "videos": [
-          "gallery/25.mp4"
-        ],
-        "total": 2
+          "assets/gallery/28.mp4",
+          "assets/gallery/28a.mp4"
+        ]
       }
     },
     {
-      "id": 29,
-      "sessionId": "D13S2",
-      "sessionNumber": 29,
+      "sn": 29,
+      "sessionRef": "D13S2",
+      "date": "2025-12-08",
       "district": "Mianwali",
       "location": "Kamar Mashaani Gulshan Colony",
-      "date": "2025-12-08",
-      "dayIndex": 13,
-      "facilitator": "Binyameen",
-      "facilitatorContact": "0300-1828265",
-      "host": "Taj Muhammad",
-      "hostContact": "0300-7417465",
-      "dealerShop": "Arshad, Arshad Zarai",
-      "dealerName": "Arshad",
-      "dealerContact": "0301-7802078",
-      "sessionType": "0",
       "village": "Kamar Mashaani Gulshan Colony",
-      "coordinates": "32°51'53.0\"N 71°20'23.0\"E",
-      "latitude": 32.8647,
-      "longitude": 71.3397,
-      "farmers": 30,
-      "wheatFarmers": 30,
-      "acres": 267,
-      "performance": {
-        "knowBuctril": 26,
-        "awarenessRate": null,
-        "usedLastYear": 24,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 27,
-        "definiteUseRate": null,
-        "maybe": 3,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Binyameen",
+        "phone": "0300-1828265"
+      },
+      "host": {
+        "name": "Taj Muhammad",
+        "phone": "0300-7417465"
+      },
+      "dealer": {
+        "name": "Arshad",
+        "phone": "0301-7802078"
+      },
+      "coords": {
+        "lat": 32.86472222222223,
+        "lng": 71.33972222222222,
+        "raw": "32°51'53.0\"N 71°20'23.0\"E"
+      },
+      "metrics": {
+        "farmers": 30,
+        "wheatFarmers": 30,
+        "wheatAcres": 267,
         "estimatedBuctrilAcres": 244,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 22,
-          "safeOnCrop": 21,
-          "trustInBayer": 23,
-          "goodPastExperience": 22,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 26,
+        "usedLastYear": 24,
+        "definite": 27,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 86.7,
+          "usedLastYear": 80.0,
+          "definite": 90.0,
+          "maybe": 10.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 1,
-          "happyWithGeneric": 2,
-          "fearOfBurn": 3,
-          "noMoney": 2,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Fear of Burn",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 88.5
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Fear of Burn",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/26.jpeg"
+          "assets/gallery/29.jpeg",
+          "assets/gallery/29a.jpeg"
         ],
         "videos": [
-          "gallery/26.mp4"
-        ],
-        "total": 2
+          "assets/gallery/29.mp4",
+          "assets/gallery/29a.mp4"
+        ]
       }
     },
     {
-      "id": 30,
-      "sessionId": "D13S3",
-      "sessionNumber": 30,
+      "sn": 30,
+      "sessionRef": "D13S3",
+      "date": "2025-12-08",
       "district": "Mianwali",
       "location": "Daud KhaiL kacha",
-      "date": "2025-12-08",
-      "dayIndex": 13,
-      "facilitator": "Murtaza",
-      "facilitatorContact": "0304-6747523",
-      "host": "Shifaullah",
-      "hostContact": "0305-3126621",
-      "dealerShop": "Noor M. Khan, Al-Badar Zari Center",
-      "dealerName": "Noor M. Khan",
-      "dealerContact": "0301-6351412",
-      "sessionType": "0",
       "village": "Daud KhaiL kacha",
-      "coordinates": "32°50'50.0\"N 71°33'14.5\"E",
-      "latitude": 32.8472,
-      "longitude": 71.554,
-      "farmers": 39,
-      "wheatFarmers": 39,
-      "acres": 378,
-      "performance": {
-        "knowBuctril": 36,
-        "awarenessRate": null,
-        "usedLastYear": 32,
-        "usedLastYearRate": null,
-        "willDefinitelyUse": 37,
-        "definiteUseRate": null,
-        "maybe": 2,
-        "maybeRate": null,
-        "notInterested": 0,
-        "notInterestedRate": null,
+      "salesRep": {
+        "name": "Murtaza",
+        "phone": "0304-6747523"
+      },
+      "host": {
+        "name": "Shifaullah",
+        "phone": "0305-3126621"
+      },
+      "dealer": {
+        "name": "Noor M. Khan",
+        "phone": "0301-6351412"
+      },
+      "coords": {
+        "lat": 32.84722222222222,
+        "lng": 71.55402777777778,
+        "raw": "32°50'50.0\"N 71°33'14.5\"E"
+      },
+      "metrics": {
+        "farmers": 39,
+        "wheatFarmers": 39,
+        "wheatAcres": 378,
         "estimatedBuctrilAcres": 375,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 30,
-          "safeOnCrop": 29,
-          "trustInBayer": 32,
-          "goodPastExperience": 30,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 36,
+        "usedLastYear": 32,
+        "definite": 37,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 92.3,
+          "usedLastYear": 82.1,
+          "definite": 94.9,
+          "maybe": 5.1,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 15,
-          "happyWithGeneric": 4,
-          "fearOfBurn": 7,
-          "noMoney": 5,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 90.3
       },
-      "mediaFiles": {
-        "images": [],
-        "videos": [],
-        "total": 0
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
+        "images": [
+          "assets/gallery/30.jpeg",
+          "assets/gallery/30a.jpeg"
+        ],
+        "videos": [
+          "assets/gallery/30.mp4",
+          "assets/gallery/30a.mp4"
+        ]
       }
     },
     {
-      "id": 31,
-      "sessionId": "D14S1",
-      "sessionNumber": 31,
+      "sn": 31,
+      "sessionRef": "D14S1",
+      "date": "2025-12-09",
       "district": "Sargodha",
       "location": "Jharoola",
-      "date": "2025-12-09",
-      "dayIndex": 14,
-      "facilitator": "0",
-      "facilitatorContact": "0",
-      "host": "Malik Sajid",
-      "hostContact": "0300-5196990",
-      "dealerShop": "M. Naved, Lajpal Traders",
-      "dealerName": "M. Naved",
-      "dealerContact": "3457289040",
-      "sessionType": "0",
       "village": "Jharoola",
-      "coordinates": "31°55'02.4\"N 72°21'48.1\"E",
-      "latitude": 31.9173,
-      "longitude": 72.3634,
-      "farmers": 44,
-      "wheatFarmers": 44,
-      "acres": 336,
-      "performance": {
-        "knowBuctril": 33,
-        "awarenessRate": 75.0,
-        "usedLastYear": 29,
-        "usedLastYearRate": 65.9,
-        "willDefinitelyUse": 41,
-        "definiteUseRate": 93.2,
-        "maybe": 3,
-        "maybeRate": 6.8,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Malik Sajid",
+        "phone": "0300-5196990"
+      },
+      "dealer": {
+        "name": "M. Naved",
+        "phone": "3,457,289,040"
+      },
+      "coords": {
+        "lat": 31.917333333333335,
+        "lng": 72.3633611111111,
+        "raw": "31°55'02.4\"N 72°21'48.1\"E"
+      },
+      "metrics": {
+        "farmers": 44,
+        "wheatFarmers": 44,
+        "wheatAcres": 336,
         "estimatedBuctrilAcres": 326,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 25,
-          "safeOnCrop": 27,
-          "trustInBayer": 29,
-          "goodPastExperience": 28,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 33,
+        "usedLastYear": 29,
+        "definite": 41,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 75.0,
+          "usedLastYear": 66.0,
+          "definite": 93.0,
+          "maybe": 7.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 30,
-          "happyWithGeneric": 15,
-          "fearOfBurn": 10,
-          "noMoney": 5,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 82.9
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/27.jpeg"
+          "assets/gallery/31.jpeg",
+          "assets/gallery/31a.jpeg"
         ],
         "videos": [
-          "gallery/27.mp4"
-        ],
-        "total": 2
+          "assets/gallery/31.mp4",
+          "assets/gallery/31a.mp4"
+        ]
       }
     },
     {
-      "id": 32,
-      "sessionId": "D14S2",
-      "sessionNumber": 32,
+      "sn": 32,
+      "sessionRef": "D14S2",
+      "date": "2025-12-09",
       "district": "Sargodha",
       "location": "Habib pur Kangrra",
-      "date": "2025-12-09",
-      "dayIndex": 14,
-      "facilitator": "Syed Asim Murtaza",
-      "facilitatorContact": "0342-5128639",
-      "host": "M. IRFAN",
-      "hostContact": "0302-7038789",
-      "dealerShop": "M. Nsveed, Lajpal Traders",
-      "dealerName": "M. Nsveed",
-      "dealerContact": "0345-7289040",
-      "sessionType": "0",
       "village": "Habib pur Kangrra",
-      "coordinates": "31°58'50.9\"N 72°27'50.2\"E",
-      "latitude": 31.9808,
-      "longitude": 72.4639,
-      "farmers": 41,
-      "wheatFarmers": 41,
-      "acres": 239,
-      "performance": {
-        "knowBuctril": 35,
-        "awarenessRate": 85.4,
-        "usedLastYear": 34,
-        "usedLastYearRate": 82.9,
-        "willDefinitelyUse": 40,
-        "definiteUseRate": 97.6,
-        "maybe": 0,
-        "maybeRate": 0.0,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Syed Asim Murtaza",
+        "phone": "0342-5128639"
+      },
+      "host": {
+        "name": "M. IRFAN",
+        "phone": "0302-7038789"
+      },
+      "dealer": {
+        "name": "M. Nsveed",
+        "phone": "0345-7289040"
+      },
+      "coords": {
+        "lat": 31.980805555555555,
+        "lng": 72.46394444444445,
+        "raw": "31°58'50.9\"N 72°27'50.2\"E"
+      },
+      "metrics": {
+        "farmers": 41,
+        "wheatFarmers": 41,
+        "wheatAcres": 239,
         "estimatedBuctrilAcres": 234,
-        "keyInfluencers": 7,
-        "planYes": 0,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 28,
-          "safeOnCrop": 32,
-          "trustInBayer": 30,
-          "goodPastExperience": 0,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 35,
+        "usedLastYear": 34,
+        "definite": 40,
+        "maybe": 0,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 85.0,
+          "usedLastYear": 83.0,
+          "definite": 98.0,
+          "maybe": 0.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 22,
-          "happyWithGeneric": 7,
-          "fearOfBurn": 5,
-          "noMoney": 10,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to Use: Safe on Crop",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 91.3
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Safe on Crop",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/28.jpeg"
+          "assets/gallery/32.jpeg",
+          "assets/gallery/32a.jpeg"
         ],
         "videos": [
-          "gallery/28.mp4"
-        ],
-        "total": 2
+          "assets/gallery/32.mp4",
+          "assets/gallery/32a.mp4"
+        ]
       }
     },
     {
-      "id": 33,
-      "sessionId": "D14S3",
-      "sessionNumber": 33,
+      "sn": 33,
+      "sessionRef": "D14S3",
+      "date": "2025-12-09",
       "district": "Sargodha",
       "location": "ChakrraLa",
-      "date": "2025-12-09",
-      "dayIndex": 14,
-      "facilitator": "Mubashir Siddiqui",
-      "facilitatorContact": "0345-1718611",
-      "host": "Arshad",
-      "hostContact": "0346-3825513",
-      "dealerShop": "Zaheer Abbas, M. Khan Zarai Markez",
-      "dealerName": "Zaheer Abbas",
-      "dealerContact": "0345-1718570",
-      "sessionType": "0",
       "village": "ChakrraLa",
-      "coordinates": "32°05'48.7\"N 72°22'20.7\"E",
-      "latitude": 32.0969,
-      "longitude": 72.3724,
-      "farmers": 31,
-      "wheatFarmers": 31,
-      "acres": 945,
-      "performance": {
-        "knowBuctril": 15,
-        "awarenessRate": 48.4,
-        "usedLastYear": 14,
-        "usedLastYearRate": 45.2,
-        "willDefinitelyUse": 25,
-        "definiteUseRate": 80.6,
-        "maybe": 6,
-        "maybeRate": 19.4,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Mubashir Siddiqui",
+        "phone": "0345-1718611"
+      },
+      "host": {
+        "name": "Arshad",
+        "phone": "0346-3825513"
+      },
+      "dealer": {
+        "name": "Zaheer Abbas",
+        "phone": "0345-1718570"
+      },
+      "coords": {
+        "lat": 32.09686111111111,
+        "lng": 72.37241666666667,
+        "raw": "32°05'48.7\"N 72°22'20.7\"E"
+      },
+      "metrics": {
+        "farmers": 31,
+        "wheatFarmers": 31,
+        "wheatAcres": 945,
         "estimatedBuctrilAcres": 911,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 12,
-          "safeOnCrop": 14,
-          "trustInBayer": 14,
-          "goodPastExperience": 11,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 15,
+        "usedLastYear": 14,
+        "definite": 25,
+        "maybe": 6,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 48.0,
+          "usedLastYear": 45.0,
+          "definite": 81.0,
+          "maybe": 19.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 15,
-          "happyWithGeneric": 3,
-          "fearOfBurn": 10,
-          "noMoney": 8,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to Use: Safe on Crop",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 68.8
       },
-      "mediaFiles": {
-        "images": [],
-        "videos": [],
-        "total": 0
+      "insights": {
+        "topReasonToUse": "Safe on Crop",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
+        "images": [
+          "assets/gallery/33.jpeg",
+          "assets/gallery/33a.jpeg"
+        ],
+        "videos": [
+          "assets/gallery/33.mp4",
+          "assets/gallery/33a.mp4"
+        ]
       }
     },
     {
-      "id": 34,
-      "sessionId": "D15S1",
-      "sessionNumber": 34,
+      "sn": 34,
+      "sessionRef": "D15S1",
+      "date": "2025-12-10",
       "district": "Phalia",
       "location": "Machyana",
-      "date": "2025-12-10",
-      "dayIndex": 15,
-      "facilitator": "0",
-      "facilitatorContact": "0",
-      "host": "Ziaullah Babar",
-      "hostContact": "0347-6116938",
-      "dealerShop": "0",
-      "dealerName": "",
-      "dealerContact": "0",
-      "sessionType": "0",
       "village": "Machyana",
-      "coordinates": "32°34'08.1\"N 73°57'09.3\"E",
-      "latitude": 32.5689,
-      "longitude": 73.9526,
-      "farmers": 28,
-      "wheatFarmers": 28,
-      "acres": 157,
-      "performance": {
-        "knowBuctril": 23,
-        "awarenessRate": 82.1,
-        "usedLastYear": 20,
-        "usedLastYearRate": 71.4,
-        "willDefinitelyUse": 25,
-        "definiteUseRate": 89.3,
-        "maybe": 3,
-        "maybeRate": 10.7,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Ziaullah Babar",
+        "phone": "0347-6116938"
+      },
+      "dealer": {
+        "name": "",
+        "phone": "-"
+      },
+      "coords": {
+        "lat": 32.56891666666667,
+        "lng": 73.95258333333334,
+        "raw": "32°34'08.1\"N 73°57'09.3\"E"
+      },
+      "metrics": {
+        "farmers": 28,
+        "wheatFarmers": 28,
+        "wheatAcres": 157,
         "estimatedBuctrilAcres": 140,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 17,
-          "safeOnCrop": 20,
-          "trustInBayer": 25,
-          "goodPastExperience": 18,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 23,
+        "usedLastYear": 20,
+        "definite": 25,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 82.0,
+          "usedLastYear": 71.0,
+          "definite": 89.0,
+          "maybe": 11.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 22,
-          "happyWithGeneric": 5,
-          "fearOfBurn": 2,
-          "noMoney": 7,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 85.6
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/29.jpeg"
+          "assets/gallery/34.jpeg",
+          "assets/gallery/34a.jpeg"
         ],
         "videos": [
-          "gallery/29.mp4"
-        ],
-        "total": 2
+          "assets/gallery/34.mp4",
+          "assets/gallery/34a.mp4"
+        ]
       }
     },
     {
-      "id": 35,
-      "sessionId": "D15S2",
-      "sessionNumber": 35,
+      "sn": 35,
+      "sessionRef": "D15S2",
+      "date": "2025-12-10",
       "district": "Phalia",
       "location": "Sheikh Pur",
-      "date": "2025-12-10",
-      "dayIndex": 15,
-      "facilitator": "0",
-      "facilitatorContact": "0",
-      "host": "Nadeem",
-      "hostContact": "0304-1767621",
-      "dealerShop": "Ali Ehsan, Ali Traders",
-      "dealerName": "Ali Ehsan",
-      "dealerContact": "0301-626320",
-      "sessionType": "0",
       "village": "Sheikh Pur",
-      "coordinates": "32°34'01.6\"N 74°09'21.3\"E",
-      "latitude": 32.5671,
-      "longitude": 74.1559,
-      "farmers": 29,
-      "wheatFarmers": 29,
-      "acres": 246,
-      "performance": {
-        "knowBuctril": 25,
-        "awarenessRate": 86.2,
-        "usedLastYear": 22,
-        "usedLastYearRate": 75.9,
-        "willDefinitelyUse": 27,
-        "definiteUseRate": 93.1,
-        "maybe": 2,
-        "maybeRate": 6.9,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Nadeem",
+        "phone": "0304-1767621"
+      },
+      "dealer": {
+        "name": "Ali Ehsan",
+        "phone": "0301-626320"
+      },
+      "coords": {
+        "lat": 32.56711111111112,
+        "lng": 74.15591666666667,
+        "raw": "32°34'01.6\"N 74°09'21.3\"E"
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 246,
         "estimatedBuctrilAcres": 231,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 18,
-          "safeOnCrop": 20,
-          "trustInBayer": 25,
-          "goodPastExperience": 21,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 25,
+        "usedLastYear": 22,
+        "definite": 27,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 86.0,
+          "usedLastYear": 76.0,
+          "definite": 93.0,
+          "maybe": 7.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 10,
-          "happyWithGeneric": 2,
-          "fearOfBurn": 0,
-          "noMoney": 5,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 87.1
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/30.jpeg"
+          "assets/gallery/35.jpeg",
+          "assets/gallery/35a.jpeg"
         ],
         "videos": [
-          "gallery/30.mp4"
-        ],
-        "total": 2
+          "assets/gallery/35.mp4",
+          "assets/gallery/35a.mp4"
+        ]
       }
     },
     {
-      "id": 36,
-      "sessionId": "D15S3",
-      "sessionNumber": 36,
+      "sn": 36,
+      "sessionRef": "D15S3",
+      "date": "2025-12-10",
       "district": "Phalia",
       "location": "Baghwal",
-      "date": "2025-12-10",
-      "dayIndex": 15,
-      "facilitator": "Ibrar Azhar",
-      "facilitatorContact": "0306-0619613",
-      "host": "M. Ashraf",
-      "hostContact": "0334-7262420",
-      "dealerShop": "Shafat Rafique, Mehr Raffique and sons",
-      "dealerName": "Shafat Rafique",
-      "dealerContact": "0324-4551430",
-      "sessionType": "0",
       "village": "Baghwal",
-      "coordinates": "32°36'14.9\"N 74°09'30.2\"E",
-      "latitude": 32.6041,
-      "longitude": 74.1584,
-      "farmers": 14,
-      "wheatFarmers": 14,
-      "acres": 139,
-      "performance": {
-        "knowBuctril": 12,
-        "awarenessRate": 85.7,
-        "usedLastYear": 10,
-        "usedLastYearRate": 71.4,
-        "willDefinitelyUse": 14,
-        "definiteUseRate": 100.0,
-        "maybe": 0,
-        "maybeRate": 0.0,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Ibrar Azhar",
+        "phone": "0306-0619613"
+      },
+      "host": {
+        "name": "M. Ashraf",
+        "phone": "0334-7262420"
+      },
+      "dealer": {
+        "name": "Shafat Rafique",
+        "phone": "0324-4551430"
+      },
+      "coords": {
+        "lat": 32.60413888888889,
+        "lng": 74.1583888888889,
+        "raw": "32°36'14.9\"N 74°09'30.2\"E"
+      },
+      "metrics": {
+        "farmers": 14,
+        "wheatFarmers": 14,
+        "wheatAcres": 139,
         "estimatedBuctrilAcres": 139,
-        "keyInfluencers": 7,
-        "planYes": 7,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 2,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.4
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 8,
-          "safeOnCrop": 7,
-          "trustInBayer": 10,
-          "goodPastExperience": 9,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 12,
+        "usedLastYear": 10,
+        "definite": 14,
+        "maybe": 0,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 86.0,
+          "usedLastYear": 71.0,
+          "definite": 100.0,
+          "maybe": 0.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 6,
-          "happyWithGeneric": 1,
-          "fearOfBurn": 2,
-          "noMoney": 0,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 2,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.4
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 87.2
       },
-      "mediaFiles": {
-        "images": [],
-        "videos": [],
-        "total": 0
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
+        "images": [
+          "assets/gallery/36.jpeg",
+          "assets/gallery/36a.jpeg"
+        ],
+        "videos": [
+          "assets/gallery/36.mp4",
+          "assets/gallery/36a.mp4"
+        ]
       }
     },
     {
-      "id": 37,
-      "sessionId": "D16S1",
-      "sessionNumber": 37,
+      "sn": 37,
+      "sessionRef": "D16S1",
+      "date": "2025-12-11",
       "district": "Chakwal",
       "location": "Daleel Pur Khokhar Baala",
-      "date": "2025-12-11",
-      "dayIndex": 16,
-      "facilitator": "0",
-      "facilitatorContact": "0",
-      "host": "Kamran",
-      "hostContact": "0340-1598005",
-      "dealerShop": "Iftikhar Shah, Makkah Zari Market",
-      "dealerName": "Iftikhar Shah",
-      "dealerContact": "0333-5760664",
-      "sessionType": "0",
       "village": "Daleel Pur Khokhar Baala",
-      "coordinates": "32°44'07.6\"N 72°50'19.5\"E",
-      "latitude": 32.7354,
-      "longitude": 72.8387,
-      "farmers": 28,
-      "wheatFarmers": 28,
-      "acres": 245,
-      "performance": {
-        "knowBuctril": 24,
-        "awarenessRate": 85.7,
-        "usedLastYear": 21,
-        "usedLastYearRate": 75.0,
-        "willDefinitelyUse": 27,
-        "definiteUseRate": 96.4,
-        "maybe": 1,
-        "maybeRate": 3.6,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Kamran",
+        "phone": "0340-1598005"
+      },
+      "dealer": {
+        "name": "Iftikhar Shah",
+        "phone": "0333-5760664"
+      },
+      "coords": {
+        "lat": 32.73544444444445,
+        "lng": 72.83874999999999,
+        "raw": "32°44'07.6\"N 72°50'19.5\"E"
+      },
+      "metrics": {
+        "farmers": 28,
+        "wheatFarmers": 28,
+        "wheatAcres": 245,
         "estimatedBuctrilAcres": 235,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 17,
-          "safeOnCrop": 20,
-          "trustInBayer": 21,
-          "goodPastExperience": 19,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 24,
+        "usedLastYear": 21,
+        "definite": 27,
+        "maybe": 1,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 86.0,
+          "usedLastYear": 75.0,
+          "definite": 96.0,
+          "maybe": 4.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 15,
-          "happyWithGeneric": 0,
-          "fearOfBurn": 5,
-          "noMoney": 10,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 88.0
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/31.jpeg"
+          "assets/gallery/37.jpeg",
+          "assets/gallery/37a.jpeg"
         ],
         "videos": [
-          "gallery/31.mp4"
-        ],
-        "total": 2
+          "assets/gallery/37.mp4",
+          "assets/gallery/37a.mp4"
+        ]
       }
     },
     {
-      "id": 38,
-      "sessionId": "D16S2",
-      "sessionNumber": 38,
+      "sn": 38,
+      "sessionRef": "D16S2",
+      "date": "2025-12-11",
       "district": "Chakwal",
       "location": "DawaalmiaaL",
-      "date": "2025-12-11",
-      "dayIndex": 16,
-      "facilitator": "0",
-      "facilitatorContact": "0",
-      "host": "Amir",
-      "hostContact": "0345-5828098",
-      "dealerShop": "Malik Tanveer, Haq Bahu Zarai Store",
-      "dealerName": "Malik Tanveer",
-      "dealerContact": "0346-6599586",
-      "sessionType": "0",
       "village": "DawaalmiaaL",
-      "coordinates": "32°43'44.0\"N 72°54'54.7\"E",
-      "latitude": 32.7289,
-      "longitude": 72.9152,
-      "farmers": 29,
-      "wheatFarmers": 29,
-      "acres": 246,
-      "performance": {
-        "knowBuctril": 23,
-        "awarenessRate": 79.3,
-        "usedLastYear": 22,
-        "usedLastYearRate": 75.9,
-        "willDefinitelyUse": 25,
-        "definiteUseRate": 86.2,
-        "maybe": 4,
-        "maybeRate": 13.8,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Amir",
+        "phone": "0345-5828098"
+      },
+      "dealer": {
+        "name": "Malik Tanveer",
+        "phone": "0346-6599586"
+      },
+      "coords": {
+        "lat": 32.72888888888889,
+        "lng": 72.91519444444445,
+        "raw": "32°43'44.0\"N 72°54'54.7\"E"
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 246,
         "estimatedBuctrilAcres": 220,
-        "keyInfluencers": 7,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 2,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 18,
-          "safeOnCrop": 20,
-          "trustInBayer": 22,
-          "goodPastExperience": 19,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 23,
+        "usedLastYear": 22,
+        "definite": 25,
+        "maybe": 4,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 79.0,
+          "usedLastYear": 76.0,
+          "definite": 86.0,
+          "maybe": 14.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 16,
-          "happyWithGeneric": 3,
-          "fearOfBurn": 7,
-          "noMoney": 11,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 2,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 82.9
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/32.jpeg"
+          "assets/gallery/38.jpeg",
+          "assets/gallery/38a.jpeg"
         ],
         "videos": [
-          "gallery/32.mp4"
-        ],
-        "total": 2
+          "assets/gallery/38.mp4",
+          "assets/gallery/38a.mp4"
+        ]
       }
     },
     {
-      "id": 39,
-      "sessionId": "D17S1",
-      "sessionNumber": 39,
+      "sn": 39,
+      "sessionRef": "D17S1",
+      "date": null,
       "district": "Phalia",
       "location": "Chak 262-GB",
-      "date": "Toba take ",
-      "dayIndex": 17,
-      "facilitator": "M. Shabbir",
-      "facilitatorContact": "0333-6881063",
-      "host": "Raye Junaid",
-      "hostContact": "0341-5719387",
-      "dealerShop": "M. Ehsan, Ehsan Corporation",
-      "dealerName": "M. Ehsan",
-      "dealerContact": "0300-6562098",
-      "sessionType": "0",
       "village": "Chak 262-GB",
-      "coordinates": "30°49'42.0\"N 72°35'49.6\"E",
-      "latitude": 30.8283,
-      "longitude": 72.5971,
-      "farmers": 42,
-      "wheatFarmers": 42,
-      "acres": 303,
-      "performance": {
-        "knowBuctril": 35,
-        "awarenessRate": 83.3,
-        "usedLastYear": 32,
-        "usedLastYearRate": 76.2,
-        "willDefinitelyUse": 40,
-        "definiteUseRate": 95.2,
-        "maybe": 2,
-        "maybeRate": 4.8,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "M. Shabbir",
+        "phone": "0333-6881063"
+      },
+      "host": {
+        "name": "Raye Junaid",
+        "phone": "0341-5719387"
+      },
+      "dealer": {
+        "name": "M. Ehsan",
+        "phone": "0300-6562098"
+      },
+      "coords": {
+        "lat": 30.828333333333333,
+        "lng": 72.5971111111111,
+        "raw": "30°49'42.0\"N 72°35'49.6\"E"
+      },
+      "metrics": {
+        "farmers": 42,
+        "wheatFarmers": 42,
+        "wheatAcres": 303,
         "estimatedBuctrilAcres": 299,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 3,
-        "goldenPeriod": 2,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 3,
-        "safetyPPE": 3,
-        "averageScore": 2.8
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 28,
-          "safeOnCrop": 25,
-          "trustInBayer": 30,
-          "goodPastExperience": 29,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 35,
+        "usedLastYear": 32,
+        "definite": 40,
+        "maybe": 2,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 83.0,
+          "usedLastYear": 76.0,
+          "definite": 95.0,
+          "maybe": 5.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 15,
-          "happyWithGeneric": 2,
-          "fearOfBurn": 3,
-          "noMoney": 7,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 3,
+          "goldenPeriod": 2,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 3,
+          "ppeSafety": 3,
+          "avg": 2.8
         },
-        "topReasonUse": "Reason to use: Have Trust in Bayer",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 88.7
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Have Trust in Bayer",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/33.jpeg"
+          "assets/gallery/39.jpeg",
+          "assets/gallery/39a.jpeg"
         ],
         "videos": [
-          "gallery/33.mp4"
-        ],
-        "total": 2
+          "assets/gallery/39.mp4",
+          "assets/gallery/39a.mp4"
+        ]
       }
     },
     {
-      "id": 40,
-      "sessionId": "D17S2",
-      "sessionNumber": 40,
+      "sn": 40,
+      "sessionRef": "D17S2",
+      "date": null,
       "district": "Phalia",
       "location": "Chak 338 GB",
-      "date": "Toba take ",
-      "dayIndex": 17,
-      "facilitator": "Qasim Iqbal",
-      "facilitatorContact": "0312-6812343",
-      "host": "M. Javaid",
-      "hostContact": "0346-7423338",
-      "dealerShop": "M. Ehsan, Ehsan Corporation",
-      "dealerName": "M. Ehsan",
-      "dealerContact": "0300-6562098",
-      "sessionType": "0",
       "village": "Chak 338 GB",
-      "coordinates": "30°52'14.1\"N 72°28'26.9\"E",
-      "latitude": 30.8706,
-      "longitude": 72.4741,
-      "farmers": 33,
-      "wheatFarmers": 33,
-      "acres": 247,
-      "performance": {
-        "knowBuctril": 27,
-        "awarenessRate": 81.8,
-        "usedLastYear": 23,
-        "usedLastYearRate": 69.7,
-        "willDefinitelyUse": 30,
-        "definiteUseRate": 90.9,
-        "maybe": 3,
-        "maybeRate": 9.1,
-        "notInterested": 0,
-        "notInterestedRate": 0.0,
+      "salesRep": {
+        "name": "Qasim Iqbal",
+        "phone": "0312-6812343"
+      },
+      "host": {
+        "name": "M. Javaid",
+        "phone": "0346-7423338"
+      },
+      "dealer": {
+        "name": "M. Ehsan",
+        "phone": "0300-6562098"
+      },
+      "coords": {
+        "lat": 30.870583333333332,
+        "lng": 72.47413888888889,
+        "raw": "30°52'14.1\"N 72°28'26.9\"E"
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 33,
+        "wheatAcres": 247,
         "estimatedBuctrilAcres": 221,
-        "keyInfluencers": 6,
-        "planYes": 6,
-        "planMaybe": 0,
-        "planNo": 0
-      },
-      "understandingScores": {
-        "yieldLoss": 2,
-        "goldenPeriod": 3,
-        "buctrilBroadleaf": 3,
-        "buctrilAtlantis": 2,
-        "safetyPPE": 3,
-        "averageScore": 2.6
-      },
-      "reasons": {
-        "toUse": {
-          "betterWeedControl": 20,
-          "safeOnCrop": 18,
-          "trustInBayer": 19,
-          "goodPastExperience": 21,
-          "dealerRecommending": 0,
-          "offerGift": 0,
-          "other": 0
+        "knowBuctril": 27,
+        "usedLastYear": 23,
+        "definite": 30,
+        "maybe": 3,
+        "notInterested": 0,
+        "rates": {
+          "awareness": 82.0,
+          "usedLastYear": 70.0,
+          "definite": 91.0,
+          "maybe": 9.0,
+          "notInterested": 0.0
         },
-        "notToUse": {
-          "priceTooHigh": 20,
-          "happyWithGeneric": 4,
-          "fearOfBurn": 11,
-          "noMoney": 5,
-          "notAvailable": 0,
-          "doNotBelieve": 0,
-          "other": 0
+        "understanding": {
+          "yieldLoss": 2,
+          "goldenPeriod": 3,
+          "buctrilBroadleaf": 3,
+          "comboBenefit": 2,
+          "ppeSafety": 3,
+          "avg": 2.6
         },
-        "topReasonUse": "Reason to Use: Good Past Experience",
-        "topReasonNotUse": "Reason Not to Use: Price Too High",
-        "competitorBrandsMentioned": ""
+        "sessionScore": 84.5
       },
-      "mediaFiles": {
+      "insights": {
+        "topReasonToUse": "Good Past Experience",
+        "topReasonNotToUse": "Price Too High",
+        "competitorsMentioned": ""
+      },
+      "media": {
         "images": [
-          "gallery/34.jpeg"
+          "assets/gallery/40.jpeg",
+          "assets/gallery/40a.jpeg"
         ],
         "videos": [
-          "gallery/34.mp4"
-        ],
-        "total": 2
+          "assets/gallery/40.mp4",
+          "assets/gallery/40a.mp4"
+        ]
       }
     }
   ]

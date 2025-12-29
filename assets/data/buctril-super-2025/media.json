@@ -1,0 +1,39 @@
+{
+  "assetsBase": "assets/",
+  "galleryBase": "assets/gallery/",
+  "placeholder": "assets/placeholder.svg",
+  "backgroundVideo": "assets/bg.mp4",
+  "headerSequence": [
+    {
+      "key": "bayer",
+      "label": "Bayer",
+      "video": "assets/bayer.mp4",
+      "poster": "assets/bayer.png"
+    },
+    {
+      "key": "interact",
+      "label": "INTERACT",
+      "video": "assets/interact.mp4",
+      "poster": "assets/interact.gif"
+    },
+    {
+      "key": "buctril",
+      "label": "Buctril",
+      "video": "assets/buctril.mp4",
+      "poster": "assets/buctril.jpg"
+    },
+    {
+      "key": "atlantis",
+      "label": "Atlantis",
+      "video": "assets/atlantis.mp4",
+      "poster": "assets/atlantis.jpg"
+    }
+  ],
+  "brandImages": {
+    "interactGif": "assets/interact.gif",
+    "bayerLogo": "assets/bayer.png",
+    "buctril": "assets/buctril.jpg",
+    "atlantis": "assets/atlantis.jpg",
+    "products": "assets/products.jpg"
+  }
+}

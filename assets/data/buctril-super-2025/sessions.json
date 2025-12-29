@@ -1,0 +1,2844 @@
+{
+  "sessions": [
+    {
+      "id": 1,
+      "sheetRef": "D1S1",
+      "date": "2024-11-24",
+      "day": 1,
+      "city": "Ubaro",
+      "district": "Ubaro",
+      "spot": "Ameen khan Chacharr",
+      "village": "Ameen khan Chacharr",
+      "salesRep": {
+        "name": "Sadiq Hussain",
+        "phone": "0301-2124357"
+      },
+      "host": {
+        "name": "Hakim Ali Chachar",
+        "phone": "0306-8250645"
+      },
+      "dealer": {
+        "nearest": "Amar Lal, Amar Lal Pesticides",
+        "name": "Amar Lal",
+        "phone": "0300-3263827"
+      },
+      "geo": {
+        "lat": 28.153666666666666,
+        "lng": 69.81658333333333
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 1002,
+        "estimatedBuctrilAcres": 929,
+        "awarenessPct": 76.0,
+        "usedLastYearPct": 62.0,
+        "definitePct": 90.0,
+        "maybePct": 10.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 22,
+        "Trust in Bayer": 28,
+        "Good Past Experience": 18,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 84.8,
+      "media": {
+        "images": [
+          "gallery/1.jpeg",
+          "gallery/1a.jpeg"
+        ],
+        "videos": [
+          "gallery/1.mp4",
+          "gallery/1a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "sheetRef": "D1S2",
+      "date": "2024-11-24",
+      "day": 1,
+      "city": "",
+      "district": "Ubaro",
+      "spot": "Naseer Dhondo",
+      "village": "Naseer Dhondo",
+      "salesRep": {
+        "name": "Jam Wali",
+        "phone": "0300 - 3267636"
+      },
+      "host": {
+        "name": "Jam Wali Dhino",
+        "phone": "0300-3267636"
+      },
+      "dealer": {
+        "nearest": "Amar Lal, Amar Lal Pesticides",
+        "name": "Amar Lal",
+        "phone": "0300-3263827"
+      },
+      "geo": {
+        "lat": 28.134666666666668,
+        "lng": 69.83669444444443
+      },
+      "metrics": {
+        "farmers": 41,
+        "wheatFarmers": 40,
+        "wheatAcres": 1414,
+        "estimatedBuctrilAcres": 1371,
+        "awarenessPct": 85.0,
+        "usedLastYearPct": 49.0,
+        "definitePct": 80.0,
+        "maybePct": 20.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 30,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 41,
+        "Good Past Experience": 20,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 81.6,
+      "media": {
+        "images": [
+          "gallery/2.jpeg",
+          "gallery/2a.jpeg"
+        ],
+        "videos": [
+          "gallery/2.mp4",
+          "gallery/2a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "sheetRef": "D2S1",
+      "date": "2024-11-25",
+      "day": 2,
+      "city": "Dharki",
+      "district": "Dharki",
+      "spot": "Matal Mahar",
+      "village": "Matal Mahar",
+      "salesRep": {
+        "name": "waqar Ahmad",
+        "phone": "0311-2121427"
+      },
+      "host": {
+        "name": "M. Moosa",
+        "phone": "0300-3660064"
+      },
+      "dealer": {
+        "nearest": "Papu Ram, New Darvaish Pesicide",
+        "name": "Papu Ram",
+        "phone": "0333-7248105"
+      },
+      "geo": {
+        "lat": 28.032833333333333,
+        "lng": 69.70408333333333
+      },
+      "metrics": {
+        "farmers": 30,
+        "wheatFarmers": 30,
+        "wheatAcres": 750,
+        "estimatedBuctrilAcres": 700,
+        "awarenessPct": 70.0,
+        "usedLastYearPct": 63.0,
+        "definitePct": 90.0,
+        "maybePct": 10.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 17,
+        "Safe on Crop": 15,
+        "Trust in Bayer": 28,
+        "Good Past Experience": 19,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 83.5,
+      "media": {
+        "images": [
+          "gallery/3.jpeg",
+          "gallery/3a.jpeg"
+        ],
+        "videos": [
+          "gallery/3.mp4",
+          "gallery/3a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "sheetRef": "D2S2",
+      "date": "2024-11-25",
+      "day": 2,
+      "city": "",
+      "district": "Dharki",
+      "spot": "Abdullah Rajni",
+      "village": "Abdullah Rajni",
+      "salesRep": {
+        "name": "Tanveer Ahmed",
+        "phone": "0320-1323046"
+      },
+      "host": {
+        "name": "Shafique Ahmed",
+        "phone": "0309-3897158"
+      },
+      "dealer": {
+        "nearest": "Papu Ram, New Darvaish Pesicide",
+        "name": "Papu Ram",
+        "phone": "0333-7248105"
+      },
+      "geo": {
+        "lat": 28.008222222222223,
+        "lng": 69.7261388888889
+      },
+      "metrics": {
+        "farmers": 37,
+        "wheatFarmers": 37,
+        "wheatAcres": 447,
+        "estimatedBuctrilAcres": 420,
+        "awarenessPct": 86.0,
+        "usedLastYearPct": 78.0,
+        "definitePct": 89.0,
+        "maybePct": 11.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 25,
+        "Safe on Crop": 30,
+        "Trust in Bayer": 35,
+        "Good Past Experience": 28,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 89.3,
+      "media": {
+        "images": [
+          "gallery/4.jpeg",
+          "gallery/4a.jpeg"
+        ],
+        "videos": [
+          "gallery/4.mp4",
+          "gallery/4a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "sheetRef": "D3S1",
+      "date": "2024-11-26",
+      "day": 3,
+      "city": "Ghotki",
+      "district": "Ghotki",
+      "spot": "Abdullah Laakhan",
+      "village": "Abdullah Laakhan",
+      "salesRep": {
+        "name": "Farooq Ahmad",
+        "phone": "0305-3014237"
+      },
+      "host": {
+        "name": "Ali Nawaz",
+        "phone": "0300-3117949"
+      },
+      "dealer": {
+        "nearest": "Ameer Bukhash, Ameer Bukhsh Pest",
+        "name": "Ameer Bukhash",
+        "phone": "0302-3157094"
+      },
+      "geo": {
+        "lat": 28.032944444444443,
+        "lng": 69.38183333333333
+      },
+      "metrics": {
+        "farmers": 39,
+        "wheatFarmers": 39,
+        "wheatAcres": 1075,
+        "estimatedBuctrilAcres": 990,
+        "awarenessPct": 85.0,
+        "usedLastYearPct": 72.0,
+        "definitePct": 90.0,
+        "maybePct": 10.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 25,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 32,
+        "Good Past Experience": 28,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 88.5,
+      "media": {
+        "images": [
+          "gallery/5.jpeg",
+          "gallery/5a.jpeg"
+        ],
+        "videos": [
+          "gallery/5.mp4",
+          "gallery/5a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "sheetRef": "D3S2",
+      "date": "2024-11-26",
+      "day": 3,
+      "city": "",
+      "district": "Ghotki",
+      "spot": "M. Qasim Ghooto",
+      "village": "M. Qasim Ghooto",
+      "salesRep": {
+        "name": "Hizbullah",
+        "phone": "0315-7810700"
+      },
+      "host": {
+        "name": "Raeis M. Punal",
+        "phone": "0300-3262285"
+      },
+      "dealer": {
+        "nearest": "Ameer Bukhash, Ameer Bukhsh Pest",
+        "name": "Ameer Bukhash",
+        "phone": "0302-3157094"
+      },
+      "geo": {
+        "lat": 28.03502777777778,
+        "lng": 69.26463888888888
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 459,
+        "estimatedBuctrilAcres": 419,
+        "awarenessPct": 93.0,
+        "usedLastYearPct": 86.0,
+        "definitePct": 90.0,
+        "maybePct": 10.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 25,
+        "Safe on Crop": 23,
+        "Trust in Bayer": 26,
+        "Good Past Experience": 25,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 92.7,
+      "media": {
+        "images": [
+          "gallery/6.jpeg",
+          "gallery/6a.jpeg"
+        ],
+        "videos": [
+          "gallery/6.mp4",
+          "gallery/6a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "sheetRef": "D4S1",
+      "date": "2024-11-27",
+      "day": 4,
+      "city": "Ghotki",
+      "district": "Ghotki",
+      "spot": "Darri Chachar",
+      "village": "Darri Chachar",
+      "salesRep": {
+        "name": "Imtiaz Ahmad",
+        "phone": "0307-2235762"
+      },
+      "host": {
+        "name": "Fayaz Ahmed",
+        "phone": "0300-2326598"
+      },
+      "dealer": {
+        "nearest": "Sahil Kumar, SSD Evergreen",
+        "name": "Sahil Kumar",
+        "phone": "0300-4218988"
+      },
+      "geo": {
+        "lat": 27.87852777777778,
+        "lng": 69.26241666666667
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 33,
+        "wheatAcres": 245,
+        "estimatedBuctrilAcres": 825,
+        "awarenessPct": 94.0,
+        "usedLastYearPct": 91.0,
+        "definitePct": 97.0,
+        "maybePct": 3.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 29,
+        "Safe on Crop": 30,
+        "Trust in Bayer": 32,
+        "Good Past Experience": 30,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 96.1,
+      "media": {
+        "images": [
+          "gallery/7.jpeg",
+          "gallery/7a.jpeg"
+        ],
+        "videos": [
+          "gallery/7.mp4",
+          "gallery/7a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "sheetRef": "D4S2",
+      "date": "2024-11-27",
+      "day": 4,
+      "city": "",
+      "district": "Ghotki",
+      "spot": "Kalati Gabol",
+      "village": "Kalati Gabol",
+      "salesRep": {
+        "name": "Bahadur Ali",
+        "phone": "0300-9316971"
+      },
+      "host": {
+        "name": "Abdul Rasheed",
+        "phone": "0300-3194825"
+      },
+      "dealer": {
+        "nearest": "Ravi Kumar, SSD Evergreen",
+        "name": "Ravi Kumar",
+        "phone": "0300-3292555"
+      },
+      "geo": {
+        "lat": 27.84861111111111,
+        "lng": 69.43611111111112
+      },
+      "metrics": {
+        "farmers": 35,
+        "wheatFarmers": 35,
+        "wheatAcres": 1063,
+        "estimatedBuctrilAcres": 1000,
+        "awarenessPct": 89.0,
+        "usedLastYearPct": 80.0,
+        "definitePct": 94.0,
+        "maybePct": 6.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 28,
+        "Safe on Crop": 30,
+        "Trust in Bayer": 32,
+        "Good Past Experience": 28,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 92.2,
+      "media": {
+        "images": [
+          "gallery/8.jpeg",
+          "gallery/8a.jpeg"
+        ],
+        "videos": [
+          "gallery/8.mp4",
+          "gallery/8a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "sheetRef": "D5S1",
+      "date": "2024-11-28",
+      "day": 5,
+      "city": "Jaferabad",
+      "district": "Jaferabad",
+      "spot": "Haji Darya Khan",
+      "village": "Haji Darya Khan",
+      "salesRep": {
+        "name": "Khuda Bukhsh",
+        "phone": "0300-1156695"
+      },
+      "host": {
+        "name": "Haji Darya khan",
+        "phone": "0300-8920333"
+      },
+      "dealer": {
+        "nearest": "Putab Raay, Sanjay Fertilizers",
+        "name": "Putab Raay",
+        "phone": "0300-317/018"
+      },
+      "geo": {
+        "lat": 28.209527777777776,
+        "lng": 68.57619444444444
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 32,
+        "wheatAcres": 625,
+        "estimatedBuctrilAcres": 558,
+        "awarenessPct": 68.0,
+        "usedLastYearPct": 56.0,
+        "definitePct": 76.0,
+        "maybePct": 24.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 18,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 25,
+        "Good Past Experience": 19,
+        "Dealer Recommending": 15,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 77.0,
+      "media": {
+        "images": [
+          "gallery/9.jpeg",
+          "gallery/9a.jpeg"
+        ],
+        "videos": [
+          "gallery/9.mp4",
+          "gallery/9a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "sheetRef": "D5S2",
+      "date": "2024-11-28",
+      "day": 5,
+      "city": "",
+      "district": "Jaferabad",
+      "spot": "Qaeim Khan Khossa 2",
+      "village": "Qaeim Khan Khossa 2",
+      "salesRep": {
+        "name": "Khuda Bukhsh",
+        "phone": "0300-1156695"
+      },
+      "host": {
+        "name": "Haji ShahaL khan",
+        "phone": "0300-3174711"
+      },
+      "dealer": {
+        "nearest": "Purtab Roy, Sanjay Fertilizer Agency",
+        "name": "Purtab Roy",
+        "phone": "030-317/018"
+      },
+      "geo": {
+        "lat": 28.18947222222222,
+        "lng": 68.58833333333332
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 30,
+        "wheatAcres": 641,
+        "estimatedBuctrilAcres": 550,
+        "awarenessPct": 61.0,
+        "usedLastYearPct": 55.0,
+        "definitePct": 76.0,
+        "maybePct": 15.0,
+        "notInterestedPct": 9.0,
+        "avgUnderstanding": 2
+      },
+      "reasonsUse": {
+        "Better Weed Control": 18,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 25,
+        "Good Past Experience": 18,
+        "Dealer Recommending": 25,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 66.8,
+      "media": {
+        "images": [
+          "gallery/10.jpeg",
+          "gallery/10a.jpeg"
+        ],
+        "videos": [
+          "gallery/10.mp4",
+          "gallery/10a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "sheetRef": "D6S1",
+      "date": "2024-11-29",
+      "day": 6,
+      "city": "Ranipur",
+      "district": "Ranipur",
+      "spot": "Allah Wadhayo",
+      "village": "Allah Wadhayo",
+      "salesRep": {
+        "name": "Shafqat Ali Solangi",
+        "phone": "0307-3422299"
+      },
+      "host": {
+        "name": "Ali Dino",
+        "phone": "0300-3727407"
+      },
+      "dealer": {
+        "nearest": "Shah M. Mangi, Mangi Fertilizers",
+        "name": "Shah M. Mangi",
+        "phone": "0300-9348853"
+      },
+      "geo": {
+        "lat": 27.094777777777775,
+        "lng": 68.58969444444443
+      },
+      "metrics": {
+        "farmers": 59,
+        "wheatFarmers": 56,
+        "wheatAcres": 1871,
+        "estimatedBuctrilAcres": 1466,
+        "awarenessPct": 34.0,
+        "usedLastYearPct": 22.0,
+        "definitePct": 76.0,
+        "maybePct": 17.0,
+        "notInterestedPct": 7.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 12,
+        "Safe on Crop": 13,
+        "Trust in Bayer": 20,
+        "Good Past Experience": 13,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 63.4,
+      "media": {
+        "images": [
+          "gallery/11.jpeg",
+          "gallery/11a.jpeg"
+        ],
+        "videos": [
+          "gallery/11.mp4",
+          "gallery/11a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "sheetRef": "D6S2",
+      "date": "2024-11-29",
+      "day": 6,
+      "city": "",
+      "district": "Ranipur",
+      "spot": "Haji Khabar Malaha",
+      "village": "Haji Khabar Malaha",
+      "salesRep": {
+        "name": "Muhammad Yahya",
+        "phone": "0300-3197088"
+      },
+      "host": {
+        "name": "Anwar Ali",
+        "phone": "0305-3691795"
+      },
+      "dealer": {
+        "nearest": "Shah M. Mangi, Mangi Fertilizers",
+        "name": "Shah M. Mangi",
+        "phone": "0300-9348853"
+      },
+      "geo": {
+        "lat": 27.04061111111111,
+        "lng": 68.56322222222222
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 33,
+        "wheatAcres": 582,
+        "estimatedBuctrilAcres": 572,
+        "awarenessPct": 85.0,
+        "usedLastYearPct": 76.0,
+        "definitePct": 97.0,
+        "maybePct": 3.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 24,
+        "Safe on Crop": 25,
+        "Trust in Bayer": 28,
+        "Good Past Experience": 24,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 91.6,
+      "media": {
+        "images": [
+          "gallery/12.jpeg",
+          "gallery/12a.jpeg"
+        ],
+        "videos": [
+          "gallery/12.mp4",
+          "gallery/12a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "sheetRef": "D7S1",
+      "date": "2024-12-01",
+      "day": 7,
+      "city": "Mehrabpur",
+      "district": "Mehrabpur",
+      "spot": "Saein Daad Marri",
+      "village": "Saein Daad Marri",
+      "salesRep": {
+        "name": "Farhan All Urar",
+        "phone": "0300-2198404"
+      },
+      "host": {
+        "name": "Ghulam Abbas",
+        "phone": "0304-0187132"
+      },
+      "dealer": {
+        "nearest": "Shalid Rajput, Zain Pesticide Shop",
+        "name": "Shalid Rajput",
+        "phone": "0308-3213080"
+      },
+      "geo": {
+        "lat": 27.16038888888889,
+        "lng": 68.33008333333333
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 32,
+        "wheatAcres": 1158,
+        "estimatedBuctrilAcres": 1112,
+        "awarenessPct": 65.0,
+        "usedLastYearPct": 35.0,
+        "definitePct": 79.0,
+        "maybePct": 15.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 10,
+        "Safe on Crop": 11,
+        "Trust in Bayer": 20,
+        "Good Past Experience": 12,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 74.2,
+      "media": {
+        "images": [
+          "gallery/13.jpeg",
+          "gallery/13a.jpeg"
+        ],
+        "videos": [
+          "gallery/13.mp4",
+          "gallery/13a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "sheetRef": "D7S2",
+      "date": "2024-12-01",
+      "day": 7,
+      "city": "",
+      "district": "Mehrabpur",
+      "spot": "Pir Watiyo",
+      "village": "Pir Watiyo",
+      "salesRep": {
+        "name": "Muhammad Saleem",
+        "phone": "0302-112607"
+      },
+      "host": {
+        "name": "Ghulam Sarwar",
+        "phone": "0304-1783160"
+      },
+      "dealer": {
+        "nearest": "Shalid Rajput, Zain Pesticide Shop",
+        "name": "Shalid Rajput",
+        "phone": "0308-3213080"
+      },
+      "geo": {
+        "lat": 27.12163888888889,
+        "lng": 68.33311111111111
+      },
+      "metrics": {
+        "farmers": 36,
+        "wheatFarmers": 35,
+        "wheatAcres": 411,
+        "estimatedBuctrilAcres": 375,
+        "awarenessPct": 56.0,
+        "usedLastYearPct": 39.0,
+        "definitePct": 81.0,
+        "maybePct": 17.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 12,
+        "Safe on Crop": 14,
+        "Trust in Bayer": 20,
+        "Good Past Experience": 14,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 73.2,
+      "media": {
+        "images": [
+          "gallery/14.jpeg",
+          "gallery/14a.jpeg"
+        ],
+        "videos": [
+          "gallery/14.mp4",
+          "gallery/14a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "sheetRef": "D8S1",
+      "date": "2024-11-29",
+      "day": 8,
+      "city": "Dadu",
+      "district": "Dadu",
+      "spot": "Manali",
+      "village": "Manali",
+      "salesRep": {
+        "name": "Farooq Ahmad",
+        "phone": "0303-3796871"
+      },
+      "host": {
+        "name": "Abdul Razzaq",
+        "phone": "0300-3212418"
+      },
+      "dealer": {
+        "nearest": "Dilep Kumar, Tilani Barai Markaz",
+        "name": "Dilep Kumar",
+        "phone": "0300-8317220"
+      },
+      "geo": {
+        "lat": 26.735777777777777,
+        "lng": 68.01047222222222
+      },
+      "metrics": {
+        "farmers": 49,
+        "wheatFarmers": 49,
+        "wheatAcres": 857,
+        "estimatedBuctrilAcres": 825,
+        "awarenessPct": 82.0,
+        "usedLastYearPct": 71.0,
+        "definitePct": 94.0,
+        "maybePct": 6.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 30,
+        "Safe on Crop": 32,
+        "Trust in Bayer": 40,
+        "Good Past Experience": 34,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 89.0,
+      "media": {
+        "images": [
+          "gallery/15.jpeg",
+          "gallery/15a.jpeg"
+        ],
+        "videos": [
+          "gallery/15.mp4",
+          "gallery/15a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "sheetRef": "D8S2",
+      "date": "2024-11-29",
+      "day": 8,
+      "city": "",
+      "district": "Dadu",
+      "spot": "Golo Potho",
+      "village": "Golo Potho",
+      "salesRep": {
+        "name": "Farooq Ahmad",
+        "phone": "0303-3796871"
+      },
+      "host": {
+        "name": "Jewan Abro",
+        "phone": "0300-3137977"
+      },
+      "dealer": {
+        "nearest": "Dilep Kumar, Tilani Zarai Markaz",
+        "name": "Dilep Kumar",
+        "phone": "0301-837/920"
+      },
+      "geo": {
+        "lat": 26.721833333333333,
+        "lng": 67.98611111111111
+      },
+      "metrics": {
+        "farmers": 43,
+        "wheatFarmers": 43,
+        "wheatAcres": 899,
+        "estimatedBuctrilAcres": 860,
+        "awarenessPct": 70.0,
+        "usedLastYearPct": 65.0,
+        "definitePct": 93.0,
+        "maybePct": 7.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 25,
+        "Safe on Crop": 22,
+        "Trust in Bayer": 28,
+        "Good Past Experience": 26,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 84.8,
+      "media": {
+        "images": [
+          "gallery/16.jpeg",
+          "gallery/16a.jpeg"
+        ],
+        "videos": [
+          "gallery/16.mp4",
+          "gallery/16a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "sheetRef": "D9S1",
+      "date": "2024-12-03",
+      "day": 9,
+      "city": "Muzaffar Ghar",
+      "district": "Muzaffar Ghar",
+      "spot": "Bassti Seerein",
+      "village": "Bassti Seerein",
+      "salesRep": {
+        "name": "Táriq Husain",
+        "phone": "0301-4590967"
+      },
+      "host": {
+        "name": "Bilal Gorai",
+        "phone": "0307-6344702"
+      },
+      "dealer": {
+        "nearest": "M. Sari Ahmed, Al Sarn & Brother",
+        "name": "M. Sari Ahmed",
+        "phone": "0300-4936442"
+      },
+      "geo": {
+        "lat": 30.01861111111111,
+        "lng": 71.11963888888889
+      },
+      "metrics": {
+        "farmers": 28,
+        "wheatFarmers": 28,
+        "wheatAcres": 320,
+        "estimatedBuctrilAcres": 305,
+        "awarenessPct": 89.0,
+        "usedLastYearPct": 79.0,
+        "definitePct": 93.0,
+        "maybePct": 7.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 21,
+        "Trust in Bayer": 25,
+        "Good Past Experience": 22,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 91.7,
+      "media": {
+        "images": [
+          "gallery/17.jpeg",
+          "gallery/17a.jpeg"
+        ],
+        "videos": [
+          "gallery/17.mp4",
+          "gallery/17a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "sheetRef": "D9S2",
+      "date": "2024-12-03",
+      "day": 9,
+      "city": "",
+      "district": "Muzaffar Ghar",
+      "spot": "Topi Maanay wali",
+      "village": "Topi Maanay wali",
+      "salesRep": {
+        "name": "Takes Bbbas",
+        "phone": "0300-3738100"
+      },
+      "host": {
+        "name": "M. Bilal Chandio",
+        "phone": "0345-7352033"
+      },
+      "dealer": {
+        "nearest": "M. Shahzed Khan, Khan Agro Services",
+        "name": "M. Shahzed Khan",
+        "phone": "0303-2193472"
+      },
+      "geo": {
+        "lat": 29.990055555555557,
+        "lng": 71.11030555555556
+      },
+      "metrics": {
+        "farmers": 42,
+        "wheatFarmers": 42,
+        "wheatAcres": 410,
+        "estimatedBuctrilAcres": 390,
+        "awarenessPct": 83.0,
+        "usedLastYearPct": 81.0,
+        "definitePct": 90.0,
+        "maybePct": 10.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 30,
+        "Safe on Crop": 32,
+        "Trust in Bayer": 35,
+        "Good Past Experience": 34,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 89.4,
+      "media": {
+        "images": [
+          "gallery/18.jpeg",
+          "gallery/18a.jpeg"
+        ],
+        "videos": [
+          "gallery/18.mp4",
+          "gallery/18a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "sheetRef": "D9S3",
+      "date": "2024-12-03",
+      "day": 9,
+      "city": "",
+      "district": "Muzaffar Ghar",
+      "spot": "Phaty wala",
+      "village": "Phaty wala",
+      "salesRep": {
+        "name": "Ghukem Murtaxa",
+        "phone": "0313-7879 858"
+      },
+      "host": {
+        "name": "Mujahid Hussain",
+        "phone": "0302-6131374"
+      },
+      "dealer": {
+        "nearest": "M. Ali Hajish, Balcoh Agro Services",
+        "name": "M. Ali Hajish",
+        "phone": "0345-7171771"
+      },
+      "geo": {
+        "lat": 30.175,
+        "lng": 71.06375
+      },
+      "metrics": {
+        "farmers": 54,
+        "wheatFarmers": 54,
+        "wheatAcres": 337,
+        "estimatedBuctrilAcres": 310,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 35,
+        "Safe on Crop": 32,
+        "Trust in Bayer": 40,
+        "Good Past Experience": 39,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/19.jpeg",
+          "gallery/19a.jpeg"
+        ],
+        "videos": [
+          "gallery/19.mp4",
+          "gallery/19a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "sheetRef": "D10S1",
+      "date": "2024-12-04",
+      "day": 10,
+      "city": "Kot Adu",
+      "district": "Kot Adu",
+      "spot": "Basti Haider Ghazi",
+      "village": "Basti Haider Ghazi",
+      "salesRep": {
+        "name": "M. Junaid",
+        "phone": "0348-0636385"
+      },
+      "host": {
+        "name": "Ghulan Hailer",
+        "phone": "0343 - 1349093"
+      },
+      "dealer": {
+        "nearest": "Mudavar Farcoa, Haji & Sons",
+        "name": "Mudavar Farcoa",
+        "phone": "345-8541301"
+      },
+      "geo": {
+        "lat": 30.538944444444446,
+        "lng": 70.97586111111112
+      },
+      "metrics": {
+        "farmers": 37,
+        "wheatFarmers": 37,
+        "wheatAcres": 376,
+        "estimatedBuctrilAcres": 356,
+        "awarenessPct": 73.0,
+        "usedLastYearPct": 57.0,
+        "definitePct": 95.0,
+        "maybePct": 5.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 19,
+        "Trust in Bayer": 20,
+        "Good Past Experience": 21,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Good Past Experience",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 85.0,
+      "media": {
+        "images": [
+          "gallery/20.jpeg",
+          "gallery/20a.jpeg"
+        ],
+        "videos": [
+          "gallery/20.mp4",
+          "gallery/20a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "sheetRef": "D10S2",
+      "date": "2024-12-04",
+      "day": 10,
+      "city": "",
+      "district": "Kot Adu",
+      "spot": "Hanjrai Bangla Chaah Phaati wala",
+      "village": "Hanjrai Bangla Chaah Phaati wala",
+      "salesRep": {
+        "name": "Gulam Yasin",
+        "phone": "0341-8606797"
+      },
+      "host": {
+        "name": "Naveed Ahmed",
+        "phone": "0344-1073974"
+      },
+      "dealer": {
+        "nearest": "Nasir Ahmad, Uzair Khan Traders",
+        "name": "Nasir Ahmad",
+        "phone": "0342-382/088"
+      },
+      "geo": {
+        "lat": 30.611972222222224,
+        "lng": 70.91716666666667
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 34,
+        "wheatAcres": 275,
+        "estimatedBuctrilAcres": 254,
+        "awarenessPct": 71.0,
+        "usedLastYearPct": 53.0,
+        "definitePct": 88.0,
+        "maybePct": 12.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 17,
+        "Safe on Crop": 15,
+        "Trust in Bayer": 20,
+        "Good Past Experience": 18,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 81.5,
+      "media": {
+        "images": [
+          "gallery/21.jpeg",
+          "gallery/21a.jpeg"
+        ],
+        "videos": [
+          "gallery/21.mp4",
+          "gallery/21a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "sheetRef": "D11S1",
+      "date": "2024-12-05",
+      "day": 11,
+      "city": "Karor Lal esan",
+      "district": "Karor Lal esan",
+      "spot": "Basti joya",
+      "village": "Basti joya",
+      "salesRep": {
+        "name": "M. Aslam",
+        "phone": "0300-9875514"
+      },
+      "host": {
+        "name": "Mushtaq  Hussain",
+        "phone": "0306-8513786"
+      },
+      "dealer": {
+        "nearest": "M. Azhar Hussain, Achas Comision Shop",
+        "name": "M. Azhar Hussain",
+        "phone": "0308-205622"
+      },
+      "geo": {
+        "lat": 31.16097222222222,
+        "lng": 70.94111111111111
+      },
+      "metrics": {
+        "farmers": 32,
+        "wheatFarmers": 32,
+        "wheatAcres": 256,
+        "estimatedBuctrilAcres": 248,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 22,
+        "Trust in Bayer": 24,
+        "Good Past Experience": 22,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/22.jpeg",
+          "gallery/22a.jpeg"
+        ],
+        "videos": [
+          "gallery/22.mp4",
+          "gallery/22a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "sheetRef": "D11S2",
+      "date": "2024-12-05",
+      "day": 11,
+      "city": "",
+      "district": "Karor Lal esan",
+      "spot": "Chak 106 TDA",
+      "village": "Chak 106 TDA",
+      "salesRep": {
+        "name": "M. Shafi",
+        "phone": "0344 - 7144162"
+      },
+      "host": {
+        "name": "Mulazim Hussain",
+        "phone": "0307-8802008"
+      },
+      "dealer": {
+        "nearest": "M. Azhar Hussain, Achas Comision Shop",
+        "name": "M. Azhar Hussain",
+        "phone": "0308-205622"
+      },
+      "geo": {
+        "lat": 31.14525,
+        "lng": 71.03133333333334
+      },
+      "metrics": {
+        "farmers": 51,
+        "wheatFarmers": 51,
+        "wheatAcres": 335,
+        "estimatedBuctrilAcres": 317,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 30,
+        "Safe on Crop": 32,
+        "Trust in Bayer": 35,
+        "Good Past Experience": 30,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/23.jpeg",
+          "gallery/23a.jpeg"
+        ],
+        "videos": [
+          "gallery/23.mp4",
+          "gallery/23a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 24,
+      "sheetRef": "D11S3",
+      "date": "2024-12-05",
+      "day": 11,
+      "city": "",
+      "district": "Karor Lal esan",
+      "spot": "Bassti Maachi Buchi wala",
+      "village": "Bassti Maachi Buchi wala",
+      "salesRep": {
+        "name": "Irfan Hussain",
+        "phone": "0304-9365914"
+      },
+      "host": {
+        "name": "M. SULEMAN",
+        "phone": "0308-1405556"
+      },
+      "dealer": {
+        "nearest": "Atta ullah, Ehsan Zarai Services",
+        "name": "Atta ullah",
+        "phone": "0301-4998520"
+      },
+      "geo": {
+        "lat": 31.35575,
+        "lng": 70.95108333333333
+      },
+      "metrics": {
+        "farmers": 66,
+        "wheatFarmers": 66,
+        "wheatAcres": 675,
+        "estimatedBuctrilAcres": 632,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 35,
+        "Safe on Crop": 40,
+        "Trust in Bayer": 45,
+        "Good Past Experience": 41,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/24.jpeg",
+          "gallery/24a.jpeg"
+        ],
+        "videos": [
+          "gallery/24.mp4",
+          "gallery/24a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "sheetRef": "D12S1",
+      "date": "2024-12-06",
+      "day": 12,
+      "city": "Bhakkar",
+      "district": "Bhakkar",
+      "spot": "Kandani",
+      "village": "Kandani",
+      "salesRep": {
+        "name": "Zeeshan Khan",
+        "phone": "0371-0397214"
+      },
+      "host": {
+        "name": "Zahoor Khan",
+        "phone": "0345-7659279"
+      },
+      "dealer": {
+        "nearest": "Ghazanfer, Ghazanfer Traderrs",
+        "name": "Ghazanfer",
+        "phone": "0317-7998764"
+      },
+      "geo": {
+        "lat": 31.480666666666664,
+        "lng": 70.99277777777777
+      },
+      "metrics": {
+        "farmers": 34,
+        "wheatFarmers": 34,
+        "wheatAcres": 631,
+        "estimatedBuctrilAcres": 602,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 21,
+        "Trust in Bayer": 22,
+        "Good Past Experience": 21,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/25.jpeg",
+          "gallery/25a.jpeg"
+        ],
+        "videos": [
+          "gallery/25.mp4",
+          "gallery/25a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "sheetRef": "D12S2",
+      "date": "2024-12-06",
+      "day": 12,
+      "city": "",
+      "district": "Bhakkar",
+      "spot": "54-ML",
+      "village": "54-ML",
+      "salesRep": {
+        "name": "Syed Tasawar Abbas",
+        "phone": "0336-6631214"
+      },
+      "host": {
+        "name": "Ch. Ghulam Murtaza",
+        "phone": "0315-6603754"
+      },
+      "dealer": {
+        "nearest": "Ghazanfer, Ghazanfer Traderrs",
+        "name": "Ghazanfer",
+        "phone": "0317-7998764"
+      },
+      "geo": {
+        "lat": 31.733027777777775,
+        "lng": 71.3073611111111
+      },
+      "metrics": {
+        "farmers": 27,
+        "wheatFarmers": 27,
+        "wheatAcres": 535,
+        "estimatedBuctrilAcres": 512,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 14,
+        "Safe on Crop": 13,
+        "Trust in Bayer": 15,
+        "Good Past Experience": 12,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/26.jpeg",
+          "gallery/26a.jpeg"
+        ],
+        "videos": [
+          "gallery/26.mp4",
+          "gallery/26a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "sheetRef": "D12S3",
+      "date": "2024-12-06",
+      "day": 12,
+      "city": "",
+      "district": "Bhakkar",
+      "spot": "Majoka",
+      "village": "Majoka",
+      "salesRep": {
+        "name": "M. Tahir",
+        "phone": "0307-5115767"
+      },
+      "host": {
+        "name": "Nazar Abbas",
+        "phone": "0310-7789111"
+      },
+      "dealer": {
+        "nearest": "M. Asghar, Akhter Traders",
+        "name": "M. Asghar",
+        "phone": "0301-55277000"
+      },
+      "geo": {
+        "lat": 31.775944444444445,
+        "lng": 71.02986111111112
+      },
+      "metrics": {
+        "farmers": 35,
+        "wheatFarmers": 35,
+        "wheatAcres": 290,
+        "estimatedBuctrilAcres": 278,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 19,
+        "Trust in Bayer": 21,
+        "Good Past Experience": 16,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": null,
+        "Happy with Generic": null,
+        "Fear of Burn": null,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/27.jpeg",
+          "gallery/27a.jpeg"
+        ],
+        "videos": [
+          "gallery/27.mp4",
+          "gallery/27a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "sheetRef": "D13S1",
+      "date": "2024-12-08",
+      "day": 13,
+      "city": "Mianwali",
+      "district": "Mianwali",
+      "spot": "Kalor Sharif Kacha",
+      "village": "Kalor Sharif Kacha",
+      "salesRep": {
+        "name": "Arif Khan",
+        "phone": "0306-5306565"
+      },
+      "host": {
+        "name": "Abid Hussain",
+        "phone": "0301-2068770"
+      },
+      "dealer": {
+        "nearest": "Waseem Khan, Awais & Brothers",
+        "name": "Waseem Khan",
+        "phone": "0300-0232627"
+      },
+      "geo": {
+        "lat": 32.73430555555556,
+        "lng": 71.27775
+      },
+      "metrics": {
+        "farmers": 32,
+        "wheatFarmers": 32,
+        "wheatAcres": 441,
+        "estimatedBuctrilAcres": 436,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 25,
+        "Safe on Crop": 27,
+        "Trust in Bayer": 29,
+        "Good Past Experience": 25,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 20,
+        "Happy with Generic": 5,
+        "Fear of Burn": 15,
+        "No Money": 5,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/28.jpeg",
+          "gallery/28a.jpeg"
+        ],
+        "videos": [
+          "gallery/28.mp4",
+          "gallery/28a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "sheetRef": "D13S2",
+      "date": "2024-12-08",
+      "day": 13,
+      "city": "",
+      "district": "Mianwali",
+      "spot": "Kamar Mashaani Gulshan Colony",
+      "village": "Kamar Mashaani Gulshan Colony",
+      "salesRep": {
+        "name": "Binyameen",
+        "phone": "0300-1828265"
+      },
+      "host": {
+        "name": "Taj Muhammad",
+        "phone": "0300-7417465"
+      },
+      "dealer": {
+        "nearest": "Arshad, Arshad Zarai",
+        "name": "Arshad",
+        "phone": "0301-7802078"
+      },
+      "geo": {
+        "lat": 32.86472222222223,
+        "lng": 71.33972222222222
+      },
+      "metrics": {
+        "farmers": 30,
+        "wheatFarmers": 30,
+        "wheatAcres": 267,
+        "estimatedBuctrilAcres": 244,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 22,
+        "Safe on Crop": 21,
+        "Trust in Bayer": 23,
+        "Good Past Experience": 22,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 1,
+        "Happy with Generic": 2,
+        "Fear of Burn": 3,
+        "No Money": 2,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Fear of Burn",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/29.jpeg",
+          "gallery/29a.jpeg"
+        ],
+        "videos": [
+          "gallery/29.mp4",
+          "gallery/29a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "sheetRef": "D13S3",
+      "date": "2024-12-08",
+      "day": 13,
+      "city": "",
+      "district": "Mianwali",
+      "spot": "Daud KhaiL kacha",
+      "village": "Daud KhaiL kacha",
+      "salesRep": {
+        "name": "Murtaza",
+        "phone": "0304-6747523"
+      },
+      "host": {
+        "name": "Shifaullah",
+        "phone": "0305-3126621"
+      },
+      "dealer": {
+        "nearest": "Noor M. Khan, Al-Badar Zari Center",
+        "name": "Noor M. Khan",
+        "phone": "0301-6351412"
+      },
+      "geo": {
+        "lat": 32.84722222222222,
+        "lng": 71.55402777777778
+      },
+      "metrics": {
+        "farmers": 39,
+        "wheatFarmers": 39,
+        "wheatAcres": 378,
+        "estimatedBuctrilAcres": 375,
+        "awarenessPct": null,
+        "usedLastYearPct": null,
+        "definitePct": null,
+        "maybePct": null,
+        "notInterestedPct": null,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 30,
+        "Safe on Crop": 29,
+        "Trust in Bayer": 32,
+        "Good Past Experience": 30,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 15,
+        "Happy with Generic": 4,
+        "Fear of Burn": 7,
+        "No Money": 5,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 100.0,
+      "media": {
+        "images": [
+          "gallery/30.jpeg",
+          "gallery/30a.jpeg"
+        ],
+        "videos": [
+          "gallery/30.mp4",
+          "gallery/30a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "sheetRef": "D14S1",
+      "date": "2024-12-09",
+      "day": 14,
+      "city": "Sargodha",
+      "district": "Sargodha",
+      "spot": "Jharoola",
+      "village": "Jharoola",
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Malik Sajid",
+        "phone": "0300-5196990"
+      },
+      "dealer": {
+        "nearest": "M. Naved, Lajpal Traders",
+        "name": "M. Naved",
+        "phone": "3,457,289,040"
+      },
+      "geo": {
+        "lat": 31.917333333333335,
+        "lng": 72.3633611111111
+      },
+      "metrics": {
+        "farmers": 44,
+        "wheatFarmers": 44,
+        "wheatAcres": 336,
+        "estimatedBuctrilAcres": 326,
+        "awarenessPct": 75.0,
+        "usedLastYearPct": 66.0,
+        "definitePct": 93.0,
+        "maybePct": 7.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 25,
+        "Safe on Crop": 27,
+        "Trust in Bayer": 29,
+        "Good Past Experience": 28,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 30,
+        "Happy with Generic": 15,
+        "Fear of Burn": 10,
+        "No Money": 5,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 86.2,
+      "media": {
+        "images": [
+          "gallery/31.jpeg",
+          "gallery/31a.jpeg"
+        ],
+        "videos": [
+          "gallery/31.mp4",
+          "gallery/31a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "sheetRef": "D14S2",
+      "date": "2024-12-09",
+      "day": 14,
+      "city": "",
+      "district": "Sargodha",
+      "spot": "Habib pur Kangrra",
+      "village": "Habib pur Kangrra",
+      "salesRep": {
+        "name": "Syed Asim Murtaza",
+        "phone": "0342-5128639"
+      },
+      "host": {
+        "name": "M. IRFAN",
+        "phone": "0302-7038789"
+      },
+      "dealer": {
+        "nearest": "M. Nsveed, Lajpal Traders",
+        "name": "M. Nsveed",
+        "phone": "0345-7289040"
+      },
+      "geo": {
+        "lat": 31.980805555555555,
+        "lng": 72.46394444444445
+      },
+      "metrics": {
+        "farmers": 41,
+        "wheatFarmers": 41,
+        "wheatAcres": 239,
+        "estimatedBuctrilAcres": 234,
+        "awarenessPct": 85.0,
+        "usedLastYearPct": 83.0,
+        "definitePct": 98.0,
+        "maybePct": 0.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 28,
+        "Safe on Crop": 32,
+        "Trust in Bayer": 30,
+        "Good Past Experience": null,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 22,
+        "Happy with Generic": 7,
+        "Fear of Burn": 5,
+        "No Money": 10,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Safe on Crop",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 93.0,
+      "media": {
+        "images": [
+          "gallery/32.jpeg",
+          "gallery/32a.jpeg"
+        ],
+        "videos": [
+          "gallery/32.mp4",
+          "gallery/32a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "sheetRef": "D14S3",
+      "date": "2024-12-09",
+      "day": 14,
+      "city": "",
+      "district": "Sargodha",
+      "spot": "ChakrraLa",
+      "village": "ChakrraLa",
+      "salesRep": {
+        "name": "Mubashir Siddiqui",
+        "phone": "0345-1718611"
+      },
+      "host": {
+        "name": "Arshad",
+        "phone": "0346-3825513"
+      },
+      "dealer": {
+        "nearest": "Zaheer Abbas, M. Khan Zarai Markez",
+        "name": "Zaheer Abbas",
+        "phone": "0345-1718570"
+      },
+      "geo": {
+        "lat": 32.09686111111111,
+        "lng": 72.37241666666667
+      },
+      "metrics": {
+        "farmers": 31,
+        "wheatFarmers": 31,
+        "wheatAcres": 945,
+        "estimatedBuctrilAcres": 911,
+        "awarenessPct": 48.0,
+        "usedLastYearPct": 45.0,
+        "definitePct": 81.0,
+        "maybePct": 19.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 12,
+        "Safe on Crop": 14,
+        "Trust in Bayer": 14,
+        "Good Past Experience": 11,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 15,
+        "Happy with Generic": 3,
+        "Fear of Burn": 10,
+        "No Money": 8,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Safe on Crop",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 72.1,
+      "media": {
+        "images": [
+          "gallery/33.jpeg",
+          "gallery/33a.jpeg"
+        ],
+        "videos": [
+          "gallery/33.mp4",
+          "gallery/33a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 34,
+      "sheetRef": "D15S1",
+      "date": "2024-12-10",
+      "day": 15,
+      "city": "Phalia",
+      "district": "Phalia",
+      "spot": "Machyana",
+      "village": "Machyana",
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Ziaullah Babar",
+        "phone": "0347-6116938"
+      },
+      "dealer": {
+        "nearest": "-",
+        "name": "",
+        "phone": "-"
+      },
+      "geo": {
+        "lat": 32.56891666666667,
+        "lng": 73.95258333333334
+      },
+      "metrics": {
+        "farmers": 28,
+        "wheatFarmers": 28,
+        "wheatAcres": 157,
+        "estimatedBuctrilAcres": 140,
+        "awarenessPct": 82.0,
+        "usedLastYearPct": 71.0,
+        "definitePct": 89.0,
+        "maybePct": 11.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 17,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 25,
+        "Good Past Experience": 18,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 22,
+        "Happy with Generic": 5,
+        "Fear of Burn": 2,
+        "No Money": 7,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 87.3,
+      "media": {
+        "images": [
+          "gallery/34.jpeg",
+          "gallery/34a.jpeg"
+        ],
+        "videos": [
+          "gallery/34.mp4",
+          "gallery/34a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 35,
+      "sheetRef": "D15S2",
+      "date": "2024-12-10",
+      "day": 15,
+      "city": "",
+      "district": "Phalia",
+      "spot": "Sheikh Pur",
+      "village": "Sheikh Pur",
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Nadeem",
+        "phone": "0304-1767621"
+      },
+      "dealer": {
+        "nearest": "Ali Ehsan, Ali Traders",
+        "name": "Ali Ehsan",
+        "phone": "0301-626320"
+      },
+      "geo": {
+        "lat": 32.56711111111112,
+        "lng": 74.15591666666667
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 246,
+        "estimatedBuctrilAcres": 231,
+        "awarenessPct": 86.0,
+        "usedLastYearPct": 76.0,
+        "definitePct": 93.0,
+        "maybePct": 7.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 18,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 25,
+        "Good Past Experience": 21,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 10,
+        "Happy with Generic": 2,
+        "Fear of Burn": null,
+        "No Money": 5,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 90.5,
+      "media": {
+        "images": [
+          "gallery/35.jpeg",
+          "gallery/35a.jpeg"
+        ],
+        "videos": [
+          "gallery/35.mp4",
+          "gallery/35a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "sheetRef": "D15S3",
+      "date": "2024-12-10",
+      "day": 15,
+      "city": "",
+      "district": "Phalia",
+      "spot": "Baghwal",
+      "village": "Baghwal",
+      "salesRep": {
+        "name": "Ibrar Azhar",
+        "phone": "0306-0619613"
+      },
+      "host": {
+        "name": "M. Ashraf",
+        "phone": "0334-7262420"
+      },
+      "dealer": {
+        "nearest": "Shafat Rafique, Mehr Raffique and sons",
+        "name": "Shafat Rafique",
+        "phone": "0324-4551430"
+      },
+      "geo": {
+        "lat": 32.60413888888889,
+        "lng": 74.1583888888889
+      },
+      "metrics": {
+        "farmers": 14,
+        "wheatFarmers": 14,
+        "wheatAcres": 139,
+        "estimatedBuctrilAcres": 139,
+        "awarenessPct": 86.0,
+        "usedLastYearPct": 71.0,
+        "definitePct": 100.0,
+        "maybePct": 0.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 2
+      },
+      "reasonsUse": {
+        "Better Weed Control": 8,
+        "Safe on Crop": 7,
+        "Trust in Bayer": 10,
+        "Good Past Experience": 9,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 6,
+        "Happy with Generic": 1,
+        "Fear of Burn": 2,
+        "No Money": null,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 83.8,
+      "media": {
+        "images": [
+          "gallery/36.jpeg",
+          "gallery/36a.jpeg"
+        ],
+        "videos": [
+          "gallery/36.mp4",
+          "gallery/36a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 37,
+      "sheetRef": "D16S1",
+      "date": "2024-12-11",
+      "day": 16,
+      "city": "Chakwal",
+      "district": "Chakwal",
+      "spot": "Daleel Pur Khokhar Baala",
+      "village": "Daleel Pur Khokhar Baala",
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Kamran",
+        "phone": "0340-1598005"
+      },
+      "dealer": {
+        "nearest": "Iftikhar Shah, Makkah Zari Market",
+        "name": "Iftikhar Shah",
+        "phone": "0333-5760664"
+      },
+      "geo": {
+        "lat": 32.73544444444445,
+        "lng": 72.83874999999999
+      },
+      "metrics": {
+        "farmers": 28,
+        "wheatFarmers": 28,
+        "wheatAcres": 245,
+        "estimatedBuctrilAcres": 235,
+        "awarenessPct": 86.0,
+        "usedLastYearPct": 75.0,
+        "definitePct": 96.0,
+        "maybePct": 4.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 17,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 21,
+        "Good Past Experience": 19,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 15,
+        "Happy with Generic": null,
+        "Fear of Burn": 5,
+        "No Money": 10,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 91.3,
+      "media": {
+        "images": [
+          "gallery/37.jpeg",
+          "gallery/37a.jpeg"
+        ],
+        "videos": [
+          "gallery/37.mp4",
+          "gallery/37a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "sheetRef": "D16S2",
+      "date": "2024-12-11",
+      "day": 16,
+      "city": "",
+      "district": "Chakwal",
+      "spot": "DawaalmiaaL",
+      "village": "DawaalmiaaL",
+      "salesRep": {
+        "name": "-",
+        "phone": "-"
+      },
+      "host": {
+        "name": "Amir",
+        "phone": "0345-5828098"
+      },
+      "dealer": {
+        "nearest": "Malik Tanveer, Haq Bahu Zarai Store",
+        "name": "Malik Tanveer",
+        "phone": "0346-6599586"
+      },
+      "geo": {
+        "lat": 32.72888888888889,
+        "lng": 72.91519444444445
+      },
+      "metrics": {
+        "farmers": 29,
+        "wheatFarmers": 29,
+        "wheatAcres": 246,
+        "estimatedBuctrilAcres": 220,
+        "awarenessPct": 79.0,
+        "usedLastYearPct": 76.0,
+        "definitePct": 86.0,
+        "maybePct": 14.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 18,
+        "Safe on Crop": 20,
+        "Trust in Bayer": 22,
+        "Good Past Experience": 19,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 16,
+        "Happy with Generic": 3,
+        "Fear of Burn": 7,
+        "No Money": 11,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 86.2,
+      "media": {
+        "images": [
+          "gallery/38.jpeg",
+          "gallery/38a.jpeg"
+        ],
+        "videos": [
+          "gallery/38.mp4",
+          "gallery/38a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 39,
+      "sheetRef": "D17S1",
+      "date": "Toba take singh",
+      "day": 17,
+      "city": "Toba take singh",
+      "district": "Phalia",
+      "spot": "Chak 262-GB",
+      "village": "Chak 262-GB",
+      "salesRep": {
+        "name": "M. Shabbir",
+        "phone": "0333-6881063"
+      },
+      "host": {
+        "name": "Raye Junaid",
+        "phone": "0341-5719387"
+      },
+      "dealer": {
+        "nearest": "M. Ehsan, Ehsan Corporation",
+        "name": "M. Ehsan",
+        "phone": "0300-6562098"
+      },
+      "geo": {
+        "lat": 30.828333333333333,
+        "lng": 72.5971111111111
+      },
+      "metrics": {
+        "farmers": 42,
+        "wheatFarmers": 42,
+        "wheatAcres": 303,
+        "estimatedBuctrilAcres": 299,
+        "awarenessPct": 83.0,
+        "usedLastYearPct": 76.0,
+        "definitePct": 95.0,
+        "maybePct": 5.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 28,
+        "Safe on Crop": 25,
+        "Trust in Bayer": 30,
+        "Good Past Experience": 29,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 15,
+        "Happy with Generic": 2,
+        "Fear of Burn": 3,
+        "No Money": 7,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Have Trust in Bayer",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 90.4,
+      "media": {
+        "images": [
+          "gallery/39.jpeg",
+          "gallery/39a.jpeg"
+        ],
+        "videos": [
+          "gallery/39.mp4",
+          "gallery/39a.mp4"
+        ]
+      }
+    },
+    {
+      "id": 40,
+      "sheetRef": "D17S2",
+      "date": "Toba take singh",
+      "day": 17,
+      "city": "",
+      "district": "Phalia",
+      "spot": "Chak 338 GB",
+      "village": "Chak 338 GB",
+      "salesRep": {
+        "name": "Qasim Iqbal",
+        "phone": "0312-6812343"
+      },
+      "host": {
+        "name": "M. Javaid",
+        "phone": "0346-7423338"
+      },
+      "dealer": {
+        "nearest": "M. Ehsan, Ehsan Corporation",
+        "name": "M. Ehsan",
+        "phone": "0300-6562098"
+      },
+      "geo": {
+        "lat": 30.870583333333332,
+        "lng": 72.47413888888889
+      },
+      "metrics": {
+        "farmers": 33,
+        "wheatFarmers": 33,
+        "wheatAcres": 247,
+        "estimatedBuctrilAcres": 221,
+        "awarenessPct": 82.0,
+        "usedLastYearPct": 70.0,
+        "definitePct": 91.0,
+        "maybePct": 9.0,
+        "notInterestedPct": 0.0,
+        "avgUnderstanding": 3
+      },
+      "reasonsUse": {
+        "Better Weed Control": 20,
+        "Safe on Crop": 18,
+        "Trust in Bayer": 19,
+        "Good Past Experience": 21,
+        "Dealer Recommending": null,
+        "Offer/Gift": null,
+        "Other": null
+      },
+      "reasonsNotUse": {
+        "Price Too High": 20,
+        "Happy with Generic": 4,
+        "Fear of Burn": 11,
+        "No Money": 5,
+        "Not Available": null,
+        "Do Not Believe": null,
+        "Other": null
+      },
+      "topReasonUse": "Good Past Experience",
+      "topReasonNotUse": "Price Too High",
+      "competitors": "",
+      "score": 87.8,
+      "media": {
+        "images": [
+          "gallery/40.jpeg",
+          "gallery/40a.jpeg"
+        ],
+        "videos": [
+          "gallery/40.mp4",
+          "gallery/40a.mp4"
+        ]
+      }
+    }
+  ]
+}

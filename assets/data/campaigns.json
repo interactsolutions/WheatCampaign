@@ -1,0 +1,13 @@
+{
+  "agency": "INTERACT",
+  "version": "8",
+  "campaigns": [
+    {
+      "id": "buctril-super-2025",
+      "name": "Buctril Super • Wheat Activations 2024",
+      "country": "Pakistan",
+      "sessionsUrl": "data/buctril-super-2025/sessions.json",
+      "mediaUrl": "data/buctril-super-2025/media.json"
+    }
+  ]
+}

@@ -21,6 +21,77 @@
     return url(s.replace(/^\/+/, ''));
   };
 
+  // Attribute-safe escaping (for src/href attributes)
+  function escapeAttr(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Lightbox (used by session media + gallery)
+  function openLightbox(item) {
+    const lb = document.getElementById('lightbox');
+    const body = document.getElementById('lightboxBody');
+    if (!lb || !body) return;
+    const rawUrl = item && item.url ? item.url : '';
+    const srcUrl = resolveUrl(rawUrl);
+    if (!srcUrl) return;
+
+    state.selectedMediaUrl = srcUrl;
+
+    const kind = String(item?.kind || item?.type || '').toLowerCase();
+    const src = escapeAttr(srcUrl);
+
+    body.innerHTML = (kind === 'video')
+      ? `<video src="${src}" controls autoplay playsinline style="width:100%;max-height:75vh;border-radius:14px;background:#000"></video>`
+      : `<img src="${src}" alt="" style="max-width:100%;max-height:75vh;border-radius:14px" />`;
+
+    lb.classList.remove('hidden');
+    lb.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    const lb = document.getElementById('lightbox');
+    const body = document.getElementById('lightboxBody');
+    if (body) body.innerHTML = '';
+    if (lb) {
+      lb.classList.add('hidden');
+      lb.setAttribute('aria-hidden', 'true');
+    }
+    state.selectedMediaUrl = null;
+    document.body.style.overflow = '';
+  }
+
+
+  // Asset path tolerance: GitHub Pages is case-sensitive; allow common case/typo variants.
+  const assetCandidates = (p) => {
+    const s0 = String(p || '').trim().replace(/^\/+/, '');
+    if (!s0) return [];
+    const out = [s0];
+    const parts = s0.split('/');
+    const fname = parts[parts.length - 1] || '';
+    const lower = fname.toLowerCase();
+    const upperFirst = lower ? (lower.charAt(0).toUpperCase() + lower.slice(1)) : fname;
+
+    const withName = (name) => parts.slice(0, -1).concat([name]).join('/');
+
+    if (lower && lower !== fname) out.push(withName(lower));
+    if (upperFirst && upperFirst !== fname) out.push(withName(upperFirst));
+
+    // Common typo seen in repo history
+    if (lower === 'products.jpg') out.push(withName('poducts.jpg'));
+    if (lower === 'poducts.jpg') out.push(withName('products.jpg'));
+
+    return Array.from(new Set(out));
+  };
+
+  async function resolveExistingAsset(p){
+    for (const c of assetCandidates(p)) {
+      if (await assetExists(c)) return c;
+    }
+    return '';
+  }
+
+
   const state = {
     campaigns: [],
     campaign: null,
@@ -124,15 +195,17 @@
       s.textContent = 'If video does not auto-play on iPhone, tap once to start.';
       setActiveThumb();
 
-      const hasVid = item.video ? await assetExists(item.video) : false;
-      const hasPoster = item.poster ? await assetExists(item.poster) : false;
+      const vidPath = item.video ? await resolveExistingAsset(item.video) : '';
+      const posterPath = item.poster ? (await resolveExistingAsset(item.poster)) : '';
+      const hasVid = !!vidPath;
+      const hasPoster = !!posterPath;
 
-      const posterSrc = resolveUrl(hasPoster ? item.poster : 'assets/placeholder.svg');
+      const posterSrc = resolveUrl(hasPoster ? posterPath : 'assets/placeholder.svg');
       poster.src = posterSrc;
 
       if(hasVid){
         hero.classList.remove('fallback');
-        v.src = resolveUrl(item.video);
+        v.src = resolveUrl(vidPath);
         v.load();
         try{
           const p = v.play();
@@ -167,7 +240,7 @@
       el.className = 'heroThumb';
       el.dataset.idx = String(item.idx);
       el.innerHTML = `
-        <img alt="" src="${escapeHtml(resolveUrl(item.poster || 'assets/placeholder.svg'))}"/>
+        <img alt="" src="${escapeHtml(resolveUrl(item.poster || 'assets/placeholder.svg'))}" onerror="this.src='assets/placeholder.svg'"/>
         <div class="badge">${escapeHtml(item.label)}</div>
       `;
       el.addEventListener('click', ()=>loadIndex(item.idx, true));
@@ -204,20 +277,20 @@
     if(!host) return;
 
     const candidates = [
-      {name:'INTERACT', img:'assets/Interact.gif'},
-      {name:'Bayer', img:'assets/Bayer.png'},
-      {name:'Buctril Super', img:'assets/Buctril.jpg'},
-      {name:'Atlantis', img:'assets/Atlantis.jpg'},
-      {name:'Products', img:'assets/poducts.jpg'}
+      {name:'INTERACT', img:(cfg.brandImages && cfg.brandImages.interactGif) ? cfg.brandImages.interactGif : 'assets/interact.gif'},
+      {name:'Bayer', img:(cfg.brandImages && cfg.brandImages.bayerLogo) ? cfg.brandImages.bayerLogo : 'assets/bayer.png'},
+      {name:'Buctril Super', img:(cfg.brandImages && cfg.brandImages.buctril) ? cfg.brandImages.buctril : 'assets/buctril.jpg'},
+      {name:'Atlantis', img:(cfg.brandImages && cfg.brandImages.atlantis) ? cfg.brandImages.atlantis : 'assets/atlantis.jpg'},
+      {name:'Products', img:(cfg.brandImages && cfg.brandImages.products) ? cfg.brandImages.products : 'assets/products.jpg'}
     ];
 
     host.innerHTML = '';
     for(const c of candidates){
-      const ok = await assetExists(c.img);
-      if(!ok) continue;
+      const resolved = await resolveExistingAsset(c.img);
+      if(!resolved) continue;
       const pill = document.createElement('div');
       pill.className = 'brandPill';
-      pill.innerHTML = `<img alt="${escapeHtml(c.name)}" src="${escapeHtml(resolveUrl(c.img))}"/><span>${escapeHtml(c.name)}</span>`;
+      pill.innerHTML = `<img alt="${escapeHtml(c.name)}" src="${escapeHtml(resolveUrl(resolved))}"/><span>${escapeHtml(c.name)}</span>`;
       host.appendChild(pill);
     }
   }
@@ -227,9 +300,9 @@
   async function initBgVideo(cfg) {
     const v = $$('#bgVideo');
     if(!v) return;
-    const src = cfg.backgroundVideo || 'assets/bg.mp4';
-    const ok = await assetExists(src);
-    if(!ok){
+    const src0 = cfg.backgroundVideo || 'assets/bg.mp4';
+    const src = await resolveExistingAsset(src0);
+    if(!src){
       // Keep the element but don’t break layout; background falls back to gradient.
       v.removeAttribute('src');
       v.style.display = 'none';

@@ -8,32 +8,32 @@
       "key": "bayer",
       "label": "Bayer",
       "video": "assets/bayer.mp4",
-      "poster": "assets/Bayer.png"
+      "poster": "assets/bayer.png"
     },
     {
       "key": "interact",
       "label": "INTERACT",
-      "video": "assets/Interact.mp4",
-      "poster": "assets/Interact.gif"
+      "video": "assets/interact.mp4",
+      "poster": "assets/interact.gif"
     },
     {
       "key": "buctril",
       "label": "Buctril",
       "video": "assets/buctril.mp4",
-      "poster": "assets/Buctril.jpg"
+      "poster": "assets/buctril.jpg"
     },
     {
       "key": "atlantis",
       "label": "Atlantis",
       "video": "assets/atlantis.mp4",
-      "poster": "assets/Atlantis.jpg"
+      "poster": "assets/atlantis.jpg"
     }
   ],
   "brandImages": {
-    "interactGif": "assets/Interact.gif",
-    "bayerLogo": "assets/Bayer.png",
-    "buctril": "assets/Buctril.jpg",
-    "atlantis": "assets/Atlantis.jpg",
-    "products": "assets/poducts.jpg"
+    "interactGif": "assets/interact.gif",
+    "bayerLogo": "assets/bayer.png",
+    "buctril": "assets/buctril.jpg",
+    "atlantis": "assets/atlantis.jpg",
+    "products": "assets/products.jpg"
   }
 }

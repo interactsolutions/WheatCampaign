@@ -26,6 +26,33 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+
+
+  function parseDateSafe(val) {
+    if (!val) return null;
+    const s = String(val).trim();
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) {
+      const d = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+      return isNaN(d.getTime()) ? null : d;
+    }
+    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmy) {
+      const d = new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
+      return isNaN(d.getTime()) ? null : d;
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function fmtISO(d) {
+    if (!d) return '';
+    const yyyy = String(d.getFullYear());
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   // Lightbox (used by session media + gallery)
   function openLightbox(item) {
     const lb = document.getElementById('lightbox');
@@ -402,17 +429,17 @@
   function filterSessions() {
     const district = $$('#districtSelect').value;
     const q = ($$('#searchInput').value || '').toLowerCase().trim();
-    const from = $$('#fromDate').value ? new Date($$('#fromDate').value) : null;
-    const to = $$('#toDate').value ? new Date($$('#toDate').value) : null;
+    const from = $$('#fromDate').value ? parseDateSafe($$('#fromDate').value) : null;
+    const to = $$('#toDate').value ? parseDateSafe($$('#toDate').value) : null;
 
     const res = state.sessions.filter(s => {
       if (district && district !== 'ALL' && (s.district||'') !== district) return false;
       if (from) {
-        const d = s.date ? new Date(s.date) : null;
+        const d = parseDateSafe(s.date);
         if (d && d < from) return false;
       }
       if (to) {
-        const d = s.date ? new Date(s.date) : null;
+        const d = parseDateSafe(s.date);
         // inclusive end
         const t2 = new Date(to.getTime() + 24*3600*1000 - 1);
         if (d && d > t2) return false;
@@ -428,7 +455,7 @@
     state.page = 1;
 
     const distLabel = (district && district !== 'ALL') ? district : 'All districts';
-    const dateLabel = (from || to) ? `${from ? from.toISOString().slice(0,10) : '…'} → ${to ? to.toISOString().slice(0,10) : '…'}` : 'All dates';
+    const dateLabel = (from || to) ? `${from ? fmtISO(from) : '…'} → ${to ? fmtISO(to) : '…'}` : 'All dates';
     $$('#selectionChip').textContent = `${distLabel} • ${dateLabel}`;
   }
 

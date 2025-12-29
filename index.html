@@ -22,6 +22,7 @@
         <div class="brandSub">Insights, coverage and field media — built for teams, partners and the community.</div>
       </div>
       <div class="headerActions">
+        <a class="chip link" href="./details.html?campaign=buctril-super-2025">Detailed view</a>
         <a class="chip link" href="#feedback">Send feedback</a>
       </div>
     </div>
@@ -90,8 +91,17 @@
       </div>
     </section>
 
-    <section class="grid2">
-      <section class="card">
+      <div class="tabs" role="tablist" aria-label="Dashboard sections">
+        <button class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true">Summary</button>
+        <button class="tabBtn" data-tab="map" role="tab" aria-selected="false">Map</button>
+        <button class="tabBtn" data-tab="sessions" role="tab" aria-selected="false">Sessions</button>
+        <button class="tabBtn" data-tab="media" role="tab" aria-selected="false">Media</button>
+        <button class="tabBtn" data-tab="feedback" role="tab" aria-selected="false">Feedback</button>
+      </div>
+
+
+    <section class="grid2" data-tab="summary">
+      <section class="card" data-tab="map">
         <h2>Campaign insights at a glance</h2>
         <p class="muted">Clear, comparable metrics for stakeholder decisions: awareness, intent, understanding, and coverage.</p>
         <div class="donutGrid">
@@ -132,7 +142,7 @@
         </div>
       </section>
 
-      <section class="card mapCard">
+      <section class="card mapCard" data-tab="sessions">
         <div class="mapHeader">
           <div>
             <h2>Map view</h2>
@@ -185,7 +195,7 @@
       </section>
     </section>
 
-    <section class="card">
+    <section class="card" data-tab="media">
       <div class="sectionHeader">
         <div>
           <h2>Sessions</h2>
@@ -212,7 +222,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" data-tab="feedback">
       <div class="sectionHeader">
         <div>
           <h2>Media wall</h2>

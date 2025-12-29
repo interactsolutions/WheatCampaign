@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Session Sheets – INTERACT Dashboard</title>
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand__title">INTERACT</div>
+        <div class="brand__subtitle">Session Sheets Viewer</div>
+      </div>
+      <nav class="topbar__nav">
+        <a class="chip" href="./index.html">Dashboard</a>
+        <a class="chip chip--active" href="./sheets.html">Sheets</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <div class="card__head">
+          <h2>Browse individual session sheets</h2>
+          <p class="muted">Select a sheet to view the original form values, influencer farmers list, and feedback/signatures (if present in Excel).</p>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label class="label">Campaign</label>
+            <select id="campaignSelect" class="input">
+              <option value="buctril-super-2025">buctril-super-2025</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Session Sheet</label>
+            <select id="sheetSelect" class="input"></select>
+          </div>
+        </div>
+
+        <div id="sheetMeta" class="kv"></div>
+
+        <div class="divider"></div>
+        <h3>Key influencer farmers</h3>
+        <div class="tableWrap"><table class="table" id="farmersTable"></table></div>
+
+        <div class="divider"></div>
+        <h3>Host / sales feedback & signatures</h3>
+        <div id="feedbackBlock" class="grid2"></div>
+
+        <div class="divider"></div>
+        <h3>Full sheet data (scroll)</h3>
+        <div class="tableWrap"><table class="table table--dense" id="gridTable"></table></div>
+      </section>
+    </main>
+  </div>
+
+<script>
+(function(){
+  const $ = (s, r=document)=>r.querySelector(s);
+  const $el = (tag, cls)=>{ const e=document.createElement(tag); if(cls) e.className=cls; return e; };
+
+  const BASE = new URL('./', window.location.href);
+  const q = new URLSearchParams(location.search);
+  const campaign = q.get('campaign') || 'buctril-super-2025';
+
+  function resolveUrl(p){ return new URL(p, BASE).toString(); }
+
+  async function getJson(p){
+    const res = await fetch(resolveUrl(p), {cache:'no-store'});
+    if(!res.ok) throw new Error('Fetch failed: '+p+' ('+res.status+')');
+    return res.json();
+  }
+
+  function fmt(v){ return (v===null||v===undefined||v==='') ? '—' : v; }
+
+  function renderMeta(m){
+    const box = $('#sheetMeta');
+    box.innerHTML = '';
+    const items = [
+      ['Date', m.date], ['District', m.district], ['Village', m.village],
+      ['Host', m.host], ['Dealer', m.dealer], ['Dealer Contact', m.dealer_contact],
+      ['Farmers present', m.farmers_present], ['Acres', m.acres],
+      ['Coordinates', m.coord_raw]
+    ];
+    items.forEach(([k,v])=>{
+      const row = $el('div','kv__row');
+      row.innerHTML = `<div class="kv__k">${k}</div><div class="kv__v">${fmt(v)}</div>`;
+      box.appendChild(row);
+    });
+  }
+
+  function renderFarmers(rows){
+    const t = $('#farmersTable');
+    const head = ['SN','Farmer','Phone','Village','Acres','Intent','Used before','Other brands/method'];
+    t.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+    const tb = $el('tbody');
+    rows.forEach(r=>{
+      const tr = $el('tr');
+      tr.innerHTML = `<td>${fmt(r.sn)}</td><td>${fmt(r.name)}</td><td>${fmt(r.phone)}</td><td>${fmt(r.village)}</td><td>${fmt(r.acres)}</td><td>${fmt(r.intent)}</td><td>${fmt(r.used_before)}</td><td>${fmt(r.other_brands_method)}</td>`;
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function renderFeedback(fb, sigs){
+    const block = $('#feedbackBlock');
+    block.innerHTML = '';
+    const left = $el('div','cardLite');
+    const right = $el('div','cardLite');
+
+    left.innerHTML = `
+      <h4>Host</h4>
+      <div class="muted">Name: <b>${fmt(fb.host_name)}</b></div>
+      <div class="muted">Phone: <b>${fmt(fb.host_phone)}</b></div>
+      <div class="muted">Comment:</div>
+      <div class="quote">${fmt(fb.host_comment)}</div>
+      ${sigs.host ? `<img class="sig" src="${resolveUrl(sigs.host)}" alt="Host signature"/>` : `<div class="muted">Signature: —</div>`}
+    `;
+    right.innerHTML = `
+      <h4>Sales</h4>
+      <div class="muted">Name: <b>${fmt(fb.sales_name)}</b></div>
+      <div class="muted">Phone: <b>${fmt(fb.sales_phone)}</b></div>
+      <div class="muted">Feedback:</div>
+      <div class="quote">${fmt(fb.sales_feedback)}</div>
+      ${sigs.sales ? `<img class="sig" src="${resolveUrl(sigs.sales)}" alt="Sales signature"/>` : `<div class="muted">Signature: —</div>`}
+    `;
+    block.appendChild(left);
+    block.appendChild(right);
+  }
+
+  function renderGrid(grid){
+    const t = $('#gridTable');
+    t.innerHTML = '';
+    const thead = $el('thead');
+    const trh = $el('tr');
+    const cols = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+    trh.innerHTML = `<th class="sticky">Row</th>${cols.map(c=>`<th>${c}</th>`).join('')}`;
+    thead.appendChild(trh);
+    t.appendChild(thead);
+
+    const tbody = $el('tbody');
+    grid.forEach((row, i)=>{
+      const tr = $el('tr');
+      const cells = row.map(v=>`<td>${fmt(v)}</td>`).join('');
+      tr.innerHTML = `<td class="sticky">${i+1}</td>${cells}`;
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+  }
+
+  async function load(){
+    $('#campaignSelect').value = campaign;
+    const idx = await getJson(`data/${campaign}/sheets_index.json`);
+    const sel = $('#sheetSelect');
+    sel.innerHTML = idx.sheets.map(s=>`<option value="${s.sheet}">${s.sheet} — ${s.district || ''} / ${s.village || ''}</option>`).join('');
+    const fromQ = q.get('sheet');
+    if(fromQ && idx.sheets.some(x=>x.sheet===fromQ)) sel.value = fromQ;
+
+    async function openSheet(name){
+      const data = await getJson(`data/${campaign}/sheets/${name}.json`);
+      renderMeta(data.meta);
+      renderFarmers(data.farmers || []);
+      renderFeedback(data.feedback || {}, data.signatures || {});
+      renderGrid(data.grid || []);
+    }
+    sel.addEventListener('change', ()=>openSheet(sel.value));
+    await openSheet(sel.value);
+  }
+
+  load().catch(err=>{
+    document.body.innerHTML = `<div style="padding:24px;font-family:system-ui;color:#fff;background:#0b1220;min-height:100vh">
+      <h2>Sheets viewer failed to load</h2>
+      <pre style="white-space:pre-wrap;color:#cfe0ff">${err.message}</pre>
+      <p>Confirm the file exists: <code>/data/${campaign}/sheets_index.json</code></p>
+    </div>`;
+  });
+})();
+</script>
+</body>
+</html>

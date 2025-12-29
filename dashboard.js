@@ -98,10 +98,6 @@
     sessions: [],
     media: null,
     filtered: [],
-    farmers: [],
-    people: [],
-    extrasById: new Map(),
-    revealContacts: false,
     map: null,
     markers: [],
     page: 1,
@@ -524,178 +520,7 @@
     sel.innerHTML = `<option value="ALL">All</option>` + districts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
   }
 
-  
-  // Contacts & people directory (optional, campaign-specific)
-  function maskPhone(v){
-    const s = String(v||'').trim();
-    if(!s) return '—';
-    if(state.revealContacts) return s;
-    // keep last 4 digits
-    const digits = s.replace(/\D/g,'');
-    if(digits.length <= 4) return '•••';
-    const last4 = digits.slice(-4);
-    return '••••••' + last4;
-  }
-
-  function ensureImg(el, src){
-    if(!el) return;
-    if(src){
-      el.src = src;
-      el.style.display = '';
-    }else{
-      el.removeAttribute('src');
-      el.style.display = 'none';
-    }
-  }
-
-  function rebuildVillageOptions(){
-    const sel = $$('#villageSelect');
-    if(!sel) return;
-    const district = $$('#districtSelect')?.value || 'ALL';
-    const vill = new Set();
-    for(const s of state.sessions){
-      if(district !== 'ALL' && (s.district||s.location?.district||s.city) !== district) continue;
-      const v = (s.village || s.location?.village);
-      if(v) vill.add(v);
-    }
-    const list = Array.from(vill).sort((a,b)=>String(a).localeCompare(String(b)));
-    sel.innerHTML = `<option value="ALL">All</option>` + list.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-  }
-
-  function rebuildPeopleOptions(){
-    const sel = $$('#personSelect');
-    if(!sel) return;
-    const role = $$('#roleSelect')?.value || 'ALL';
-    const ppl = (state.people||[]).filter(p => role==='ALL' || p.role===role);
-    ppl.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
-    sel.innerHTML = `<option value="">Select…</option>` + ppl.map((p,idx)=>`<option value="${idx}">${escapeHtml(p.name)} (${p.role})</option>`).join('');
-    sel.dataset.count = String(ppl.length);
-    // stash filtered list for lookup
-    state._peopleFiltered = ppl;
-  }
-
-  function renderPersonProfile(){
-    const host = $$('#personProfile');
-    if(!host) return;
-    const sel = $$('#personSelect');
-    const idx = sel && sel.value ? parseInt(sel.value,10) : NaN;
-    const p = (!Number.isNaN(idx) && state._peopleFiltered) ? state._peopleFiltered[idx] : null;
-    if(!p){
-      host.innerHTML = `<div class="profileTitle">Select a person</div><div class="muted">Choose a host or sales rep to view feedback, signatures and linked sessions.</div>`;
-      return;
-    }
-    const phone = maskPhone(p.phone);
-    const sessions = (p.sessions||[]).slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
-    const sigAny = sessions.find(x=>p.signatures && p.signatures[String(x.sessionId)]);
-    const sig = sigAny ? p.signatures[String(sigAny.sessionId)] : '';
-    host.innerHTML = `
-      <div class="profileTitle">${escapeHtml(p.name)} <span class="muted">(${escapeHtml(p.role)})</span></div>
-      <div class="profileRow"><div class="profileKey">Phone</div><div class="profileVal">${escapeHtml(phone)}</div></div>
-      <div class="profileRow"><div class="profileKey">Sessions</div><div class="profileVal">${escapeHtml(String(sessions.length))}</div></div>
-      ${sig ? `<div style="margin-top:10px"><div class="profileKey">Signature (sample)</div><img class="sigThumb" src="${escapeHtml(sig)}" alt="Signature"/></div>` : ``}
-      <div style="margin-top:10px">
-        <div class="profileKey">Recent feedback</div>
-        <div class="muted" style="margin-top:6px">
-          ${sessions.slice(-5).reverse().map(x=>`${escapeHtml(x.date||'')} • ${escapeHtml(x.district||'')} • ${escapeHtml(x.comment||'')}`).join('<br/>') || '—'}
-        </div>
-      </div>
-    `;
-  }
-
-  function renderFarmersTable(){
-    const body = $$('#farmersTbody');
-    if(!body) return;
-    const district = $$('#districtSelect')?.value || 'ALL';
-    const village = $$('#villageSelect')?.value || 'ALL';
-    const q = ($$('#farmerSearch')?.value || '').trim().toLowerCase();
-
-    let rows = (state.farmers||[]);
-    if(district !== 'ALL') rows = rows.filter(r=>String(r.district||'')===district);
-    if(village !== 'ALL') rows = rows.filter(r=>String(r.village||'')===village || String(r.farmerVillage||'')===village);
-    if(q){
-      rows = rows.filter(r=>String(r.farmerName||'').toLowerCase().includes(q) || String(r.farmerVillage||'').toLowerCase().includes(q) || String(r.buctrilPlan||'').toLowerCase().includes(q));
-    }
-    rows = rows.slice().sort((a,b)=> (String(a.farmerName||'')).localeCompare(String(b.farmerName||'')));
-
-    if(!rows.length){
-      body.innerHTML = `<tr><td colspan="6" class="muted">No farmers match the filters.</td></tr>`;
-      return;
-    }
-    const cap = 300;
-    const trimmed = rows.slice(0, cap);
-    body.innerHTML = trimmed.map(r=>`
-      <tr class="rowBtn" data-session="${r.sessionId}">
-        <td>${escapeHtml(r.farmerName||'—')}</td>
-        <td>${escapeHtml(r.farmerVillage||r.village||'—')}</td>
-        <td class="num">${escapeHtml(fmtInt(r.wheatAcres))}</td>
-        <td>${escapeHtml(r.buctrilPlan||'—')}</td>
-        <td>${escapeHtml(String(r.sessionId||'—'))}</td>
-        <td>${escapeHtml(maskPhone(r.phone))}</td>
-      </tr>
-    `).join('');
-    // allow click to open session profile
-    body.querySelectorAll('tr[data-session]').forEach(tr=>{
-      tr.addEventListener('click', ()=>{
-        const sid = tr.getAttribute('data-session');
-        const s = state.sessions.find(x=>String(x.id)===String(sid));
-        if(s) openSession(s);
-      });
-    });
-
-    if(rows.length>cap){
-      body.insertAdjacentHTML('beforeend', `<tr><td colspan="6" class="muted">Showing first ${cap} of ${rows.length} farmers.</td></tr>`);
-    }
-  }
-
-  function renderDrawerExtras(s){
-    // extras are optional; only show if available
-    const ex = state.extrasById && state.extrasById.get(String(s.id));
-    const hostPhoneEl = $$('#dHostPhone');
-    const repPhoneEl = $$('#dRepPhone');
-    const dealerPhoneEl = $$('#dDealerPhone');
-    const hostNoteEl = $$('#dHostNote');
-    const repNoteEl = $$('#dRepNote');
-    const hostSigEl = $$('#dHostSig');
-    const repSigEl = $$('#dRepSig');
-
-    if(ex){
-      hostPhoneEl.textContent = maskPhone(ex.host?.phone || ex.host?.feedbackPhone || '');
-      repPhoneEl.textContent = maskPhone(ex.sales?.phone || '');
-      dealerPhoneEl.textContent = maskPhone(ex.dealer?.phone || '');
-      hostNoteEl.textContent = safeStr(ex.host?.comment || ex.host?.rating || '');
-      repNoteEl.textContent = safeStr(ex.sales?.comment || '');
-      ensureImg(hostSigEl, ex.host?.signature || '');
-      ensureImg(repSigEl, ex.sales?.signature || '');
-    }else{
-      hostPhoneEl.textContent = '—';
-      repPhoneEl.textContent = '—';
-      dealerPhoneEl.textContent = '—';
-      hostNoteEl.textContent = '—';
-      repNoteEl.textContent = '—';
-      ensureImg(hostSigEl, '');
-      ensureImg(repSigEl, '');
-    }
-
-    // influencer farmers
-    const tbody = $$('#drawerFarmersBody');
-    if(!tbody) return;
-    const infl = (state.farmers||[]).filter(r=>String(r.sessionId)===String(s.id)).slice(0, 200);
-    if(!infl.length){
-      tbody.innerHTML = `<tr><td colspan="5" class="muted">No farmer contact rows found for this session.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = infl.map(r=>`
-      <tr>
-        <td>${escapeHtml(r.farmerName||'—')}</td>
-        <td class="num">${escapeHtml(fmtInt(r.wheatAcres))}</td>
-        <td>${escapeHtml(r.buctrilPlan||'—')}</td>
-        <td>${escapeHtml(r.farmerVillage||r.village||'—')}</td>
-        <td>${escapeHtml(maskPhone(r.phone))}</td>
-      </tr>
-    `).join('');
-  }
-
-function escapeHtml(s) {
+  function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
@@ -872,7 +697,7 @@ function escapeHtml(s) {
         openSession(s);
         try{ marker.openPopup(); }catch{}
         // Ensure session panel is visible on small screens
-        const drawer = $$('#sessionDrawer');
+        const drawer = $$('#drawer');
         drawer?.scrollIntoView({behavior:'smooth', block:'start'});
       });
 
@@ -918,7 +743,7 @@ function escapeHtml(s) {
 // Session drawer
   async function openSession(s) {
     state.selected = s;
-    const drawer = $$('#sessionDrawer');
+    const drawer = $$('#drawer');
     drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
 
     $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
@@ -928,14 +753,12 @@ function escapeHtml(s) {
     $$('#dRep').textContent = safeStr(s.people?.rep || s.rep);
     $$('#dDealer').textContent = safeStr(s.people?.dealer || s.dealer);
 
-    renderDrawerExtras(s);
-
-    const elFarmers = $$('#dFarmers'); if(elFarmers) elFarmers.textContent = fmtInt(s.metrics?.farmers);
-    const elAcres = $$('#dAcres'); if(elAcres) elAcres.textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
-    const elDef = $$('#dDefinite'); if(elDef) elDef.textContent = fmtPct(s.metrics?.intentPct);
-    const elScore = $$('#dScore'); if(elScore) elScore.textContent = `${fmtInt(Math.round(s.score||0))}/100`;
-    const elTopUse = $$('#dTopUse'); if(elTopUse) elTopUse.textContent = safeStr(s.topReasonUse || s.topUseReason || s.reasons?.topUse || '');
-    const elTopNot = $$('#dTopNotUse'); if(elTopNot) elTopNot.textContent = safeStr(s.topReasonNotUse || s.topNotUseReason || s.reasons?.topNotUse || '');
+    $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
+    $$('#dAcres').textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
+    $$('#dAwareness').textContent = fmtPct(s.metrics?.awarenessPct);
+    $$('#dIntent').textContent = fmtPct(s.metrics?.intentPct);
+    $$('#dClarity').textContent = fmtPct(s.metrics?.clarityPct);
+    $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
 
     // Share / maps
     const lat = s.geo?.lat, lng = s.geo?.lng;
@@ -956,7 +779,7 @@ function escapeHtml(s) {
     }
 
     // Media (only existing files)
-    const mediaHost = $$('#drawerMedia');
+    const mediaHost = $$('#sessionMedia');
     if(mediaHost){
       mediaHost.innerHTML = '';
       const resolved = await resolveSessionMedia(s);
@@ -1074,30 +897,8 @@ function escapeHtml(s) {
     await renderFooterBrands(state.media);
 
     const payload = await fetchJson(url(c.sessionsUrl));
-    // optional per-campaign detail datasets
-    state.farmers = [];
-    state.people = [];
-    state.extrasById = new Map();
-    try{
-      const f = await fetchJson(url(`data/${c.id}/farmers.json`));
-      state.farmers = f.farmers || [];
-    }catch(_e){}
-    try{
-      const p = await fetchJson(url(`data/${c.id}/people.json`));
-      state.people = p.people || [];
-    }catch(_e){}
-    try{
-      const ex = await fetchJson(url(`data/${c.id}/extras.json`));
-      const list = ex.sessions || [];
-      state.extrasById = new Map(list.map(x=>[String(x.id), x]));
-    }catch(_e){}
-
     state.sessions = payload.sessions || payload || [];
     rebuildDistrictOptions();
-    rebuildVillageOptions();
-    rebuildPeopleOptions();
-    renderFarmersTable();
-    renderPersonProfile();
     // default district all
     $$('#districtSelect').value = 'ALL';
 
@@ -1118,14 +919,14 @@ function escapeHtml(s) {
 
   function wireUi() {
     $$('#applyBtn').addEventListener('click', () => {
-      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); rebuildVillageOptions(); rebuildPeopleOptions(); renderFarmersTable(); renderPersonProfile(); fitMap(); rebuildVillageOptions(); rebuildPeopleOptions(); renderFarmersTable(); renderPersonProfile(); rebuildVillageOptions(); rebuildPeopleOptions(); renderFarmersTable(); renderPersonProfile();
+      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });
     $$('#resetBtn').addEventListener('click', () => {
       $$('#districtSelect').value = 'ALL';
       $$('#searchInput').value = '';
       $$('#fromDate').value = '';
       $$('#toDate').value = '';
-      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); rebuildVillageOptions(); rebuildPeopleOptions(); renderFarmersTable(); renderPersonProfile(); fitMap(); rebuildVillageOptions(); rebuildPeopleOptions(); renderFarmersTable(); renderPersonProfile(); rebuildVillageOptions(); rebuildPeopleOptions(); renderFarmersTable(); renderPersonProfile();
+      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });
     $$('#exportBtn').addEventListener('click', () => {
       if (!state.filtered.length) { alert('Nothing to export for current filters.'); return; }

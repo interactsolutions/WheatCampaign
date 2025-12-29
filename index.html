@@ -179,41 +179,7 @@
             <button class="btn" id="shareSessionBtn">Share session</button>
           </div>
 
-          
-          <h3 class="drawerSectionTitle">Contacts & feedback</h3>
-          <div class="contactGrid">
-            <div class="kv"><div class="k">Host phone</div><div class="v" id="dHostPhone">—</div></div>
-            <div class="kv"><div class="k">Sales phone</div><div class="v" id="dRepPhone">—</div></div>
-            <div class="kv"><div class="k">Dealer phone</div><div class="v" id="dDealerPhone">—</div></div>
-            <div class="kv wide"><div class="k">Host notes</div><div class="v" id="dHostNote">—</div></div>
-            <div class="kv wide"><div class="k">Sales notes</div><div class="v" id="dRepNote">—</div></div>
-            <div class="sigRow">
-              <div class="sig">
-                <div class="k">Host signature</div>
-                <img id="dHostSig" class="sigImg" alt="Host signature" />
-              </div>
-              <div class="sig">
-                <div class="k">Sales signature</div>
-                <img id="dRepSig" class="sigImg" alt="Sales signature" />
-              </div>
-            </div>
-          </div>
-
-          <h3 class="drawerSectionTitle">Key influencer farmers</h3>
-          <div class="tableWrap mini">
-            <table class="table" id="drawerFarmersTable">
-              <thead>
-                <tr>
-                  <th>Farmer</th><th class="num">Acres</th><th>Plan</th><th>Village</th><th>Phone</th>
-                </tr>
-              </thead>
-              <tbody id="drawerFarmersBody">
-                <tr><td colspan="5" class="muted">Select a session to view details.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-<h3 class="drawerSectionTitle">Session media</h3>
+          <h3 class="drawerSectionTitle">Session media</h3>
           <div id="drawerMedia" class="drawerMedia"></div>
         </aside>
       </section>
@@ -249,69 +215,7 @@
     <section class="card">
       <div class="sectionHeader">
         <div>
-          
-    <section class="card" id="directoryCard">
-      <div class="sectionHeader">
-        <div>
-          <h2>People & contacts</h2>
-          <p class="muted">
-            Browse key influencer farmers and field-team feedback by district, village, session or person.
-            Contacts are masked by default for privacy.
-          </p>
-        </div>
-        <div class="dirActions">
-          <label class="toggle">
-            <input type="checkbox" id="revealContacts"/>
-            <span>Reveal contacts</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="controlsRow compact">
-        <div class="control">
-          <label>Village</label>
-          <select id="villageSelect"></select>
-        </div>
-        <div class="control">
-          <label>Person</label>
-          <select id="personSelect"></select>
-        </div>
-        <div class="control">
-          <label>Role</label>
-          <select id="roleSelect">
-            <option value="ALL">All</option>
-            <option value="host">Host</option>
-            <option value="sales">Sales</option>
-          </select>
-        </div>
-        <div class="control">
-          <label>Search farmers</label>
-          <input id="farmerSearch" placeholder="Farmer name, village, plan…"/>
-        </div>
-      </div>
-
-      <div class="dirSplit">
-        <div class="tableWrap">
-          <table class="table" id="farmersTable">
-            <thead>
-              <tr>
-                <th>Farmer</th><th>Village</th><th class="num">Acres</th><th>Plan</th><th>Session</th><th>Phone</th>
-              </tr>
-            </thead>
-            <tbody id="farmersTbody">
-              <tr><td colspan="6" class="muted">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="profileCard" id="personProfile">
-          <div class="profileTitle">Select a person</div>
-          <div class="muted">Choose a host or sales rep to view feedback, signatures and linked sessions.</div>
-        </div>
-      </div>
-    </section>
-
-<h2>Media wall</h2>
+          <h2>Media wall</h2>
           <p class="muted">Animated cards combine each session’s photo and video. Only items from <code>assets/gallery/</code> are shown.</p>
         </div>
         <div class="mediaCounters">

@@ -21,8 +21,27 @@
         <div class="brandMark">INTERACT</div>
         <div class="brandSub">Insights, coverage and field media — built for teams, partners and the community.</div>
       </div>
+      <div class="headerActions">
+        <a class="chip link" href="#feedback">Send feedback</a>
+      </div>
+    </div>
 
-      <div class="headerMedia" id="headerMedia" aria-label="Header media carousel"></div>
+    <div class="heroWrap">
+      <div class="heroPlayer" id="heroPlayer" aria-label="Header video playlist">
+        <video id="heroVideo" muted autoplay playsinline loop preload="metadata"></video>
+        <img id="heroPoster" alt="" />
+        <div class="heroOverlay"></div>
+        <div class="heroCaption">
+          <div class="heroTitle" id="heroTitle">Campaign highlights</div>
+          <div class="heroSub" id="heroSub">If video does not auto-play on iPhone, tap once to start.</div>
+        </div>
+        <div class="heroControls">
+          <button class="iconBtn" id="heroPrev" title="Previous">‹</button>
+          <button class="iconBtn" id="heroNext" title="Next">›</button>
+          <button class="iconBtn" id="heroMute" title="Mute/Unmute">🔇</button>
+        </div>
+      </div>
+      <div class="heroThumbs" id="heroThumbs" aria-label="Header video thumbnails"></div>
     </div>
   </header>
 
@@ -235,16 +254,18 @@
       </div>
 
       <div class="feedbackActions">
-        <div class="muted">Send to <strong>interact@paksaf.com</strong> • Contact <strong>+92355223233</strong></div>
+        <div class="muted">Send to <a class="link" href="mailto:interact@paksaf.com">interact@paksaf.com</a> • Contact <a class="link" href="tel:+92355223233">+92355223233</a> • WhatsApp <a class="link" href="https://wa.me/923303570463" target="_blank" rel="noopener">+923303570463</a></div>
         <div class="btnRow">
           <button class="btn" id="emailFeedbackBtn">Email feedback</button>
           <button class="btn whatsapp" id="waFeedbackBtn">WhatsApp feedback</button>
         </div>
-        <div class="muted small" id="fbHint">Tip: On iPhone, WhatsApp share is usually the fastest.</div>
+        <div class="muted small" id="fbValidate"></div>
+        <div class="muted small" id="fbHint">We will only use your contact to follow up on the feedback if needed.</div>
       </div>
     </section>
 
     <footer class="footer">
+      <div class="footerBrands" id="footerBrands" aria-label="Brand assets"></div>
       <div class="muted">Powered by <strong>INTERACT</strong> — multi-campaign field intelligence dashboards.</div>
     </footer>
 

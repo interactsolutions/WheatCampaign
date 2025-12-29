@@ -7,6 +7,7 @@
   const fmtInt = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : new Intl.NumberFormat().format(Math.round(n));
   const fmt1 = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : (Math.round(n*10)/10).toFixed(1);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const safeStr = (v) => (v === null || v === undefined || String(v).trim()==='' ? '—' : String(v).trim());
 
   const BASE = new URL('./', window.location.href); // resolves /WheatCampaign/
   const url = (rel) => new URL(rel, BASE).toString();
@@ -44,6 +45,25 @@
     }
   }
 
+  // Asset existence cache (prevents rendering placeholder tiles for missing files)
+  const _existsCache = new Map();
+  async function assetExists(relUrl){
+    const key = String(relUrl||'');
+    if(_existsCache.has(key)) return _existsCache.get(key);
+    const u = url(String(relUrl||'').replace(/^\/?/,''));
+    let ok = false;
+    try{
+      let res = await fetch(u, { method:'HEAD', cache:'no-store' });
+      if(res && res.ok) ok = true;
+      else{
+        res = await fetch(u, { method:'GET', cache:'no-store' });
+        ok = !!(res && res.ok);
+      }
+    }catch{ ok = false; }
+    _existsCache.set(key, ok);
+    return ok;
+  }
+
   function getCampaignFromQuery() {
     const p = new URLSearchParams(window.location.search);
     return p.get('campaign');
@@ -55,60 +75,176 @@
     history.replaceState({}, '', u.toString());
   }
 
-  function renderHeaderMedia(cfg) {
-    const host = $$('#headerMedia');
+  
+  function renderHero(cfg){
+    const hero = $$('#heroPlayer');
+    const v = $$('#heroVideo');
+    const poster = $$('#heroPoster');
+    const thumbs = $$('#heroThumbs');
+    const t = $$('#heroTitle');
+    const s = $$('#heroSub');
+    const btnPrev = $$('#heroPrev');
+    const btnNext = $$('#heroNext');
+    const btnMute = $$('#heroMute');
+    if(!hero || !v || !poster || !thumbs) return;
+
+    const seq = Array.isArray(cfg.headerSequence) ? cfg.headerSequence : [];
+    const playlist = seq.map((x, idx)=>({
+      idx,
+      label: x.label || `Header ${idx+1}`,
+      title: x.title || x.label || 'Campaign highlights',
+      video: x.video || '',
+      poster: x.poster || 'assets/placeholder.svg'
+    }));
+
+    let cur = 0;
+    let autoTimer = null;
+
+    function setActiveThumb(){
+      $all('.heroThumb', thumbs).forEach((el)=>el.classList.remove('active'));
+      const el = thumbs.querySelector(`[data-idx="${cur}"]`);
+      if(el) el.classList.add('active');
+    }
+
+    async function loadIndex(i, user=false){
+      if(!playlist.length) return;
+      cur = (i + playlist.length) % playlist.length;
+      const item = playlist[cur];
+
+      t.textContent = item.title;
+      s.textContent = 'If video does not auto-play on iPhone, tap once to start.';
+      setActiveThumb();
+
+      const hasVid = item.video ? await assetExists(item.video) : false;
+      const hasPoster = item.poster ? await assetExists(item.poster) : false;
+
+      const posterSrc = resolveUrl(hasPoster ? item.poster : 'assets/placeholder.svg');
+      poster.src = posterSrc;
+
+      if(hasVid){
+        hero.classList.remove('fallback');
+        v.src = resolveUrl(item.video);
+        v.load();
+        try{
+          const p = v.play();
+          if(p && p.catch) await p;
+        }catch(_e){
+          hero.classList.add('fallback');
+          s.textContent = 'Tap to play (autoplay blocked by device/browser).';
+        }
+      }else{
+        hero.classList.add('fallback');
+        v.removeAttribute('src');
+        v.load();
+        s.textContent = 'Video not found. Showing poster image.';
+      }
+
+      if(user){
+        // If user interacted, keep autoplay rotation but slower.
+        restartAuto(11000);
+      }
+    }
+
+    function restartAuto(ms=8500){
+      if(autoTimer) window.clearInterval(autoTimer);
+      if(!playlist.length) return;
+      autoTimer = window.setInterval(()=>loadIndex(cur+1), ms);
+    }
+
+    // Build thumbs
+    thumbs.innerHTML = '';
+    playlist.slice(0, 4).forEach((item)=>{
+      const el = document.createElement('div');
+      el.className = 'heroThumb';
+      el.dataset.idx = String(item.idx);
+      el.innerHTML = `
+        <img alt="" src="${escapeHtml(resolveUrl(item.poster || 'assets/placeholder.svg'))}"/>
+        <div class="badge">${escapeHtml(item.label)}</div>
+      `;
+      el.addEventListener('click', ()=>loadIndex(item.idx, true));
+      thumbs.appendChild(el);
+    });
+
+    btnPrev?.addEventListener('click', (e)=>{ e.preventDefault(); loadIndex(cur-1, true); });
+    btnNext?.addEventListener('click', (e)=>{ e.preventDefault(); loadIndex(cur+1, true); });
+    btnMute?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      v.muted = !v.muted;
+      btnMute.textContent = v.muted ? '🔇' : '🔊';
+    });
+
+    hero.addEventListener('click', async ()=>{
+      try{
+        if(v.paused){
+          await v.play();
+          hero.classList.remove('fallback');
+        }else{
+          v.pause();
+        }
+      }catch(_e){
+        hero.classList.add('fallback');
+      }
+    });
+
+    loadIndex(0);
+    restartAuto();
+  }
+
+  async function renderFooterBrands(cfg){
+    const host = $$('#footerBrands');
+    if(!host) return;
+
+    const candidates = [
+      {name:'INTERACT', img:'assets/Interact.gif'},
+      {name:'Bayer', img:'assets/Bayer.png'},
+      {name:'Buctril Super', img:'assets/Buctril.jpg'},
+      {name:'Atlantis', img:'assets/Atlantis.jpg'},
+      {name:'Products', img:'assets/poducts.jpg'}
+    ];
+
     host.innerHTML = '';
-    const seq = (cfg && cfg.headerSequence) ? cfg.headerSequence : [];
-    for (const item of seq) {
-      const tile = document.createElement('div');
-      tile.className = 'headerTile';
-      const vid = document.createElement('video');
-      vid.muted = true;
-      vid.loop = true;
-      vid.autoplay = true;
-      vid.playsInline = true;
-      vid.preload = 'metadata';
-      vid.src = url(item.video.replace(/^\/?/,''));
-      const img = document.createElement('img');
-      img.src = url(item.poster.replace(/^\/?/,''));
-      img.alt = item.label || '';
-      // fallback logic
-      let videoOk = true;
-      vid.addEventListener('error', () => {
-        videoOk = false;
-        vid.remove();
-        img.style.display = 'block';
-      });
-      vid.addEventListener('canplay', () => {
-        if (!videoOk) return;
-        vid.play().catch(() => {
-          // iOS may block; show poster
-          vid.remove();
-          img.style.display = 'block';
-        });
-      });
-      tile.appendChild(vid);
-      tile.appendChild(img);
-      const badge = document.createElement('div');
-      badge.className = 'badge';
-      badge.textContent = item.label || '';
-      tile.appendChild(badge);
-      host.appendChild(tile);
+    for(const c of candidates){
+      const ok = await assetExists(c.img);
+      if(!ok) continue;
+      const pill = document.createElement('div');
+      pill.className = 'brandPill';
+      pill.innerHTML = `<img alt="${escapeHtml(c.name)}" src="${escapeHtml(resolveUrl(c.img))}"/><span>${escapeHtml(c.name)}</span>`;
+      host.appendChild(pill);
     }
   }
 
-  function initBgVideo(cfg) {
+
+  
+  async function initBgVideo(cfg) {
     const v = $$('#bgVideo');
-    if (!v) return;
-    v.src = url(cfg.backgroundVideo.replace(/^\/?/,''));
-    v.addEventListener('error', () => {
+    if(!v) return;
+    const src = cfg.backgroundVideo || 'assets/bg.mp4';
+    const ok = await assetExists(src);
+    if(!ok){
+      // Keep the element but don’t break layout; background falls back to gradient.
+      v.removeAttribute('src');
       v.style.display = 'none';
-    });
-    v.play().catch(() => {
-      // iOS autoplay
-      v.style.display = 'none';
+      return;
+    }
+    v.src = resolveUrl(src);
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.autoplay = true;
+    v.preload = 'metadata';
+
+    // Try autoplay; if blocked, show paused first frame and allow tap to start.
+    try{
+      const p = v.play();
+      if(p && p.catch) await p;
+    }catch(_e){
+      v.classList.add('paused');
+    }
+    v.addEventListener('click', async ()=>{
+      try{ await v.play(); v.classList.remove('paused'); }catch(_e){}
     });
   }
+
 
   function donutSvg(parts, centerText, subText) {
     // parts: [{label, value(0..1), colorClass}]
@@ -344,80 +480,65 @@
   // Media wall
   function renderMediaWall() {
     const host = $$('#mediaWall');
-    const ph = state.media?.placeholder ? url(state.media.placeholder.replace(/^\/?/,'') ) : url('assets/placeholder.svg');
+    if(!host) return;
 
-    const cards = state.filtered.map(s => {
-      // Use first image/video of those that are from gallery
-      const img0 = (s.media?.images||[]).find(p=>p && p.startsWith('gallery/'));
-      const img1 = (s.media?.images||[]).find(p=>p && p.startsWith('gallery/') && p !== img0);
-      const vid0 = (s.media?.videos||[]).find(p=>p && p.startsWith('gallery/'));
-      const imgUrl0 = img0 ? url(state.media.galleryBase + img0.replace('gallery/','')) : ph;
-      const imgUrl1 = img1 ? url(state.media.galleryBase + img1.replace('gallery/','')) : ph;
-      const vidUrl0 = vid0 ? url(state.media.galleryBase + vid0.replace('gallery/','')) : null;
-
-      return { s, imgUrl0, imgUrl1, vidUrl0 };
-    });
-
-    host.innerHTML = cards.map(({s,imgUrl0,imgUrl1,vidUrl0}) => {
-      const sub = `${s.district || s.city || ''}${s.date ? ' • ' + s.date : ''}`;
-      return `
-        <div class="mediaCard" data-id="${s.id}">
-          <div class="mediaStack">
-            <img src="${imgUrl0}" alt="" onerror="this.onerror=null;this.src='${ph}'">
-            <img class="alt" src="${imgUrl1}" alt="" onerror="this.onerror=null;this.style.display='none'">
-            ${vidUrl0 ? `<video muted loop playsinline preload="metadata" src="${vidUrl0}"></video>` : ``}
-          </div>
-          <div class="mediaOverlay"></div>
-          <div class="mediaMeta">
-            <div>
-              <div class="t">Session ${s.id}: ${escapeHtml(s.spot || '—')}</div>
-              <div class="s">${escapeHtml(sub)}</div>
-            </div>
-            <div class="mediaBtns">
-              <div class="mediaIcon" title="Open" data-act="open">⤢</div>
-              <div class="mediaIcon" title="Share" data-act="share">⤴</div>
-            </div>
-          </div>
+    host.innerHTML = '';
+    for(const s of state.filtered){
+      const card = document.createElement('div');
+      card.className = 'mwCard';
+      card.innerHTML = `
+        <div class="mwStack" data-id="${escapeHtml(String(s.id))}">
+          <img class="mwImg" id="mwImg-${escapeHtml(String(s.id))}" alt="" loading="lazy" src="${escapeHtml(resolveUrl('assets/placeholder.svg'))}"/>
+          <img class="mwImg mwAlt" id="mwAlt-${escapeHtml(String(s.id))}" alt="" loading="lazy" src="${escapeHtml(resolveUrl('assets/placeholder.svg'))}" style="opacity:0"/>
+          <video class="mwVid" id="mwVid-${escapeHtml(String(s.id))}" muted playsinline loop preload="metadata" style="opacity:0"></video>
+          <div class="mwBadge">${escapeHtml(s.location?.district || s.location?.city || 'Session')}</div>
+        </div>
+        <div class="mwMeta">
+          <div class="mwTitle">Session ${escapeHtml(String(s.id))} • ${escapeHtml(s.date || '')}</div>
+          <div class="mwSub">${escapeHtml(fmtInt(s.metrics?.farmers))} farmers • Score ${escapeHtml(String(Math.round(s.score||0)))}/100</div>
         </div>
       `;
-    }).join('');
+      const stack = card.querySelector('.mwStack');
+      stack.addEventListener('click', ()=>openSession(s));
+      host.appendChild(card);
 
-    $$$('.mediaCard', host).forEach(card => {
-      const id = Number(card.dataset.id);
-      const s = state.sessions.find(x=>x.id===id);
-      const vid = $$('video', card);
-      if (vid) {
-        card.addEventListener('mouseenter', () => vid.play().catch(()=>{}));
-        card.addEventListener('mouseleave', () => { try{vid.pause(); vid.currentTime=0;}catch{} });
-        // mobile: tap to play/pause
-        card.addEventListener('touchstart', () => {
-          if (vid.paused) vid.play().catch(()=>{}); else vid.pause();
-        }, {passive:true});
-      }
-      $$$('.mediaIcon', card).forEach(btn => btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const act = btn.dataset.act;
-        if (act === 'open') {
-          openSession(s);
-        } else if (act === 'share') {
-          const any = firstShareableMedia(s);
-          if (any) shareUrl(any, `Session ${s.id} media`);
-        }
-      }));
-      card.addEventListener('click', () => openSession(s));
-    });
+      // hydrate with real media
+      hydrateMediaCard(s);
+    }
   }
 
-  function firstShareableMedia(s) {
-    const g = state.media?.galleryBase || 'assets/gallery/';
-    const img = (s.media?.images||[]).find(p=>p && p.startsWith('gallery/'));
-    if (img) return url(g + img.replace('gallery/',''));
-    const vid = (s.media?.videos||[]).find(p=>p && p.startsWith('gallery/'));
-    if (vid) return url(g + vid.replace('gallery/',''));
-    return null;
-  }
+  async function hydrateMediaCard(s){
+    const id = String(s.id);
+    const img = $$('#mwImg-'+id);
+    const alt = $$('#mwAlt-'+id);
+    const vid = $$('#mwVid-'+id);
+    if(!img || !alt || !vid) return;
 
-  // Map
+    const resolved = await resolveSessionMedia(s);
+    const imgs = resolved.items.filter(x=>x.kind==='image').map(x=>x.url);
+    const vids = resolved.items.filter(x=>x.kind==='video').map(x=>x.url);
+
+    if(imgs[0]){
+      img.src = resolveUrl(imgs[0]);
+    }
+    if(imgs[1]){
+      alt.src = resolveUrl(imgs[1]);
+      alt.style.opacity = '1';
+    }else{
+      alt.style.display = 'none';
+    }
+    if(vids[0]){
+      vid.src = resolveUrl(vids[0]);
+      vid.style.opacity = '0.0';
+      // Reveal video on hover (desktop) or on tap (mobile)
+      const parent = img.closest('.mwStack');
+      parent.addEventListener('mouseenter', ()=>{ vid.style.opacity='1'; try{vid.play();}catch{} });
+      parent.addEventListener('mouseleave', ()=>{ vid.style.opacity='0'; try{vid.pause();}catch{} });
+      parent.addEventListener('touchstart', ()=>{ vid.style.opacity='1'; try{vid.play();}catch{} }, {passive:true});
+    }else{
+      vid.style.display = 'none';
+    }
+  }  // Map
   function initMap() {
     const el = $$('#map');
     if (!window.L || !el) {
@@ -433,6 +554,15 @@
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
     L.control.zoom({ position:'bottomright' }).addTo(map);
+
+    // Delegate popup button clicks
+    map.getContainer().addEventListener('click', (ev)=>{
+      const btn = ev.target && ev.target.closest ? ev.target.closest('.popupBtn') : null;
+      if(!btn) return;
+      const id = btn.getAttribute('data-session');
+      const s = (state.filtered||[]).find(x=>String(x.id)===String(id)) || (state.sessions||[]).find(x=>String(x.id)===String(id));
+      if(s) openSession(s);
+    });
 
     renderMarkers();
     fitMap();
@@ -456,15 +586,40 @@
       if (typeof lat !== 'number' || typeof lng !== 'number') continue;
       const acres = s.metrics?.wheatAcres || 0;
       const radius = clamp(Math.sqrt(acres||0) * 1.6, 6, 26);
-      const m = L.circleMarker([lat,lng], {
+      const col = markerColor(s.score);
+      const marker = L.circleMarker([lat,lng], {
         radius,
-        color: markerColor(s.score),
+        color: col,
         weight: 2,
-        fillColor: markerColor(s.score),
+        fillColor: col,
         fillOpacity: 0.55
       }).addTo(state.map);
-      m.on('click', () => openSession(s));
-      state.markers.push(m);
+
+      const district = s.location?.district || s.location?.city || '—';
+      const farmers = s.metrics?.farmers || 0;
+      const score = Math.round(s.score || 0);
+
+      const popupHtml = `
+        <div class="mapPopup">
+          <div class="mpTitle">${escapeHtml(district)} <span class="mpMeta">• Session ${escapeHtml(String(s.id||''))}</span></div>
+          <div class="mpRow">
+            <span>Farmers</span><strong>${escapeHtml(String(farmers))}</strong>
+            <span style="margin-left:10px">Score</span><strong>${escapeHtml(String(score))}</strong>
+          </div>
+          <button class="popupBtn" data-session="${escapeHtml(String(s.id))}">View session details</button>
+        </div>
+      `;
+      marker.bindPopup(popupHtml, { closeButton:true, autoPan:true });
+
+      marker.on('click', () => {
+        openSession(s);
+        try{ marker.openPopup(); }catch{}
+        // Ensure session panel is visible on small screens
+        const drawer = $$('#drawer');
+        drawer?.scrollIntoView({behavior:'smooth', block:'start'});
+      });
+
+      state.markers.push(marker);
     }
   }
 
@@ -474,142 +629,93 @@
     state.map.fitBounds(g.getBounds().pad(0.2));
   }
 
-  // Session drawer
-  function openSession(s) {
+  
+  async function resolveSessionMedia(s){
+    const base = (state.media && state.media.galleryBase) ? state.media.galleryBase : 'assets/gallery/';
+    const id = String(s.id||'').trim();
+    const dedupe = (arr)=>Array.from(new Set(arr.filter(Boolean)));
+    const imgCandidates = dedupe([
+      ...(s.media?.images||[]),
+      `${base}${id}.jpeg`, `${base}${id}a.jpeg`,
+      `${base}${id}.jpg`, `${base}${id}a.jpg`,
+      `${base}${id}.png`, `${base}${id}a.png`
+    ]);
+    const vidCandidates = dedupe([
+      ...(s.media?.videos||[]),
+      `${base}${id}.mp4`, `${base}${id}a.mp4`
+    ]);
+
+    const images = [];
+    for(const u of imgCandidates){ if(await assetExists(u)) images.push(u); }
+    const videos = [];
+    for(const u of vidCandidates){ if(await assetExists(u)) videos.push(u); }
+    const items = [
+      ...images.slice(0,3).map(u=>({kind:'image', url:u})),
+      ...videos.slice(0,2).map(u=>({kind:'video', url:u})),
+      ...images.slice(3).map(u=>({kind:'image', url:u})),
+      ...videos.slice(2).map(u=>({kind:'video', url:u}))
+    ].slice(0,10);
+    return { items };
+  }
+
+// Session drawer
+  async function openSession(s) {
     state.selected = s;
-    const drawer = $$('#sessionDrawer');
-    drawer.classList.remove('hidden');
+    const drawer = $$('#drawer');
+    drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
 
-    $$('#dTitle').textContent = `Session ${s.id}: ${s.spot || '—'}`;
-    $$('#dSub').textContent = `${s.district || s.city || '—'}${s.date ? ' • ' + s.date : ''}`;
+    $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
+    $$('#dSub').textContent = `${safeStr(s.province||s.location?.province||'Pakistan')} • ${fmtInt(s.metrics?.farmers||0)} farmers • ${fmtInt(s.metrics?.acres||s.metrics?.wheatAcres||0)} acres`;
 
-    $$('#dHost').textContent = fmtPerson(s.host);
-    $$('#dRep').textContent = fmtPerson(s.salesRep);
-    $$('#dDealer').textContent = fmtPerson(s.dealer);
+    $$('#dHost').textContent = safeStr(s.people?.host || s.host);
+    $$('#dRep').textContent = safeStr(s.people?.rep || s.rep);
+    $$('#dDealer').textContent = safeStr(s.people?.dealer || s.dealer);
 
     $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
-    $$('#dAcres').textContent = fmtInt(s.metrics?.wheatAcres);
-    $$('#dDefinite').textContent = (s.metrics?.definitePct ?? '—') + (s.metrics?.definitePct!=null ? '%' : '');
-    $$('#dScore').textContent = s.score ?? '—';
-    $$('#dTopUse').textContent = s.topReasonUse || '—';
-    $$('#dTopNotUse').textContent = s.topReasonNotUse || '—';
+    $$('#dAcres').textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
+    $$('#dAwareness').textContent = fmtPct(s.metrics?.awarenessPct);
+    $$('#dIntent').textContent = fmtPct(s.metrics?.intentPct);
+    $$('#dClarity').textContent = fmtPct(s.metrics?.clarityPct);
+    $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
 
-    // drawer media thumbnails
-    const host = $$('#drawerMedia');
-    host.innerHTML = '';
-    const ph = state.media?.placeholder ? url(state.media.placeholder.replace(/^\/?/,'') ) : url('assets/placeholder.svg');
-    const gb = state.media?.galleryBase || 'assets/gallery/';
+    // Share / maps
+    const lat = s.geo?.lat, lng = s.geo?.lng;
+    const mapsUrl = (typeof lat==='number' && typeof lng==='number') ? `https://www.google.com/maps?q=${lat},${lng}` : '';
+    const openMaps = $$('#openMapsBtn');
+    if(openMaps){
+      openMaps.disabled = !mapsUrl;
+      openMaps.onclick = ()=>{ if(mapsUrl) window.open(mapsUrl, '_blank'); };
+    }
+    const shareBtn = $$('#shareSessionBtn');
+    if(shareBtn){
+      shareBtn.onclick = async ()=> {
+        const u = new URL(window.location.href);
+        u.searchParams.set('campaign', state.campaign?.id || '');
+        u.hash = `session-${s.id}`;
+        await shareUrl(u.toString(), `Session ${s.id} • ${state.campaign?.name||''}`);
+      };
+    }
 
-    const imgs = (s.media?.images||[]).filter(p=>p && p.startsWith('gallery/'));
-    const vids = (s.media?.videos||[]).filter(p=>p && p.startsWith('gallery/'));
-
-    const items = [
-      ...imgs.map(p => ({type:'img', url: url(gb + p.replace('gallery/','')) })),
-      ...vids.map(p => ({type:'vid', url: url(gb + p.replace('gallery/','')) })),
-    ];
-
-    if (!items.length) {
-      host.innerHTML = `<div class="muted">No media mapped for this session.</div>`;
-    } else {
-      for (const it of items) {
-        const t = document.createElement('div');
-        t.className = 'thumb';
-        t.innerHTML = it.type === 'img'
-          ? `<img src="${it.url}" alt="" onerror="this.onerror=null;this.src='${ph}'"><div class="type">IMG</div>`
-          : `<video muted playsinline preload="metadata" src="${it.url}"></video><div class="type">VID</div>`;
-        t.addEventListener('click', () => openLightbox(it));
-        host.appendChild(t);
+    // Media (only existing files)
+    const mediaHost = $$('#sessionMedia');
+    if(mediaHost){
+      mediaHost.innerHTML = '';
+      const resolved = await resolveSessionMedia(s);
+      if(!resolved.items.length){
+        mediaHost.innerHTML = '<div class="emptyState">No media mapped for this session yet.</div>';
+      }else{
+        for(const it of resolved.items){
+          const tile = document.createElement('button');
+          tile.className = 'mediaTile';
+          tile.type = 'button';
+          tile.innerHTML = (it.kind==='video')
+            ? `<div class="mediaInner"><video muted playsinline preload="metadata" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"></video><div class="tag">VID</div></div>`
+            : `<div class="mediaInner"><img alt="" loading="lazy" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"/><div class="tag">IMG</div></div>`;
+          tile.addEventListener('click', ()=>openLightbox(it));
+          mediaHost.appendChild(tile);
+        }
       }
     }
-
-    // map pan
-    if (state.map && window.L && typeof s.geo?.lat === 'number' && typeof s.geo?.lng === 'number') {
-      state.map.setView([s.geo.lat, s.geo.lng], Math.max(state.map.getZoom(), 11));
-    }
-  }
-
-  function fmtPerson(p) {
-    if (!p) return '—';
-    const name = (p.name||'').trim();
-    const phone = (p.phone||'').trim();
-    if (!name && !phone) return '—';
-    return phone ? `${name || '—'} (${phone})` : (name || '—');
-  }
-
-  // Lightbox
-  function openLightbox(it) {
-    const lb = $$('#lightbox');
-    const body = $$('#lightboxBody');
-    lb.classList.remove('hidden');
-    lb.setAttribute('aria-hidden','false');
-    state.selectedMediaUrl = it.url;
-    body.innerHTML = it.type === 'img'
-      ? `<img src="${it.url}" alt="">`
-      : `<video controls playsinline src="${it.url}"></video>`;
-  }
-
-  function closeLightbox() {
-    const lb = $$('#lightbox');
-    lb.classList.add('hidden');
-    lb.setAttribute('aria-hidden','true');
-    $$('#lightboxBody').innerHTML = '';
-    state.selectedMediaUrl = null;
-  }
-
-  async function shareUrl(u, title='Campaign media') {
-    try{
-      if (navigator.share) {
-        await navigator.share({ title, text: title, url: u });
-        return true;
-      }
-    }catch{}
-    try{
-      await navigator.clipboard.writeText(u);
-      alert('Link copied to clipboard.');
-      return true;
-    }catch{
-      prompt('Copy this link:', u);
-      return false;
-    }
-  }
-
-  // Export
-  function exportCsv() {
-    const rows = state.filtered.map(s => ({
-      id: s.id,
-      date: s.date,
-      district: s.district,
-      spot: s.spot,
-      farmers: s.metrics?.farmers,
-      acres: s.metrics?.wheatAcres,
-      awarenessPct: s.metrics?.awarenessPct,
-      usedLastYearPct: s.metrics?.usedLastYearPct,
-      definitePct: s.metrics?.definitePct,
-      avgUnderstanding: s.metrics?.avgUnderstanding,
-      score: s.score
-    }));
-    const header = Object.keys(rows[0]||{});
-    const csv = [header.join(',')].concat(rows.map(r => header.map(k => `"${String(r[k]??'').replace(/"/g,'""')}"`).join(','))).join('\n');
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-    const filename = `campaign_${state.campaign?.id||'export'}.csv`;
-
-    // iOS-friendly share fallback
-    const file = new File([blob], filename, {type: blob.type});
-    if (navigator.canShare && navigator.canShare({files:[file]})) {
-      navigator.share({files:[file], title: filename}).catch(()=>{});
-      return;
-    }
-    const u = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = u;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // iOS: open in new tab
-    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isiOS) window.open(u, '_blank');
-    setTimeout(()=>URL.revokeObjectURL(u), 5000);
   }
 
   // Feedback
@@ -704,8 +810,9 @@
     setStatus(`loading ${c.id}…`);
     // load media first (for header/bg)
     state.media = await fetchJson(url(c.mediaUrl));
-    initBgVideo(state.media);
-    renderHeaderMedia(state.media);
+    await initBgVideo(state.media);
+    renderHero(state.media);
+    await renderFooterBrands(state.media);
 
     const payload = await fetchJson(url(c.sessionsUrl));
     state.sessions = payload.sessions || payload || [];

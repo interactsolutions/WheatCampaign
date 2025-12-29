@@ -140,12 +140,34 @@
     el.classList.toggle('warnChip', type==='warn');
   }
 
+  function fatalError(err) {
+    const msg = (err && err.message) ? err.message : String(err || 'Unknown error');
+    setStatus(`error: ${msg}`, 'warn');
+    const hint = document.getElementById('fatalHint');
+    if (hint) {
+      hint.style.display = 'block';
+      hint.textContent = msg;
+    }
+    const tbl = document.getElementById('sessionsTable');
+    if (tbl) {
+      tbl.innerHTML = `<tbody><tr><td colspan="7" class="muted">
+        Dashboard failed to load data. Please confirm these URLs exist and return JSON:
+        <div class="mono" style="margin-top:8px">
+          /WheatCampaign/data/campaigns.json<br/>
+          /WheatCampaign/data/${encodeURIComponent(getCampaignFromQuery()||'buctril-super-2025')}/sessions.json
+        </div>
+        <div class="muted" style="margin-top:8px">Open DevTools Console to see exact failing URL.</div>
+      </td></tr></tbody>`;
+    }
+  }
+
+
   async function fetchJson(relUrl, timeoutMs=12000) {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
     try{
       const res = await fetch(relUrl, { cache: 'no-store', signal: controller.signal });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${relUrl}`);
       return await res.json();
     } finally {
       clearTimeout(t);
@@ -883,8 +905,17 @@
   async function boot() {
     try{
       setStatus('loading campaigns…');
-      const reg = await fetchJson(url('data/campaigns.json'));
-      state.campaigns = reg.campaigns || [];
+      let reg = null;
+      try {
+        reg = await fetchJson(url('data/campaigns.json'));
+      } catch(e) {
+        console.warn('campaigns.json missing; using fallback', e);
+      }
+      state.campaigns = (reg && reg.campaigns) ? reg.campaigns : [];
+      if (!state.campaigns.length) {
+        const fallbackId = getCampaignFromQuery() || 'buctril-super-2025';
+        state.campaigns = [{ id: fallbackId, name: fallbackId }];
+      }
       const cs = $$('#campaignSelect');
       cs.innerHTML = state.campaigns.map(c => `<option value="${c.id}">${escapeHtml(c.name||c.id)}</option>`).join('');
 
@@ -910,7 +941,7 @@
       console.error(e);
       setStatus(`error: ${e.message || e}`, 'warn');
       // leave UI usable but show hint
-      alert(`Dashboard failed to load: ${e.message || e}\n\nOpen /data/campaigns.json in your browser to confirm it exists.`);
+      fatalError(e);
     }
   }
 

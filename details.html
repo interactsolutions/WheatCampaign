@@ -233,8 +233,10 @@
   const state = { campaign:'buctril-super-2025', campaigns:[], sessions:[], sheetsIndex:null };
 
   async function loadCampaigns(){
-    const cfg = await getJson('data/campaigns.json');
-    state.campaigns = cfg.campaigns || [];
+    let cfg=null;
+    try{ cfg = await getJson('data/campaigns.json'); }catch(e){ console.warn('campaigns.json missing; using fallback', e); }
+    state.campaigns = (cfg && cfg.campaigns) ? cfg.campaigns : [];
+    if(!state.campaigns.length){ state.campaigns=[{id:(new URLSearchParams(location.search).get('campaign')||'buctril-super-2025'), name:'buctril-super-2025'}]; }
     const sel = $('#campaignSelect');
     sel.innerHTML = state.campaigns.map(c=>`<option value="${c.id}">${c.name || c.id}</option>`).join('');
     const q = new URLSearchParams(location.search);

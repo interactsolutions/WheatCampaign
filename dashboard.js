@@ -12,6 +12,15 @@
   const BASE = new URL('./', window.location.href); // resolves /WheatCampaign/
   const url = (rel) => new URL(rel, BASE).toString();
 
+  // Normalize asset paths so '/assets/..' does not escape the GitHub Pages sub-path
+  const resolveUrl = (p) => {
+    const s = String(p || '').trim();
+    if (!s) return '';
+    if (/^(https?:)?\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return s;
+    // prevent absolute-path resolution to origin root (breaks /WheatCampaign/ hosting)
+    return url(s.replace(/^\/+/, ''));
+  };
+
   const state = {
     campaigns: [],
     campaign: null,
@@ -101,7 +110,7 @@
     let autoTimer = null;
 
     function setActiveThumb(){
-      $all('.heroThumb', thumbs).forEach((el)=>el.classList.remove('active'));
+      $$$('.heroThumb', thumbs).forEach((el)=>el.classList.remove('active'));
       const el = thumbs.querySelector(`[data-idx="${cur}"]`);
       if(el) el.classList.add('active');
     }

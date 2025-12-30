@@ -18,7 +18,13 @@
     if (!s) return '';
     if (/^(https?:)?\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return s;
     // prevent absolute-path resolution to origin root (breaks /WheatCampaign/ hosting)
-    return url(s.replace(/^\/+/, ''));
+    
+    // normalize legacy gallery paths (older data uses 'gallery/...'; repo uses 'assets/gallery/...')
+    let rel = s.replace(/^\/+/, '');
+    if (rel.startsWith('gallery/')) rel = 'assets/' + rel; // -> assets/gallery/...
+    // tolerate already-correct 'assets/gallery/...'
+    return url(rel);
+
   };
 
   // Attribute-safe escaping (for src/href attributes)
@@ -558,7 +564,15 @@
   }
 
   function avg(list) {
-    const nums = list.filter(v => typeof v === 'number' && !Number.isNaN(v));
+    const nums = list.map(v => {
+      if (typeof v === 'number' && !Number.isNaN(v)) return v;
+      if (typeof v === 'string') {
+        const t = v.trim().replace('%','');
+        const n = Number(t);
+        return Number.isFinite(n) ? n : NaN;
+      }
+      return NaN;
+    }).filter(v => typeof v === 'number' && !Number.isNaN(v));
     if (!nums.length) return null;
     return nums.reduce((a,v)=>a+v,0)/nums.length;
   }
@@ -630,7 +644,21 @@
         </div>
       `;
       const stack = card.querySelector('.mwStack');
-      stack.addEventListener('click', ()=>openSession(s));
+      stack.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const resolved = await resolveSessionMedia(s);
+        const vids = resolved.items.filter(x=>x.kind==='video');
+        const imgs = resolved.items.filter(x=>x.kind==='image');
+        const pick = (vids[0] || imgs[0]);
+        if (pick) openLightbox(pick);
+      });
+
+      const btn = card.querySelector('[data-open-sheet]');
+      if (btn) btn.addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        openSessionSheet(s);
+      });
       host.appendChild(card);
 
       // hydrate with real media
@@ -956,6 +984,19 @@
 
     const payload = await fetchJson(url(c.sessionsUrl));
     state.sessions = payload.sessions || payload || [];
+    // Initialize date bounds based on loaded sessions
+    try{
+      const dates = state.sessions.map(x=>parseDateSafe(x.date)).filter(Boolean).sort((a,b)=>a-b);
+      if (dates.length){
+        const minD = fmtISO(dates[0]);
+        const maxD = fmtISO(dates[dates.length-1]);
+        const fromEl = $$('#fromDate');
+        const toEl = $$('#toDate');
+        if (fromEl){ fromEl.min = minD; fromEl.max = maxD; if(!fromEl.value) fromEl.placeholder = minD; }
+        if (toEl){ toEl.min = minD; toEl.max = maxD; if(!toEl.value) toEl.placeholder = maxD; }
+      }
+    }catch(_e){}
+
     rebuildDistrictOptions();
     // default district all
     $$('#districtSelect').value = 'ALL';
@@ -1033,6 +1074,22 @@
       if (!state.selectedMediaUrl) return;
       try{ await navigator.clipboard.writeText(state.selectedMediaUrl); alert('Link copied.'); }
       catch{ prompt('Copy link:', state.selectedMediaUrl); }
+    });
+
+
+    // UX: Enter in search/date fields should apply filters
+    const applyNow = () => { try{ filterSessions(); updateAll(); }catch(_e){} };
+    ['searchInput','fromDate','toDate'].forEach(id=>{
+      const el = $$('#'+id);
+      if(!el) return;
+      el.addEventListener('keydown', (e)=>{
+        if (e.key === 'Enter') { e.preventDefault(); applyNow(); }
+      });
+    });
+    ['fromDate','toDate'].forEach(id=>{
+      const el = $$('#'+id);
+      if(!el) return;
+      el.addEventListener('change', ()=>applyNow());
     });
 
     // feedback

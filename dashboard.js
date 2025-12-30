@@ -6,7 +6,6 @@
   const $$$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
   const fmtInt = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : new Intl.NumberFormat().format(Math.round(n));
   const fmt1 = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : (Math.round(n*10)/10).toFixed(1);
-  const fmtPct = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : `${Math.round(Number(n))}%`;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const safeStr = (v) => (v === null || v === undefined || String(v).trim()==='' ? '—' : String(v).trim());
 
@@ -22,26 +21,7 @@
     return url(s.replace(/^\/+/, ''));
   };
 
-  
-
-// Normalize gallery paths. Some datasets store media as "gallery/1.jpeg" (relative),
-// while the hosted files live under "assets/gallery/".
-function normalizeGalleryPath(p){
-  const s = String(p||'').trim();
-  if(!s) return '';
-  if (/^(https?:)?\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return s;
-  const clean = s.replace(/^\.+\//, '').replace(/^\/+/, '');
-  // Already under assets/
-  if (clean.startsWith('assets/')) return clean;
-  // Stored as gallery/...
-  if (clean.startsWith('gallery/')) return 'assets/' + clean;
-  // Stored as just filename
-  if (!clean.includes('/')) return 'assets/gallery/' + clean;
-  // Otherwise treat as relative to site root (but keep under repo path via resolveUrl())
-  return clean;
-}
-
-// Attribute-safe escaping (for src/href attributes)
+  // Attribute-safe escaping (for src/href attributes)
   function escapeAttr(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
@@ -213,16 +193,7 @@ function normalizeGalleryPath(p){
     return ok;
   }
 
-  
-
-function openSheetForSession(s){
-  const campaignId = state.campaign?.id || getCampaignFromQuery() || 'buctril-super-2025';
-  const sheet = s.sheetRef || s.id;
-  const u = `./sheets.html?campaign=${encodeURIComponent(campaignId)}&sheet=${encodeURIComponent(sheet)}`;
-  window.open(u, '_blank', 'noopener');
-}
-
-function getCampaignFromQuery() {
+  function getCampaignFromQuery() {
     const p = new URLSearchParams(window.location.search);
     return p.get('campaign');
   }
@@ -633,7 +604,7 @@ function getCampaignFromQuery() {
     $$$('tr.rowBtn', tbody).forEach(tr => tr.addEventListener('click', () => {
       const id = Number(tr.dataset.id);
       const s = state.sessions.find(x=>x.id===id);
-      if (s) openSheetForSession(s);
+      if (s) openSession(s);
     }));
   }
 
@@ -721,7 +692,7 @@ function getCampaignFromQuery() {
       if(!btn) return;
       const id = btn.getAttribute('data-session');
       const s = (state.filtered||[]).find(x=>String(x.id)===String(id)) || (state.sessions||[]).find(x=>String(x.id)===String(id));
-      if(s) openSheetForSession(s);
+      if(s) openSession(s);
     });
 
     renderMarkers();
@@ -766,7 +737,7 @@ function getCampaignFromQuery() {
             <span>Farmers</span><strong>${escapeHtml(String(farmers))}</strong>
             <span style="margin-left:10px">Score</span><strong>${escapeHtml(String(score))}</strong>
           </div>
-          <button class="popupBtn" data-session="${escapeHtml(String(s.id))}">Open full sheet</button>
+          <button class="popupBtn" data-session="${escapeHtml(String(s.id))}">View session details</button>
         </div>
       `;
       marker.bindPopup(popupHtml, { closeButton:true, autoPan:true });
@@ -775,7 +746,7 @@ function getCampaignFromQuery() {
         openSession(s);
         try{ marker.openPopup(); }catch{}
         // Ensure session panel is visible on small screens
-        const drawer = $$('#sessionDrawer');
+        const drawer = $$('#drawer');
         drawer?.scrollIntoView({behavior:'smooth', block:'start'});
       });
 
@@ -790,127 +761,95 @@ function getCampaignFromQuery() {
   }
 
   
-  
-async function resolveSessionMedia(s){
-  const base = (state.media && state.media.galleryBase) ? String(state.media.galleryBase) : 'assets/gallery/';
-  const baseNorm = base.endsWith('/') ? base : (base + '/');
+  async function resolveSessionMedia(s){
+    const base = (state.media && state.media.galleryBase) ? state.media.galleryBase : 'assets/gallery/';
+    const id = String(s.id||'').trim();
+    const dedupe = (arr)=>Array.from(new Set(arr.filter(Boolean)));
+    const imgCandidates = dedupe([
+      ...(s.media?.images||[]),
+      `${base}${id}.jpeg`, `${base}${id}a.jpeg`,
+      `${base}${id}.jpg`, `${base}${id}a.jpg`,
+      `${base}${id}.png`, `${base}${id}a.png`
+    ]);
+    const vidCandidates = dedupe([
+      ...(s.media?.videos||[]),
+      `${base}${id}.mp4`, `${base}${id}a.mp4`
+    ]);
 
-  const id = String(s.id||'').trim();
-  const dedupe = (arr)=>Array.from(new Set(arr.filter(Boolean)));
-
-  // 1) Start with explicitly provided media paths from sessions.json, but normalize them.
-  const rawImgs = (s.media?.images||[]).map(normalizeGalleryPath);
-  const rawVids = (s.media?.videos||[]).map(normalizeGalleryPath);
-
-  // 2) Add conventional fallbacks by id (1.jpeg, 1a.jpeg, etc.) under gallery base.
-  const imgCandidates = dedupe([
-    ...rawImgs,
-    `${baseNorm}${id}.jpeg`, `${baseNorm}${id}a.jpeg`,
-    `${baseNorm}${id}.jpg`,  `${baseNorm}${id}a.jpg`,
-    `${baseNorm}${id}.png`,  `${baseNorm}${id}a.png`
-  ].map(normalizeGalleryPath));
-
-  const vidCandidates = dedupe([
-    ...rawVids,
-    `${baseNorm}${id}.mp4`,  `${baseNorm}${id}a.mp4`
-  ].map(normalizeGalleryPath));
-
-  const images = [];
-  for(const u of imgCandidates){ if(await assetExists(u)) images.push(u); }
-  const videos = [];
-  for(const u of vidCandidates){ if(await assetExists(u)) videos.push(u); }
-
-  const items = [
-    ...images.slice(0,3).map(u=>({kind:'image', url:u})),
-    ...videos.slice(0,2).map(u=>({kind:'video', url:u})),
-    ...images.slice(3).map(u=>({kind:'image', url:u})),
-    ...videos.slice(2).map(u=>({kind:'video', url:u}))
-  ].slice(0,12);
-
-  return { items };
-}
-
+    const images = [];
+    for(const u of imgCandidates){ if(await assetExists(u)) images.push(u); }
+    const videos = [];
+    for(const u of vidCandidates){ if(await assetExists(u)) videos.push(u); }
+    const items = [
+      ...images.slice(0,3).map(u=>({kind:'image', url:u})),
+      ...videos.slice(0,2).map(u=>({kind:'video', url:u})),
+      ...images.slice(3).map(u=>({kind:'image', url:u})),
+      ...videos.slice(2).map(u=>({kind:'video', url:u}))
+    ].slice(0,10);
+    return { items };
+  }
 
 // Session drawer
-  
-async function openSession(s) {
-  state.selected = s;
+  async function openSession(s) {
+    state.selected = s;
+    const drawer = $$('#drawer');
+    drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
 
-  const drawer = $$('#sessionDrawer');
-  if(drawer){
-    drawer.classList.remove('hidden');
-    drawer.scrollTop = 0;
-  }
+    $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
+    $$('#dSub').textContent = `${safeStr(s.province||s.location?.province||'Pakistan')} • ${fmtInt(s.metrics?.farmers||0)} farmers • ${fmtInt(s.metrics?.acres||s.metrics?.wheatAcres||0)} acres`;
 
-  const hostName = s.host?.name || s.people?.host || (typeof s.host==='string' ? s.host : '');
-  const repName  = s.salesRep?.name || s.people?.rep || (typeof s.rep==='string' ? s.rep : '');
-  const dealerName = s.dealer?.name || s.people?.dealer || s.dealer?.nearest || (typeof s.dealer==='string' ? s.dealer : '');
+    $$('#dHost').textContent = safeStr(s.people?.host || s.host);
+    $$('#dRep').textContent = safeStr(s.people?.rep || s.rep);
+    $$('#dDealer').textContent = safeStr(s.people?.dealer || s.dealer);
 
-  $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
-  $$('#dSub').textContent = `${safeStr(s.location?.province||'Pakistan')} • ${fmtInt(s.metrics?.farmers||0)} farmers • ${fmtInt(s.metrics?.wheatAcres||0)} acres`;
+    $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
+    $$('#dAcres').textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
+    $$('#dAwareness').textContent = fmtPct(s.metrics?.awarenessPct);
+    $$('#dIntent').textContent = fmtPct(s.metrics?.intentPct);
+    $$('#dClarity').textContent = fmtPct(s.metrics?.clarityPct);
+    $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
 
-  $$('#dHost').textContent = safeStr(hostName);
-  $$('#dRep').textContent = safeStr(repName);
-  $$('#dDealer').textContent = safeStr(dealerName);
+    // Share / maps
+    const lat = s.geo?.lat, lng = s.geo?.lng;
+    const mapsUrl = (typeof lat==='number' && typeof lng==='number') ? `https://www.google.com/maps?q=${lat},${lng}` : '';
+    const openMaps = $$('#openMapsBtn');
+    if(openMaps){
+      openMaps.disabled = !mapsUrl;
+      openMaps.onclick = ()=>{ if(mapsUrl) window.open(mapsUrl, '_blank'); };
+    }
+    const shareBtn = $$('#shareSessionBtn');
+    if(shareBtn){
+      shareBtn.onclick = async ()=> {
+        const u = new URL(window.location.href);
+        u.searchParams.set('campaign', state.campaign?.id || '');
+        u.hash = `session-${s.id}`;
+        await shareUrl(u.toString(), `Session ${s.id} • ${state.campaign?.name||''}`);
+      };
+    }
 
-  $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
-  $$('#dAcres').textContent = fmtInt(s.metrics?.wheatAcres);
-  $$('#dDefinite').textContent = fmtPct(s.metrics?.definitePct);
-  $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
-
-  $$('#dTopUse').textContent = safeStr(s.topReasonUse || s.topReasonToUse || '');
-  $$('#dTopNotUse').textContent = safeStr(s.topReasonNotUse || '');
-
-  // Maps
-  const lat = s.geo?.lat, lng = s.geo?.lng;
-  const mapsUrl = (typeof lat==='number' && typeof lng==='number') ? `https://www.google.com/maps?q=${lat},${lng}` : '';
-  const openMaps = $$('#openMapsBtn');
-  if(openMaps){
-    openMaps.disabled = !mapsUrl;
-    openMaps.onclick = ()=>{ if(mapsUrl) window.open(mapsUrl, '_blank', 'noopener'); };
-  }
-
-  // Open full sheet (required for full farmer list + comments + signatures)
-  const sheetBtn = $$('#openSheetBtn');
-  if(sheetBtn){
-    sheetBtn.disabled = !(s.sheetRef || s.id);
-    sheetBtn.onclick = ()=> openSheetForSession(s);
-  }
-
-  const shareBtn = $$('#shareSessionBtn');
-  if(shareBtn){
-    shareBtn.onclick = async ()=> {
-      const u = new URL(window.location.href);
-      u.searchParams.set('campaign', state.campaign?.id || '');
-      u.hash = `session-${s.id}`;
-      await shareUrl(u.toString(), `Session ${s.sheetRef || s.id} • ${state.campaign?.name||''}`);
-    };
-  }
-
-  // Drawer media
-  const mediaHost = $$('#drawerMedia');
-  if(mediaHost){
-    mediaHost.innerHTML = '';
-    const resolved = await resolveSessionMedia(s);
-    if(!resolved.items.length){
-      mediaHost.innerHTML = '<div class="emptyState">No media mapped for this session yet (or files are missing under assets/gallery/).</div>';
-    }else{
-      for(const it of resolved.items){
-        const tile = document.createElement('button');
-        tile.className = 'thumb';
-        tile.type = 'button';
-        tile.innerHTML = (it.kind==='video')
-          ? `<video muted playsinline preload="metadata" src="${escapeHtml(resolveUrl(it.url))}"></video><div class="type">VID</div>`
-          : `<img alt="" loading="lazy" src="${escapeHtml(resolveUrl(it.url))}"/><div class="type">IMG</div>`;
-        tile.addEventListener('click', ()=>openLightbox(it));
-        mediaHost.appendChild(tile);
+    // Media (only existing files)
+    const mediaHost = $$('#sessionMedia');
+    if(mediaHost){
+      mediaHost.innerHTML = '';
+      const resolved = await resolveSessionMedia(s);
+      if(!resolved.items.length){
+        mediaHost.innerHTML = '<div class="emptyState">No media mapped for this session yet.</div>';
+      }else{
+        for(const it of resolved.items){
+          const tile = document.createElement('button');
+          tile.className = 'mediaTile';
+          tile.type = 'button';
+          tile.innerHTML = (it.kind==='video')
+            ? `<div class="mediaInner"><video muted playsinline preload="metadata" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"></video><div class="tag">VID</div></div>`
+            : `<div class="mediaInner"><img alt="" loading="lazy" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"/><div class="tag">IMG</div></div>`;
+          tile.addEventListener('click', ()=>openLightbox(it));
+          mediaHost.appendChild(tile);
+        }
       }
     }
   }
-}
 
-// Feedback
-
+  // Feedback
   function validEmail(s) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s||'').trim());
   }
@@ -1021,26 +960,10 @@ async function openSession(s) {
     // default district all
     $$('#districtSelect').value = 'ALL';
 
-    // Initialize date range controls based on loaded sessions
-    const dates = state.sessions.map(s=>parseDateSafe(s.date)).filter(Boolean).sort((a,b)=>a-b);
-    const fromEl = $$('#fromDate');
-    const toEl = $$('#toDate');
-    if(dates.length && fromEl && toEl){
-      const minD = dates[0];
-      const maxD = dates[dates.length-1];
-      fromEl.min = fmtISO(minD);
-      fromEl.max = fmtISO(maxD);
-      toEl.min = fmtISO(minD);
-      toEl.max = fmtISO(maxD);
-      // Default: show full available range, but keep values blank so filters are not forced.
-      fromEl.placeholder = fmtISO(minD);
-      toEl.placeholder = fmtISO(maxD);
-    }
-
     filterSessions();
     updateKPIs();
     renderTable();
-    if((state.activeTab||'summary')==='media'){ renderMediaWall(); }
+    renderMediaWall();
 
     // map
     if (!state.map) {
@@ -1052,79 +975,21 @@ async function openSession(s) {
     setStatus('loaded');
   }
 
-  
-function wireTabs(){
-  const btns = $$$('.tabBtn');
-  const sections = $$$('[data-tab]').filter(el => el.tagName.toLowerCase() === 'section' || el.classList.contains('grid2'));
-  const setActive = (tab)=>{
-    state.activeTab = tab;
-    btns.forEach(b=>{
-      const on = b.dataset.tab === tab;
-      b.classList.toggle('tabBtn--active', on);
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    // Show/hide top-level tab sections (ignore inner elements that also have data-tab)
-    $$$('main > section[data-tab], main > .grid2[data-tab]').forEach(sec=>{
-      sec.style.display = (sec.getAttribute('data-tab') === tab) ? '' : 'none';
-    });
-
-    // Map resize when tab becomes visible
-    if(tab === 'map' && state.map){
-      setTimeout(()=>{ try{ state.map.invalidateSize(); }catch{} }, 50);
-    }
-    // Lazy render media wall when opening Media
-    if(tab === 'media'){
-      renderMediaWall();
-    }
-  };
-
-  btns.forEach(b=>b.addEventListener('click', ()=>setActive(b.dataset.tab)));
-  // default tab
-  setActive(state.activeTab || 'summary');
-}
-
-function wireUi() {
+  function wireUi() {
     $$('#applyBtn').addEventListener('click', () => {
-      filterSessions(); updateKPIs(); renderTable();
-      if((state.activeTab||'summary')==='media'){ renderMediaWall(); }
-      renderMarkers(); fitMap();
+      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });
     $$('#resetBtn').addEventListener('click', () => {
       $$('#districtSelect').value = 'ALL';
       $$('#searchInput').value = '';
       $$('#fromDate').value = '';
       $$('#toDate').value = '';
-      filterSessions(); updateKPIs(); renderTable();
-      if((state.activeTab||'summary')==='media'){ renderMediaWall(); }
-      renderMarkers(); fitMap();
+      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });
     $$('#exportBtn').addEventListener('click', () => {
       if (!state.filtered.length) { alert('Nothing to export for current filters.'); return; }
       exportCsv();
     });
-
-
-// Apply filters on Enter in search box
-const search = $$('#searchInput');
-if(search){
-  search.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      $$('#applyBtn').click();
-    }
-  });
-}
-// Apply when date range changes
-['fromDate','toDate','districtSelect'].forEach((id)=>{
-  const el = document.getElementById(id);
-  if(el){
-    el.addEventListener('change', ()=> $$('#applyBtn').click());
-  }
-});
-
-// Tabs
-wireTabs();
-
 
     $$('#prevBtn').addEventListener('click', () => { if (state.page>1){ state.page--; renderTable(); } });
     $$('#nextBtn').addEventListener('click', () => {

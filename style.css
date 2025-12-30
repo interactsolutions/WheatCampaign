@@ -75,6 +75,7 @@ body{
 .brandPill span{font-size:12px; color:#dbe5ff}
 
 .brandMark{font-weight:800; letter-spacing:.14em; font-size:12px; opacity:.9}
+.pageTitle{margin:4px 0 0; font-size:20px; font-weight:900; letter-spacing:-0.02em; color:#e9f0ff}
 .brandSub{margin-top:8px; color:var(--muted); font-size:14px; max-width:560px; line-height:1.35}
 .headerMedia{display:flex; gap:10px; flex-wrap:nowrap}
 .headerTile{width:120px; height:64px; border:1px solid rgba(26,41,71,.65); border-radius:14px; overflow:hidden; background:rgba(11,18,32,.65); position:relative; box-shadow: 0 10px 24px rgba(0,0,0,.22)}
@@ -351,3 +352,6 @@ body{
   line-height: 1.35;
 }
 .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+.bullets{margin:10px 0 0; padding-left:18px}
+.bullets li{margin:6px 0; line-height:1.35}

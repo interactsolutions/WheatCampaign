@@ -6,6 +6,7 @@
   const $$$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
   const fmtInt = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : new Intl.NumberFormat().format(Math.round(n));
   const fmt1 = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : (Math.round(n*10)/10).toFixed(1);
+  const fmtPct = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : `${Math.round(n)}%`;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const safeStr = (v) => (v === null || v === undefined || String(v).trim()==='' ? '—' : String(v).trim());
 
@@ -130,7 +131,9 @@
     page: 1,
     pageSize: 12,
     selected: null,
-    selectedMediaUrl: null
+    selectedMediaUrl: null,
+    mediaWallLoaded: false,
+    mediaObserver: null
   };
 
   function setStatus(msg, type='info') {
@@ -425,7 +428,7 @@
   function computeTopReason(sessions, key='use') {
     const counts = new Map();
     for (const s of sessions) {
-      const obj = key==='use' ? (s.reasonsUse||{}) : (s.reasonsNotUse||{});
+      const obj = (key==='use') ? (s.reasonsUse||{}) : (s.reasonsNotUse||{});
       for (const [k,v] of Object.entries(obj)) {
         if (!v || v<=0) continue;
         counts.set(k, (counts.get(k)||0) + v);
@@ -613,6 +616,14 @@
     const host = $$('#mediaWall');
     if(!host) return;
 
+    // Counters
+    const totalSessions = state.filtered.length;
+    const imgCount = state.filtered.reduce((acc,s)=>acc+(Array.isArray(s.media?.images)?s.media.images.length:0),0);
+    const vidCount = state.filtered.reduce((acc,s)=>acc+(Array.isArray(s.media?.videos)?s.media.videos.length:0),0);
+    const ms = document.getElementById('mSessions'); if(ms) ms.textContent = `${totalSessions} Sessions`;
+    const mi = document.getElementById('mImages'); if(mi) mi.textContent = `${imgCount} Images`;
+    const mv = document.getElementById('mVideos'); if(mv) mv.textContent = `${vidCount} Videos`;
+
     host.innerHTML = '';
     for(const s of state.filtered){
       const card = document.createElement('div');
@@ -633,9 +644,8 @@
       stack.addEventListener('click', ()=>openSession(s));
       host.appendChild(card);
 
-      // hydrate with real media
-      hydrateMediaCard(s);
-    }
+      // hydrate lazily when card becomes visible
+      observeMediaCard(s);}
   }
 
   async function hydrateMediaCard(s){
@@ -669,7 +679,33 @@
     }else{
       vid.style.display = 'none';
     }
-  }  // Map
+  function observeMediaCard(s){
+  const id = String(s.id);
+  const el = document.querySelector(`.mwStack[data-id="${id}"]`);
+  if(!el) return;
+
+  // Fallback: if observer not supported, hydrate immediately
+  if(!('IntersectionObserver' in window)){
+    hydrateMediaCard(s);
+    return;
+  }
+
+  if(!state.mediaObserver){
+    state.mediaObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(en=>{
+        if(!en.isIntersecting) return;
+        const sid = en.target.getAttribute('data-id');
+        const sess = state.sessions.find(x=>String(x.id)===String(sid));
+        if(sess) hydrateMediaCard(sess);
+        try{ state.mediaObserver.unobserve(en.target); }catch{}
+      });
+    }, {root:null, threshold:0.15});
+  }
+
+  state.mediaObserver.observe(el);
+}
+
+}  // Map
   function initMap() {
     const el = $$('#map');
     if (!window.L || !el) {
@@ -746,7 +782,7 @@
         openSession(s);
         try{ marker.openPopup(); }catch{}
         // Ensure session panel is visible on small screens
-        const drawer = $$('#drawer');
+        const drawer = $$('#sessionDrawer');
         drawer?.scrollIntoView({behavior:'smooth', block:'start'});
       });
 
@@ -792,22 +828,26 @@
 // Session drawer
   async function openSession(s) {
     state.selected = s;
-    const drawer = $$('#drawer');
+    const drawer = $$('#sessionDrawer');
+    drawer?.classList.remove('hidden');
     drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
 
     $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
     $$('#dSub').textContent = `${safeStr(s.province||s.location?.province||'Pakistan')} • ${fmtInt(s.metrics?.farmers||0)} farmers • ${fmtInt(s.metrics?.acres||s.metrics?.wheatAcres||0)} acres`;
 
-    $$('#dHost').textContent = safeStr(s.people?.host || s.host);
-    $$('#dRep').textContent = safeStr(s.people?.rep || s.rep);
-    $$('#dDealer').textContent = safeStr(s.people?.dealer || s.dealer);
+    const hostName = s.people?.host || s.host;
+    const repName = s.people?.rep || s.rep || s.salesRep?.name;
+    const dealerName = s.people?.dealer || s.dealer;
+    $$('#dHost').textContent = safeStr(hostName?.name || hostName);
+    $$('#dRep').textContent = safeStr(repName?.name || repName);
+    $$('#dDealer').textContent = safeStr(dealerName?.name || dealerName);
 
     $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
     $$('#dAcres').textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
-    $$('#dAwareness').textContent = fmtPct(s.metrics?.awarenessPct);
-    $$('#dIntent').textContent = fmtPct(s.metrics?.intentPct);
-    $$('#dClarity').textContent = fmtPct(s.metrics?.clarityPct);
+    $$('#dDefinite').textContent = fmtPct(s.metrics?.definitePct);
     $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
+    $$('#dTopUse').textContent = safeStr(computeTopReason([s],'use').label);
+    $$('#dTopNotUse').textContent = safeStr(computeTopReason([s],'not').label);
 
     // Share / maps
     const lat = s.geo?.lat, lng = s.geo?.lng;
@@ -828,7 +868,7 @@
     }
 
     // Media (only existing files)
-    const mediaHost = $$('#sessionMedia');
+    const mediaHost = $$('#drawerMedia');
     if(mediaHost){
       mediaHost.innerHTML = '';
       const resolved = await resolveSessionMedia(s);
@@ -837,7 +877,7 @@
       }else{
         for(const it of resolved.items){
           const tile = document.createElement('button');
-          tile.className = 'mediaTile';
+          tile.className = 'thumb';
           tile.type = 'button';
           tile.innerHTML = (it.kind==='video')
             ? `<div class="mediaInner"><video muted playsinline preload="metadata" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"></video><div class="tag">VID</div></div>`
@@ -936,6 +976,7 @@
 
       await loadCampaign(chosen);
       wireUi();
+      wireTabs();
       setStatus('ready');
     }catch(e){
       console.error(e);
@@ -948,6 +989,9 @@
   async function loadCampaign(c) {
     state.campaign = c;
     setStatus(`loading ${c.id}…`);
+    const pt = document.getElementById('pageTitle');
+    if(pt){ pt.textContent = (c.name && c.name!==c.id) ? `${c.name} • Campaign Dashboard` : `${c.id} • Campaign Dashboard`; }
+
     // load media first (for header/bg)
     state.media = await fetchJson(url(c.mediaUrl));
     await initBgVideo(state.media);
@@ -963,7 +1007,9 @@
     filterSessions();
     updateKPIs();
     renderTable();
-    renderMediaWall();
+    state.mediaWallLoaded = false;
+    const mw = document.getElementById('mediaWall');
+    if(mw) mw.innerHTML = '<div class="muted">Open the Media tab to load gallery items…</div>';
 
     // map
     if (!state.map) {
@@ -975,7 +1021,75 @@
     setStatus('loaded');
   }
 
-  function wireUi() {
+  function selectTab(tab, opts={}) {
+  const target = String(tab||'summary');
+  // buttons
+  $$$('.tabBtn').forEach(btn => {
+    const active = btn.dataset.tab === target;
+    btn.classList.toggle('tabBtn--active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  // sections (only top-level tab sections)
+  $$$('.tabSection').forEach(sec => {
+    const show = sec.dataset.tab === target;
+    sec.classList.toggle('hidden', !show);
+  });
+
+  // When opening map, ensure Leaflet sizes correctly
+  if (target === 'map') {
+    window.setTimeout(() => {
+      try { state.map?.invalidateSize(); } catch {}
+      fitMap();
+    }, 80);
+  }
+
+  // Lazy-load media wall only when needed
+  if (target === 'media' && !state.mediaWallLoaded) {
+    renderMediaWall();
+    state.mediaWallLoaded = true;
+  }
+
+  if (target === 'feedback' && opts.scrollToFeedback) {
+    const fb = document.getElementById('feedback');
+    fb?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+
+function wireTabs() {
+  $$$('.tabBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      selectTab(btn.dataset.tab);
+    });
+  });
+
+  // Header link: switch tab then scroll
+  const fbLink = document.querySelector('a[href="#feedback"]');
+  if (fbLink) {
+    fbLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      selectTab('feedback', {scrollToFeedback:true});
+    });
+  }
+
+  // Hash routing: #session-123 opens map + drawer
+  window.addEventListener('hashchange', () => handleHash());
+  handleHash();
+}
+
+function handleHash() {
+  const h = (window.location.hash || '').replace('#','').trim();
+  const m = h.match(/^session-(\d+)$/);
+  if (!m) return;
+  const id = Number(m[1]);
+  const s = state.sessions.find(x=>x.id===id);
+  if (s) {
+    selectTab('map');
+    openSession(s);
+  }
+}
+
+function wireUi() {
     $$('#applyBtn').addEventListener('click', () => {
       filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });

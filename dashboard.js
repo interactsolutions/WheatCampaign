@@ -116,7 +116,7 @@
       dealer: { name: s.dealer?.name || s.dealerName || '' },
       metrics,
       score: Number(s.score100 ?? s.score ?? s.metrics?.score ?? 0) || 0,
-      geo: (Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng))) ? { lat: Number(s.lat), lng: Number(s.lng) } : null,
+      geo: (() => { const lat = s.geo?.lat ?? s.lat ?? s.latitude ?? s.geoLat; const lng = s.geo?.lng ?? s.lng ?? s.longitude ?? s.geoLng; const nlat = Number(lat); const nlng = Number(lng); return (Number.isFinite(nlat) && Number.isFinite(nlng)) ? { lat: nlat, lng: nlng } : null; })(),
       media
     };
   }

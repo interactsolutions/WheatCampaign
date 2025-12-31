@@ -130,8 +130,7 @@
     page: 1,
     pageSize: 12,
     selected: null,
-    selectedMediaUrl: null,
-    charts: { trend: null, district: null }
+    selectedMediaUrl: null
   };
 
   function setStatus(msg, type='info') {
@@ -558,134 +557,7 @@
     $$('#mVideos').textContent = `${fmtInt(videoCount)} Videos`;
   }
 
-  
-  function renderExecutiveNarrative() {
-    const s = state.filtered;
-    const farmers = s.reduce((a,x)=>a+(x.metrics?.farmers||0),0) || 0;
-    const acres = s.reduce((a,x)=>a+(x.metrics?.wheatAcres||0),0) || 0;
-
-    // Weighted averages by farmers where possible
-    const wAvg = (vals) => {
-      let num=0, den=0;
-      for (const x of s){
-        const w = (x.metrics?.farmers||0);
-        const v = vals(x);
-        if (v===null || v===undefined || Number.isNaN(v)) continue;
-        num += w * Number(v);
-        den += w;
-      }
-      return den ? (num/den) : null;
-    };
-
-    const avgDef = wAvg(x=>x.metrics?.definitePct);
-    const avgAware = wAvg(x=>x.metrics?.awarenessPct);
-    const avgUnderstand = wAvg(x=>x.metrics?.avgUnderstanding); // 0..3
-    const avgScore = (()=>{ const arr=s.map(x=>x.score).filter(v=>typeof v==='number'); return arr.length?arr.reduce((a,v)=>a+v,0)/arr.length:null; })();
-
-    const headline = (avgDef===null || farmers===0) ? '—' : `${Math.round(avgDef)}% definite intent across ${fmtInt(acres)} acres`;
-    $$('#headlineMetric') && ($$('#headlineMetric').textContent = headline);
-
-    // Simple ROI signal heuristic
-    let roi = '—';
-    if (avgDef!==null && avgAware!==null) {
-      if (avgDef>=85 && avgAware>=75) roi = 'Strong: high intent with healthy awareness';
-      else if (avgDef>=75) roi = 'Moderate: intent is good; awareness uplift can improve ROI';
-      else roi = 'At risk: reinforce value narrative to lift intent';
-    }
-    $$('#roiSignal') && ($$('#roiSignal').textContent = roi);
-
-    // Key risk heuristic
-    let risk = '—';
-    if (avgAware!==null && avgAware < 70) risk = 'Awareness below target in selection';
-    else if (avgUnderstand!==null && avgUnderstand < 2.2) risk = 'Understanding lag: retrain key messages';
-    else if (avgScore!==null && avgScore < 75) risk = 'Session delivery quality inconsistent';
-    else risk = 'No critical risk flagged';
-    $$('#keyRisk') && ($$('#keyRisk').textContent = risk);
-
-    // Recommendations
-    const rec = [];
-    if (avgAware!==null && avgAware < 80) rec.push({t:'Improve awareness', d:'Increase pre-activation dealer touchpoints and reinforce “what/why” at session start.'});
-    if (avgDef!==null && avgDef < 85) rec.push({t:'Lift adoption intent', d:'Strengthen ROI/value talk-track; address price and generic objections with comparisons and proof.'});
-    if (avgUnderstand!==null && avgUnderstand < 2.5) rec.push({t:'Boost understanding', d:'Repeat the 4 key messages (dose, water, timing, safety) and use quick recall questions at the end.'});
-    if (!rec.length) rec.push({t:'Sustain momentum', d:'Maintain cadence; replicate high-performing districts and capture more proof media + testimonials.'});
-
-    const recEl = $$('#recList');
-    if (recEl) {
-      recEl.innerHTML = rec.map(r=>`<div class="recItem"><div class="recTitle"><strong>${escapeHtml(r.t)}</strong></div><div class="muted">${escapeHtml(r.d)}</div></div>`).join('');
-    }
-
-    // Update campaign header title if available
-    if (state.campaign?.name && $$('#campaignH1')) $$('#campaignH1').textContent = state.campaign.name;
-  }
-
-  function renderCharts() {
-    if (typeof window.Chart === 'undefined') return;
-
-    const s = state.filtered.slice();
-    // Trend: sessions per date
-    const byDate = new Map();
-    s.forEach(x=>{
-      const d = x.date || '';
-      if(!d) return;
-      byDate.set(d, (byDate.get(d)||0)+1);
-    });
-    const dates = Array.from(byDate.keys()).sort();
-    const counts = dates.map(d=>byDate.get(d));
-
-    const ctxTrend = $$('#chartTrend');
-    if (ctxTrend) {
-      state.charts.trend?.destroy?.();
-      state.charts.trend = new window.Chart(ctxTrend, {
-        type:'line',
-        data:{ labels: dates, datasets:[{ label:'Sessions', data: counts, tension:0.25 }]},
-        options:{
-          responsive:true,
-          plugins:{ legend:{display:false}},
-          scales:{ y:{ beginAtZero:true, ticks:{ precision:0 }}}
-        }
-      });
-    }
-
-    // District comparison (farmers-weighted awareness and avgUnderstanding)
-    const byDist = new Map();
-    s.forEach(x=>{
-      const dist = x.district || x.city || '—';
-      const w = x.metrics?.farmers || 0;
-      const aware = (x.metrics?.awarenessPct!=null)?Number(x.metrics.awarenessPct):null;
-      const und = (x.metrics?.avgUnderstanding!=null)?Number(x.metrics.avgUnderstanding):null;
-      if(!byDist.has(dist)) byDist.set(dist, {w:0, awareNum:0, undNum:0});
-      const a = byDist.get(dist);
-      a.w += w;
-      if(aware!=null && !Number.isNaN(aware)) a.awareNum += w*aware;
-      if(und!=null && !Number.isNaN(und)) a.undNum += w*und;
-    });
-    const dists = Array.from(byDist.keys()).sort((a,b)=> (byDist.get(b).w - byDist.get(a).w)).slice(0,12);
-    const awareVals = dists.map(k=>{
-      const a=byDist.get(k); return a.w? (a.awareNum/a.w):0;
-    });
-    const undVals = dists.map(k=>{
-      const a=byDist.get(k); return a.w? ((a.undNum/a.w)/3*100):0; // normalize to %
-    });
-
-    const ctxD = $$('#chartDistrict');
-    if (ctxD) {
-      state.charts.district?.destroy?.();
-      state.charts.district = new window.Chart(ctxD, {
-        type:'bar',
-        data:{ labels:dists, datasets:[
-          {label:'Awareness %', data: awareVals},
-          {label:'Understanding (norm %)', data: undVals},
-        ]},
-        options:{
-          responsive:true,
-          plugins:{ legend:{ position:'bottom'}},
-          scales:{ y:{ beginAtZero:true, max:100}}
-        }
-      });
-    }
-  }
-
-function avg(list) {
+  function avg(list) {
     const nums = list.filter(v => typeof v === 'number' && !Number.isNaN(v));
     if (!nums.length) return null;
     return nums.reduce((a,v)=>a+v,0)/nums.length;
@@ -707,9 +579,9 @@ function avg(list) {
     const chunk = state.filtered.slice(start, start+state.pageSize);
 
     const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
-        const pi = $$('#pageInfo'); if (pi) pi.textContent = `Page ${state.page} / ${totalPages}`;
-    const pb = $$('#prevBtn'); if (pb) pb.disabled = state.page<=1;
-    const nb = $$('#nextBtn'); if (nb) nb.disabled = state.page>=totalPages;
+    $$('#pageInfo').textContent = `Page ${state.page} / ${totalPages}`;
+    $$('#prevBtn').disabled = state.page<=1;
+    $$('#nextBtn').disabled = state.page>=totalPages;
 
     const tbody = $$('#sessionsTbody');
     if (!chunk.length) {
@@ -723,8 +595,8 @@ function avg(list) {
         <td>${escapeHtml(s.spot || '—')}</td>
         <td class="num">${fmtInt(s.metrics?.farmers)}</td>
         <td class="num">${fmtInt(s.metrics?.wheatAcres)}</td>
-        <td class="num">${s.metrics?.awarenessPct ?? '—'}%</td>
-        <td class="num">${s.metrics?.definitePct ?? '—'}%</td>
+        <td class="num">${s.metrics?.definitePct ?? '—'}</td>
+        <td class="num">${s.metrics?.awarenessPct ?? '—'}</td>
         <td class="num">${s.score ?? '—'}</td>
       </tr>
     `).join('');
@@ -732,7 +604,7 @@ function avg(list) {
     $$$('tr.rowBtn', tbody).forEach(tr => tr.addEventListener('click', () => {
       const id = Number(tr.dataset.id);
       const s = state.sessions.find(x=>x.id===id);
-      if (s) openSheet(s);
+      if (s) openSession(s);
     }));
   }
 
@@ -742,18 +614,7 @@ function avg(list) {
     if(!host) return;
 
     host.innerHTML = '';
-    const type = ($$('#mediaType')?.value || 'all');
-    const q = (($$('#mediaSearch')?.value)||'').toLowerCase().trim();
     for(const s of state.filtered){
-      if (q) {
-        const blob = `${s.district||''} ${s.city||''} ${s.spot||''} ${s.village||''}`.toLowerCase();
-        if (!blob.includes(q)) continue;
-      }
-      const hasImg = (s.media?.images||[]).length>0;
-      const hasVid = (s.media?.videos||[]).length>0;
-      if (type==='images' && !hasImg) continue;
-      if (type==='videos' && !hasVid) continue;
-
       const card = document.createElement('div');
       card.className = 'mwCard';
       card.innerHTML = `
@@ -929,20 +790,9 @@ function avg(list) {
   }
 
 // Session drawer
-  async 
-  function openSheet(s){
-    const sheet = (s.sheetRef || s.sheet || s.id || '').toString();
-    if(!sheet) return;
-    const cid = state.campaign?.id || getCampaignFromQuery() || '';
-    const href = url(`sheets.html?campaign=${encodeURIComponent(cid)}&sheet=${encodeURIComponent(sheet)}`);
-    window.open(href, '_blank', 'noopener');
-  }
-
-function openSession(s) {
-    // If the drawer UI isn't present (or has changed), open the full session sheet instead.
-    const drawer = $$('#sessionDrawer') || $$('#drawer');
-    if (!drawer) { openSheet(s); return; }
+  async function openSession(s) {
     state.selected = s;
+    const drawer = $$('#drawer');
     drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
 
     $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
@@ -1099,21 +949,27 @@ function openSession(s) {
     state.campaign = c;
     setStatus(`loading ${c.id}…`);
     // load media first (for header/bg)
-    state.media = await fetchJson(url(c.mediaUrl));
+    const mediaUrl = c.mediaUrl || `data/${c.id}/media.json`;
+    state.media = await fetchJson(url(mediaUrl));
     await initBgVideo(state.media);
     renderHero(state.media);
     await renderFooterBrands(state.media);
 
-    const payload = await fetchJson(url(c.sessionsUrl));
+    const sessionsUrl = c.sessionsUrl || `data/${c.id}/sessions.json`;
+    const payload = await fetchJson(url(sessionsUrl));
     state.sessions = payload.sessions || payload || [];
+    // optional extra datasets
+    try{ state.people = await fetchJson(url(c.peopleUrl || `data/${c.id}/people.json`)); }catch(e){ state.people = null; }
+    try{ state.farmers = await fetchJson(url(c.farmersUrl || `data/${c.id}/farmers.json`)); }catch(e){ state.farmers = null; }
+    try{ state.extras = await fetchJson(url(c.extrasUrl || `data/${c.id}/extras.json`)); }catch(e){ state.extras = null; }
+    try{ state.sheetsIndex = await fetchJson(url(c.sheetsIndexUrl || `data/${c.id}/sheets_index.json`)); }catch(e){ state.sheetsIndex = null; }
+
     rebuildDistrictOptions();
     // default district all
     $$('#districtSelect').value = 'ALL';
 
     filterSessions();
     updateKPIs();
-    renderExecutiveNarrative();
-    renderCharts();
     renderTable();
     renderMediaWall();
 
@@ -1129,21 +985,21 @@ function openSession(s) {
 
   function wireUi() {
     $$('#applyBtn').addEventListener('click', () => {
-      filterSessions(); updateKPIs(); renderExecutiveNarrative(); renderCharts(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
+      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });
     $$('#resetBtn').addEventListener('click', () => {
       $$('#districtSelect').value = 'ALL';
       $$('#searchInput').value = '';
       $$('#fromDate').value = '';
       $$('#toDate').value = '';
-      filterSessions(); updateKPIs(); renderExecutiveNarrative(); renderCharts(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
+      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
     });
     $$('#exportBtn').addEventListener('click', () => {
       if (!state.filtered.length) { alert('Nothing to export for current filters.'); return; }
       exportCsv();
     });
 
-    $$('#prevBtn')?.addEventListener('click', () => { if (state.page>1){ state.page--; renderTable(); } });
+    $$('#prevBtn').addEventListener('click', () => { if (state.page>1){ state.page--; renderTable(); } });
     $$('#nextBtn').addEventListener('click', () => {
       const totalPages = Math.max(1, Math.ceil(state.filtered.length/state.pageSize));
       if (state.page<totalPages){ state.page++; renderTable(); }
@@ -1190,33 +1046,6 @@ function openSession(s) {
     // feedback
     $$('#emailFeedbackBtn').addEventListener('click', sendEmailFeedback);
     $$('#waFeedbackBtn').addEventListener('click', sendWhatsAppFeedback);
-
-    // Enter key triggers Apply for search/date inputs
-    ['searchInput','fromDate','toDate'].forEach(id=>{
-      const el = document.getElementById(id);
-      el && el.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); $$('#applyBtn').click(); }});
-      el && el.addEventListener('change', ()=>{ $$('#applyBtn').click(); });
-    });
-
-    // Media filters (re-render wall only)
-    $$('#mediaType')?.addEventListener('change', ()=>{ renderMediaWall(); });
-    $$('#mediaSearch')?.addEventListener('input', ()=>{ renderMediaWall(); });
-
-    // Presentation mode
-    $$('#btnPresentation')?.addEventListener('click', ()=>{ document.body.classList.toggle('presentation'); });
-
-    // Ensure Details link keeps campaign
-    const dl = $$('#detailsLink');
-    if (dl && state.campaign?.id) dl.href = `./details.html?campaign=${encodeURIComponent(state.campaign.id)}`;
-
-    // When switching to the map tab, Leaflet needs invalidateSize after display change
-    window.addEventListener('hashchange', ()=>{
-      const h = (location.hash||'#overview').replace('#','');
-      if (h==='media-map' || h==='mediaMap') {
-        setTimeout(()=>{ try{ state.map && state.map.invalidateSize(); }catch(_e){} }, 250);
-      }
-    });
-
   }
 
   boot();

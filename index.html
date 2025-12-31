@@ -4,15 +4,10 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta name="theme-color" content="#0b1220"/>
-  <meta name="description" content="Executive-ready dashboard for Buctril Super wheat farmer education sessions: intent, awareness, understanding, coverage, media and map." />
-  <meta property="og:title" content="Buctril Super • Campaign Dashboard" />
-  <meta property="og:description" content="Campaign outcomes, farmer mood signals, session media and coverage map." />
-  <meta property="og:type" content="website" />
   <title>INTERACT • Campaign Dashboard</title>
   <link rel="stylesheet" href="style.css"/>
   <!-- Leaflet (map) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div class="bg">
@@ -98,186 +93,189 @@
     </section>
 
       <div class="tabs" role="tablist" aria-label="Dashboard sections">
-        <a class="tabBtn tabBtn--active" data-tab="overview" role="tab" aria-selected="true" href="#overview">Overview</a>
-        <a class="tabBtn" data-tab="metrics" role="tab" aria-selected="false" href="#metrics">Metrics &amp; Results</a>
-        <a class="tabBtn" data-tab="mediaMap" role="tab" aria-selected="false" href="#media-map">Media &amp; Map</a>
-        <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback &amp; Next Steps</a>
+        <button class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true">Summary</button>
+        <button class="tabBtn" data-tab="map" role="tab" aria-selected="false">Map</button>
+        <button class="tabBtn" data-tab="sessions" role="tab" aria-selected="false">Sessions</button>
+        <button class="tabBtn" data-tab="media" role="tab" aria-selected="false">Media</button>
+        <button class="tabBtn" data-tab="feedback" role="tab" aria-selected="false">Feedback</button>
       </div>
 
-    <section class="tabSection" data-tab="overview" id="overview">
-      <section class="card span2">
-        <h2 id="campaignH1" class="h1Title">Buctril Super • Wheat Activations</h2>
-        <p class="muted" id="execSummary">
-          This dashboard summarizes farmer education sessions for Buctril Super in wheat, showing adoption intent, awareness, understanding, and coverage.
-          Use it to evaluate message uptake, field execution quality, and implications for brand ROI.
-        </p>
-        <div class="execKpiRow">
-          <div class="miniKpi"><div class="miniLabel">Sessions</div><div class="miniVal" id="kSessions">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Farmers</div><div class="miniVal" id="kFarmers">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Acres</div><div class="miniVal" id="kAcres">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Avg Score</div><div class="miniVal" id="kScore">—</div></div>
+
+    <section class="grid2" data-tab="summary">
+      <section class="card" data-tab="map">
+        <h2>Campaign insights at a glance</h2>
+        <p class="muted">Clear, comparable metrics for stakeholder decisions: awareness, intent, understanding, and coverage.</p>
+        <div class="donutGrid">
+          <div class="donutCard">
+            <div class="donutTitle">Adoption intent</div>
+            <div class="donutWrap" id="donutIntent"></div>
+            <div class="donutMeta muted" id="metaIntent">—</div>
+          </div>
+          <div class="donutCard">
+            <div class="donutTitle">Brand awareness</div>
+            <div class="donutWrap" id="donutAwareness"></div>
+            <div class="donutMeta muted" id="metaAwareness">—</div>
+          </div>
+          <div class="donutCard">
+            <div class="donutTitle">Message understanding</div>
+            <div class="donutWrap" id="donutUnderstanding"></div>
+            <div class="donutMeta muted" id="metaUnderstanding">—</div>
+          </div>
+          <div class="donutCard">
+            <div class="donutTitle">Coverage by acres</div>
+            <div class="donutWrap" id="donutCoverage"></div>
+            <div class="donutMeta muted" id="metaCoverage">—</div>
+          </div>
+        </div>
+        <div class="insightsRow">
+          <div class="insight">
+            <div class="insightLabel">Top reason to use</div>
+            <div class="insightVal" id="topUse">—</div>
+          </div>
+          <div class="insight">
+            <div class="insightLabel">Top reason not to use</div>
+            <div class="insightVal" id="topNotUse">—</div>
+          </div>
+          <div class="insight">
+            <div class="insightLabel">Competitors mentioned</div>
+            <div class="insightVal" id="topCompetitors">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card mapCard" data-tab="sessions">
+        <div class="mapHeader">
+          <div>
+            <h2>Map view</h2>
+            <p class="muted">Spots are shown by default. Tap a spot to open the session profile with people, performance and media.</p>
+          </div>
+          <div class="mapBtns">
+            <button class="btn" id="fitBtn">Fit</button>
+            <button class="btn" id="mapResetBtn">Reset</button>
+          </div>
+        </div>
+        <div class="mapWrap">
+          <div id="map" class="map">Loading map…</div>
+          <div id="mapFallback" class="mapFallback hidden">
+            <div class="warn">Map unavailable on this device/network.</div>
+            <div class="muted">You can still browse sessions and open locations in Google Maps from each session profile.</div>
+          </div>
         </div>
 
-        <div class="execHighlights">
-          <div class="pill"><span class="pillKey">Headline</span> <span class="pillVal" id="headlineMetric">—</span></div>
-          <div class="pill"><span class="pillKey">ROI signal</span> <span class="pillVal" id="roiSignal">—</span></div>
-          <div class="pill"><span class="pillKey">Key risk</span> <span class="pillVal" id="keyRisk">—</span></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h3>Objective</h3>
-        <p class="muted">
-          Educate wheat farmers on Buctril Super’s role in weed control and yield protection, improve correct-use understanding (dose, water, timing),
-          and drive intention to adopt across meaningful acres.
-        </p>
-        <h3>Storyline</h3>
-        <ol class="storyList">
-          <li><strong>Activities:</strong> field sessions, supervisor/backchecker observation, and farmer Q&amp;A.</li>
-          <li><strong>Outcomes:</strong> awareness and understanding uplift, plus adoption intent and committed acres.</li>
-          <li><strong>Next steps:</strong> targeted reinforcement where intent or clarity lags, with dealer enablement where availability/price objections appear.</li>
-        </ol>
-      </section>
-
-      <section class="card">
-        <h3>Quick recommendations</h3>
-        <div class="recList" id="recList">
-          <div class="recItem">Recommendations will populate after data loads.</div>
-        </div>
-      </section>
-    </section>
-
-    <section class="tabSection hidden" data-tab="metrics" id="metrics">
-      <section class="grid2">
-        <section class="card">
-          <h2>Key metrics</h2>
-          <p class="muted">Snapshot of intent, awareness, understanding and coverage for the current filter selection.</p>
-          <div class="donutGrid">
-            <div class="donutCard">
-              <div class="donutTitle">Adoption intent</div>
-              <div class="donutWrap" id="donutIntent"></div>
-              <div class="donutMeta muted" id="metaIntent">—</div>
-            </div>
-            <div class="donutCard">
-              <div class="donutTitle">Brand awareness</div>
-              <div class="donutWrap" id="donutAwareness"></div>
-              <div class="donutMeta muted" id="metaAwareness">—</div>
-            </div>
-            <div class="donutCard">
-              <div class="donutTitle">Understanding</div>
-              <div class="donutWrap" id="donutUnderstanding"></div>
-              <div class="donutMeta muted" id="metaUnderstanding">—</div>
-            </div>
-            <div class="donutCard">
-              <div class="donutTitle">Coverage</div>
-              <div class="donutWrap" id="donutCoverage"></div>
-              <div class="donutMeta muted" id="metaCoverage">—</div>
-            </div>
-          </div>
-        </section>
-
-        <section class="card">
-          <h2>Trends &amp; comparisons</h2>
-          <p class="muted">Visuals for executive review: momentum over time and district-level comparisons.</p>
-          <div class="chartBlock">
-            <div class="chartTitle">Sessions over time</div>
-            <canvas id="chartTrend" height="120"></canvas>
-          </div>
-          <div class="chartBlock">
-            <div class="chartTitle">District comparison (Awareness vs Understanding)</div>
-            <canvas id="chartDistrict" height="140"></canvas>
-          </div>
-          <div class="muted tiny">Tip: Use District filter to focus; charts update with filters.</div>
-        </section>
-
-        <section class="card span2">
-          <h2>Sessions list</h2>
-          <p class="muted">Click a session row to open the complete session sheet (comments + signatures + farmer roster).</p>
-          <div class="tableWrap">
-            <table class="tbl">
-              <thead>
-                <tr>
-                  <th>Date</th><th>District</th><th>Spot</th><th>Farmers</th><th>Acres</th><th>Awareness</th><th>Definite</th><th>Score</th>
-                </tr>
-              </thead>
-              <tbody id="sessionsTbody">
-                <tr><td colspan="8" class="muted">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-    </section>
-
-    <section class="tabSection hidden" data-tab="mediaMap" id="media-map">
-      <section class="grid2">
-        <section class="card mapCard">
-          <div class="cardHead">
+        <aside class="drawer" id="sessionDrawer" aria-label="Session profile">
+          <div class="drawerTop">
             <div>
-              <h2>Map</h2>
-              <p class="muted">Coverage by location. Click a spot for quick profile, then open the full sheet.</p>
+              <div class="drawerTitle" id="dTitle">Session —</div>
+              <div class="drawerSub muted" id="dSub">—</div>
             </div>
-            <div class="cardActions">
-              <button class="btn btnGhost" id="mapResetBtn" type="button">Reset</button>
-            </div>
+            <button class="iconBtn" id="drawerClose" title="Close">
+              <span aria-hidden="true">✕</span>
+            </button>
           </div>
-          <div class="mapWrap">
-            <div id="map" class="map"></div>
-            <div class="mapFallback hidden" id="mapFallback">
-              <div class="fallbackBox">
-                <div class="fallbackTitle">Map unavailable</div>
-                <div class="muted">If network blocks tiles, use the Sessions list for district-level insights.</div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        <section class="card">
+          <div class="drawerGrid">
+            <div class="kv"><div class="k">Host</div><div class="v" id="dHost">—</div></div>
+            <div class="kv"><div class="k">Sales rep</div><div class="v" id="dRep">—</div></div>
+            <div class="kv"><div class="k">Dealer</div><div class="v" id="dDealer">—</div></div>
+            <div class="kv"><div class="k">Farmers</div><div class="v" id="dFarmers">—</div></div>
+            <div class="kv"><div class="k">Wheat acres</div><div class="v" id="dAcres">—</div></div>
+            <div class="kv"><div class="k">Definite</div><div class="v" id="dDefinite">—</div></div>
+            <div class="kv"><div class="k">Score</div><div class="v" id="dScore">—</div></div>
+            <div class="kv"><div class="k">Top reason to use</div><div class="v" id="dTopUse">—</div></div>
+            <div class="kv"><div class="k">Top reason not to use</div><div class="v" id="dTopNotUse">—</div></div>
+          </div>
+
+          <div class="drawerActions">
+            <button class="btn" id="openMapsBtn">Open in Maps</button>
+            <button class="btn" id="shareSessionBtn">Share session</button>
+          </div>
+
+          <h3 class="drawerSectionTitle">Session media</h3>
+          <div id="drawerMedia" class="drawerMedia"></div>
+        </aside>
+      </section>
+    </section>
+
+    <section class="card" data-tab="media">
+      <div class="sectionHeader">
+        <div>
+          <h2>Sessions</h2>
+          <p class="muted">Filter by district and date to view exact sessions and their outcomes. Tap a row to open the session profile.</p>
+        </div>
+        <div class="pager">
+          <button class="btn" id="prevBtn">Prev</button>
+          <span class="muted" id="pageInfo">Page 1 / 1</span>
+          <button class="btn" id="nextBtn">Next</button>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table class="table" id="sessionsTable">
+          <thead>
+            <tr>
+              <th>Date</th><th>District</th><th>Spot</th><th class="num">Farmers</th><th class="num">Acres</th><th class="num">Definite %</th><th class="num">Awareness %</th><th class="num">Score</th>
+            </tr>
+          </thead>
+          <tbody id="sessionsTbody">
+            <tr><td colspan="8" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" data-tab="feedback">
+      <div class="sectionHeader">
+        <div>
           <h2>Media wall</h2>
-          <div class="mediaControls">
-            <select class="sel" id="mediaType">
-              <option value="all">All media</option>
-              <option value="images">Images</option>
-              <option value="videos">Videos</option>
-            </select>
-            <input class="in" id="mediaSearch" placeholder="Filter by district/spot keywords"/>
-          </div>
-          <div class="mediaWall" id="mediaWall">
-            <div class="muted">Media loads on demand. Select a card to view fullscreen.</div>
-          </div>
-        </section>
-      </section>
+          <p class="muted">Animated cards combine each session’s photo and video. Only items from <code>assets/gallery/</code> are shown.</p>
+        </div>
+        <div class="mediaCounters">
+          <div class="chip" id="mSessions">— Sessions</div>
+          <div class="chip" id="mImages">— Images</div>
+          <div class="chip" id="mVideos">— Videos</div>
+        </div>
+      </div>
+
+      <div class="mediaWall" id="mediaWall">
+        <div class="muted">Loading…</div>
+      </div>
     </section>
 
-    <section class="tabSection hidden" data-tab="feedback" id="feedback">
-      <section class="grid2">
-        <section class="card">
-          <h2>Feedback</h2>
-          <p class="muted">Share issues, observations, or improvement suggestions for the brand team and field execution.</p>
-          <textarea class="ta" id="feedbackText" rows="8" placeholder="Write feedback here…"></textarea>
-          <div class="btnRow">
-            <button class="btn" id="waFeedbackBtn" type="button">Send on WhatsApp</button>
-            <button class="btn btnGhost" id="emailFeedbackBtn" type="button">Send Email</button>
-          </div>
-          <div class="muted tiny">Tip: include session IDs (e.g., D1S1) and district names for fast action.</div>
-        </section>
+    <section class="card" id="feedback">
+      <h2>Share feedback</h2>
+      <p class="muted">Help us improve field activations. Provide your email or phone and send feedback to INTERACT.</p>
 
-        <section class="card">
-          <h2>Next steps</h2>
-          <div class="nextSteps" id="nextSteps">
-            <div class="step">• Reinforce key messages where understanding is below target.</div>
-            <div class="step">• Prepare objection-handling where “Price too high” or “generic preference” appears.</div>
-            <div class="step">• Coordinate dealer availability and recommendation programs in low-availability districts.</div>
-          </div>
-          <div class="btnRow">
-            <a class="btn btnGhost" href="./details.html" id="detailsLink">Open Detailed View</a>
-            <button class="btn btnGhost" id="btnPresentation" type="button">Presentation Mode</button>
-          </div>
-        </section>
-      </section>
+      <div class="feedbackGrid">
+        <div class="control">
+          <label>Name (optional)</label>
+          <input id="fbName" placeholder="Your name"/>
+        </div>
+        <div class="control">
+          <label>Email</label>
+          <input id="fbEmail" placeholder="name@example.com"/>
+        </div>
+        <div class="control">
+          <label>Phone</label>
+          <input id="fbPhone" placeholder="+92XXXXXXXXXX"/>
+        </div>
+        <div class="control full">
+          <label>Feedback</label>
+          <textarea id="fbText" rows="4" placeholder="What worked well? What should be improved?"></textarea>
+        </div>
+      </div>
+
+      <div class="feedbackActions">
+        <div class="muted">Send to <a class="link" href="mailto:interact@paksaf.com">interact@paksaf.com</a> • Contact <a class="link" href="tel:+92355223233">+92355223233</a> • WhatsApp <a class="link" href="https://wa.me/923303570463" target="_blank" rel="noopener">+923303570463</a></div>
+        <div class="btnRow">
+          <button class="btn" id="emailFeedbackBtn">Email feedback</button>
+          <button class="btn whatsapp" id="waFeedbackBtn">WhatsApp feedback</button>
+        </div>
+        <div class="muted small" id="fbValidate"></div>
+        <div class="muted small" id="fbHint">We will only use your contact to follow up on the feedback if needed.</div>
+      </div>
     </section>
 
-<footer class="footer">
+    <footer class="footer">
       <div class="footerBrands" id="footerBrands" aria-label="Brand assets"></div>
       <div class="muted">Powered by <strong>INTERACT</strong> — multi-campaign field intelligence dashboards.</div>
     </footer>
@@ -296,45 +294,6 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
-  <script src="dashboard.js?v=20251230" defer></script>
-<script>
-/* Tab fallback: keeps navigation working even if dashboard.js fails to load */
-(function(){
-  function $$ (sel, root){ return (root||document).querySelector(sel); }
-  function $$$ (sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
-  function setActive(tab){
-    tab = (tab||'overview').replace(/^#/, '');
-    if(tab==='media-map') tab='mediaMap';
-
-    var btns = $$$('.tabBtn[data-tab]');
-    var secs = $$$('section[data-tab]');
-    btns.forEach(function(b){
-      var on = (b.getAttribute('data-tab')===tab);
-      b.classList.toggle('tabBtn--active', on);
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    secs.forEach(function(s){
-      var on = (s.getAttribute('data-tab')===tab);
-      s.classList.toggle('hidden', !on);
-    });
-  }
-  document.addEventListener('click', function(e){
-    var a = e.target && e.target.closest ? e.target.closest('.tabBtn[data-tab]') : null;
-    if(!a) return;
-    // allow hash update, but ensure UI updates immediately
-    var tab = a.getAttribute('data-tab');
-    setActive(tab);
-  }, true);
-
-  window.addEventListener('hashchange', function(){
-    setActive((location.hash||'#summary').slice(1));
-  });
-
-  document.addEventListener('DOMContentLoaded', function(){
-    // initialize from hash
-    setActive((location.hash||'#summary').slice(1));
-  });
-})();
-</script>
+  <script src="dashboard.js" defer></script>
 </body>
 </html>

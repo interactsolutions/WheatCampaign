@@ -2,244 +2,360 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Session details • WheatCampaign</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b1220"/>
+  <title>INTERACT • Detailed Data</title>
   <link rel="stylesheet" href="./style.css"/>
-  <link rel="icon" href="./assets/bayer.svg" type="image/svg+xml"/>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <img class="brand__logo" src="./assets/bayer.svg" alt="Bayer"/>
-      <div class="brand__text">
-        <div class="brand__title">Session details</div>
-        <div class="brand__subtitle" id="subTitle">—</div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand__title">INTERACT</div>
+        <div class="brand__subtitle">Detailed data view • filter by people, place, session and date</div>
       </div>
-    </div>
-    <nav class="tabs">
-      <a class="chip" id="backBtn" href="./index.html#sessions">Back</a>
-      <a class="chip" id="openSheetBtn" href="./sheets.html">Open sheet</a>
-      <a class="chip" id="openDashboardBtn" href="./index.html#summary">Dashboard</a>
-    </nav>
-  </header>
+      <nav class="topbar__nav">
+        <a class="chip" href="./index.html">Dashboard</a>
+        <a class="chip chip--active" href="./details.html">Detailed view</a>
+        <a class="chip" href="./sheets.html">Sheets</a>
+      </nav>
+    </header>
 
-  <main class="container">
-    <section class="card" id="statusCard">
-      <div class="muted">Loading session…</div>
-    </section>
+    <main class="container">
+      <section class="card">
+        <div class="card__head">
+          <h2>Filters</h2>
+          <p class="muted">Use this page to review session-level and people-level details. Click a row to open the session sheet and signatures.</p>
+        </div>
 
-    <section class="grid2" id="metaGrid" style="display:none"></section>
+        <div class="grid3">
+          <div>
+            <label class="label">Campaign</label>
+            <select id="campaignSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">District / City</label>
+            <select id="districtSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Session (sheet)</label>
+            <select id="sessionSelect" class="input"></select>
+          </div>
 
-    <section class="card" id="feedbackCard" style="display:none">
-      <div class="card__head"><h2>Supervisor notes & proof</h2></div>
-      <div id="feedbackBlock" class="grid2"></div>
-    </section>
+          <div>
+            <label class="label">Host</label>
+            <select id="hostSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Sales rep</label>
+            <select id="salesSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Date range</label>
+            <div class="dateRange">
+              <input id="fromDate" type="date" class="input"/>
+              <span class="to">to</span>
+              <input id="toDate" type="date" class="input"/>
+            </div>
+          </div>
+        </div>
 
-    <section class="card" id="mediaCard" style="display:none">
-      <div class="card__head">
-        <h2>Session media</h2>
-        <div class="muted" id="mediaHint">Tap an item to open.</div>
-      </div>
-      <div class="mediaGrid" id="mediaGrid"></div>
-    </section>
-  </main>
+        <div class="controlsRow" style="margin-top:12px">
+          <div class="control" style="flex:1">
+            <label>Search</label>
+            <input id="q" class="input" placeholder="Village, dealer, competitors, notes…"/>
+          </div>
+          <div class="control actions">
+            <label class="srOnly">Actions</label>
+            <button class="btn primary" id="apply">Apply</button>
+            <button class="btn" id="reset">Reset</button>
+          </div>
+        </div>
+      </section>
 
-  <dialog id="viewer" class="viewer">
-    <button class="viewer__close" id="viewerClose" aria-label="Close">×</button>
-    <div class="viewer__body" id="viewerBody"></div>
-  </dialog>
+      <section class="card">
+        <div class="card__head">
+          <h2>Results</h2>
+          <p class="muted" id="resultsMeta">—</p>
+        </div>
+        <div class="tableWrap">
+          <table class="table" id="resultsTable"></table>
+        </div>
+      </section>
+
+      <section class="card" id="detailCard">
+        <div class="card__head">
+          <h2>Selected session</h2>
+          <p class="muted">Full feedback + signatures (if present) and key influencer farmers.</p>
+        </div>
+        <div id="selectedMeta" class="kv"></div>
+        <div class="divider"></div>
+        <div class="grid2" id="selectedPeople"></div>
+        <div class="divider"></div>
+        <h3>Key influencer farmers</h3>
+        <div class="tableWrap"><table class="table" id="farmersTable"></table></div>
+      </section>
+    </main>
+  </div>
 
 <script>
-(() => {
-  'use strict';
-  const $ = (s, r=document) => r.querySelector(s);
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-  const qp = new URLSearchParams(location.search);
-  const campaign = qp.get('campaign') || 'buctril-super-2025';
-  const sessionKey = qp.get('session') || qp.get('sheet') || qp.get('id');
+(function(){
+  const $ = (s, r=document)=>r.querySelector(s);
+  const $el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
 
-  function dataUrl(p){ return `./data/${encodeURIComponent(campaign)}/${p}`; }
-  function abs(u){ return u.startsWith('http') ? u : ('./' + u.replace(/^\.\//,'')); }
+  const BASE = new URL('./', window.location.href);
 
-  async function getJson(url){
-    const r = await fetch(url, {cache:'no-store'});
-    if(!r.ok) throw new Error(url + ' -> ' + r.status);
-    return r.json();
+  function resolveUrl(p){ return new URL(p, BASE).toString(); }
+  async function getJson(p){
+    const res = await fetch(resolveUrl(p), {cache:'no-store'});
+    if(!res.ok) throw new Error('Fetch failed: '+p+' ('+res.status+')');
+    return res.json();
+  }
+  function parseDateSafe(val){
+    if(!val) return null;
+    const s=String(val).trim();
+    const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(iso){ const d=new Date(+iso[1], +iso[2]-1, +iso[3]); return isNaN(d)?null:d; }
+    const dmy=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if(dmy){ const d=new Date(+dmy[3], +dmy[2]-1, +dmy[1]); return isNaN(d)?null:d; }
+    const d=new Date(s); return isNaN(d)?null:d;
+  }
+  function fmt(v){ return (v===null||v===undefined||v==='') ? '—' : v; }
+  function uniq(arr){ return Array.from(new Set(arr.filter(Boolean))); }
+
+  function renderOptions(sel, opts, allLabel='All'){
+    sel.innerHTML = `<option value="ALL">${allLabel}</option>` + opts.map(o=>`<option value="${String(o).replace(/"/g,'&quot;')}">${o}</option>`).join('');
   }
 
-  function parseDate(d){
-    // Accept YYYY-MM-DD or DD/MM/YYYY
-    if(!d) return null;
-    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d + 'T00:00:00');
-    const m = String(d).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if(m) return new Date(`${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}T00:00:00`);
-    const dt = new Date(d);
-    return isNaN(dt.getTime()) ? null : dt;
-  }
-
-  function fmtDate(d){
-    const dt = parseDate(d);
-    if(!dt) return '—';
-    return dt.toISOString().slice(0,10);
-  }
-
-  function cardKV(label, value){
-    const div = document.createElement('div');
-    div.className = 'kv';
-    div.innerHTML = `<div class="kv__k">${esc(label)}</div><div class="kv__v">${esc(value ?? '—')}</div>`;
-    return div;
-  }
-
-  function openViewer(node){
-    const dlg = $('#viewer');
-    $('#viewerBody').innerHTML = '';
-    $('#viewerBody').appendChild(node);
-    dlg.showModal();
-  }
-
-  function closeViewer(){ $('#viewer').close(); }
-  $('#viewerClose').addEventListener('click', closeViewer);
-  $('#viewer').addEventListener('click', (e) => { if(e.target === $('#viewer')) closeViewer(); });
-
-  function mediaThumb(item){
-    const wrap = document.createElement('button');
-    wrap.type = 'button';
-    wrap.className = 'mediaThumb';
-    const kind = item.type || (String(item.file||'').toLowerCase().endsWith('.mp4') ? 'video' : 'image');
-    const src = abs(item.url || item.file || '');
-    const label = item.label || item.title || (kind==='video' ? 'Video' : 'Image');
-
-    wrap.innerHTML = `
-      <div class="mediaThumb__frame">
-        ${kind==='video' ? `<video muted playsinline preload="metadata" src="${esc(src)}"></video>` : `<img loading="lazy" src="${esc(src)}" alt="${esc(label)}"/>`}
-        <div class="mediaThumb__cap">${esc(label)}</div>
-      </div>`;
-    wrap.addEventListener('click', () => {
-      if(kind==='video'){
-        const v = document.createElement('video');
-        v.src = src; v.controls = true; v.playsInline = true; v.autoplay = true;
-        v.style.maxWidth = '100%'; v.style.maxHeight = '80vh';
-        openViewer(v);
-      } else {
-        const img = document.createElement('img');
-        img.src = src; img.alt = label;
-        img.style.maxWidth='100%'; img.style.maxHeight='80vh';
-        openViewer(img);
-      }
+  function renderMetaBox(meta){
+    const box = $('#selectedMeta');
+    box.innerHTML='';
+    const items = [
+      ['Date', meta.date], ['District', meta.district], ['Village', meta.village],
+      ['Host', meta.host], ['Dealer', meta.dealer], ['Dealer Contact', meta.dealer_contact],
+      ['Farmers present', meta.farmers_present], ['Acres', meta.acres], ['Coordinates', meta.coord_raw]
+    ];
+    items.forEach(([k,v])=>{
+      const row=$el('div','kv__row');
+      row.innerHTML = `<div class="kv__k">${k}</div><div class="kv__v">${fmt(v)}</div>`;
+      box.appendChild(row);
     });
-    return wrap;
   }
 
-  async function main(){
-    $('#subTitle').textContent = campaign + (sessionKey ? ` • ${sessionKey}` : '');
-    $('#backBtn').href = `./index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
-    $('#openDashboardBtn').href = `./index.html?campaign=${encodeURIComponent(campaign)}#summary`;
-    $('#openSheetBtn').href = `./sheets.html?campaign=${encodeURIComponent(campaign)}`;
-
-    if(!sessionKey){
-      $('#statusCard').innerHTML = '<div class="muted">Missing session id. Open from Sessions table.</div>';
-      return;
-    }
-
-    let sessions = [];
-    let media = [];
-    try{
-      const [s, m] = await Promise.all([
-        getJson(dataUrl('sessions.json')),
-        getJson(dataUrl('media.json')).catch(() => ([]))
-      ]);
-      sessions = Array.isArray(s) ? s : (s.sessions || []);
-      media = Array.isArray(m) ? m : (m.items || []);
-    }catch(err){
-      $('#statusCard').innerHTML = `<div class="muted">Failed to load data: ${esc(err.message)}</div>`;
-      return;
-    }
-
-    const key = String(sessionKey).toLowerCase();
-    const ses = sessions.find(x => String(x.sheetRef||x.id||x.sessionId||x.code||'').toLowerCase()===key)
-             || sessions.find(x => String(x.sheet||'').toLowerCase()===key);
-
-    if(!ses){
-      $('#statusCard').innerHTML = `<div class="muted">Session not found: <b>${esc(sessionKey)}</b></div>`;
-      return;
-    }
-
-    const sheetRef = ses.sheetRef || ses.sheet || ses.id || ses.sessionId || ses.code;
-    $('#openSheetBtn').href = `./sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(sheetRef)}#sheet`;
-
-    $('#statusCard').innerHTML = `
-      <div class="card__head">
-        <h2>Session ${esc(ses.session_no ?? '')}</h2>
-        <div class="muted">${esc(fmtDate(ses.date))} • ${esc(ses.district ?? '—')} • ${esc(ses.spot ?? ses.village ?? '—')}</div>
-      </div>
-      <div class="muted">Farmers: <b>${esc(ses.farmers ?? ses.farmers_present ?? '—')}</b> • Acres: <b>${esc(ses.acres ?? '—')}</b> • Score: <b>${esc((ses.score ?? ses.avg_score ?? '—'))}</b></div>
+  function renderSelectedPeople(fb, sigs){
+    const wrap = $('#selectedPeople');
+    wrap.innerHTML='';
+    const host = $el('div','cardLite');
+    host.innerHTML = `
+      <h4>Host</h4>
+      <div class="muted">Name: <b>${fmt(fb.host_name)}</b></div>
+      <div class="muted">Phone: <b>${fmt(fb.host_phone)}</b></div>
+      <div class="muted">Comment:</div>
+      <div class="quote">${fmt(fb.host_comment)}</div>
+      ${sigs.host ? `<img class="sig" src="${resolveUrl(sigs.host)}" alt="Host signature"/>` : `<div class="muted">Signature: —</div>`}
     `;
+    const sales = $el('div','cardLite');
+    sales.innerHTML = `
+      <h4>Sales</h4>
+      <div class="muted">Name: <b>${fmt(fb.sales_name)}</b></div>
+      <div class="muted">Phone: <b>${fmt(fb.sales_phone)}</b></div>
+      <div class="muted">Feedback:</div>
+      <div class="quote">${fmt(fb.sales_feedback)}</div>
+      ${sigs.sales ? `<img class="sig" src="${resolveUrl(sigs.sales)}" alt="Sales signature"/>` : `<div class="muted">Signature: —</div>`}
+    `;
+    wrap.appendChild(host);
+    wrap.appendChild(sales);
+  }
 
-    const meta = $('#metaGrid');
-    meta.style.display = '';
-    meta.innerHTML = '';
-    meta.appendChild(cardKV('Host', ses.host || ses.host_name || '—'));
-    meta.appendChild(cardKV('Sales rep', ses.sales || ses.sales_name || '—'));
-    meta.appendChild(cardKV('Dealer', ses.dealer || '—'));
-    meta.appendChild(cardKV('Village / Spot', ses.spot || ses.village || '—'));
-    meta.appendChild(cardKV('District', ses.district || '—'));
-    meta.appendChild(cardKV('Coordinates', (ses.lat && ses.lon) ? `${ses.lat}, ${ses.lon}` : '—'));
-    meta.appendChild(cardKV('Definite %', ses.definite ?? ses.definite_pct ?? '—'));
-    meta.appendChild(cardKV('Awareness %', ses.awareness ?? ses.awareness_pct ?? '—'));
-
-    // Try load sheet json for feedback/signatures (optional)
-    try{
-      const sheet = await getJson(dataUrl(`sheets/${sheetRef}.json`));
-      const fb = sheet.feedback || {};
-      const sigs = sheet.signatures || {};
-      const card = $('#feedbackCard');
-      card.style.display = '';
-      const block = $('#feedbackBlock');
-      block.innerHTML = '';
-      const host = document.createElement('div');
-      host.className = 'cardLite';
-      host.innerHTML = `
-        <h4>Host / Supervisor</h4>
-        <div class="muted">Name: <b>${esc(fb.host_name || ses.host || '—')}</b></div>
-        <div class="muted">Phone: <b>${esc(fb.host_phone || '—')}</b></div>
-        <div class="muted">Comment:</div>
-        <div class="quote">${esc(fb.host_comment || '—')}</div>
-        ${sigs.host ? `<img class="sig" src="${esc(abs(sigs.host))}" alt="Host signature" loading="lazy" onerror="this.style.display='none'"/>` : `<div class="muted">Signature: —</div>`}
-      `;
-      const sales = document.createElement('div');
-      sales.className = 'cardLite';
-      sales.innerHTML = `
-        <h4>Sales</h4>
-        <div class="muted">Name: <b>${esc(fb.sales_name || ses.sales || '—')}</b></div>
-        <div class="muted">Phone: <b>${esc(fb.sales_phone || '—')}</b></div>
-        <div class="muted">Feedback:</div>
-        <div class="quote">${esc(fb.sales_feedback || '—')}</div>
-        ${sigs.sales ? `<img class="sig" src="${esc(abs(sigs.sales))}" alt="Sales signature" loading="lazy" onerror="this.style.display='none'"/>` : `<div class="muted">Signature: —</div>`}
-      `;
-      block.appendChild(host);
-      block.appendChild(sales);
-    }catch(_e){
-      // ok
-    }
-
-    // session media
-    const mediaFor = media.filter(x => {
-      const ref = String(x.sessionRef || x.sheetRef || x.session || x.sheet || x.code || '').toLowerCase();
-      return ref === String(sheetRef).toLowerCase();
+  function renderFarmers(rows){
+    const t = $('#farmersTable');
+    const head = ['SN','Farmer','Phone','Village','Acres','Intent','Used before','Other brands/method'];
+    t.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+    const tb = $el('tbody');
+    (rows||[]).forEach(r=>{
+      const tr=$el('tr');
+      tr.innerHTML = `<td>${fmt(r.sn)}</td><td>${fmt(r.name)}</td><td>${fmt(r.phone)}</td><td>${fmt(r.village)}</td><td>${fmt(r.acres)}</td><td>${fmt(r.intent)}</td><td>${fmt(r.used_before)}</td><td>${fmt(r.other_brands_method)}</td>`;
+      tb.appendChild(tr);
     });
+    t.appendChild(tb);
+  }
 
-    if(mediaFor.length){
-      $('#mediaCard').style.display = '';
-      const grid = $('#mediaGrid');
-      grid.innerHTML = '';
-      mediaFor.forEach(it => grid.appendChild(mediaThumb(it)));
-    }else{
-      $('#mediaHint').textContent = 'No media linked to this session in media.json.';
-      $('#mediaCard').style.display = '';
+  function renderResults(rows){
+    const t = $('#resultsTable');
+    const head = ['Date','Sheet','District','Village','Host','Sales','Farmers','Acres','Definite','Score','Actions'];
+    t.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+    const tb = $el('tbody');
+    rows.forEach(r=>{
+      const tr=$el('tr');
+      const openSheet = `./sheets.html?campaign=${encodeURIComponent(state.campaign)}&sheet=${encodeURIComponent(r.sheetRef||r.id)}`;
+      const openDash = `./index.html?campaign=${encodeURIComponent(state.campaign)}&open=${encodeURIComponent(r.sheetRef||r.id)}#sessions`;
+      tr.innerHTML = `
+        <td>${fmt(r.date)}</td>
+        <td><b>${fmt(r.sheetRef||r.id)}</b></td>
+        <td>${fmt(r.district||r.city)}</td>
+        <td>${fmt(r.village)}</td>
+        <td>${fmt((r.host&&r.host.name)||r.hostName||'')}</td>
+        <td>${fmt((r.salesRep&&r.salesRep.name)||r.salesName||'')}</td>
+        <td>${fmt(r.farmers)}</td>
+        <td>${fmt(r.acres)}</td>
+        <td>${fmt(r.definite)}</td>
+        <td>${fmt(r.score)}</td>
+        <td style="white-space:nowrap">
+          <a class="chip" href="${openDash}">Open</a>
+          <a class="chip" href="${openSheet}">Sheet</a>
+        </td>
+      `;
+      tr.addEventListener('click', async (e)=>{
+        // ignore click on links
+        if(e.target && e.target.closest('a')) return;
+        await openSheetDetail(r.sheetRef||r.id);
+        document.getElementById('detailCard').scrollIntoView({behavior:'smooth', block:'start'});
+      });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    $('#resultsMeta').textContent = `${rows.length} session(s) shown`;
+  }
+
+  async function openSheetDetail(sheet){
+    try{
+      const data = await getJson(`data/${state.campaign}/sheets/${sheet}.json`);
+      renderMetaBox(data.meta||{});
+      renderSelectedPeople(data.feedback||{}, data.signatures||{});
+      renderFarmers(data.farmers||[]);
+    }catch(err){
+      $('#selectedMeta').innerHTML = `<div class="muted">Sheet details not available for <b>${sheet}</b>. Ensure sheets viewer data is deployed.</div>`;
+      $('#selectedPeople').innerHTML = '';
+      $('#farmersTable').innerHTML = '';
     }
   }
 
-  main();
+  const state = { campaign:'buctril-super-2025', campaigns:[], sessions:[], sheetsIndex:null };
+
+  async function loadCampaigns(){
+    let cfg=null;
+    try{ cfg = await getJson('data/campaigns.json'); }catch(e){ console.warn('campaigns.json missing; using fallback', e); }
+    state.campaigns = (cfg && cfg.campaigns) ? cfg.campaigns : [];
+    if(!state.campaigns.length){ state.campaigns=[{id:(new URLSearchParams(location.search).get('campaign')||'buctril-super-2025'), name:'buctril-super-2025'}]; }
+    const sel = $('#campaignSelect');
+    sel.innerHTML = state.campaigns.map(c=>`<option value="${c.id}">${c.name || c.id}</option>`).join('');
+    const q = new URLSearchParams(location.search);
+    const c0 = q.get('campaign') || state.campaigns[0]?.id || 'buctril-super-2025';
+    sel.value = c0;
+    state.campaign = c0;
+  }
+
+  async function loadData(){
+    const campaignId = state.campaign;
+    const s = await getJson(`data/${campaignId}/sessions.json`);
+    state.sessions = (s.sessions||[]).slice();
+    try{
+      state.sheetsIndex = await getJson(`data/${campaignId}/sheets_index.json`);
+    }catch(e){ state.sheetsIndex = null; }
+
+    // normalize dates & fill missing from sheets_index
+    const map = new Map((state.sheetsIndex?.sheets||[]).map(x=>[x.sheet,x.date]));
+    state.sessions = state.sessions.map(x=>{
+      const d = parseDateSafe(x.date);
+      if(!d && x.sheetRef && map.has(x.sheetRef)){
+        const d2 = parseDateSafe(map.get(x.sheetRef));
+        return d2 ? ({...x, date: `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`}) : ({...x, date:''});
+      }
+      return d ? ({...x, date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}) : ({...x, date:''});
+    });
+
+    // populate selects
+    const districts = uniq(state.sessions.map(x=>x.district||x.city));
+    renderOptions($('#districtSelect'), districts, 'All districts');
+
+    const sheets = uniq(state.sessions.map(x=>x.sheetRef||x.id));
+    renderOptions($('#sessionSelect'), sheets, 'All sessions');
+
+    const hosts = uniq(state.sessions.map(x=>(x.host&&x.host.name)||''));
+    renderOptions($('#hostSelect'), hosts, 'All hosts');
+
+    const sales = uniq(state.sessions.map(x=>(x.salesRep&&x.salesRep.name)||''));
+    renderOptions($('#salesSelect'), sales, 'All sales reps');
+
+    // date range defaults from min/max
+    const ds = state.sessions.map(x=>parseDateSafe(x.date)).filter(Boolean).sort((a,b)=>a-b);
+    if(ds.length){
+      $('#fromDate').value = `${ds[0].getFullYear()}-${String(ds[0].getMonth()+1).padStart(2,'0')}-${String(ds[0].getDate()).padStart(2,'0')}`;
+      $('#toDate').value = `${ds[ds.length-1].getFullYear()}-${String(ds[ds.length-1].getMonth()+1).padStart(2,'0')}-${String(ds[ds.length-1].getDate()).padStart(2,'0')}`;
+    }
+  }
+
+  function applyFilters(){
+    const district = $('#districtSelect').value;
+    const session = $('#sessionSelect').value;
+    const host = $('#hostSelect').value;
+    const sales = $('#salesSelect').value;
+    const q = ($('#q').value||'').toLowerCase().trim();
+    const from = $('#fromDate').value ? parseDateSafe($('#fromDate').value) : null;
+    const to0 = $('#toDate').value ? parseDateSafe($('#toDate').value) : null;
+    const to = to0 ? new Date(to0.getTime() + 24*3600*1000 - 1) : null;
+
+    const rows = state.sessions.filter(r=>{
+      if(district !== 'ALL' && (r.district||r.city) !== district) return false;
+      const sid = (r.sheetRef||r.id);
+      if(session !== 'ALL' && sid !== session) return false;
+      if(host !== 'ALL' && ((r.host&&r.host.name)||'') !== host) return false;
+      if(sales !== 'ALL' && ((r.salesRep&&r.salesRep.name)||'') !== sales) return false;
+
+      const d = parseDateSafe(r.date);
+      if(from && d && d < from) return false;
+      if(to && d && d > to) return false;
+
+      if(q){
+        const blob = `${r.village||''} ${(r.dealer&&r.dealer.name)||''} ${(r.topReasonUse||'')} ${(r.topReasonNotUse||'')} ${(r.competitors||[]).join(' ')} ${(r.notes||'')}`.toLowerCase();
+        if(!blob.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b)=>{
+      const da=parseDateSafe(a.date), db=parseDateSafe(b.date);
+      if(da && db) return da - db;
+      if(da) return -1;
+      if(db) return 1;
+      return String(a.sheetRef||a.id).localeCompare(String(b.sheetRef||b.id));
+    });
+
+    renderResults(rows);
+    if(rows[0]) openSheetDetail(rows[0].sheetRef||rows[0].id);
+  }
+
+  function resetFilters(){
+    $('#districtSelect').value='ALL';
+    $('#sessionSelect').value='ALL';
+    $('#hostSelect').value='ALL';
+    $('#salesSelect').value='ALL';
+    $('#q').value='';
+    applyFilters();
+  }
+
+  async function boot(){
+    await loadCampaigns();
+    await loadData();
+    $('#apply').addEventListener('click', applyFilters);
+    $('#reset').addEventListener('click', resetFilters);
+    $('#campaignSelect').addEventListener('change', async ()=>{
+      state.campaign = $('#campaignSelect').value;
+      await loadData();
+      applyFilters();
+      const u = new URL(location.href);
+      u.searchParams.set('campaign', state.campaign);
+      history.replaceState(null,'',u.toString());
+    });
+    // auto apply
+    applyFilters();
+  }
+
+  boot().catch(err=>{
+    document.body.innerHTML = `<div style="padding:24px;font-family:system-ui;color:#fff;background:#0b1220;min-height:100vh">
+      <h2>Detailed view failed to load</h2>
+      <pre style="white-space:pre-wrap;color:#cfe0ff">${err.message}</pre>
+      <p>Confirm the file exists: <code>/data/campaigns.json</code> and <code>/data/{campaign}/sessions.json</code></p>
+    </div>`;
+  });
 })();
 </script>
 </body>

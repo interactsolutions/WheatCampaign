@@ -907,14 +907,31 @@
       setStatus('loading campaigns…');
       let reg = null;
       try {
-        reg = await fetchJson(url('data/campaigns.json'));
-      } catch(e) {
-        console.warn('campaigns.json missing; using fallback', e);
+        // Robustly resolve campaigns index (repo layout has changed a few times)
+        const candidates = [url('data/campaigns.json'), url('campaigns.json')];
+        for (const cUrl of candidates) {
+          reg = await fetchJson(cUrl);
+          if (reg && (Array.isArray(reg) || Array.isArray(reg.campaigns))) break;
+          reg = null;
+        }
+      } catch (e) {
+        console.warn('campaigns index missing; using fallback', e);
+        reg = null;
       }
       state.campaigns = (reg && reg.campaigns) ? reg.campaigns : [];
       if (!state.campaigns.length) {
         const fallbackId = getCampaignFromQuery() || 'buctril-super-2025';
-        state.campaigns = [{ id: fallbackId, name: fallbackId }];
+        state.campaigns = [{
+          id: fallbackId,
+          title: fallbackId.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()),
+          subtitle: 'Campaign insights for brand management • INTERACT',
+          sessionsUrl: `data/${fallbackId}/sessions.json`,
+          peopleUrl: `data/${fallbackId}/people.json`,
+          farmersUrl: `data/${fallbackId}/farmers.json`,
+          mediaUrl: `data/${fallbackId}/media.json`,
+          sheetsIndexUrl: `data/${fallbackId}/sheets/sheets_index.json`,
+          branding: { logoUrl: 'assets/bayer.svg' }
+        }];
       }
       const cs = $$('#campaignSelect');
       cs.innerHTML = state.campaigns.map(c => `<option value="${c.id}">${escapeHtml(c.name||c.id)}</option>`).join('');
@@ -948,11 +965,6 @@
   async function loadCampaign(c) {
     state.campaign = c;
     setStatus(`loading ${c.id}…`);
-    // Normalize campaign config (campaigns.json may omit URLs)
-    const base = `data/${c.id}/`;
-    if (!c.sessionsUrl) c.sessionsUrl = `${base}sessions.json`;
-    if (!c.mediaUrl) c.mediaUrl = `${base}media.json`;
-
     // load media first (for header/bg)
     state.media = await fetchJson(url(c.mediaUrl));
     await initBgVideo(state.media);

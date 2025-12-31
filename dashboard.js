@@ -91,29 +91,77 @@
 
   // Asset path tolerance: GitHub Pages is case-sensitive; allow common case/typo variants.
   const assetCandidates = (p) => {
-    const s0 = String(p || '').trim().replace(/^\/+/, '');
-    if (!s0) return [];
-    const out = [s0];
+    const sRaw = String(p || '').trim();
+    if (!sRaw) return [];
+    const s0 = sRaw.replace(/^\/+/, '');
+
+    const out = [];
+    const add = (x) => { if (x) out.push(String(x).replace(/^\/+/, '')); };
+
+    add(s0);
+
+    // Common repo pattern: sessions.json sometimes stores media under "gallery/.."
+    if (s0.startsWith('gallery/')) add('assets/' + s0);
+
+    // If not already under assets/, try prefixing
+    if (!s0.startsWith('assets/') && !s0.startsWith('data/')) add('assets/' + s0);
+
     const parts = s0.split('/');
     const fname = parts[parts.length - 1] || '';
+    const basePath = parts.slice(0, -1).join('/');
+    const withName = (name) => (basePath ? basePath + '/' : '') + name;
+
     const lower = fname.toLowerCase();
     const upperFirst = lower ? (lower.charAt(0).toUpperCase() + lower.slice(1)) : fname;
 
-    const withName = (name) => parts.slice(0, -1).concat([name]).join('/');
+    if (lower && lower !== fname) add(withName(lower));
+    if (upperFirst && upperFirst !== fname) add(withName(upperFirst));
 
-    if (lower && lower !== fname) out.push(withName(lower));
-    if (upperFirst && upperFirst !== fname) out.push(withName(upperFirst));
+    // Extension tolerance (.jpg <-> .jpeg)
+    const swapExt = (name) => {
+      const n = String(name || '');
+      if (n.toLowerCase().endsWith('.jpg')) return n.slice(0, -4) + '.jpeg';
+      if (n.toLowerCase().endsWith('.jpeg')) return n.slice(0, -5) + '.jpg';
+      return '';
+    };
+    const swapped = swapExt(fname);
+    if (swapped) add(withName(swapped));
 
     // Common typo seen in repo history
-    if (lower === 'products.jpg') out.push(withName('poducts.jpg'));
-    if (lower === 'poducts.jpg') out.push(withName('products.jpg'));
+    if (lower === 'products.jpg' || lower === 'products.jpeg') add(withName(lower.replace('products', 'poducts')));
+    if (lower === 'poducts.jpg' || lower === 'poducts.jpeg') add(withName(lower.replace('poducts', 'products')));
+
+    // Apply assets/ prefix to all relative candidates
+    for (const c of out.slice()) {
+      if (!c.startsWith('assets/') && !c.startsWith('data/')) add('assets/' + c);
+    }
 
     return Array.from(new Set(out));
   };
 
-  async function resolveExistingAsset(p){
-    for (const c of assetCandidates(p)) {
-      if (await assetExists(c)) return c;
+  async function resolveExistingAsset(p) {
+    const raw = String(p || '').trim();
+    if (!raw) return '';
+
+    // Absolute URLs / special schemes: return as-is
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
+
+    for (const c of assetCandidates(raw)) {
+      try {
+        if (await assetExists(c)) return c;
+      } catch (_) {
+        // ignore transient fetch/HEAD issues
+      }
+    }
+
+    const lower = raw.toLowerCase();
+    if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov')) {
+      // self-contained fallback
+      if (await assetExists('assets/placeholder-video.mp4')) return 'assets/placeholder-video.mp4';
+      return '';
+    }
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.gif') || lower.endsWith('.svg')) {
+      return 'assets/placeholder.svg';
     }
     return '';
   }
@@ -135,9 +183,13 @@
 
   function setStatus(msg, type='info') {
     const el = $$('#statusChip');
-    if (!el) return;
-    el.textContent = `Status: ${msg}`;
-    el.classList.toggle('warnChip', type==='warn');
+    if (el) {
+      el.textContent = `Status: ${msg}`;
+      el.classList.toggle('warnChip', type === 'warn');
+    }
+    const app = $$('#app') || document.body;
+    const m = String(msg || '').toLowerCase();
+    if (app) app.classList.toggle('loading', m.startsWith('loading'));
   }
 
   function fatalError(err) {
@@ -217,7 +269,13 @@
     const btnMute = $$('#heroMute');
     if(!hero || !v || !poster || !thumbs) return;
 
-    const seq = Array.isArray(cfg.headerSequence) ? cfg.headerSequence : [];
+    const seq = Array.isArray(cfg && cfg.headerSequence) ? cfg.headerSequence : [];
+
+    if (!seq.length) {
+      hero.innerHTML = '<img src="assets/placeholder.svg" alt="Campaign" style="width:100%;height:100%;object-fit:cover">';
+      return;
+    }
+
     const playlist = seq.map((x, idx)=>({
       idx,
       label: x.label || `Header ${idx+1}`,
@@ -573,6 +631,28 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // Share helper (Web Share API with clipboard fallback)
+  async function shareUrl(urlToShare, title) {
+    const u = String(urlToShare || '').trim();
+    if (!u) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: title || 'INTERACT Campaign', url: u });
+        return;
+      } catch (err) {
+        // user cancelled or share failed; fall through to clipboard
+        console.debug('shareUrl fallback:', err);
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(u);
+      alert('Link copied to clipboard!');
+    } catch (err) {
+      prompt('Copy this link:', u);
+    }
+  }
+
+
   // Sessions table
   function renderTable() {
     const start = (state.page-1)*state.pageSize;
@@ -670,15 +750,40 @@
       vid.style.display = 'none';
     }
   }  // Map
-  function initMap() {
-    const el = $$('#map');
+  
+
+  function activeTab() {
+    return (location.hash || '#summary').replace(/^#/, '');
+  }
+
+  function ensureMapReady() {
+    if (activeTab() !== 'sessions') {
+      state.mapPending = true;
+      return;
+    }
+    state.mapPending = false;
+
+    if (!state.map) initMap();
+
+    if (state.map) {
+      // Leaflet can render blank if initialized while hidden
+      setTimeout(() => {
+        try { state.map.invalidateSize(); } catch (_) {}
+      }, 50);
+      renderMarkers();
+      fitMap();
+    }
+  }
+function initMap() {
+    const el = $$('#leafletMap');
     if (!window.L || !el) {
-      $$('#mapFallback').classList.remove('hidden');
-      el.classList.add('hidden');
+      const fb = $$('#mapFallback');
+      if (fb) fb.classList.remove('hidden');
+      if (el) el.classList.add('hidden');
       return;
     }
 
-    const map = L.map('map', { zoomControl: false });
+    const map = L.map('leafletMap', { zoomControl: false });
     state.map = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -761,32 +866,48 @@
   }
 
   
-  async function resolveSessionMedia(s){
-    const base = (state.media && state.media.galleryBase) ? state.media.galleryBase : 'assets/gallery/';
-    const id = String(s.id||'').trim();
-    const dedupe = (arr)=>Array.from(new Set(arr.filter(Boolean)));
+  async function resolveSessionMedia(s) {
+    const base = (state.media && state.media.galleryBase) ? String(state.media.galleryBase).replace(/^\/+/, '') : 'assets/gallery/';
+    const id = String(s.id || '').trim();
+    const dedupe = (arr) => Array.from(new Set(arr.filter(Boolean)));
+
+    const normalize = (u) => {
+      const raw = String(u || '').trim();
+      if (!raw) return '';
+      if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
+      const rel = raw.replace(/^\/+/, '');
+      if (rel.startsWith('assets/') || rel.startsWith('data/')) return rel;
+      if (base && rel.startsWith(base)) return rel;
+
+      // sessions.json often stores "gallery/..." while galleryBase already points to "assets/gallery/"
+      if (rel.startsWith('gallery/')) return base + rel.replace(/^gallery\//, '');
+
+      // filename-only or other relative path: treat as relative to galleryBase
+      return base + rel;
+    };
+
     const imgCandidates = dedupe([
-      ...(s.media?.images||[]),
+      ...((s.media?.images || []).map(normalize)),
       `${base}${id}.jpeg`, `${base}${id}a.jpeg`,
       `${base}${id}.jpg`, `${base}${id}a.jpg`,
       `${base}${id}.png`, `${base}${id}a.png`
     ]);
     const vidCandidates = dedupe([
-      ...(s.media?.videos||[]),
+      ...((s.media?.videos || []).map(normalize)),
       `${base}${id}.mp4`, `${base}${id}a.mp4`
     ]);
 
     const images = [];
-    for(const u of imgCandidates){ if(await assetExists(u)) images.push(u); }
+    for (const u of imgCandidates) { if (await assetExists(u)) images.push(u); }
     const videos = [];
-    for(const u of vidCandidates){ if(await assetExists(u)) videos.push(u); }
+    for (const u of vidCandidates) { if (await assetExists(u)) videos.push(u); }
+
     const items = [
-      ...images.slice(0,3).map(u=>({kind:'image', url:u})),
-      ...videos.slice(0,2).map(u=>({kind:'video', url:u})),
-      ...images.slice(3).map(u=>({kind:'image', url:u})),
-      ...videos.slice(2).map(u=>({kind:'video', url:u}))
-    ].slice(0,10);
-    return { items };
+      ...videos.map(url => ({ kind: 'video', url })),
+      ...images.map(url => ({ kind: 'image', url }))
+    ];
+
+    return { items, images, videos };
   }
 
 // Session drawer
@@ -968,7 +1089,7 @@
     // load media first (for header/bg)
     state.media = await fetchJson(url(c.mediaUrl));
     await initBgVideo(state.media);
-    renderHero(state.media);
+    try { renderHero(state.media || {}); } catch (err) { console.warn("Hero render failed:", err); }
     await renderFooterBrands(state.media);
 
     const payload = await fetchJson(url(c.sessionsUrl));
@@ -1077,16 +1198,26 @@
     // feedback
     $$('#emailFeedbackBtn').addEventListener('click', sendEmailFeedback);
     $$('#waFeedbackBtn').addEventListener('click', sendWhatsAppFeedback);
-  }
+  
+
+    // Ensure map renders correctly when the Sessions tab becomes visible
+    window.addEventListener('hashchange', () => {
+      if (activeTab() === 'sessions') ensureMapReady();
+    });
+
+    // If the page loads directly into Sessions, initialize after bindings
+    if (activeTab() === 'sessions') ensureMapReady();
+}
 
   boot();
 })()
-function formatDateInput(d){
-  const dt = (d instanceof Date)? d: parseDateSafe(d);
-  if(!dt || Number.isNaN(dt.getTime())) return '';
-  const yyyy=dt.getFullYear();
-  const mm=String(dt.getMonth()+1).padStart(2,'0');
-  const dd=String(dt.getDate()).padStart(2,'0');
-  return `${dd}/${mm}/${yyyy}`;
-}
+function formatDateInput(d) {
+    const dt = (d instanceof Date) ? d : parseDateSafe(d);
+    if (!dt || Number.isNaN(dt.getTime())) return '';
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    // HTML date inputs require YYYY-MM-DD
+    return `${yyyy}-${mm}-${dd}`;
+  }
 ;

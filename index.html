@@ -108,7 +108,7 @@
 
 
     <section class="grid2" data-tab="summary" id="summary">
-      <section class="card" data-tab="map" id="map">
+      <section class="card" id="insights">
         <h2>Campaign insights at a glance</h2>
         <p class="muted">Clear, comparable metrics for stakeholder decisions: awareness, intent, understanding, and coverage.</p>
         <div class="donutGrid">
@@ -148,8 +148,9 @@
           </div>
         </div>
       </section>
+    </section>
 
-      <section class="card mapCard" data-tab="sessions" id="sessions">
+    <section class="card mapCard hidden" data-tab="sessions" id="sessions">
         <div class="mapHeader">
           <div>
             <h2>Map view</h2>
@@ -161,7 +162,7 @@
           </div>
         </div>
         <div class="mapWrap">
-          <div id="map" class="map">Loading map…</div>
+          <div id="leafletMap" class="map">Loading map…</div>
           <div id="mapFallback" class="mapFallback hidden">
             <div class="warn">Map unavailable on this device/network.</div>
             <div class="muted">You can still browse sessions and open locations in Google Maps from each session profile.</div>
@@ -202,7 +203,7 @@
       </section>
     </section>
 
-    <section class="card" data-tab="media" id="media">
+    <section class="card hidden" data-tab="sessions" id="sessionsList">
       <div class="sectionHeader">
         <div>
           <h2>Sessions</h2>
@@ -229,7 +230,7 @@
       </div>
     </section>
 
-    <section class="card" data-tab="feedback" id="feedback">
+    <section class="card hidden" data-tab="media" id="media">
       <div class="sectionHeader">
         <div>
           <h2>Media wall</h2>
@@ -246,8 +247,9 @@
         <div class="muted">Loading…</div>
       </div>
     </section>
+    </section>
 
-    <section class="card" id="feedback">
+    <section class="card hidden" data-tab="feedback" id="feedback">
       <h2>Share feedback</h2>
       <p class="muted">Help us improve field activations. Provide your email or phone and send feedback to INTERACT.</p>
 

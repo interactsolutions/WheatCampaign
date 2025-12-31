@@ -948,6 +948,11 @@
   async function loadCampaign(c) {
     state.campaign = c;
     setStatus(`loading ${c.id}…`);
+    // Normalize campaign config (campaigns.json may omit URLs)
+    const base = `data/${c.id}/`;
+    if (!c.sessionsUrl) c.sessionsUrl = `${base}sessions.json`;
+    if (!c.mediaUrl) c.mediaUrl = `${base}media.json`;
+
     // load media first (for header/bg)
     state.media = await fetchJson(url(c.mediaUrl));
     await initBgVideo(state.media);

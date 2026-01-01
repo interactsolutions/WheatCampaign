@@ -1222,6 +1222,18 @@
       updateMapData();
       setMapStatus('Ready', true);
       setTimeout(() => map.invalidateSize(), 250);
+
+      // Close any open Leaflet popups when clicking on the map background. This
+      // prevents popup windows from remaining open when users click outside
+      // markers. Without this, popups would remain visible and obstruct the
+      // interface. Use a try/catch in case Leaflet has no popups open.
+      map.on('click', () => {
+        try {
+          map.closePopup();
+        } catch (_e) {
+          /* no-op */
+        }
+      });
     } catch (e) {
       setMapStatus('Failed', false);
       $$('#mapFallback')?.classList.remove('hidden');

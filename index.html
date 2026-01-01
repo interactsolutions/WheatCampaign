@@ -56,6 +56,23 @@
     </div>
   </header>
 
+  <!-- Hero video slider -->
+  <div class="heroWrap" id="heroWrap">
+    <div class="heroPlayer" id="heroPlayer">
+      <video id="heroVideo" autoplay muted loop playsinline></video>
+      <div class="heroOverlay"></div>
+      <div class="heroCaption">
+        <div id="heroTitle" class="heroTitle"></div>
+        <div id="heroSub" class="heroSub"></div>
+      </div>
+      <div class="heroControls">
+        <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
+        <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
+      </div>
+    </div>
+    <div class="heroThumbs" id="heroThumbs"></div>
+  </div>
+
   <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
     <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
     <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
@@ -290,5 +307,57 @@
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 
   <script src="dashboard.js?v=20260101"></script>
+
+  <!-- Hero slider initialization -->
+  <script>
+  (function() {
+    // Define the videos to cycle through in the hero slider. Each entry can have
+    // a title and caption for display in the overlay.
+    const videos = [
+      { file: 'assets/atlantis.mp4', title: 'Atlantis', caption: 'Atlantis field application' },
+      { file: 'assets/bayer.mp4', title: 'Bayer', caption: 'Bayer promotional clip' },
+      { file: 'assets/buctril.mp4', title: 'Buctril', caption: 'Buctril product demo' },
+      { file: 'assets/interact.mp4', title: 'Interact', caption: 'Interact Solutions overview' }
+    ];
+    let current = 0;
+    const heroVideo = document.getElementById('heroVideo');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSub = document.getElementById('heroSub');
+    const thumbContainer = document.getElementById('heroThumbs');
+    const prevBtn = document.getElementById('heroPrev');
+    const nextBtn = document.getElementById('heroNext');
+    // Function to update the hero player to the specified index
+    function setHero(i) {
+      current = (i + videos.length) % videos.length;
+      const v = videos[current];
+      if (heroVideo) {
+        heroVideo.src = v.file;
+        // Restart playback when source changes
+        heroVideo.load();
+      }
+      if (heroTitle) heroTitle.textContent = v.title;
+      if (heroSub) heroSub.textContent = v.caption;
+      // Update active state on thumbnails
+      Array.from(thumbContainer.children).forEach((el, idx) => {
+        if (idx === current) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+    }
+    // Build thumbnail elements once DOM is ready
+    videos.forEach((v, idx) => {
+      const d = document.createElement('div');
+      d.className = 'heroThumb';
+      // Use a small preview video for each thumb; fallback to image if missing
+      d.innerHTML = `<video autoplay loop muted playsinline src="${v.file}"></video><div class="badge">${idx+1}</div>`;
+      d.addEventListener('click', () => setHero(idx));
+      thumbContainer.appendChild(d);
+    });
+    // Navigation buttons
+    prevBtn?.addEventListener('click', () => setHero(current - 1));
+    nextBtn?.addEventListener('click', () => setHero(current + 1));
+    // Initialize the first video
+    setHero(0);
+  })();
+  </script>
 </body>
 </html>

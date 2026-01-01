@@ -292,7 +292,9 @@
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
     const tabs = $$$('.tabBtn[data-tab]');
-    const panels = $$$('[data-tab]');
+    // IMPORTANT: only hide/show *panels*, not the tab buttons.
+    // (tab buttons also carry data-tab and must remain visible)
+    const panels = $$$('.tabPanel[data-tab]');
 
     tabs.forEach(a => {
       const is = a.dataset.tab === tab;

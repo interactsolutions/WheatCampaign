@@ -14,7 +14,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <img src="assets/interact.gif" alt="INTERACT" class="brandMark" onerror="this.style.display='none'"/>
+      <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
       <div>
         <div class="brandTitle">Harvest Horizons</div>
         <div class="brandSub">Campaign dashboard</div>
@@ -51,7 +51,7 @@
   </nav>
 
   <main id="app" class="">
-    <section class="grid2" data-tab="summary" id="summary">
+    <section class="tabPanel grid2" data-tab="summary" id="summary">
       <section class="card">
         <h2>Executive summary</h2>
         <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
@@ -123,7 +123,7 @@
 
     </section>
 
-    <section class="card mapCard hidden" data-tab="map" id="map">
+    <section class="tabPanel card mapCard" data-tab="map" id="map">
       <div class="mapHeader">
         <div>
           <h2>Map view</h2>
@@ -138,7 +138,7 @@
       </div>
     </section>
 
-    <section class="card hidden" data-tab="sessions" id="sessions">
+    <section class="tabPanel card" data-tab="sessions" id="sessions">
       <div class="row">
         <h2>Sessions</h2>
         <div class="muted">Click a row to preview; use buttons to open sheet/details.</div>
@@ -155,7 +155,7 @@
       </div>
     </section>
 
-    <section class="card hidden" data-tab="media" id="media">
+    <section class="tabPanel card" data-tab="media" id="media">
       <div class="row">
         <h2>Media</h2>
         <div class="muted">Thumbnails are pulled from assets/gallery. Missing files will fall back to placeholders.</div>
@@ -163,7 +163,7 @@
       <div id="mediaGrid" class="mediaGrid"></div>
     </section>
 
-    <section class="card hidden" data-tab="feedback" id="feedback">
+    <section class="tabPanel card" data-tab="feedback" id="feedback">
       <h2>Feedback</h2>
       <div class="muted">Optional notes for your team (stored locally in your browser).</div>
       <div class="divider"></div>
@@ -187,6 +187,20 @@
       </div>
     </section>
   </main>
+
+  <footer class="footer">
+    <div class="footerBrands">
+      <div class="brandPill">
+        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
+        <span>INTERACT Solutions</span>
+      </div>
+      <div class="brandPill">
+        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+        <span>Bayer Crop Science</span>
+      </div>
+    </div>
+    <div class="smallMuted">This dashboard is designed to be static-host friendly (GitHub Pages) and resilient to missing media assets.</div>
+  </footer>
 
   <!-- Session drawer overlay -->
   <div class="drawerOverlay hidden" id="drawerOverlay" aria-hidden="true"></div>
@@ -244,6 +258,20 @@
       <div class="lightboxBody" id="lbBody"></div>
     </div>
   </div>
+
+  <footer class="footer" aria-label="Footer">
+    <div class="footerBrands">
+      <div class="brandPill">
+        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
+        <span>INTERACT Solutions</span>
+      </div>
+      <div class="brandPill">
+        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+        <span>Bayer Crop Science</span>
+      </div>
+    </div>
+    <div class="smallMuted">Offline-friendly campaign report. Use Healthcheck to validate data and asset availability.</div>
+  </footer>
 
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 

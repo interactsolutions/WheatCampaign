@@ -26,6 +26,26 @@
       </div>
     </div>
 
+    <!-- Hero video slider moved inside the header. Placing the hero before the controls
+         allows the media content to sit above the date and campaign filters. When
+         the page is scrolled the sticky header will keep the controls visible
+         while the hero naturally scrolls out of view. -->
+    <div class="heroWrap" id="heroWrap">
+      <div class="heroPlayer" id="heroPlayer">
+        <video id="heroVideo" autoplay muted loop playsinline></video>
+        <div class="heroOverlay"></div>
+        <div class="heroCaption">
+          <div id="heroTitle" class="heroTitle"></div>
+          <div id="heroSub" class="heroSub"></div>
+        </div>
+        <div class="heroControls">
+          <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
+          <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
+        </div>
+      </div>
+      <div class="heroThumbs" id="heroThumbs"></div>
+    </div>
+
     <div class="controls">
       <div class="control">
         <label for="campaignSelect">Campaign</label>
@@ -44,7 +64,7 @@
         </div>
         <div id="rangeHint" class="smallMuted"></div>
       </div>
-      <!-- Added filters for farmer (host) name and city -->
+      <!-- Filters for farmer (host) name and city -->
       <div class="control">
         <label for="nameFilter">Farmer name</label>
         <input id="nameFilter" type="text" placeholder="Search by host name" />
@@ -55,23 +75,6 @@
       </div>
     </div>
   </header>
-
-  <!-- Hero video slider -->
-  <div class="heroWrap" id="heroWrap">
-    <div class="heroPlayer" id="heroPlayer">
-      <video id="heroVideo" autoplay muted loop playsinline></video>
-      <div class="heroOverlay"></div>
-      <div class="heroCaption">
-        <div id="heroTitle" class="heroTitle"></div>
-        <div id="heroSub" class="heroSub"></div>
-      </div>
-      <div class="heroControls">
-        <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
-        <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
-      </div>
-    </div>
-    <div class="heroThumbs" id="heroThumbs"></div>
-  </div>
 
   <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
     <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
@@ -219,7 +222,8 @@
     </section>
   </main>
 
-  <footer class="footer">
+  <!-- Unified footer: combines the static-host and offline-friendly notes into a single footer. -->
+  <footer class="footer" aria-label="Footer">
     <div class="footerBrands">
       <div class="brandPill">
         <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
@@ -230,7 +234,7 @@
         <span>Bayer Crop Science</span>
       </div>
     </div>
-    <div class="smallMuted">This dashboard is designed to be static-host friendly (GitHub Pages) and resilient to missing media assets.</div>
+    <div class="smallMuted">This dashboard is designed to be static‑host friendly and offline‑friendly. Use the Healthcheck to validate data and asset availability.</div>
   </footer>
 
   <!-- Session drawer overlay -->
@@ -290,19 +294,6 @@
     </div>
   </div>
 
-  <footer class="footer" aria-label="Footer">
-    <div class="footerBrands">
-      <div class="brandPill">
-        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
-        <span>INTERACT Solutions</span>
-      </div>
-      <div class="brandPill">
-        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
-        <span>Bayer Crop Science</span>
-      </div>
-    </div>
-    <div class="smallMuted">Offline-friendly campaign report. Use Healthcheck to validate data and asset availability.</div>
-  </footer>
 
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 

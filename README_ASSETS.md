@@ -1,41 +1,18 @@
-# Harvest Horizons — Assets Folder Scaffold
+# Assets
 
-This scaffold matches the paths expected by your patched dashboard ZIP (index.html + data_processor.js + sessions.json + media.json).
+Place campaign media under:
 
-## Required / recommended paths
+assets/gallery/
 
-### Hero background video (pick ONE)
-- `assets/bg.mp4`  (preferred)
-- `tmp.mp4`        (fallback)
+Examples:
+- assets/gallery/1.jpeg
+- assets/gallery/1a.jpeg
+- assets/gallery/1.mp4
+- assets/gallery/1a.mp4
 
-If neither exists, the hero video will hide automatically.
+The dashboard will also attempt reasonable fallbacks when a file is missing:
+- .jpeg <-> .jpg <-> .png
+- with/without trailing 'a' (e.g., 17a.jpeg -> 17.jpeg)
 
-### Placeholder (pick ONE; best to keep both)
-- `assets/placeholder.svg` (preferred)
-- `placeholder.svg`        (fallback)
-
-### Media gallery base path
-Media items are expected under:
-- `assets/gallery/`
-
-By default the JS will try these for each *media session id*:
-- main video: `assets/gallery/<id>.mp4`
-- main image: `assets/gallery/<id>.jpg`
-- variant images: `assets/gallery/<id>_a.jpg`, ... `_f.jpg`
-
-Variant videos are **disabled** by default (to avoid broken tiles).
-
-A full expected-file list is in:
-- `media_manifest_expected_files.csv`
-
-## Brand images used by index.html (store at repo root)
-The patched `index.html` references these at the repository root:
-- `Bayer.jpg`
-- `Buctril.jpg`
-- `Atlantis.jpg`
-- `Interact.gif`
-
-If you store them elsewhere, update the `<img src="...">` paths in `index.html`.
-
-## Notes
-- If you have *different media per session* (not reusable by numeric id), switch to unique ids in `media.json` (and rename files accordingly). The current compact format assumes the same `<id>.jpg/mp4` can be reused across repeated ids.
+Signatures are stored under:
+assets/signatures/buctril-super-2025/

@@ -53,13 +53,20 @@
   <main id="app" class="">
     <section class="grid2" data-tab="summary" id="summary">
       <section class="card">
-        <h2>Campaign insights at a glance</h2>
+        <h2>Executive summary</h2>
+        <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
+        
         <div class="kpis">
           <div class="kpi"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
           <div class="kpi"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
           <div class="kpi"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Avg score</div><div class="kpiVal" id="kpiScore">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
+
         <div class="divider"></div>
         <div class="tableWrap">
           <table class="sessionTable" id="topSessionsTable">
@@ -73,14 +80,47 @@
         </div>
       </section>
 
+      
       <section class="card">
-        <h2>Status</h2>
-        <div id="statusBox" class="status">Loading…</div>
-        <div class="divider"></div>
-        <div class="smallMuted">
-          Tip: Use the Sessions tab to open each sheet (D1S1, D1S2…) and verify per-session summaries.
+        <h2>Outcome funnel and priorities</h2>
+        <div class="muted">Percentages are weighted by farmers present (or session farmers if sheet summaries are unavailable).</div>
+
+        <div id="funnel" class="funnel">
+          <div class="muted">Loading…</div>
         </div>
+
+        <div class="divider"></div>
+        <h3>Where to focus next</h3>
+        <div class="smallMuted">Lowest definite intent first (tie-breaker: lower score). Use this list to plan follow-ups, dealer touchpoints, and demo plots.</div>
+        <div class="tableWrap">
+          <table class="sessionTable" id="priorityDistrictsTable">
+            <thead>
+              <tr>
+                <th>District</th><th>Sessions</th><th>Farmers</th><th>Acres</th><th>Awareness</th><th>Definite</th><th>Avg score</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="divider"></div>
+        <div class="grid2">
+          <div class="card card--flat">
+            <h3>Top adoption drivers</h3>
+            <ul class="bullets" id="driversList"><li class="muted">Loading…</li></ul>
+          </div>
+          <div class="card card--flat">
+            <h3>Top barriers</h3>
+            <ul class="bullets" id="barriersList"><li class="muted">Loading…</li></ul>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h3>Data readiness</h3>
+        <div id="statusBox" class="status">Loading…</div>
+        <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
       </section>
+
     </section>
 
     <section class="card mapCard hidden" data-tab="map" id="map">
@@ -168,6 +208,14 @@
 
       <div class="divider"></div>
       <div id="dMeta" class="muted"></div>
+
+      <div class="divider"></div>
+      <h3>Outcomes</h3>
+      <div id="dOutcomes" class="muted">—</div>
+
+      <div class="divider"></div>
+      <h3>Recommended next actions</h3>
+      <ul id="dActions" class="bullets"><li class="muted">—</li></ul>
 
       <div class="divider"></div>
       <div class="drawerActions">

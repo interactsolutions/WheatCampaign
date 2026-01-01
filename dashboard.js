@@ -83,6 +83,10 @@
     return x.toFixed(1);
   }
 
+  function num(v) {
+    return (typeof v === 'number' && Number.isFinite(v)) ? v : NaN;
+  }
+
   // ---------- Media path resolution ----------
   const existsCache = new Map(); // url -> boolean
 
@@ -479,62 +483,240 @@
 
   // ---------- Render ----------
   function renderSummary() {
-    $$('#kpiSessions').textContent = fmtInt(state.filteredSessions.length);
-
-    // Farmers/acres from sheets_index if available; else from session fields
-    let farmers = 0;
-    let acres = 0;
-    let scoreSum = 0;
-    let scoreN = 0;
-
+    const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
-    for (const s of state.filteredSessions) {
+    // ---------- Totals ----------
+    let totalFarmers = 0;
+    let totalAcres = 0;
+    let totalEstAcres = 0;
+
+    // ---------- Weighted averages (per-metric denominators so missing values do NOT behave like zeros) ----------
+    let sumAw = 0, denAw = 0;
+    let sumUl = 0, denUl = 0;
+    let sumDe = 0, denDe = 0;
+    let sumMb = 0, denMb = 0;
+    let sumNi = 0, denNi = 0;
+    let sumUn = 0, denUn = 0; // understanding is 0–3
+
+    let sumScore = 0, denScore = 0;
+
+    const drivers = new Map();
+    const barriers = new Map();
+
+    let imgRefs = 0;
+    let vidRefs = 0;
+
+    for (const s of fs) {
       const si = idx?.get(s.sheetRef);
-      if (si) {
-        farmers += Number(si.farmers_present || 0);
-        acres += Number(si.acres || 0);
-      } else {
-        // fallback
-        farmers += Number(s.farmersPresent || 0);
-        acres += Number(s.acres || 0);
+
+      const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+
+      if (Number.isFinite(farmers) && farmers > 0) totalFarmers += farmers;
+      if (Number.isFinite(acres) && acres > 0) totalAcres += acres;
+
+      const wt = (Number.isFinite(farmers) && farmers > 0) ? farmers : 1;
+      const m = s.metrics || {};
+
+      const aw = num(m.awarenessPct);
+      const ul = num(m.usedLastYearPct);
+      const de = num(m.definitePct);
+      const mb = num(m.maybePct);
+      const ni = num(m.notInterestedPct);
+      const un = num(m.avgUnderstanding);
+
+      if (Number.isFinite(aw)) { sumAw += aw * wt; denAw += wt; }
+      if (Number.isFinite(ul)) { sumUl += ul * wt; denUl += wt; }
+      if (Number.isFinite(de)) { sumDe += de * wt; denDe += wt; }
+      if (Number.isFinite(mb)) { sumMb += mb * wt; denMb += wt; }
+      if (Number.isFinite(ni)) { sumNi += ni * wt; denNi += wt; }
+      if (Number.isFinite(un)) { sumUn += un * wt; denUn += wt; }
+
+      const sc = num(s.score);
+      if (Number.isFinite(sc)) { sumScore += sc * wt; denScore += wt; }
+
+      const est = num(m.estimatedBuctrilAcres);
+      if (Number.isFinite(est) && est > 0) totalEstAcres += est;
+
+      // reasons (counts)
+      const ru = s.reasonsUse && typeof s.reasonsUse === 'object' ? s.reasonsUse : null;
+      if (ru) {
+        for (const [k, v] of Object.entries(ru)) {
+          const n = num(v);
+          if (!Number.isFinite(n) || n <= 0) continue;
+          drivers.set(k, (drivers.get(k) || 0) + n);
+        }
       }
-      if (Number.isFinite(Number(s.score))) {
-        scoreSum += Number(s.score);
-        scoreN += 1;
+
+      const rn = s.reasonsNotUse && typeof s.reasonsNotUse === 'object' ? s.reasonsNotUse : null;
+      if (rn) {
+        for (const [k, v] of Object.entries(rn)) {
+          const n = num(v);
+          if (!Number.isFinite(n) || n <= 0) continue;
+          barriers.set(k, (barriers.get(k) || 0) + n);
+        }
       }
+
+      // media reference counts
+      const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
+      const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
+      imgRefs += imgs.length;
+      vidRefs += vids.length;
     }
 
-    $$('#kpiFarmers').textContent = fmtInt(farmers);
-    $$('#kpiAcres').textContent = fmt1(acres);
-    $$('#kpiScore').textContent = scoreN ? fmt1(scoreSum / scoreN) : '—';
+    const avg = (sum, den) => (den > 0 ? (sum / den) : NaN);
+    const pct = (v) => Number.isFinite(v) ? (fmt1(v) + '%') : '—';
 
-    // top sessions table (by score)
-    const top = [...state.filteredSessions].sort((a,b) => Number(b.score||0) - Number(a.score||0)).slice(0, 10);
-    const tbody = $$('#topSessionsTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = top.map(s => {
-      const sid = esc(s.id);
-      const sheet = esc(s.sheetRef || '');
-      const date = esc(s.date || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
-      const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
-      const si = idx?.get(s.sheetRef);
-      const f = si ? fmtInt(si.farmers_present) : '—';
-      const a = si ? fmt1(si.acres) : '—';
-      const hrefSheet = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
-      return `<tr data-session-id="${sid}">
-        <td>${date}</td>
-        <td><span class="badge">${sheet}</span></td>
-        <td>${district}</td>
-        <td>${village}</td>
-        <td>${f}</td>
-        <td>${a}</td>
-        <td>${score}</td>
-        <td><a class="btn btnSmall" href="${hrefSheet}">Open sheet</a></td>
-      </tr>`;
-    }).join('');
+    const awarenessAvg = avg(sumAw, denAw);
+    const usedLastYearAvg = avg(sumUl, denUl);
+    const definiteAvg = avg(sumDe, denDe);
+    const maybeAvg = avg(sumMb, denMb);
+    const notInterestedAvg = avg(sumNi, denNi);
+    const understandingAvg = avg(sumUn, denUn); // 0–3
+    const scoreAvg = avg(sumScore, denScore);
+
+    // ---------- KPI tiles ----------
+    const elKpiSessions = $$('#kpiSessions'); if (elKpiSessions) elKpiSessions.textContent = fmtInt(fs.length);
+    const elKpiFarmers = $$('#kpiFarmers'); if (elKpiFarmers) elKpiFarmers.textContent = totalFarmers ? fmtInt(totalFarmers) : '—';
+    const elKpiAcres = $$('#kpiAcres'); if (elKpiAcres) elKpiAcres.textContent = totalAcres ? fmt1(totalAcres) : '—';
+    const elKpiEst = $$('#kpiEstAcres'); if (elKpiEst) elKpiEst.textContent = totalEstAcres ? fmt1(totalEstAcres) : '—';
+    const elKpiAw = $$('#kpiAwareness'); if (elKpiAw) elKpiAw.textContent = pct(awarenessAvg);
+    const elKpiDef = $$('#kpiDefinite'); if (elKpiDef) elKpiDef.textContent = pct(definiteAvg);
+    const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
+    const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
+
+    // ---------- Funnel (bars) ----------
+    const funnelEl = $$('#funnel');
+    if (funnelEl) {
+      const items = [
+        { label: 'Awareness', width: awarenessAvg, display: pct(awarenessAvg) },
+        { label: 'Used last year', width: usedLastYearAvg, display: pct(usedLastYearAvg) },
+        { label: 'Definite intent', width: definiteAvg, display: pct(definiteAvg) },
+        { label: 'Maybe', width: maybeAvg, display: pct(maybeAvg) },
+        { label: 'Not interested', width: notInterestedAvg, display: pct(notInterestedAvg) },
+        { label: 'Understanding (avg)', width: (Number.isFinite(understandingAvg) ? (understandingAvg / 3 * 100) : 0), display: (Number.isFinite(understandingAvg) ? (fmt1(understandingAvg) + ' / 3') : '—') },
+      ];
+      funnelEl.innerHTML = items.map(x => {
+        const w = Math.max(0, Math.min(100, Number(x.width) || 0));
+        return `<div class="barRow">
+          <div class="barLabel">${esc(x.label)}</div>
+          <div class="barTrack"><div class="barFill" style="width:${w}%; background:rgba(255,255,255,.65)"></div></div>
+          <div class="barVal">${esc(x.display)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ---------- Top sessions table (by score) ----------
+    const topBody = $$('#topSessionsTable tbody');
+    if (topBody) {
+      const top = [...fs].sort((a,b) => Number(b.score||0) - Number(a.score||0)).slice(0, 8);
+      topBody.innerHTML = top.map(s => {
+        const sid = esc(s.id);
+        const date = esc(s.date || '');
+        const sheet = esc(s.sheetRef || '');
+        const district = esc(s.district || '');
+        const village = esc(s.village || s.spot || '');
+        const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
+        const si = idx?.get(s.sheetRef);
+        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number(s?.metrics?.farmers)) ? fmtInt(s.metrics.farmers) : '—');
+        const a = si ? fmt1(si.acres) : (Number.isFinite(Number(s?.metrics?.wheatAcres)) ? fmt1(s.metrics.wheatAcres) : '—');
+        const href = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+        return `<tr data-session-id="${sid}">
+          <td>${date}</td>
+          <td><span class="badge">${sheet}</span></td>
+          <td>${district}</td>
+          <td>${village}</td>
+          <td>${f}</td>
+          <td>${a}</td>
+          <td>${score}</td>
+          <td><a class="btn btnSmall" href="${href}">Open</a></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ---------- Priority districts ----------
+    const pdBody = $$('#priorityDistrictsTable tbody');
+    if (pdBody) {
+      const byD = new Map();
+
+      for (const s of fs) {
+        const d = (s.district || '—').trim() || '—';
+        const si = idx?.get(s.sheetRef);
+        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+        const wt = (Number.isFinite(farmers) && farmers > 0) ? farmers : 1;
+
+        const m = s.metrics || {};
+        const aw = num(m.awarenessPct);
+        const de = num(m.definitePct);
+        const sc = num(s.score);
+
+        const o = byD.get(d) || { district: d, sessions: 0, farmers: 0, acres: 0, awSum: 0, awDen: 0, deSum: 0, deDen: 0, scSum: 0, scDen: 0 };
+        o.sessions += 1;
+        if (Number.isFinite(farmers) && farmers > 0) o.farmers += farmers;
+        if (Number.isFinite(acres) && acres > 0) o.acres += acres;
+
+        if (Number.isFinite(aw)) { o.awSum += aw * wt; o.awDen += wt; }
+        if (Number.isFinite(de)) { o.deSum += de * wt; o.deDen += wt; }
+        if (Number.isFinite(sc)) { o.scSum += sc * wt; o.scDen += wt; }
+
+        byD.set(d, o);
+      }
+
+      const rows = [...byD.values()].map(o => {
+        const aw = avg(o.awSum, o.awDen);
+        const de = avg(o.deSum, o.deDen);
+        const sc = avg(o.scSum, o.scDen);
+        return { ...o, aw, de, sc };
+      }).sort((a,b) => {
+        const ad = Number.isFinite(a.de) ? a.de : 1e9;
+        const bd = Number.isFinite(b.de) ? b.de : 1e9;
+        if (ad !== bd) return ad - bd;
+        const as = Number.isFinite(a.sc) ? a.sc : 1e9;
+        const bs = Number.isFinite(b.sc) ? b.sc : 1e9;
+        return as - bs;
+      }).slice(0, 8);
+
+      pdBody.innerHTML = rows.map(r => {
+        return `<tr>
+          <td>${esc(r.district)}</td>
+          <td>${fmtInt(r.sessions)}</td>
+          <td>${r.farmers ? fmtInt(r.farmers) : '—'}</td>
+          <td>${r.acres ? fmt1(r.acres) : '—'}</td>
+          <td>${pct(r.aw)}</td>
+          <td>${pct(r.de)}</td>
+          <td>${Number.isFinite(r.sc) ? fmt1(r.sc) : '—'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ---------- Drivers & barriers ----------
+    const listHtml = (mp) => {
+      const total = totalFarmers || 0;
+      const arr = [...mp.entries()].sort((a,b) => (b[1]||0) - (a[1]||0)).slice(0, 6);
+      if (!arr.length) return '<li class="muted">No entries captured.</li>';
+      return arr.map(([k, v]) => {
+        const n = Number(v) || 0;
+        const share = (total > 0) ? ` • ${fmt1(n / total * 100)}%` : '';
+        return `<li><b>${esc(k)}</b>: ${fmtInt(n)}${esc(share)}</li>`;
+      }).join('');
+    };
+
+    const drvEl = $$('#driversList');
+    if (drvEl) drvEl.innerHTML = listHtml(drivers);
+
+    const barEl = $$('#barriersList');
+    if (barEl) barEl.innerHTML = listHtml(barriers);
+
+    // ---------- Data readiness / status ----------
+    setStatus(
+      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
+      `Reach: ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers • ${totalAcres ? fmt1(totalAcres) : '—'} acres • Est. Buctril acres: ${totalEstAcres ? fmt1(totalEstAcres) : '—'}.\n` +
+      `Referenced media: ${fmtInt(imgRefs)} images • ${fmtInt(vidRefs)} videos.\n` +
+      `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
+      'ok'
+    );
   }
 
   function renderSessionsTable() {
@@ -709,6 +891,53 @@
       s.host?.name ? `Host: ${esc(s.host.name)}` : '',
     ].filter(Boolean).join(' • ');
     $$('#dMeta').innerHTML = meta || '<span class="muted">—</span>';
+
+    // Outcomes (session-level conversion / understanding)
+    const outEl = $$('#dOutcomes');
+    const actEl = $$('#dActions');
+
+    const m = s.metrics || {};
+    const aw = num(m.awarenessPct);
+    const ul = num(m.usedLastYearPct);
+    const de = num(m.definitePct);
+    const mb = num(m.maybePct);
+    const ni = num(m.notInterestedPct);
+    const un = num(m.avgUnderstanding);
+
+    const fmtPct = (v) => Number.isFinite(v) ? (fmt1(v) + '%') : '—';
+    const fmtUnd = (v) => Number.isFinite(v) ? (fmt1(v) + ' / 3') : '—';
+
+    if (outEl) {
+      const topUse = (s.topReasonUse || '').trim();
+      const topNot = (s.topReasonNotUse || '').trim();
+      outEl.innerHTML = `
+        <div class="muted">Awareness: <b>${esc(fmtPct(aw))}</b> • Definite: <b>${esc(fmtPct(de))}</b> • Used last year: <b>${esc(fmtPct(ul))}</b></div>
+        <div class="muted">Maybe: <b>${esc(fmtPct(mb))}</b> • Not interested: <b>${esc(fmtPct(ni))}</b> • Understanding: <b>${esc(fmtUnd(un))}</b></div>
+        <div class="smallMuted">${topUse ? ('Top driver: ' + esc(topUse)) : ''}${topUse && topNot ? ' • ' : ''}${topNot ? ('Top barrier: ' + esc(topNot)) : ''}</div>
+      `.trim();
+    }
+
+    // Recommended actions (lightweight heuristic rules)
+    const acts = [];
+    const farmersNow = Number(si?.farmers_present ?? m.farmers ?? 0);
+    const uPct = Number.isFinite(un) ? (un / 3 * 100) : NaN;
+
+    if (Number.isFinite(aw) && aw < 60) acts.push('Increase awareness: start with weed-pressure framing + product positioning; add a pre-activation dealer touchpoint and 1–2 local influencer farmers.');
+    if (Number.isFinite(de) && de < 70) acts.push('Improve conversion: strengthen objection-handling talk track; include cost-per-acre ROI and a demo-plot story (before/after weeds).');
+    if (Number.isFinite(uPct) && uPct < 75) acts.push('Improve message clarity: simplify the 4 key messages, use visuals, repeat key points, and do a quick comprehension check mid-session.');
+    if (Number.isFinite(farmersNow) && farmersNow > 0 && farmersNow < 20) acts.push('Improve turnout: revise venue/time, confirm mobilization plan, and coordinate with nearest dealer for invites and reminders.');
+
+    const rn = s.reasonsNotUse && typeof s.reasonsNotUse === 'object' ? s.reasonsNotUse : {};
+    const price = Number(rn['Price Too High'] || 0);
+    const avail = Number(rn['Not Available'] || 0);
+    const burn = Number(rn['Fear of Burn'] || 0);
+    if (Number.isFinite(price) && price > 0) acts.push('Address price objections: lead with value narrative (weed control reliability, yield protection), and convert price to per-acre cost.');
+    if (Number.isFinite(avail) && avail > 0) acts.push('Fix availability risk: confirm stock at nearest dealer and share a clear purchase path at the end of the session.');
+    if (Number.isFinite(burn) && burn > 0) acts.push('Reduce burn concerns: emphasize correct dose + timing and show safe-use guidance with examples.');
+
+    if (actEl) {
+      actEl.innerHTML = acts.length ? acts.map(x => `<li>${esc(x)}</li>`).join('') : '<li class="muted">No critical flags for this session based on thresholds.</li>';
+    }
 
     // Links
     const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;

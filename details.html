@@ -27,6 +27,17 @@
     <section class="card">
       <h2>Overview</h2>
       <div id="overview" class="muted">Loading…</div>
+
+      <div class="kpis kpis--compact">
+        <div class="kpi"><div class="kpiLabel">Awareness</div><div class="kpiVal" id="kAwareness">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Definite</div><div class="kpiVal" id="kDefinite">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Understanding</div><div class="kpiVal" id="kUnderstanding">—</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <h3>Recommended next actions</h3>
+      <ul id="actions" class="bullets"><li class="muted">Loading…</li></ul>
+
       <div class="divider"></div>
       <div class="drawerActions">
         <a class="btn" id="openSheet" href="#">Open sheet</a>
@@ -49,6 +60,22 @@
   'use strict';
   const $$ = (s,r=document)=>r.querySelector(s);
   const esc = (s)=>{const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML;};
+  const fmtInt = (n) => {
+    const x = Number(n);
+    return Number.isFinite(x) ? x.toLocaleString() : '—';
+  };
+  const fmt1 = (n) => {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return '—';
+    const y = Math.round(x * 10) / 10;
+    return (y % 1 === 0) ? String(y.toFixed(0)) : String(y.toFixed(1));
+  };
+  const fmtPct = (n) => {
+    const x = Number(n);
+    return Number.isFinite(x) ? (fmt1(x) + '%') : '—';
+  };
+
+  const num = (v) => (typeof v === 'number' && Number.isFinite(v)) ? v : NaN;
   const BASE = new URL('.', location.href);
   const url = (p)=>new URL(p, BASE).toString();
   const qs = new URLSearchParams(location.search);
@@ -209,7 +236,30 @@
       <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
     `;
 
-    const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(s.sheetRef)}`;
+        // Outcome KPIs and recommended actions
+    const mtr = s.metrics || {};
+    const aw = num(mtr.awarenessPct);
+    const de = num(mtr.definitePct);
+    const un = num(mtr.avgUnderstanding);
+
+    $$('#kAwareness').textContent = fmtPct(aw);
+    $$('#kDefinite').textContent = fmtPct(de);
+    $$('#kUnderstanding').textContent = Number.isFinite(un) ? (fmt1(un) + ' / 3') : '—';
+
+    const acts = [];
+    const uPct = Number.isFinite(un) ? (un / 3 * 100) : NaN;
+    if (Number.isFinite(aw) && aw < 60) acts.push('Increase awareness: add a short pre-activation dealer touchpoint and begin the session with weed-pressure framing + product positioning.');
+    if (Number.isFinite(de) && de < 70) acts.push('Improve conversion: strengthen objection-handling talk track; use per-acre ROI and a demo-plot story to close.');
+    if (Number.isFinite(uPct) && uPct < 75) acts.push('Improve clarity: simplify key messages, use visuals, and do a quick comprehension check mid-session.');
+    const rn = s.reasonsNotUse && typeof s.reasonsNotUse === 'object' ? s.reasonsNotUse : {};
+    if (Number(rn['Price Too High'] || 0) > 0) acts.push('Address price objections: explain value in per-acre cost terms and emphasize reliability / yield protection.');
+    if (Number(rn['Not Available'] || 0) > 0) acts.push('Fix availability risk: confirm stock at nearest dealer and share a clear purchase path at the end of the session.');
+    if (Number(rn['Fear of Burn'] || 0) > 0) acts.push('Reduce burn concerns: emphasize correct dose + timing and show safe-use guidance with examples.');
+
+    const actEl = $$('#actions');
+    if (actEl) actEl.innerHTML = acts.length ? acts.map(x => `<li>${esc(x)}</li>`).join('') : '<li class="muted">No critical flags for this session based on thresholds.</li>';
+
+const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(s.sheetRef)}`;
     $$('#openSheet').href = sheetUrl;
 
     const lat = Number(s.geo?.lat), lng = Number(s.geo?.lng);

@@ -1,25 +1,42 @@
-# INTERACT Multi‑Campaign Field Intelligence Dashboard (v2)
+# INTERACT Field Intelligence Dashboard (Multi‑Campaign)
 
-## What this fixes
-- **Totals/KPIs mismatch** caused by the spreadsheet's **top summary row**:
-  - This build computes totals strictly from **session rows only** (40 sessions), matching the XLSX and expected campaign totals.
-- **iPhone / mobile rendering**:
-  - Mobile-first layout, safe-area support, table-to-card fallback, reduced-motion, and iOS video autoplay fallback.
-- **Session Score**:
-  - 35% Definite Use + 25% Awareness + 15% Used Last Year + 25% Understanding (normalized from 0–3 to 0–100).
+This repository hosts a static, GitHub‑Pages friendly dashboard that converts field session sheets (e.g., D1S1…D13S3) into an **outcome‑oriented campaign report**:
+- **Reach**: sessions, farmers reached, acres engaged
+- **Conversion funnel** (weighted by farmers present): awareness → used last year → definite intent (plus maybe / not interested)
+- **Impact proxy**: estimated product acres influenced (when provided in the sheet)
+- **Execution focus**: priority districts, top adoption drivers, top barriers, and session‑level recommended actions
 
-## Multi-campaign
-1. Add a campaign folder: `data/<campaignId>/`
-2. Place:
-   - `sessions.json`
-   - `media.json`
-3. Register it in `data/campaigns.json`
+## What this build is optimized for
+- **Report accuracy**: campaign totals are computed from **session rows only** (not the spreadsheet’s top summary row) so the dashboard matches your XLSX session totals.
+- **Reliability on mobile**: responsive layout, safe‑area support, and resilient media loading.
+- **Operational usefulness**: the UI emphasizes “what happened” and “what to do next” instead of raw tables.
 
-## Deploy
-Copy these files/folders to your GitHub Pages repo root:
+## Data model (per campaign)
+Create a folder at `data/<campaignId>/` and include:
+- `sessions.json` (required): session records + metrics + geo + media references
+- `sheets_index.json` (recommended): per‑sheet farmers/acres totals for accurate weighting
+- `sheets/*.json` (optional but recommended): raw sheet exports used in the drawer and “Open sheet”
+- `media.json` (optional): structured campaign media index
+
+Register campaigns in `data/campaigns.json`.
+
+## Score logic (session score)
+Session score is computed from the session’s captured outcomes:
+- Definite intent (35%)
+- Awareness (25%)
+- Used last year (15%)
+- Understanding (25%, normalized from 0–3 to 0–100)
+
+## Healthcheck
+Open `healthcheck.html` to validate that core JSON files load successfully. It is designed to quickly diagnose broken paths during GitHub Pages deployment.
+
+## Deploy to GitHub Pages
+Copy these items to your GitHub Pages repo root:
 - `index.html`
+- `details.html`
+- `sheets.html`
+- `healthcheck.html`
 - `style.css`
 - `dashboard.js`
 - `data/`
-Keep your existing `assets/` folder as-is (images/videos/gallery).
-
+- `assets/` (images, videos, signatures, gallery)

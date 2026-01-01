@@ -1,85 +1,97 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Healthcheck</title>
-  <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.css?v=20260101" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>WheatCampaign Healthcheck</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; padding:16px; background:#0b1220; color:#e9f0ff}
+    a{color:#8ab4ff}
+    .card{border:1px solid #1a2947; border-radius:14px; padding:12px; margin:12px 0; background:rgba(7,11,20,.35)}
+    table{width:100%; border-collapse:collapse}
+    th,td{padding:10px; border-bottom:1px solid rgba(26,41,71,.55); text-align:left}
+    .ok{color:#22c55e; font-weight:800}
+    .bad{color:#ef4444; font-weight:800}
+    code{background:rgba(255,255,255,.08); padding:2px 6px; border-radius:8px}
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div>
-        <div class="brandTitle">Healthcheck</div>
-        <div class="brandSub"><a class="link" href="index.html">Back to dashboard</a></div>
-      </div>
-    </div>
-  </header>
-
-  <main class="card">
-    <h2>Resource checks</h2>
-    <div class="muted">This page verifies that JSON + critical assets are reachable from GitHub Pages.</div>
-    <div class="divider"></div>
-    <div id="out" class="muted">Running…</div>
-  </main>
+  <h1>Healthcheck</h1>
+  <div class="card">
+    This page checks whether required files are reachable and valid JSON on GitHub Pages.
+    If something is <span class="bad">FAIL</span>, that is why the dashboard stays on “Loading”.
+  </div>
+  <div class="card">
+    <div>Campaign param: <code id="camp">—</code></div>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Resource</th><th>Status</th><th>Details</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
 
 <script>
-(() => {
-  'use strict';
-  const BASE = new URL('.', location.href);
-  const url = (p)=>new URL(p, BASE).toString();
-  const out = document.getElementById('out');
-  const esc = (s)=>{const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML;};
+(async ()=>{
+  const BASE = new URL('./', window.location.href);
+  const url = (rel)=> new URL(rel, BASE).toString();
+  const camp = new URLSearchParams(location.search).get('campaign') || '(default)';
+  document.getElementById('camp').textContent = camp;
 
-  async function head(p) {
-    const u = url(p);
-    try {
-      const r = await fetch(u, {method:'HEAD', cache:'no-store'});
-      return { ok:r.ok, status:r.status, url:u };
-    } catch (e) {
-      return { ok:false, status:0, url:u, err:String(e) };
+  const items = [
+    {name:'index.html', u: url('index.html'), json:false},
+    {name:'dashboard.js', u: url('dashboard.js'), json:false},
+    {name:'style.css', u: url('style.css'), json:false},
+    {name:'data/campaigns.json', u: url('data/campaigns.json'), json:true},
+  ];
+
+  const tbody = document.getElementById('rows');
+
+  async function check(item){
+    try{
+      const res = await fetch(item.u, {cache:'no-store'});
+      if(!res.ok) throw new Error(res.status+' '+res.statusText);
+      if(item.json){
+        const j = await res.json();
+        return {ok:true, detail: 'valid JSON'};
+      }
+      return {ok:true, detail: res.headers.get('content-type') || 'ok'};
+    }catch(e){
+      return {ok:false, detail: String(e.message||e)};
     }
   }
 
-  async function getJson(p) {
-    const u = url(p);
-    const r = await fetch(u, {cache:'no-store'});
-    return { ok:r.ok, status:r.status, url:u, json: r.ok ? await r.json() : null };
+  for(const item of items){
+    const r = await check(item);
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><a href="'+item.u+'" target="_blank" rel="noopener">'+item.name+'</a></td>'
+      + '<td class="'+(r.ok?'ok':'bad')+'">'+(r.ok?'OK':'FAIL')+'</td>'
+      + '<td>'+r.detail+'</td>';
+    tbody.appendChild(tr);
   }
 
-  async function run() {
-    const lines = [];
-    const reg = await getJson('data/campaigns.json');
-    lines.push(`<div><b>data/campaigns.json</b>: ${reg.ok ? 'OK' : 'FAIL'} (${reg.status})</div>`);
-    if (!reg.ok || !reg.json || !Array.isArray(reg.json.campaigns)) {
-      out.innerHTML = lines.join('');
-      return;
+  // campaign-specific checks
+  try{
+    const reg = await (await fetch(url('data/campaigns.json'), {cache:'no-store'})).json();
+    const c = reg.campaigns?.find(x=>x.id===camp) || reg.campaigns?.[0];
+    if(c){
+      const s = await check({name:'sessions', u:url(c.sessionsUrl), json:true});
+      const m = await check({name:'media', u:url(c.mediaUrl), json:true});
+      const add = (label, res, href) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><a href="'+href+'" target="_blank" rel="noopener">'+label+'</a></td>'
+          + '<td class="'+(res.ok?'ok':'bad')+'">'+(res.ok?'OK':'FAIL')+'</td>'
+          + '<td>'+res.detail+'</td>';
+        tbody.appendChild(tr);
+      };
+      add('campaign sessions.json', s, url(c.sessionsUrl));
+      add('campaign media.json', m, url(c.mediaUrl));
     }
-    const c = reg.json.campaigns[0];
-    const sessionsUrl = c.sessionsUrl || ('data/' + c.id + '/sessions.json');
-    const sheetsIndexUrl = c.sheetsIndexUrl || ('data/' + c.id + '/sheets_index.json');
-
-    const s1 = await getJson(sessionsUrl);
-    lines.push(`<div><b>${esc(sessionsUrl)}</b>: ${s1.ok ? 'OK' : 'FAIL'} (${s1.status})</div>`);
-    const s2 = await getJson(sheetsIndexUrl);
-    lines.push(`<div><b>${esc(sheetsIndexUrl)}</b>: ${s2.ok ? 'OK' : 'FAIL'} (${s2.status})</div>`);
-
-    // Sample one media file (if listed)
-    const session = s1.json?.sessions?.[0];
-    const img = session?.media?.images?.[0];
-    if (img) {
-      const p = img.startsWith('gallery/') ? ('assets/' + img) : img;
-      const a = await head(p);
-      lines.push(`<div><b>${esc(p)}</b>: ${a.ok ? 'OK' : 'FAIL'} (${a.status})</div>`);
-    } else {
-      lines.push(`<div class="smallMuted">No sample media paths found in first session.</div>`);
-    }
-
-    out.innerHTML = lines.join('');
+  }catch(e){
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>campaign files</td><td class="bad">FAIL</td><td>'+String(e.message||e)+'</td>';
+    tbody.appendChild(tr);
   }
-
-  run();
 })();
 </script>
 </body>

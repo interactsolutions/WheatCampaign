@@ -1,201 +1,664 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sheets</title>
-  <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.css?v=20260101" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>INTERACT • Session Sheet</title>
+  <meta name="description" content="Session sheet with farmer mood, understanding, commercial intent and proof for the selected campaign session."/>
+  <link rel="stylesheet" href="./style.css"/>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <div>
-        <div class="brandTitle">Sheets browser</div>
-        <div class="brandSub"><a id="backLink" class="link" href="index.html">Back to dashboard</a></div>
+    <div class="wrap topbar__inner">
+      <div class="brand">
+        <div class="brand__title">INTERACT</div>
+        <div class="brand__sub" id="campaignSub">Campaign</div>
       </div>
-    </div>
-    <div class="controls">
-      <div class="control">
-        <label for="sheetSelect">Sheet</label>
-        <select id="sheetSelect"></select>
-      </div>
-      <div class="control">
-        <label>Search</label>
-        <input id="sheetSearch" placeholder="D1S1, village, district…" />
-      </div>
+      <nav class="topbar__nav">
+        <a class="chip" id="backToDash" href="./index.html">← Dashboard</a>
+        <a class="chip" id="openDetails" href="./details.html">Detailed view</a>
+        <span class="chip chip--muted" id="statusChip">Loading…</span>
+      </nav>
     </div>
   </header>
 
-  <main class="grid2">
-    <section class="card">
-      <h2>Sheet details</h2>
-      <div id="meta" class="muted">Loading…</div>
+  <main class="wrap" style="padding-top:18px;padding-bottom:60px">
+    <div class="sheetHero">
+      <div>
+        <h1 class="h1" id="sheetTitle">Session Sheet</h1>
+        <div class="muted" id="sheetSub">—</div>
+      </div>
+      <div class="heroActions">
+        <button class="btn" id="btnCopyLink">Copy link</button>
+        <button class="btn btn--primary" id="btnPrint">Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Session sheet sections">
+      <button class="tabBtn tabBtn--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="tabBtn" data-tab="understanding" role="tab" aria-selected="false">Understanding</button>
+      <button class="tabBtn" data-tab="farmers" role="tab" aria-selected="false">Farmers</button>
+      <button class="tabBtn" data-tab="proof" role="tab" aria-selected="false">Proof</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section data-tab="overview" class="sheetSection">
+      <div class="grid2">
+        <div class="card">
+          <div class="card__title">Session overview</div>
+          <div class="kv" id="kvMeta"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">Topline insight</div>
+          <div class="kpiRow" id="kpiRow"></div>
+          <div class="divider"></div>
+
+          <div class="grid2">
+            <div class="cardLite">
+              <div class="smallCaps">Farmer mood (signals)</div>
+              <div class="quote" id="moodSignals">—</div>
+            </div>
+            <div class="cardLite">
+              <div class="smallCaps">Commercial drivers</div>
+              <div class="quote" id="drivers">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="divider"></div>
 
       <div class="grid2">
         <div class="card">
-          <h3>Feedback</h3>
-          <div id="feedback" class="muted">—</div>
+          <div class="card__title">Commercial intent & outcomes</div>
+          <div class="tableWrap">
+            <table class="table" id="intentTable"></table>
+          </div>
         </div>
-        <div class="card">
-          <h3>Signatures</h3>
-          <div class="mediaRow" id="sigs"></div>
-        </div>
-      </div>
 
-      <div class="divider"></div>
-      <h3>Farmers</h3>
-      <div class="tableWrap">
-        <table class="sessionTable" id="farmersTable">
-          <thead><tr id="farmersHead"></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="card">
+          <div class="card__title">Supervisor & staff notes</div>
+
+          <div class="grid2">
+            <div class="cardLite">
+              <div class="smallCaps">Host comment</div>
+              <div class="quote" id="hostComment">—</div>
+              <div class="muted" id="hostMeta"></div>
+            </div>
+            <div class="cardLite">
+              <div class="smallCaps">Sales feedback</div>
+              <div class="quote" id="salesComment">—</div>
+              <div class="muted" id="salesMeta"></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="cardLite">
+            <div class="smallCaps">Manager / backchecker end note</div>
+            <div class="quote" id="managerNote">—</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>All sheets</h2>
-      <div id="sheetList" class="muted">Loading…</div>
+    <!-- UNDERSTANDING -->
+    <section data-tab="understanding" class="sheetSection sectionHidden">
+      <div class="grid2">
+        <div class="card">
+          <div class="card__title">Message uptake (as observed)</div>
+          <div class="muted">These items come from the “Session Effectiveness & Intent (Overall Group)” section in the source sheet.</div>
+          <div class="divider"></div>
+          <div class="tableWrap">
+            <table class="table" id="understandingTable"></table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">Actionable interpretation</div>
+          <div class="muted">Rules of thumb for brand teams.</div>
+          <div class="divider"></div>
+          <div id="actionBlocks" class="actionBlocks"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FARMERS -->
+    <section data-tab="farmers" class="sheetSection sectionHidden">
+      <div class="grid2">
+        <div class="card">
+          <div class="card__title">Farmer roster</div>
+          <div class="grid2">
+            <div>
+              <label class="label" for="farmerSearch">Search farmer / phone</label>
+              <input id="farmerSearch" class="input" placeholder="e.g., Saeed or 0306…" />
+            </div>
+            <div>
+              <label class="label" for="intentFilter">Intent</label>
+              <select id="intentFilter" class="input">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="Maybe">Maybe</option>
+              </select>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="kpiRow" id="farmerKpis"></div>
+          <div class="divider"></div>
+          <div class="tableWrap">
+            <table class="table table--dense" id="farmersTable"></table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">Quick segmentation</div>
+          <div class="muted">Summaries derived from the roster fields (intent, used_before, acres).</div>
+          <div class="divider"></div>
+          <div class="segGrid" id="segGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROOF -->
+    <section data-tab="proof" class="sheetSection sectionHidden">
+      <div class="grid2">
+        <div class="card">
+          <div class="card__title">Signatures (proof)</div>
+          <div class="muted">Host and sales staff signatures captured on field.</div>
+          <div class="divider"></div>
+          <div class="grid2" id="sigGrid"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__title">Raw sheet preview (optional)</div>
+          <div class="muted">This is a light preview of the source grid for troubleshooting only.</div>
+          <div class="divider"></div>
+          <div class="tableWrap">
+            <table class="table table--dense" id="rawGrid"></table>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
 <script>
 (() => {
   'use strict';
-  const $$ = (s,r=document)=>r.querySelector(s);
-  const esc = (s)=>{const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML;};
-  const BASE = new URL('.', location.href);
-  const url = (p)=>new URL(p, BASE).toString();
-  const qs = new URLSearchParams(location.search);
-  const campaign = qs.get('campaign') || 'buctril-super-2025';
-  const requestedSheet = qs.get('sheet') || '';
 
-  $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const el = (tag, cls, txt) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  };
 
-  async function fetchJson(p) {
-    const r = await fetch(url(p), {cache:'no-store'});
-    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
-    return await r.json();
+  const params = new URLSearchParams(location.search);
+  const campaign = params.get('campaign') || 'buctril-super-2025';
+  const sheetId = params.get('sheet') || 'D1S1';
+  const base = new URL('./', location.href);
+
+  function abs(url) { return new URL(url, base).toString(); }
+
+  // Makes asset references robust across:
+  // - 'assets/...'
+  // - './assets/...'
+  // - 'gallery/..' (legacy)
+  // - bare file names (e.g. '1.jpeg' from older JSON)
+  function resolveAsset(p) {
+    if (!p) return '';
+    if (/^https?:/i.test(p)) return p;
+
+    // Normalize leading ./ or /
+    let q = String(p).replace(/^\.\//, '').replace(/^\//, '');
+    // Legacy: gallery/ -> assets/gallery/
+    if (q.startsWith('gallery/')) q = 'assets/' + q;
+    // If looks like a bare media file (jpg/mp4/png/gif) and not already under assets, prefer assets/gallery/
+    if (!q.startsWith('assets/') && /\.(jpe?g|png|gif|webp|mp4)$/i.test(q)) {
+      q = 'assets/gallery/' + q;
+    }
+    return abs(q);
   }
 
-  function normalizeMediaPath(p) {
-    const raw = String(p ?? '').trim();
-    if (!raw) return '';
-    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
-    let x = raw.replace(/^\.?\//,'').replace(/^\//,'');
-    if (x.startsWith('assets/')) return x;
-    if (x.startsWith('gallery/')) return 'assets/' + x;
-    if (!x.includes('/')) return 'assets/gallery/' + x;
-    return x;
+  async function jget(path) {
+    const res = await fetch(abs(path), { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Fetch failed ${res.status}: ${path}`);
+    return res.json();
   }
 
-  function setImg(img, p) {
-    const ph = 'assets/placeholder.svg';
-    img.src = url(normalizeMediaPath(p) || ph);
-    img.onerror = ()=>{img.onerror=null; img.src=url(ph);};
-  }
+  function setStatus(txt) { $('#statusChip').textContent = txt; }
 
-  let sheetsIndex = null;
-
-  function renderList(filterText='') {
-    const list = $$('#sheetList');
-    const f = filterText.trim().toLowerCase();
-    const items = (sheetsIndex?.sheets || []).filter(x => {
-      if (!f) return true;
-      return String(x.sheet||'').toLowerCase().includes(f)
-        || String(x.village||'').toLowerCase().includes(f)
-        || String(x.district||'').toLowerCase().includes(f);
-    });
-    list.innerHTML = `<div class="muted">Total: <b>${items.length}</b></div>` + 
-      `<ul class="muted">${items.slice(0,200).map(x => {
-        const href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(x.sheet)}`;
-        return `<li><a class="link" href="${href}">${esc(x.sheet)}</a> — ${esc(x.district||'')} — ${esc(x.village||'')}</li>`;
-      }).join('')}</ul>`;
-  }
-
-  async function loadSheet(sheetRef) {
-    const meta = $$('#meta');
-    const fb = $$('#feedback');
-    const sigs = $$('#sigs');
-    meta.textContent = 'Loading…';
-    fb.textContent = 'Loading…';
-    sigs.innerHTML = '';
-
+  function formatDate(d) {
     try {
-      const sh = await fetchJson(`data/${campaign}/sheets/${sheetRef}.json`);
-      const m = sh.meta || {};
-      meta.innerHTML = `
-        <div><b>${esc(m.sheet||sheetRef)}</b> • Date: <b>${esc(m.date||'')}</b></div>
-        <div class="smallMuted">District: ${esc(m.district||'')} • Village: ${esc(m.village||'')} • Farmers present: ${esc(String(m.farmers_present||''))} • Acres: ${esc(String(m.acres||''))}</div>
-      `;
+      if (!d) return '—';
+      const dt = new Date(d);
+      if (Number.isNaN(dt.getTime())) return String(d);
+      return dt.toISOString().slice(0,10);
+    } catch { return String(d || '—'); }
+  }
 
-      const f = sh.feedback || {};
-      fb.innerHTML = `
-        ${f.host_comment ? `<div><b>Host comment:</b> ${esc(f.host_comment)}</div>` : ''}
-        ${f.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(f.sales_feedback)}</div>` : ''}
-        ${f.manager_note ? `<div><b>Manager note:</b> ${esc(f.manager_note)}</div>` : ''}
-        ${(!f.host_comment && !f.sales_feedback && !f.manager_note) ? '<div class="muted">—</div>' : ''}
-      `;
+  function num(n) {
+    if (n === null || n === undefined || n === '') return '—';
+    const x = Number(n);
+    return Number.isFinite(x) ? x.toLocaleString() : String(n);
+  }
 
-      const sig = sh.signatures || {};
-      const host = document.createElement('img');
-      host.className = 'thumb';
-      host.alt = 'Host signature';
-      setImg(host, sig.host);
-      const sales = document.createElement('img');
-      sales.className = 'thumb';
-      sales.alt = 'Sales signature';
-      setImg(sales, sig.sales);
-      sigs.appendChild(host);
-      sigs.appendChild(sales);
+  function pct(n, d) {
+    const a = Number(n), b = Number(d);
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b <= 0) return '—';
+    return Math.round((a/b)*100) + '%';
+  }
 
-      // Farmers table
-      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
-      const head = $$('#farmersHead');
-      const body = $$('#farmersTable tbody');
-      head.innerHTML = '';
-      body.innerHTML = '';
-      const cols = farmers.length ? Object.keys(farmers[0]) : ['sn','name','phone','village','acres','intent','used_before','other_brands_method'];
-      cols.forEach(c => {
-        const th = document.createElement('th');
-        th.textContent = c;
-        head.appendChild(th);
-      });
-      for (const row of farmers) {
-        const tr = document.createElement('tr');
-        cols.forEach(c => {
-          const td = document.createElement('td');
-          td.textContent = (row && row[c] != null) ? String(row[c]) : '';
-          tr.appendChild(td);
-        });
-        body.appendChild(tr);
+  function renderKv(meta) {
+    const kv = $('#kvMeta'); kv.innerHTML = '';
+    const rows = [
+      ['Sheet', meta.sheet],
+      ['Date', formatDate(meta.date)],
+      ['District', meta.district],
+      ['Village', meta.village],
+      ['Host', meta.host],
+      ['Farmers present', num(meta.farmers_present)],
+      ['Acres engaged', num(meta.acres)],
+      ['Coordinates', (meta.lat && meta.lon) ? `${meta.lat}, ${meta.lon}` : (meta.coord_raw || '—')]
+    ];
+    rows.forEach(([k,v]) => {
+      const r = el('div','kv__row');
+      r.appendChild(el('div','kv__k',k));
+      r.appendChild(el('div','kv__v', v ?? '—'));
+      kv.appendChild(r);
+    });
+  }
+
+  // Extract sections from the raw grid (2D)
+  function gridFindRow(grid, predicate) {
+    for (let r=0; r<grid.length; r++) {
+      const row = grid[r] || [];
+      for (let c=0; c<row.length; c++) {
+        const v = row[c];
+        if (typeof v === 'string' && predicate(v)) return r;
       }
+    }
+    return -1;
+  }
 
-    } catch (e) {
-      meta.innerHTML = `<div class="muted">Could not load sheet.</div><div class="smallMuted">${esc(e.message)}</div>`;
-      fb.textContent = '—';
+  function extractUnderstanding(grid) {
+    // Find the block start
+    const start = gridFindRow(grid, s => s.toLowerCase().includes('session effectiveness'));
+    if (start < 0) return [];
+    const items = [];
+    // Expected rows follow shortly (by observation from sample)
+    for (let r=start; r<Math.min(start+30, grid.length); r++) {
+      const row = grid[r] || [];
+      // Pattern: [0]=number, [1]=question, [6]=entry
+      if (typeof row[1] === 'string' && row[1].trim().length > 0 && row[0] !== null && row[6] !== null) {
+        const q = String(row[1]).trim();
+        const entry = row[6] !== null && row[6] !== undefined ? String(row[6]).trim() : '';
+        if (entry) items.push({ sn: row[0], question: q, entry });
+      }
+    }
+    // Filter to the 6 items we expect (sn 1..6) if present
+    const filtered = items.filter(it => Number(it.sn) >= 1 && Number(it.sn) <= 6);
+    return filtered.length ? filtered : items;
+  }
+
+  function extractCommercial(grid) {
+    const start = gridFindRow(grid, s => s.toLowerCase().includes('commercial intent'));
+    if (start < 0) return [];
+    const rows = [];
+    for (let r=start; r<Math.min(start+30, grid.length); r++) {
+      const row = grid[r] || [];
+      if (typeof row[1] === 'string' && row[1].trim().length > 0 && row[0] !== null) {
+        const label = String(row[1]).trim();
+        const entry = row[6];
+        // Keep rows that look like the numbered block (1..8)
+        if (Number(row[0]) >= 1 && Number(row[0]) <= 10) {
+          rows.push({ sn: row[0], label, entry });
+        }
+      }
+    }
+    return rows;
+  }
+
+  function buildIntentTable(commercial, meta) {
+    const t = $('#intentTable'); t.innerHTML = '';
+    const thead = el('thead');
+    const trh = el('tr');
+    ['Metric','Entry','Notes'].forEach(h => trh.appendChild(el('th','',h)));
+    thead.appendChild(trh);
+    t.appendChild(thead);
+
+    const tb = el('tbody');
+    commercial.forEach(r => {
+      const tr = el('tr');
+      tr.appendChild(el('td','', r.label));
+      tr.appendChild(el('td','', r.entry === null || r.entry === undefined || r.entry === '' ? '—' : String(r.entry)));
+      let note = '';
+      if (String(r.label).toLowerCase().includes('repeat users')) note = `Share-of-attendees: ${pct(r.entry, meta.farmers_present)}`;
+      if (String(r.label).toLowerCase().includes('definitely use')) note = `Share-of-attendees: ${pct(r.entry, meta.farmers_present)}`;
+      if (String(r.label).toLowerCase().includes('committed acres')) note = meta.acres ? `Share-of-acres: ${pct(r.entry, meta.acres)}` : '';
+      tr.appendChild(el('td','muted', note || ''));
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function kpiCard(title, value, sub) {
+    const d = el('div','kpiCard');
+    d.appendChild(el('div','kpiTitle', title));
+    d.appendChild(el('div','kpiValue', value));
+    if (sub) d.appendChild(el('div','kpiSub', sub));
+    return d;
+  }
+
+  function renderTopline(meta, understanding, commercial, feedback) {
+    const k = $('#kpiRow'); k.innerHTML = '';
+
+    const def = commercial.find(x => String(x.label).toLowerCase().includes('definitely use'));
+    const rep = commercial.find(x => String(x.label).toLowerCase().includes('repeat users'));
+    const acresFirm = commercial.find(x => String(x.label).toLowerCase().includes('committed acres'));
+    const hes = commercial.find(x => String(x.label).toLowerCase().includes('hesitation'));
+    const use = commercial.find(x => String(x.label).toLowerCase().includes('reasons to use'));
+
+    k.appendChild(kpiCard('Farmers present', num(meta.farmers_present)));
+    k.appendChild(kpiCard('Acres engaged', num(meta.acres)));
+    k.appendChild(kpiCard('Definitely use', def && def.entry != null ? num(def.entry) : '—', def && def.entry != null ? pct(def.entry, meta.farmers_present) : ''));
+    k.appendChild(kpiCard('Repeat users', rep && rep.entry != null ? num(rep.entry) : '—', rep && rep.entry != null ? pct(rep.entry, meta.farmers_present) : ''));
+    if (acresFirm && acresFirm.entry != null) k.appendChild(kpiCard('Firm committed acres', num(acresFirm.entry), meta.acres ? pct(acresFirm.entry, meta.acres) : ''));
+
+    const mood = [];
+    // Use understanding entries as a proxy: any "Not clear"/"Few"/"None"/"Some confusion" -> risk
+    const risks = understanding.filter(u => /not\s*clear|none|few|confusion|mixed/i.test(u.entry));
+    if (risks.length) mood.push(`Message uptake risk on ${risks.length} item(s) (see Understanding tab).`);
+    const positives = understanding.filter(u => /clear|most|yes/i.test(u.entry));
+    if (positives.length) mood.push(`Strong uptake signals on ${positives.length} item(s).`);
+    if (feedback && feedback.host_comment) mood.push(`Host: “${feedback.host_comment}”.`);
+    $('#moodSignals').textContent = mood.length ? mood.join(' ') : '—';
+
+    const drv = [];
+    if (use && use.entry) drv.push(`Reasons to use: ${String(use.entry)}`);
+    if (hes && hes.entry) drv.push(`Hesitations: ${String(hes.entry)}`);
+    $('#drivers').textContent = drv.length ? drv.join('\n') : '—';
+  }
+
+  function renderUnderstandingTable(items) {
+    const t = $('#understandingTable'); t.innerHTML = '';
+    const thead = el('thead');
+    const trh = el('tr');
+    ['Item','What was tested','Observed result','Interpretation'].forEach(h => trh.appendChild(el('th','',h)));
+    thead.appendChild(trh);
+    t.appendChild(thead);
+    const tb = el('tbody');
+
+    items.forEach(it => {
+      const tr = el('tr');
+      tr.appendChild(el('td','', String(it.sn)));
+      tr.appendChild(el('td','', it.question));
+      const badge = el('span', 'pill ' + pillClass(it.entry), it.entry);
+      const tdEntry = el('td','');
+      tdEntry.appendChild(badge);
+      tr.appendChild(tdEntry);
+      tr.appendChild(el('td','muted', interpretUnderstanding(it.question, it.entry)));
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function pillClass(entry) {
+    const e = String(entry||'').toLowerCase();
+    if (/(not\s*clear|none|no)/.test(e)) return 'pill--bad';
+    if (/(some|mixed|few|confusion)/.test(e)) return 'pill--warn';
+    return 'pill--good';
+  }
+
+  function interpretUnderstanding(q, entry) {
+    const e = String(entry||'').toLowerCase();
+    if (/(not\s*clear|none|no)/.test(e)) return 'High risk: reinforce this message in next sessions + use visuals/demos.';
+    if (/(some|mixed|few|confusion)/.test(e)) return 'Medium risk: tighten the talk track and add a quick recap + Q&A prompt.';
+    return 'Good: keep message cadence, use repetition + farmer examples.';
+  }
+
+  function renderActionBlocks(items, commercial) {
+    const wrap = $('#actionBlocks'); wrap.innerHTML = '';
+    const risks = items.filter(u => /not\s*clear|none|no/i.test(u.entry));
+    const warns = items.filter(u => /some|mixed|few|confusion/i.test(u.entry));
+    const reasons = commercial.find(x => String(x.label).toLowerCase().includes('reasons to use'));
+    const hes = commercial.find(x => String(x.label).toLowerCase().includes('hesitation'));
+
+    const blocks = [];
+    if (risks.length) blocks.push({title:'Retrain key messages', body:`${risks.length} understanding checkpoints show “Not clear/No”. Re-run the 4 key messages with a short quiz at the end.`});
+    if (warns.length) blocks.push({title:'Sharpen talk track', body:`${warns.length} checkpoints show “Some/Mixed/Few”. Add a 60-second recap and ask 2 farmer questions to confirm understanding.`});
+    if (hes && hes.entry) blocks.push({title:'Objection handling prep', body:`Top hesitation: ${hes.entry}. Prepare ROI narrative, price-value comparison and dealer availability reassurance.`});
+    if (reasons && reasons.entry) blocks.push({title:'Double down on drivers', body:`Key driver: ${reasons.entry}. Mirror this phrasing in banners/leaflets and supervisor coaching.`});
+    if (!blocks.length) blocks.push({title:'No major risks detected', body:'Uptake looks positive across checkpoints. Focus on scale-up, repeat messages, and capture more media/proof.'});
+
+    blocks.forEach(b => {
+      const c = el('div','actionCard');
+      c.appendChild(el('div','actionTitle', b.title));
+      c.appendChild(el('div','muted', b.body));
+      wrap.appendChild(c);
+    });
+  }
+
+  function buildFarmersTable(farmers) {
+    const t = $('#farmersTable'); t.innerHTML = '';
+    const thead = el('thead');
+    const trh = el('tr');
+    ['#','Name','Phone','Village','Acres','Intent','Used before','Method/Brand'].forEach(h => trh.appendChild(el('th','',h)));
+    thead.appendChild(trh);
+    t.appendChild(thead);
+    const tb = el('tbody');
+    farmers.forEach(f => {
+      const tr = el('tr');
+      tr.appendChild(el('td','', String(f.sn ?? '')));
+      tr.appendChild(el('td','', f.name || ''));
+      tr.appendChild(el('td','', f.phone || ''));
+      tr.appendChild(el('td','', f.village || ''));
+      tr.appendChild(el('td','', f.acres != null ? String(f.acres) : ''));
+      tr.appendChild(el('td','', f.intent || ''));
+      tr.appendChild(el('td','', f.used_before || ''));
+      tr.appendChild(el('td','', f.other_brands_method || ''));
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function renderFarmerKpis(meta, farmers) {
+    const wrap = $('#farmerKpis'); wrap.innerHTML = '';
+    const yes = farmers.filter(f => String(f.intent||'').toLowerCase()==='yes').length;
+    const maybe = farmers.filter(f => String(f.intent||'').toLowerCase()==='maybe').length;
+    const no = farmers.filter(f => String(f.intent||'').toLowerCase()==='no').length;
+    const used = farmers.filter(f => String(f.used_before||'').toLowerCase()==='yes').length;
+    const acres = farmers.reduce((s,f)=>s+(Number(f.acres)||0),0);
+
+    wrap.appendChild(kpiCard('Roster count', num(farmers.length), meta.farmers_present ? `Sheet says ${num(meta.farmers_present)} present` : ''));
+    wrap.appendChild(kpiCard('Intent: Yes', num(yes), pct(yes, farmers.length)));
+    wrap.appendChild(kpiCard('Intent: Maybe', num(maybe), pct(maybe, farmers.length)));
+    wrap.appendChild(kpiCard('Intent: No', num(no), pct(no, farmers.length)));
+    wrap.appendChild(kpiCard('Used before', num(used), pct(used, farmers.length)));
+    wrap.appendChild(kpiCard('Roster acres', num(acres), 'Sum of roster acres'));
+  }
+
+  function renderSegmentation(farmers) {
+    const g = $('#segGrid'); g.innerHTML = '';
+    const by = (fn) => farmers.reduce((m,f)=>{const k=fn(f); m[k]=(m[k]||0)+1; return m;},{});
+    const intents = by(f=> (f.intent||'Unknown'));
+    const used = by(f=> (f.used_before||'Unknown'));
+    const acresBuckets = by(f=>{
+      const a=Number(f.acres)||0;
+      if (a>=50) return '50+ acres';
+      if (a>=25) return '25–49';
+      if (a>=10) return '10–24';
+      return '0–9';
+    });
+
+    const cards = [
+      {title:'Intent distribution', obj:intents},
+      {title:'Used-before distribution', obj:used},
+      {title:'Acres buckets', obj:acresBuckets}
+    ];
+
+    cards.forEach(c => {
+      const card = el('div','segCard');
+      card.appendChild(el('div','segTitle', c.title));
+      Object.entries(c.obj).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+        const row = el('div','segRow');
+        row.appendChild(el('div','muted', k));
+        row.appendChild(el('div','segVal', String(v)));
+        card.appendChild(row);
+      });
+      g.appendChild(card);
+    });
+  }
+
+  function renderSignatures(sigs) {
+    const g = $('#sigGrid'); g.innerHTML = '';
+    const entries = [
+      {label:'Host signature', path: sigs?.host_signature},
+      {label:'Sales signature', path: sigs?.sales_signature}
+    ];
+    entries.forEach(e => {
+      const card = el('div','cardLite');
+      card.appendChild(el('div','smallCaps', e.label));
+      if (e.path) {
+        const img = el('img','sig');
+        img.alt = e.label;
+        img.src = resolveAsset(e.path);
+        card.appendChild(img);
+      } else {
+        card.appendChild(el('div','quote','No signature found'));
+      }
+      g.appendChild(card);
+    });
+  }
+
+  function renderRawGrid(grid) {
+    const t = $('#rawGrid'); t.innerHTML='';
+    if (!Array.isArray(grid) || !grid.length) { t.appendChild(el('tbody')); return; }
+    const head = el('thead'); const trh = el('tr');
+    trh.appendChild(el('th','sticky','#'));
+    const maxCols = Math.min(12, Math.max(...grid.map(r => (r||[]).length)));
+    for (let c=0;c<maxCols;c++) trh.appendChild(el('th','',`C${c+1}`));
+    head.appendChild(trh); t.appendChild(head);
+    const tb = el('tbody');
+    grid.slice(0, 80).forEach((row, i) => {
+      const tr = el('tr');
+      tr.appendChild(el('td','sticky', String(i+1)));
+      for (let c=0;c<maxCols;c++) {
+        const v = row ? row[c] : '';
+        tr.appendChild(el('td','', v===null||v===undefined ? '' : String(v)));
+      }
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function setupTabs() {
+    const btns = $$('.tabBtn');
+    const sections = $$('.sheetSection');
+    btns.forEach(b => b.addEventListener('click', () => {
+      btns.forEach(x => x.classList.toggle('tabBtn--active', x===b));
+      btns.forEach(x => x.setAttribute('aria-selected', x===b ? 'true' : 'false'));
+      const tab = b.dataset.tab;
+      sections.forEach(s => s.classList.toggle('sectionHidden', s.dataset.tab !== tab));
+      // Ensure maps/large components (if any) can resize after tab change
+      window.dispatchEvent(new Event('resize'));
+    }));
+  }
+
+  function setupActions() {
+    $('#btnPrint').addEventListener('click', () => window.print());
+    $('#btnCopyLink').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(location.href); setStatus('Link copied'); }
+      catch { setStatus('Copy failed'); }
+      setTimeout(()=>setStatus('Ready'), 1200);
+    });
+  }
+
+  function wireFarmerFilters(allFarmers, meta) {
+    const search = $('#farmerSearch');
+    const intent = $('#intentFilter');
+
+    const apply = () => {
+      const q = (search.value||'').trim().toLowerCase();
+      const f = (intent.value||'').trim();
+      let list = allFarmers.slice();
+      if (q) list = list.filter(x => String(x.name||'').toLowerCase().includes(q) || String(x.phone||'').toLowerCase().includes(q));
+      if (f) list = list.filter(x => String(x.intent||'') === f);
+      buildFarmersTable(list);
+      renderFarmerKpis(meta, list);
+      renderSegmentation(list);
+    };
+
+    search.addEventListener('input', apply);
+    intent.addEventListener('change', apply);
+    apply();
+  }
+
+  async function init() {
+    try {
+      setupTabs();
+      setupActions();
+
+      // Update nav links to preserve campaign
+      $('#backToDash').href = `./index.html?campaign=${encodeURIComponent(campaign)}`;
+      $('#openDetails').href = `./details.html?campaign=${encodeURIComponent(campaign)}`;
+      $('#campaignSub').textContent = `Campaign • ${campaign}`;
+      $('#sheetTitle').textContent = `Session ${sheetId}`;
+      $('#sheetSub').textContent = `Loading ${campaign}/${sheetId}…`;
+
+      setStatus('Loading data…');
+      const sheet = await jget(`data/${campaign}/sheets/${sheetId}.json`);
+
+      const meta = sheet.meta || {};
+      const feedback = sheet.feedback || {};
+      const sigs = sheet.signatures || {};
+      const farmers = Array.isArray(sheet.farmers) ? sheet.farmers : [];
+      const grid = Array.isArray(sheet.grid) ? sheet.grid : [];
+
+      // Hero title
+      $('#sheetTitle').textContent = `${sheetId} • ${meta.district || ''} ${meta.village ? '— ' + meta.village : ''}`.trim();
+      $('#sheetSub').textContent = `Date ${formatDate(meta.date)} • Host ${meta.host || '—'} • Farmers ${num(meta.farmers_present)} • Acres ${num(meta.acres)}`;
+
+      renderKv(meta);
+
+      const understanding = extractUnderstanding(grid);
+      const commercial = extractCommercial(grid);
+
+      renderTopline(meta, understanding, commercial, feedback);
+      buildIntentTable(commercial, meta);
+
+      renderUnderstandingTable(understanding);
+      renderActionBlocks(understanding, commercial);
+
+      // Notes
+      $('#hostComment').textContent = feedback.host_comment || '—';
+      $('#salesComment').textContent = feedback.sales_feedback || '—';
+      $('#managerNote').textContent = feedback.manager_note || '—';
+
+      $('#hostMeta').textContent = [feedback.host_name, feedback.host_phone].filter(Boolean).join(' • ');
+      $('#salesMeta').textContent = [feedback.sales_name, feedback.sales_phone].filter(Boolean).join(' • ');
+
+      renderSignatures(sigs);
+
+      // Farmers
+      wireFarmerFilters(farmers, meta);
+
+      // Raw grid preview
+      renderRawGrid(grid);
+
+      setStatus('Ready');
+    } catch (err) {
+      console.error(err);
+      setStatus('Error');
+      $('#sheetSub').textContent = `Could not load sheet ${sheetId}. Check console and paths.`;
+      $('#managerNote').textContent = String(err.message || err);
     }
   }
 
-  async function boot() {
-    sheetsIndex = await fetchJson(`data/${campaign}/sheets_index.json`);
-    const sel = $$('#sheetSelect');
-    sel.innerHTML = (sheetsIndex.sheets || []).map(x => `<option value="${esc(x.sheet)}">${esc(x.sheet)} — ${esc(x.district||'')} — ${esc(x.village||'')}</option>`).join('');
-    const initial = requestedSheet || sheetsIndex.sheets?.[0]?.sheet || '';
-    sel.value = initial;
-    sel.onchange = () => {
-      location.href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(sel.value)}`;
-    };
-    $$('#sheetSearch').addEventListener('input', (ev) => renderList(ev.target.value));
-    renderList('');
-    await loadSheet(initial);
-  }
-
-  boot().catch(e => {
-    $$('#meta').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
-    $$('#sheetList').textContent = '—';
-  });
+  init();
 })();
 </script>
 </body>

@@ -1,159 +1,360 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Session details</title>
-  <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.css?v=20260101" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b1220"/>
+  <title>INTERACT • Detailed Data</title>
+  <link rel="stylesheet" href="./style.css"/>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div>
-        <div class="brandTitle">Session details</div>
-        <div class="brandSub"><a id="backLink" class="link" href="index.html">Back</a></div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand__title">INTERACT</div>
+        <div class="brand__subtitle">Detailed data view • filter by people, place, session and date</div>
       </div>
-    </div>
-    <div class="controls">
-      <div class="control">
-        <label>Session</label>
-        <div id="hdr" class="muted">—</div>
-      </div>
-    </div>
-  </header>
+      <nav class="topbar__nav">
+        <a class="chip" href="./index.html">Dashboard</a>
+        <a class="chip chip--active" href="./details.html">Detailed view</a>
+        <a class="chip" href="./sheets.html">Sheets</a>
+      </nav>
+    </header>
 
-  <main class="grid2">
-    <section class="card">
-      <h2>Overview</h2>
-      <div id="overview" class="muted">Loading…</div>
-      <div class="divider"></div>
-      <div class="drawerActions">
-        <a class="btn" id="openSheet" href="#">Open sheet</a>
-        <a class="btn btnGhost" id="openMaps" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
-      </div>
+    <main class="container">
+      <section class="card">
+        <div class="card__head">
+          <h2>Filters</h2>
+          <p class="muted">Use this page to review session-level and people-level details. Click a row to open the session sheet and signatures.</p>
+        </div>
 
-      <div class="divider"></div>
-      <h3>Sheet summary</h3>
-      <div id="sheetSummary" class="muted">Loading…</div>
-    </section>
+        <div class="grid3">
+          <div>
+            <label class="label">Campaign</label>
+            <select id="campaignSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">District / City</label>
+            <select id="districtSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Session (sheet)</label>
+            <select id="sessionSelect" class="input"></select>
+          </div>
 
-    <section class="card">
-      <h2>Media</h2>
-      <div id="media" class="mediaGrid"></div>
-    </section>
-  </main>
+          <div>
+            <label class="label">Host</label>
+            <select id="hostSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Sales rep</label>
+            <select id="salesSelect" class="input"></select>
+          </div>
+          <div>
+            <label class="label">Date range</label>
+            <div class="dateRange">
+              <input id="fromDate" type="date" class="input"/>
+              <span class="to">to</span>
+              <input id="toDate" type="date" class="input"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="controlsRow" style="margin-top:12px">
+          <div class="control" style="flex:1">
+            <label>Search</label>
+            <input id="q" class="input" placeholder="Village, dealer, competitors, notes…"/>
+          </div>
+          <div class="control actions">
+            <label class="srOnly">Actions</label>
+            <button class="btn primary" id="apply">Apply</button>
+            <button class="btn" id="reset">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card__head">
+          <h2>Results</h2>
+          <p class="muted" id="resultsMeta">—</p>
+        </div>
+        <div class="tableWrap">
+          <table class="table" id="resultsTable"></table>
+        </div>
+      </section>
+
+      <section class="card" id="detailCard">
+        <div class="card__head">
+          <h2>Selected session</h2>
+          <p class="muted">Full feedback + signatures (if present) and key influencer farmers.</p>
+        </div>
+        <div id="selectedMeta" class="kv"></div>
+        <div class="divider"></div>
+        <div class="grid2" id="selectedPeople"></div>
+        <div class="divider"></div>
+        <h3>Key influencer farmers</h3>
+        <div class="tableWrap"><table class="table" id="farmersTable"></table></div>
+      </section>
+    </main>
+  </div>
 
 <script>
-(() => {
-  'use strict';
-  const $$ = (s,r=document)=>r.querySelector(s);
-  const esc = (s)=>{const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML;};
-  const BASE = new URL('.', location.href);
-  const url = (p)=>new URL(p, BASE).toString();
-  const qs = new URLSearchParams(location.search);
-  const campaign = qs.get('campaign') || 'buctril-super-2025';
-  const sessionId = Number(qs.get('session') || 0);
+(function(){
+  const $ = (s, r=document)=>r.querySelector(s);
+  const $el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
 
-  $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
+  const BASE = new URL('./', window.location.href);
 
-  async function fetchJson(p) {
-    const r = await fetch(url(p), {cache:'no-store'});
-    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
-    return await r.json();
+  function resolveUrl(p){ return new URL(p, BASE).toString(); }
+  async function getJson(p){
+    const res = await fetch(resolveUrl(p), {cache:'no-store'});
+    if(!res.ok) throw new Error('Fetch failed: '+p+' ('+res.status+')');
+    return res.json();
+  }
+  function parseDateSafe(val){
+    if(!val) return null;
+    const s=String(val).trim();
+    const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(iso){ const d=new Date(+iso[1], +iso[2]-1, +iso[3]); return isNaN(d)?null:d; }
+    const dmy=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if(dmy){ const d=new Date(+dmy[3], +dmy[2]-1, +dmy[1]); return isNaN(d)?null:d; }
+    const d=new Date(s); return isNaN(d)?null:d;
+  }
+  function fmt(v){ return (v===null||v===undefined||v==='') ? '—' : v; }
+  function uniq(arr){ return Array.from(new Set(arr.filter(Boolean))); }
+
+  function renderOptions(sel, opts, allLabel='All'){
+    sel.innerHTML = `<option value="ALL">${allLabel}</option>` + opts.map(o=>`<option value="${String(o).replace(/"/g,'&quot;')}">${o}</option>`).join('');
   }
 
-  function normalizeMediaPath(p) {
-    const raw = String(p ?? '').trim();
-    if (!raw) return '';
-    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
-    let x = raw.replace(/^\.?\//,'').replace(/^\//,'');
-    if (x.startsWith('assets/')) return x;
-    if (x.startsWith('gallery/')) return 'assets/' + x;
-    if (!x.includes('/')) return 'assets/gallery/' + x;
-    return x;
-  }
-
-  function setImg(img, p) {
-    const ph = 'assets/placeholder.svg';
-    img.src = url(normalizeMediaPath(p) || ph);
-    img.onerror = ()=>{img.onerror=null; img.src=url(ph);};
-  }
-
-  function setVideo(v, p) {
-    const ph = 'assets/placeholder-video.mp4';
-    v.src = url(normalizeMediaPath(p) || ph);
-    v.onerror = ()=>{v.onerror=null; v.src=url(ph);};
-  }
-
-  async function boot() {
-    const sj = await fetchJson(`data/${campaign}/sessions.json`);
-    const sessions = Array.isArray(sj.sessions) ? sj.sessions : [];
-    const s = sessions.find(x => Number(x.id) === sessionId);
-    if (!s) throw new Error('Session not found.');
-
-    $$('#hdr').innerHTML = `<b>Session ${esc(s.id)}</b> • <span class="badge">${esc(s.sheetRef||'')}</span> • ${esc(s.date||'')}`;
-    $$('#overview').innerHTML = `
-      <div><b>District:</b> ${esc(s.district||'')}</div>
-      <div><b>Village/Spot:</b> ${esc(s.village||s.spot||'')}</div>
-      <div><b>Dealer:</b> ${esc(s.dealer?.nearest||s.dealer?.name||'')}</div>
-      <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(s.host?.phone||'')}</div>
-      <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(s.salesRep?.phone||'')}</div>
-      <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
-    `;
-
-    const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(s.sheetRef)}`;
-    $$('#openSheet').href = sheetUrl;
-
-    const lat = Number(s.geo?.lat), lng = Number(s.geo?.lng);
-    const maps = (Number.isFinite(lat)&&Number.isFinite(lng)) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
-    $$('#openMaps').href = maps;
-
-    // Sheet summary
-    try {
-      const sh = await fetchJson(`data/${campaign}/sheets/${s.sheetRef}.json`);
-      const m = sh.meta || {};
-      const f = sh.feedback || {};
-      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
-      const top = [...farmers].sort((a,b)=>Number(b.acres||0)-Number(a.acres||0)).slice(0,5);
-      $$('#sheetSummary').innerHTML = `
-        <div class="muted"><b>${esc(m.sheet||s.sheetRef)}</b> • Date: ${esc(m.date||s.date||'')} • Farmers present: ${esc(String(m.farmers_present||''))} • Acres: ${esc(String(m.acres||''))}</div>
-        ${f.host_comment ? `<div><b>Host comment:</b> ${esc(f.host_comment)}</div>` : ''}
-        ${f.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(f.sales_feedback)}</div>` : ''}
-        ${f.manager_note ? `<div><b>Manager note:</b> ${esc(f.manager_note)}</div>` : ''}
-        <div class="divider"></div>
-        <div><b>Top farmers</b></div>
-        ${top.length ? `<ul>${top.map(x=>`<li>${esc(x.name||'')} — ${esc(String(x.acres ?? ''))} acres</li>`).join('')}</ul>` : '<div class="muted">No farmer rows found.</div>'}
-      `;
-    } catch (e) {
-      $$('#sheetSummary').innerHTML = `<div class="muted">Could not load sheet.</div><div class="smallMuted">${esc(e.message)}</div>`;
-    }
-
-    // Media
-    const media = $$('#media');
-    const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
-    const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
-    const items = [...imgs.map(p=>({type:'image',path:p})), ...vids.map(p=>({type:'video',path:p}))];
-    if (!items.length) {
-      media.innerHTML = '<div class="muted">No media for this session.</div>';
-      return;
-    }
-    media.innerHTML = items.map((it, i)=> {
-      return it.type==='image'
-        ? `<div class="mediaThumb"><img data-i="${i}" alt="image"/></div>`
-        : `<div class="mediaThumb"><video data-i="${i}" controls playsinline></video></div>`;
-    }).join('');
-    items.forEach((it, i)=> {
-      const el = media.querySelector(`[data-i="${i}"]`);
-      if (!el) return;
-      if (it.type==='image') setImg(el, it.path);
-      else setVideo(el, it.path);
+  function renderMetaBox(meta){
+    const box = $('#selectedMeta');
+    box.innerHTML='';
+    const items = [
+      ['Date', meta.date], ['District', meta.district], ['Village', meta.village],
+      ['Host', meta.host], ['Dealer', meta.dealer], ['Dealer Contact', meta.dealer_contact],
+      ['Farmers present', meta.farmers_present], ['Acres', meta.acres], ['Coordinates', meta.coord_raw]
+    ];
+    items.forEach(([k,v])=>{
+      const row=$el('div','kv__row');
+      row.innerHTML = `<div class="kv__k">${k}</div><div class="kv__v">${fmt(v)}</div>`;
+      box.appendChild(row);
     });
   }
 
-  boot().catch(e=> {
-    $$('#overview').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
-    $$('#sheetSummary').textContent = '—';
+  function renderSelectedPeople(fb, sigs){
+    const wrap = $('#selectedPeople');
+    wrap.innerHTML='';
+    const host = $el('div','cardLite');
+    host.innerHTML = `
+      <h4>Host</h4>
+      <div class="muted">Name: <b>${fmt(fb.host_name)}</b></div>
+      <div class="muted">Phone: <b>${fmt(fb.host_phone)}</b></div>
+      <div class="muted">Comment:</div>
+      <div class="quote">${fmt(fb.host_comment)}</div>
+      ${sigs.host ? `<img class="sig" src="${resolveUrl(sigs.host)}" alt="Host signature"/>` : `<div class="muted">Signature: —</div>`}
+    `;
+    const sales = $el('div','cardLite');
+    sales.innerHTML = `
+      <h4>Sales</h4>
+      <div class="muted">Name: <b>${fmt(fb.sales_name)}</b></div>
+      <div class="muted">Phone: <b>${fmt(fb.sales_phone)}</b></div>
+      <div class="muted">Feedback:</div>
+      <div class="quote">${fmt(fb.sales_feedback)}</div>
+      ${sigs.sales ? `<img class="sig" src="${resolveUrl(sigs.sales)}" alt="Sales signature"/>` : `<div class="muted">Signature: —</div>`}
+    `;
+    wrap.appendChild(host);
+    wrap.appendChild(sales);
+  }
+
+  function renderFarmers(rows){
+    const t = $('#farmersTable');
+    const head = ['SN','Farmer','Phone','Village','Acres','Intent','Used before','Other brands/method'];
+    t.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+    const tb = $el('tbody');
+    (rows||[]).forEach(r=>{
+      const tr=$el('tr');
+      tr.innerHTML = `<td>${fmt(r.sn)}</td><td>${fmt(r.name)}</td><td>${fmt(r.phone)}</td><td>${fmt(r.village)}</td><td>${fmt(r.acres)}</td><td>${fmt(r.intent)}</td><td>${fmt(r.used_before)}</td><td>${fmt(r.other_brands_method)}</td>`;
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function renderResults(rows){
+    const t = $('#resultsTable');
+    const head = ['Date','Sheet','District','Village','Host','Sales','Farmers','Acres','Definite','Score','Actions'];
+    t.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+    const tb = $el('tbody');
+    rows.forEach(r=>{
+      const tr=$el('tr');
+      const openSheet = `./sheets.html?campaign=${encodeURIComponent(state.campaign)}&sheet=${encodeURIComponent(r.sheetRef||r.id)}`;
+      const openDash = `./index.html?campaign=${encodeURIComponent(state.campaign)}&open=${encodeURIComponent(r.sheetRef||r.id)}#sessions`;
+      tr.innerHTML = `
+        <td>${fmt(r.date)}</td>
+        <td><b>${fmt(r.sheetRef||r.id)}</b></td>
+        <td>${fmt(r.district||r.city)}</td>
+        <td>${fmt(r.village)}</td>
+        <td>${fmt((r.host&&r.host.name)||r.hostName||'')}</td>
+        <td>${fmt((r.salesRep&&r.salesRep.name)||r.salesName||'')}</td>
+        <td>${fmt(r.farmers)}</td>
+        <td>${fmt(r.acres)}</td>
+        <td>${fmt(r.definite)}</td>
+        <td>${fmt(r.score)}</td>
+        <td style="white-space:nowrap">
+          <a class="chip" href="${openDash}">Open</a>
+          <a class="chip" href="${openSheet}">Sheet</a>
+        </td>
+      `;
+      tr.addEventListener('click', async (e)=>{
+        // ignore click on links
+        if(e.target && e.target.closest('a')) return;
+        await openSheetDetail(r.sheetRef||r.id);
+        document.getElementById('detailCard').scrollIntoView({behavior:'smooth', block:'start'});
+      });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    $('#resultsMeta').textContent = `${rows.length} session(s) shown`;
+  }
+
+  async function openSheetDetail(sheet){
+    try{
+      const data = await getJson(`data/${state.campaign}/sheets/${sheet}.json`);
+      renderMetaBox(data.meta||{});
+      renderSelectedPeople(data.feedback||{}, data.signatures||{});
+      renderFarmers(data.farmers||[]);
+    }catch(err){
+      $('#selectedMeta').innerHTML = `<div class="muted">Sheet details not available for <b>${sheet}</b>. Ensure sheets viewer data is deployed.</div>`;
+      $('#selectedPeople').innerHTML = '';
+      $('#farmersTable').innerHTML = '';
+    }
+  }
+
+  const state = { campaign:'buctril-super-2025', campaigns:[], sessions:[], sheetsIndex:null };
+
+  async function loadCampaigns(){
+    let cfg=null;
+    try{ cfg = await getJson('data/campaigns.json'); }catch(e){ console.warn('campaigns.json missing; using fallback', e); }
+    state.campaigns = (cfg && cfg.campaigns) ? cfg.campaigns : [];
+    if(!state.campaigns.length){ state.campaigns=[{id:(new URLSearchParams(location.search).get('campaign')||'buctril-super-2025'), name:'buctril-super-2025'}]; }
+    const sel = $('#campaignSelect');
+    sel.innerHTML = state.campaigns.map(c=>`<option value="${c.id}">${c.name || c.id}</option>`).join('');
+    const q = new URLSearchParams(location.search);
+    const c0 = q.get('campaign') || state.campaigns[0]?.id || 'buctril-super-2025';
+    sel.value = c0;
+    state.campaign = c0;
+  }
+
+  async function loadData(){
+    const campaignId = state.campaign;
+    const s = await getJson(`data/${campaignId}/sessions.json`);
+    state.sessions = (s.sessions||[]).slice();
+    try{
+      state.sheetsIndex = await getJson(`data/${campaignId}/sheets_index.json`);
+    }catch(e){ state.sheetsIndex = null; }
+
+    // normalize dates & fill missing from sheets_index
+    const map = new Map((state.sheetsIndex?.sheets||[]).map(x=>[x.sheet,x.date]));
+    state.sessions = state.sessions.map(x=>{
+      const d = parseDateSafe(x.date);
+      if(!d && x.sheetRef && map.has(x.sheetRef)){
+        const d2 = parseDateSafe(map.get(x.sheetRef));
+        return d2 ? ({...x, date: `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`}) : ({...x, date:''});
+      }
+      return d ? ({...x, date: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}) : ({...x, date:''});
+    });
+
+    // populate selects
+    const districts = uniq(state.sessions.map(x=>x.district||x.city));
+    renderOptions($('#districtSelect'), districts, 'All districts');
+
+    const sheets = uniq(state.sessions.map(x=>x.sheetRef||x.id));
+    renderOptions($('#sessionSelect'), sheets, 'All sessions');
+
+    const hosts = uniq(state.sessions.map(x=>(x.host&&x.host.name)||''));
+    renderOptions($('#hostSelect'), hosts, 'All hosts');
+
+    const sales = uniq(state.sessions.map(x=>(x.salesRep&&x.salesRep.name)||''));
+    renderOptions($('#salesSelect'), sales, 'All sales reps');
+
+    // date range defaults from min/max
+    const ds = state.sessions.map(x=>parseDateSafe(x.date)).filter(Boolean).sort((a,b)=>a-b);
+    if(ds.length){
+      $('#fromDate').value = `${ds[0].getFullYear()}-${String(ds[0].getMonth()+1).padStart(2,'0')}-${String(ds[0].getDate()).padStart(2,'0')}`;
+      $('#toDate').value = `${ds[ds.length-1].getFullYear()}-${String(ds[ds.length-1].getMonth()+1).padStart(2,'0')}-${String(ds[ds.length-1].getDate()).padStart(2,'0')}`;
+    }
+  }
+
+  function applyFilters(){
+    const district = $('#districtSelect').value;
+    const session = $('#sessionSelect').value;
+    const host = $('#hostSelect').value;
+    const sales = $('#salesSelect').value;
+    const q = ($('#q').value||'').toLowerCase().trim();
+    const from = $('#fromDate').value ? parseDateSafe($('#fromDate').value) : null;
+    const to0 = $('#toDate').value ? parseDateSafe($('#toDate').value) : null;
+    const to = to0 ? new Date(to0.getTime() + 24*3600*1000 - 1) : null;
+
+    const rows = state.sessions.filter(r=>{
+      if(district !== 'ALL' && (r.district||r.city) !== district) return false;
+      const sid = (r.sheetRef||r.id);
+      if(session !== 'ALL' && sid !== session) return false;
+      if(host !== 'ALL' && ((r.host&&r.host.name)||'') !== host) return false;
+      if(sales !== 'ALL' && ((r.salesRep&&r.salesRep.name)||'') !== sales) return false;
+
+      const d = parseDateSafe(r.date);
+      if(from && d && d < from) return false;
+      if(to && d && d > to) return false;
+
+      if(q){
+        const blob = `${r.village||''} ${(r.dealer&&r.dealer.name)||''} ${(r.topReasonUse||'')} ${(r.topReasonNotUse||'')} ${(r.competitors||[]).join(' ')} ${(r.notes||'')}`.toLowerCase();
+        if(!blob.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b)=>{
+      const da=parseDateSafe(a.date), db=parseDateSafe(b.date);
+      if(da && db) return da - db;
+      if(da) return -1;
+      if(db) return 1;
+      return String(a.sheetRef||a.id).localeCompare(String(b.sheetRef||b.id));
+    });
+
+    renderResults(rows);
+    if(rows[0]) openSheetDetail(rows[0].sheetRef||rows[0].id);
+  }
+
+  function resetFilters(){
+    $('#districtSelect').value='ALL';
+    $('#sessionSelect').value='ALL';
+    $('#hostSelect').value='ALL';
+    $('#salesSelect').value='ALL';
+    $('#q').value='';
+    applyFilters();
+  }
+
+  async function boot(){
+    await loadCampaigns();
+    await loadData();
+    $('#apply').addEventListener('click', applyFilters);
+    $('#reset').addEventListener('click', resetFilters);
+    $('#campaignSelect').addEventListener('change', async ()=>{
+      state.campaign = $('#campaignSelect').value;
+      await loadData();
+      applyFilters();
+      const u = new URL(location.href);
+      u.searchParams.set('campaign', state.campaign);
+      history.replaceState(null,'',u.toString());
+    });
+    // auto apply
+    applyFilters();
+  }
+
+  boot().catch(err=>{
+    document.body.innerHTML = `<div style="padding:24px;font-family:system-ui;color:#fff;background:#0b1220;min-height:100vh">
+      <h2>Detailed view failed to load</h2>
+      <pre style="white-space:pre-wrap;color:#cfe0ff">${err.message}</pre>
+      <p>Confirm the file exists: <code>/data/campaigns.json</code> and <code>/data/{campaign}/sessions.json</code></p>
+    </div>`;
   });
 })();
 </script>

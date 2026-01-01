@@ -1,299 +1,204 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#0b1220"/>
-  <title>INTERACT • Campaign Dashboard</title>
-  <link rel="stylesheet" href="style.css"/>
-  <!-- Leaflet (map) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Harvest Horizons Dashboard</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=20260101" />
+  <!-- Leaflet CSS with fallback chain -->
+  <link id="leafletCss" rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
 </head>
 <body>
-  <div class="bg">
-    <video id="bgVideo" class="bgVideo" autoplay muted loop playsinline preload="metadata"></video>
-    <div class="bgShade"></div>
-  </div>
-
-  <header class="header">
-    <div class="headerInner">
-      <div class="brand">
-        <div class="brandMark">INTERACT</div>
-        <div class="brandSub">Insights, coverage and field media — built for teams, partners and the community.</div>
-      </div>
-      <div class="headerActions">
-        <a class="chip link" href="./details.html?campaign=buctril-super-2025">Detailed view</a>
-        <a class="chip link" href="#feedback">Send feedback</a>
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/interact.gif" alt="INTERACT" class="brandMark" onerror="this.style.display='none'"/>
+      <div>
+        <div class="brandTitle">Harvest Horizons</div>
+        <div class="brandSub">Campaign dashboard</div>
       </div>
     </div>
 
-    <div class="heroWrap">
-      <div class="heroPlayer" id="heroPlayer" aria-label="Header video playlist">
-        <video id="heroVideo" muted autoplay playsinline loop preload="metadata"></video>
-        <img id="heroPoster" alt="" />
-        <div class="heroOverlay"></div>
-        <div class="heroCaption">
-          <div class="heroTitle" id="heroTitle">Campaign highlights</div>
-          <div class="heroSub" id="heroSub">If video does not auto-play on iPhone, tap once to start.</div>
-        </div>
-        <div class="heroControls">
-          <button class="iconBtn" id="heroPrev" title="Previous">‹</button>
-          <button class="iconBtn" id="heroNext" title="Next">›</button>
-          <button class="iconBtn" id="heroMute" title="Mute/Unmute">🔇</button>
-        </div>
+    <div class="controls">
+      <div class="control">
+        <label for="campaignSelect">Campaign</label>
+        <select id="campaignSelect"></select>
       </div>
-      <div class="heroThumbs" id="heroThumbs" aria-label="Header video thumbnails"></div>
+
+      <div class="control">
+        <label>Date range</label>
+        <div class="rangeRow">
+          <input id="dateFrom" type="date" />
+          <span class="muted">to</span>
+          <input id="dateTo" type="date" />
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn btnGhost" id="resetBtn">Reset</button>
+          <button class="btn btnGhost" id="exportBtn">Export CSV</button>
+        </div>
+        <div id="rangeHint" class="smallMuted"></div>
+      </div>
     </div>
   </header>
 
-  <main class="main">
-    <section class="controls card">
-      <div class="controlsRow">
-        <div class="control">
-          <label>Campaign</label>
-          <select id="campaignSelect"></select>
-        </div>
-        <div class="control">
-          <label>District</label>
-          <select id="districtSelect"></select>
-        </div>
-        <div class="control">
-          <label>Search</label>
-          <input id="searchInput" placeholder="Host, dealer, village, spot…"/>
-        </div>
-        <div class="control">
-          <label>Date range</label>
-          <div class="dateRange">
-            <input id="fromDate" type="date"/>
-            <span class="to">to</span>
-            <input id="toDate" type="date"/>
-          </div>
-        </div>
-        <div class="control actions">
-          <label class="srOnly">Actions</label>
-          <button class="btn primary" id="applyBtn">Apply</button>
-          <button class="btn" id="resetBtn">Reset</button>
-          <button class="btn" id="exportBtn">Export</button>
-        </div>
-      </div>
+  <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
+    <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
+    <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
+    <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
+    <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
+    <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
+  </nav>
 
-      <div class="statusRow">
-        <div class="chips">
-          <span class="chip" id="selectionChip">All districts • All dates</span>
-          <span class="chip muted" id="statusChip">Status: initializing…</span>
-          <div id="fatalHint" class="fatalHint" style="display:none"></div>
-        </div>
-        <div class="miniKPIs">
-          <div class="miniKpi"><div class="miniLabel">Sessions</div><div class="miniVal" id="kSessions">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Farmers</div><div class="miniVal" id="kFarmers">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Acres</div><div class="miniVal" id="kAcres">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Avg Score</div><div class="miniVal" id="kScore">—</div></div>
-        </div>
-      </div>
-    </section>
-
-      <div class="tabs" role="tablist" aria-label="Dashboard sections">
-        <button class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true">Summary</button>
-        <button class="tabBtn" data-tab="map" role="tab" aria-selected="false">Map</button>
-        <button class="tabBtn" data-tab="sessions" role="tab" aria-selected="false">Sessions</button>
-        <button class="tabBtn" data-tab="media" role="tab" aria-selected="false">Media</button>
-        <button class="tabBtn" data-tab="feedback" role="tab" aria-selected="false">Feedback</button>
-      </div>
-
-
-    <section class="grid2" data-tab="summary">
-      <section class="card" data-tab="map">
+  <main id="app" class="">
+    <section class="grid2" data-tab="summary" id="summary">
+      <section class="card">
         <h2>Campaign insights at a glance</h2>
-        <p class="muted">Clear, comparable metrics for stakeholder decisions: awareness, intent, understanding, and coverage.</p>
-        <div class="donutGrid">
-          <div class="donutCard">
-            <div class="donutTitle">Adoption intent</div>
-            <div class="donutWrap" id="donutIntent"></div>
-            <div class="donutMeta muted" id="metaIntent">—</div>
-          </div>
-          <div class="donutCard">
-            <div class="donutTitle">Brand awareness</div>
-            <div class="donutWrap" id="donutAwareness"></div>
-            <div class="donutMeta muted" id="metaAwareness">—</div>
-          </div>
-          <div class="donutCard">
-            <div class="donutTitle">Message understanding</div>
-            <div class="donutWrap" id="donutUnderstanding"></div>
-            <div class="donutMeta muted" id="metaUnderstanding">—</div>
-          </div>
-          <div class="donutCard">
-            <div class="donutTitle">Coverage by acres</div>
-            <div class="donutWrap" id="donutCoverage"></div>
-            <div class="donutMeta muted" id="metaCoverage">—</div>
-          </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
+          <div class="kpi"><div class="kpiLabel">Avg score</div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
-        <div class="insightsRow">
-          <div class="insight">
-            <div class="insightLabel">Top reason to use</div>
-            <div class="insightVal" id="topUse">—</div>
-          </div>
-          <div class="insight">
-            <div class="insightLabel">Top reason not to use</div>
-            <div class="insightVal" id="topNotUse">—</div>
-          </div>
-          <div class="insight">
-            <div class="insightLabel">Competitors mentioned</div>
-            <div class="insightVal" id="topCompetitors">—</div>
-          </div>
+        <div class="divider"></div>
+        <div class="tableWrap">
+          <table class="sessionTable" id="topSessionsTable">
+            <thead>
+              <tr>
+                <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Open</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </section>
 
-      <section class="card mapCard" data-tab="sessions">
-        <div class="mapHeader">
-          <div>
-            <h2>Map view</h2>
-            <p class="muted">Spots are shown by default. Tap a spot to open the session profile with people, performance and media.</p>
-          </div>
-          <div class="mapBtns">
-            <button class="btn" id="fitBtn">Fit</button>
-            <button class="btn" id="mapResetBtn">Reset</button>
-          </div>
+      <section class="card">
+        <h2>Status</h2>
+        <div id="statusBox" class="status">Loading…</div>
+        <div class="divider"></div>
+        <div class="smallMuted">
+          Tip: Use the Sessions tab to open each sheet (D1S1, D1S2…) and verify per-session summaries.
         </div>
-        <div class="mapWrap">
-          <div id="map" class="map">Loading map…</div>
-          <div id="mapFallback" class="mapFallback hidden">
-            <div class="warn">Map unavailable on this device/network.</div>
-            <div class="muted">You can still browse sessions and open locations in Google Maps from each session profile.</div>
-          </div>
-        </div>
-
-        <aside class="drawer" id="sessionDrawer" aria-label="Session profile">
-          <div class="drawerTop">
-            <div>
-              <div class="drawerTitle" id="dTitle">Session —</div>
-              <div class="drawerSub muted" id="dSub">—</div>
-            </div>
-            <button class="iconBtn" id="drawerClose" title="Close">
-              <span aria-hidden="true">✕</span>
-            </button>
-          </div>
-
-          <div class="drawerGrid">
-            <div class="kv"><div class="k">Host</div><div class="v" id="dHost">—</div></div>
-            <div class="kv"><div class="k">Sales rep</div><div class="v" id="dRep">—</div></div>
-            <div class="kv"><div class="k">Dealer</div><div class="v" id="dDealer">—</div></div>
-            <div class="kv"><div class="k">Farmers</div><div class="v" id="dFarmers">—</div></div>
-            <div class="kv"><div class="k">Wheat acres</div><div class="v" id="dAcres">—</div></div>
-            <div class="kv"><div class="k">Definite</div><div class="v" id="dDefinite">—</div></div>
-            <div class="kv"><div class="k">Score</div><div class="v" id="dScore">—</div></div>
-            <div class="kv"><div class="k">Top reason to use</div><div class="v" id="dTopUse">—</div></div>
-            <div class="kv"><div class="k">Top reason not to use</div><div class="v" id="dTopNotUse">—</div></div>
-          </div>
-
-          <div class="drawerActions">
-            <button class="btn" id="openMapsBtn">Open in Maps</button>
-            <button class="btn" id="shareSessionBtn">Share session</button>
-          </div>
-
-          <h3 class="drawerSectionTitle">Session media</h3>
-          <div id="drawerMedia" class="drawerMedia"></div>
-        </aside>
       </section>
     </section>
 
-    <section class="card" data-tab="media">
-      <div class="sectionHeader">
+    <section class="card mapCard hidden" data-tab="map" id="map">
+      <div class="mapHeader">
         <div>
-          <h2>Sessions</h2>
-          <p class="muted">Filter by district and date to view exact sessions and their outcomes. Tap a row to open the session profile.</p>
+          <h2>Map view</h2>
+          <div class="muted">Markers reflect the currently filtered date range.</div>
         </div>
-        <div class="pager">
-          <button class="btn" id="prevBtn">Prev</button>
-          <span class="muted" id="pageInfo">Page 1 / 1</span>
-          <button class="btn" id="nextBtn">Next</button>
-        </div>
+        <div id="mapStatus" class="badge">Loading…</div>
       </div>
+      <div id="leafletMap" class="map">Loading map…</div>
+      <div class="divider"></div>
+      <div id="mapFallback" class="smallMuted hidden">
+        Map library could not be loaded. Use the Sessions table and “Open in Google Maps” links in details.
+      </div>
+    </section>
 
+    <section class="card hidden" data-tab="sessions" id="sessions">
+      <div class="row">
+        <h2>Sessions</h2>
+        <div class="muted">Click a row to preview; use buttons to open sheet/details.</div>
+      </div>
       <div class="tableWrap">
-        <table class="table" id="sessionsTable">
+        <table class="sessionTable" id="sessionsTable">
           <thead>
             <tr>
-              <th>Date</th><th>District</th><th>Spot</th><th class="num">Farmers</th><th class="num">Acres</th><th class="num">Definite %</th><th class="num">Awareness %</th><th class="num">Score</th>
+              <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Actions</th>
             </tr>
           </thead>
-          <tbody id="sessionsTbody">
-            <tr><td colspan="8" class="muted">Loading…</td></tr>
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </section>
 
-    <section class="card" data-tab="feedback">
-      <div class="sectionHeader">
-        <div>
-          <h2>Media wall</h2>
-          <p class="muted">Animated cards combine each session’s photo and video. Only items from <code>assets/gallery/</code> are shown.</p>
-        </div>
-        <div class="mediaCounters">
-          <div class="chip" id="mSessions">— Sessions</div>
-          <div class="chip" id="mImages">— Images</div>
-          <div class="chip" id="mVideos">— Videos</div>
-        </div>
+    <section class="card hidden" data-tab="media" id="media">
+      <div class="row">
+        <h2>Media</h2>
+        <div class="muted">Thumbnails are pulled from assets/gallery. Missing files will fall back to placeholders.</div>
       </div>
-
-      <div class="mediaWall" id="mediaWall">
-        <div class="muted">Loading…</div>
-      </div>
+      <div id="mediaGrid" class="mediaGrid"></div>
     </section>
 
-    <section class="card" id="feedback">
-      <h2>Share feedback</h2>
-      <p class="muted">Help us improve field activations. Provide your email or phone and send feedback to INTERACT.</p>
-
-      <div class="feedbackGrid">
-        <div class="control">
-          <label>Name (optional)</label>
-          <input id="fbName" placeholder="Your name"/>
+    <section class="card hidden" data-tab="feedback" id="feedback">
+      <h2>Feedback</h2>
+      <div class="muted">Optional notes for your team (stored locally in your browser).</div>
+      <div class="divider"></div>
+      <div class="grid2">
+        <div class="card">
+          <label class="muted" for="fbText">Notes</label>
+          <textarea id="fbText" rows="8" placeholder="Write notes here…"></textarea>
+          <div class="drawerActions">
+            <button class="btn" id="fbSave">Save</button>
+            <button class="btn btnGhost" id="fbClear">Clear</button>
+          </div>
+          <div id="fbMsg" class="smallMuted"></div>
         </div>
-        <div class="control">
-          <label>Email</label>
-          <input id="fbEmail" placeholder="name@example.com"/>
+        <div class="card">
+          <h3>Quick links</h3>
+          <ul class="muted">
+            <li><a href="healthcheck.html" class="link">Healthcheck</a></li>
+            <li><a href="sheets.html" class="link">Sheets browser</a></li>
+          </ul>
         </div>
-        <div class="control">
-          <label>Phone</label>
-          <input id="fbPhone" placeholder="+92XXXXXXXXXX"/>
-        </div>
-        <div class="control full">
-          <label>Feedback</label>
-          <textarea id="fbText" rows="4" placeholder="What worked well? What should be improved?"></textarea>
-        </div>
-      </div>
-
-      <div class="feedbackActions">
-        <div class="muted">Send to <a class="link" href="mailto:interact@paksaf.com">interact@paksaf.com</a> • Contact <a class="link" href="tel:+92355223233">+92355223233</a> • WhatsApp <a class="link" href="https://wa.me/923303570463" target="_blank" rel="noopener">+923303570463</a></div>
-        <div class="btnRow">
-          <button class="btn" id="emailFeedbackBtn">Email feedback</button>
-          <button class="btn whatsapp" id="waFeedbackBtn">WhatsApp feedback</button>
-        </div>
-        <div class="muted small" id="fbValidate"></div>
-        <div class="muted small" id="fbHint">We will only use your contact to follow up on the feedback if needed.</div>
       </div>
     </section>
-
-    <footer class="footer">
-      <div class="footerBrands" id="footerBrands" aria-label="Brand assets"></div>
-      <div class="muted">Powered by <strong>INTERACT</strong> — multi-campaign field intelligence dashboards.</div>
-    </footer>
-
   </main>
 
-  <div class="lightbox hidden" id="lightbox" aria-hidden="true">
-    <div class="lightboxInner">
-      <button class="iconBtn lightboxClose" id="lightboxClose" title="Close">✕</button>
-      <div class="lightboxBody" id="lightboxBody"></div>
-      <div class="lightboxActions">
-        <button class="btn" id="shareMediaBtn">Share</button>
-        <button class="btn" id="copyLinkBtn">Copy link</button>
+  <!-- Session drawer overlay -->
+  <div class="drawerOverlay hidden" id="drawerOverlay" aria-hidden="true"></div>
+  <aside class="drawer hidden" id="sessionDrawer" aria-hidden="true" aria-label="Session details">
+    <div class="drawerTop">
+      <div>
+        <div class="drawerTitle" id="drawerTitle">Session</div>
+        <div class="drawerSub" id="drawerSub">—</div>
       </div>
+      <button class="iconBtn" id="drawerClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="drawerBody">
+      <div class="kpis kpis--compact">
+        <div class="kpi"><div class="kpiLabel">Farmers</div><div class="kpiVal" id="dFarmers">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Acres</div><div class="kpiVal" id="dAcres">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Score</div><div class="kpiVal" id="dScore">—</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div id="dMeta" class="muted"></div>
+
+      <div class="divider"></div>
+      <div class="drawerActions">
+        <a class="btn" id="dOpenSheet" href="#">Open sheet</a>
+        <a class="btn btnGhost" id="dOpenDetails" href="#">Open details</a>
+        <a class="btn btnGhost" id="dOpenMaps" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+
+      <div class="divider"></div>
+      <h3>Sheet summary</h3>
+      <div id="dSheetSummary" class="muted">Loading…</div>
+
+      <div class="divider"></div>
+      <h3>Media</h3>
+      <div id="dMedia" class="mediaRow"></div>
+    </div>
+  </aside>
+
+  <!-- Lightbox for media -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
+    <div class="lightboxInner">
+      <div class="lightboxTop">
+        <div id="lbTitle" class="muted">Media</div>
+        <button class="iconBtn" id="lbClose" aria-label="Close">✕</button>
+      </div>
+      <div class="lightboxBody" id="lbBody"></div>
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
-  <script src="dashboard.js" defer></script>
+  <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
+
+  <script src="dashboard.js?v=20260101"></script>
 </body>
 </html>

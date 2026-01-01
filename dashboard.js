@@ -1,1043 +1,1193 @@
-
 (() => {
   'use strict';
 
-  const $$ = (sel, root=document) => root.querySelector(sel);
-  const $$$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const fmtInt = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : new Intl.NumberFormat().format(Math.round(n));
-  const fmt1 = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : (Math.round(n*10)/10).toFixed(1);
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const safeStr = (v) => (v === null || v === undefined || String(v).trim()==='' ? '—' : String(v).trim());
-
-  const BASE = new URL('./', window.location.href); // resolves /WheatCampaign/
-  const url = (rel) => new URL(rel, BASE).toString();
-
-  // Normalize asset paths so '/assets/..' does not escape the GitHub Pages sub-path
-  const resolveUrl = (p) => {
-    const s = String(p || '').trim();
-    if (!s) return '';
-    if (/^(https?:)?\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return s;
-    // prevent absolute-path resolution to origin root (breaks /WheatCampaign/ hosting)
-    return url(s.replace(/^\/+/, ''));
+  // ---------- DOM helpers ----------
+  const $$ = (sel, root = document) => root.querySelector(sel);
+  const $$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const esc = (s) => {
+    const d = document.createElement('div');
+    d.textContent = String(s ?? '');
+    return d.innerHTML;
   };
 
-  // Attribute-safe escaping (for src/href attributes)
-  function escapeAttr(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // ---------- URL helpers ----------
+  const BASE = new URL('.', window.location.href);
+  const url = (p) => new URL(p, BASE).toString();
+
+  function qs() {
+    return new URLSearchParams(window.location.search);
   }
 
-
-
-  function parseDateSafe(val) {
-    if (!val) return null;
-    const s = String(val).trim();
-    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (iso) {
-      const d = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
-      return isNaN(d.getTime()) ? null : d;
-    }
-    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-    if (dmy) {
-      const d = new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
-      return isNaN(d.getTime()) ? null : d;
-    }
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d;
+  function activeTabFromHash() {
+    const h = (window.location.hash || '#summary').replace('#', '').trim();
+    if (!h) return 'summary';
+    // Support deep-links like #session-<id>
+    if (h.startsWith('session-')) return 'sessions';
+    if (['summary','map','sessions','media','feedback'].includes(h)) return h;
+    return 'summary';
   }
 
-  function fmtISO(d) {
-    if (!d) return '';
-    const yyyy = String(d.getFullYear());
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
+  // ---------- Data / state ----------
+  const state = {
+    campaigns: [],
+    campaignId: null,
+    campaign: null,
+
+    sessions: [],
+    sessionsById: new Map(),
+    sheetsIndex: null,
+
+    filteredSessions: [],
+    dateMin: null,
+    dateMax: null,
+    dateFrom: null,
+    dateTo: null,
+
+    map: null,
+    markerLayer: null,
+    markersBySessionId: new Map(),
+  };
+
+  // ---------- Parsing / formatting ----------
+  function parseDateSafe(v) {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    const s = String(v).trim();
+    // Prefer YYYY-MM-DD
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    // Fallback Date.parse
+    const t = Date.parse(s);
+    if (Number.isFinite(t)) return new Date(t);
+    return null;
+  }
+
+  function formatDateInput(d) {
+    const dt = parseDateSafe(d);
+    if (!dt || Number.isNaN(dt.getTime())) return '';
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Lightbox (used by session media + gallery)
-  function openLightbox(item) {
-    const lb = document.getElementById('lightbox');
-    const body = document.getElementById('lightboxBody');
-    if (!lb || !body) return;
-    const rawUrl = item && item.url ? item.url : '';
-    const srcUrl = resolveUrl(rawUrl);
-    if (!srcUrl) return;
-
-    state.selectedMediaUrl = srcUrl;
-
-    const kind = String(item?.kind || item?.type || '').toLowerCase();
-    const src = escapeAttr(srcUrl);
-
-    body.innerHTML = (kind === 'video')
-      ? `<video src="${src}" controls autoplay playsinline style="width:100%;max-height:75vh;border-radius:14px;background:#000"></video>`
-      : `<img src="${src}" alt="" style="max-width:100%;max-height:75vh;border-radius:14px" />`;
-
-    lb.classList.remove('hidden');
-    lb.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+  function fmtInt(n) {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return '—';
+    return x.toLocaleString();
   }
 
-  function closeLightbox() {
-    const lb = document.getElementById('lightbox');
-    const body = document.getElementById('lightboxBody');
-    if (body) body.innerHTML = '';
-    if (lb) {
-      lb.classList.add('hidden');
-      lb.setAttribute('aria-hidden', 'true');
+  function fmt1(n) {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return '—';
+    return x.toFixed(1);
+  }
+
+  // ---------- Media path resolution ----------
+  const existsCache = new Map(); // url -> boolean
+
+  function normalizeMediaPath(p) {
+    const raw = String(p ?? '').trim();
+    if (!raw) return '';
+    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+
+    let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
+
+    // Already rooted correctly
+    if (x.startsWith('assets/')) return x;
+
+    // Common patterns from sessions.json
+    if (x.startsWith('gallery/')) return 'assets/' + x;
+
+    // Sometimes data stores just the filename
+    if (!x.includes('/')) return 'assets/gallery/' + x;
+
+    // Default: relative as-is
+    return x;
+  }
+
+  function candidatePaths(p) {
+    const norm = normalizeMediaPath(p);
+    if (!norm) return [];
+    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
+
+    const candidates = [];
+    const add = (v) => {
+      if (v && !candidates.includes(v)) candidates.push(v);
+    };
+
+    // Always start with the normalized path.
+    add(norm);
+
+    // If request is wrong folder (root) try under assets/gallery
+    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
+      const fname = norm.split('/').pop();
+      add('assets/gallery/' + fname);
     }
-    state.selectedMediaUrl = null;
-    document.body.style.overflow = '';
+
+    // Extension swaps
+    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
+    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
+    const isVid = /\.(mp4|webm)$/i.test(norm);
+
+    function addVariantBases(base) {
+      // Support common variant naming:
+      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
+      //   17_a.jpg <-> 17a.jpg
+      // (applies for a-f, but will also include single-letter suffixes generally)
+      const m1 = base.match(/^(.*?)([a-z])$/i);
+      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
+      if (m1) {
+        const root = m1[1];
+        const suf = m1[2];
+        add(base);
+        add(root + '_' + suf);
+        add(root + '-' + suf);
+        // also try without suffix (helps when data references 17a but file is 17)
+        add(root);
+        return;
+      }
+      if (m2) {
+        const root = m2[1];
+        const suf = m2[2];
+        add(base);
+        add(root + suf);
+        add(root);
+        return;
+      }
+      add(base);
+      // Also try the simplest "a" variant both joined and separated
+      add(base + 'a');
+      add(base + '_a');
+      add(base + '-a');
+    }
+
+    if (isImg) {
+      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
+      const bases = [];
+      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+
+      // Collect base variants first, then add extensions.
+      const before = candidates.length;
+      addVariantBases(base);
+      for (let i = before; i < candidates.length; i++) {
+        const c = candidates[i];
+        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
+      }
+
+      // Ensure original base is also present.
+      addBase(base);
+
+      for (const b of bases) {
+        for (const e of imgExts) add(b + e);
+      }
+    }
+
+    if (isVid) {
+      const base = norm.replace(/\.(mp4|webm)$/i, '');
+      const bases = [];
+      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+
+      const before = candidates.length;
+      addVariantBases(base);
+      for (let i = before; i < candidates.length; i++) {
+        const c = candidates[i];
+        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
+      }
+      addBase(base);
+
+      for (const b of bases) {
+        add(b + '.mp4');
+        add(b + '.webm');
+      }
+    }
+
+    // Only keep candidates that look like concrete asset files (avoid hammering the network
+    // with extension-less paths).
+    return candidates.filter(c =>
+      /^(https?:|data:|blob:)/i.test(c)
+      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
+    );
   }
 
+  async function assetExists(relOrAbs) {
+    const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
+    if (existsCache.has(u)) return existsCache.get(u);
 
-  // Asset path tolerance: GitHub Pages is case-sensitive; allow common case/typo variants.
-  const assetCandidates = (p) => {
-    const s0 = String(p || '').trim().replace(/^\/+/, '');
-    if (!s0) return [];
-    const out = [s0];
-    const parts = s0.split('/');
-    const fname = parts[parts.length - 1] || '';
-    const lower = fname.toLowerCase();
-    const upperFirst = lower ? (lower.charAt(0).toUpperCase() + lower.slice(1)) : fname;
+    // HEAD often works on GitHub Pages; if blocked, fallback to Range GET.
+    try {
+      const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
+      const ok = r.ok;
+      existsCache.set(u, ok);
+      return ok;
+    } catch (_e) {
+      try {
+        const r = await fetch(u, {
+          method: 'GET',
+          headers: { Range: 'bytes=0-0' },
+          cache: 'no-store'
+        });
+        const ok = r.ok;
+        existsCache.set(u, ok);
+        return ok;
+      } catch (_e2) {
+        existsCache.set(u, false);
+        return false;
+      }
+    }
+  }
 
-    const withName = (name) => parts.slice(0, -1).concat([name]).join('/');
-
-    if (lower && lower !== fname) out.push(withName(lower));
-    if (upperFirst && upperFirst !== fname) out.push(withName(upperFirst));
-
-    // Common typo seen in repo history
-    if (lower === 'products.jpg') out.push(withName('poducts.jpg'));
-    if (lower === 'poducts.jpg') out.push(withName('products.jpg'));
-
-    return Array.from(new Set(out));
-  };
-
-  async function resolveExistingAsset(p){
-    for (const c of assetCandidates(p)) {
+  async function resolveFirstExisting(p) {
+    const cands = candidatePaths(p);
+    for (const c of cands) {
       if (await assetExists(c)) return c;
     }
     return '';
   }
 
+  function attachSmartImage(imgEl, path) {
+    let cancelled = false;
+    const placeholder = 'assets/placeholder.svg';
 
-  const state = {
-    campaigns: [],
-    campaign: null,
-    sessions: [],
-    media: null,
-    filtered: [],
-    map: null,
-    markers: [],
-    page: 1,
-    pageSize: 12,
-    selected: null,
-    selectedMediaUrl: null
-  };
+    (async () => {
+      const chosen = await resolveFirstExisting(path);
+      if (cancelled) return;
+      imgEl.src = chosen ? url(chosen) : url(placeholder);
+    })();
 
-  function setStatus(msg, type='info') {
-    const el = $$('#statusChip');
-    if (!el) return;
-    el.textContent = `Status: ${msg}`;
-    el.classList.toggle('warnChip', type==='warn');
+    imgEl.onerror = () => {
+      imgEl.onerror = null;
+      imgEl.src = url(placeholder);
+    };
+
+    return () => { cancelled = true; };
   }
 
-  function fatalError(err) {
-    const msg = (err && err.message) ? err.message : String(err || 'Unknown error');
-    setStatus(`error: ${msg}`, 'warn');
-    const hint = document.getElementById('fatalHint');
-    if (hint) {
-      hint.style.display = 'block';
-      hint.textContent = msg;
-    }
-    const tbl = document.getElementById('sessionsTable');
-    if (tbl) {
-      tbl.innerHTML = `<tbody><tr><td colspan="7" class="muted">
-        Dashboard failed to load data. Please confirm these URLs exist and return JSON:
-        <div class="mono" style="margin-top:8px">
-          /WheatCampaign/data/campaigns.json<br/>
-          /WheatCampaign/data/${encodeURIComponent(getCampaignFromQuery()||'buctril-super-2025')}/sessions.json
-        </div>
-        <div class="muted" style="margin-top:8px">Open DevTools Console to see exact failing URL.</div>
-      </td></tr></tbody>`;
-    }
-  }
+  function attachSmartVideo(videoEl, path) {
+    const placeholder = 'assets/placeholder-video.mp4';
+    let tried = false;
 
+    // lazy load on click
+    videoEl.preload = 'metadata';
+    videoEl.controls = true;
 
-  async function fetchJson(relUrl, timeoutMs=12000) {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), timeoutMs);
-    try{
-      const res = await fetch(relUrl, { cache: 'no-store', signal: controller.signal });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${relUrl}`);
-      return await res.json();
-    } finally {
-      clearTimeout(t);
-    }
-  }
-
-  // Asset existence cache (prevents rendering placeholder tiles for missing files)
-  const _existsCache = new Map();
-  async function assetExists(relUrl){
-    const key = String(relUrl||'');
-    if(_existsCache.has(key)) return _existsCache.get(key);
-    const u = url(String(relUrl||'').replace(/^\/?/,''));
-    let ok = false;
-    try{
-      let res = await fetch(u, { method:'HEAD', cache:'no-store' });
-      if(res && res.ok) ok = true;
-      else{
-        res = await fetch(u, { method:'GET', cache:'no-store' });
-        ok = !!(res && res.ok);
-      }
-    }catch{ ok = false; }
-    _existsCache.set(key, ok);
-    return ok;
-  }
-
-  function getCampaignFromQuery() {
-    const p = new URLSearchParams(window.location.search);
-    return p.get('campaign');
-  }
-
-  function setQueryCampaign(id) {
-    const u = new URL(window.location.href);
-    u.searchParams.set('campaign', id);
-    history.replaceState({}, '', u.toString());
-  }
-
-  
-  function renderHero(cfg){
-    const hero = $$('#heroPlayer');
-    const v = $$('#heroVideo');
-    const poster = $$('#heroPoster');
-    const thumbs = $$('#heroThumbs');
-    const t = $$('#heroTitle');
-    const s = $$('#heroSub');
-    const btnPrev = $$('#heroPrev');
-    const btnNext = $$('#heroNext');
-    const btnMute = $$('#heroMute');
-    if(!hero || !v || !poster || !thumbs) return;
-
-    const seq = Array.isArray(cfg.headerSequence) ? cfg.headerSequence : [];
-    const playlist = seq.map((x, idx)=>({
-      idx,
-      label: x.label || `Header ${idx+1}`,
-      title: x.title || x.label || 'Campaign highlights',
-      video: x.video || '',
-      poster: x.poster || 'assets/placeholder.svg'
-    }));
-
-    let cur = 0;
-    let autoTimer = null;
-
-    function setActiveThumb(){
-      $$$('.heroThumb', thumbs).forEach((el)=>el.classList.remove('active'));
-      const el = thumbs.querySelector(`[data-idx="${cur}"]`);
-      if(el) el.classList.add('active');
-    }
-
-    async function loadIndex(i, user=false){
-      if(!playlist.length) return;
-      cur = (i + playlist.length) % playlist.length;
-      const item = playlist[cur];
-
-      t.textContent = item.title;
-      s.textContent = 'If video does not auto-play on iPhone, tap once to start.';
-      setActiveThumb();
-
-      const vidPath = item.video ? await resolveExistingAsset(item.video) : '';
-      const posterPath = item.poster ? (await resolveExistingAsset(item.poster)) : '';
-      const hasVid = !!vidPath;
-      const hasPoster = !!posterPath;
-
-      const posterSrc = resolveUrl(hasPoster ? posterPath : 'assets/placeholder.svg');
-      poster.src = posterSrc;
-
-      if(hasVid){
-        hero.classList.remove('fallback');
-        v.src = resolveUrl(vidPath);
-        v.load();
-        try{
-          const p = v.play();
-          if(p && p.catch) await p;
-        }catch(_e){
-          hero.classList.add('fallback');
-          s.textContent = 'Tap to play (autoplay blocked by device/browser).';
-        }
-      }else{
-        hero.classList.add('fallback');
-        v.removeAttribute('src');
-        v.load();
-        s.textContent = 'Video not found. Showing poster image.';
-      }
-
-      if(user){
-        // If user interacted, keep autoplay rotation but slower.
-        restartAuto(11000);
-      }
-    }
-
-    function restartAuto(ms=8500){
-      if(autoTimer) window.clearInterval(autoTimer);
-      if(!playlist.length) return;
-      autoTimer = window.setInterval(()=>loadIndex(cur+1), ms);
-    }
-
-    // Build thumbs
-    thumbs.innerHTML = '';
-    playlist.slice(0, 4).forEach((item)=>{
-      const el = document.createElement('div');
-      el.className = 'heroThumb';
-      el.dataset.idx = String(item.idx);
-      el.innerHTML = `
-        <img alt="" src="${escapeHtml(resolveUrl(item.poster || 'assets/placeholder.svg'))}" onerror="this.src='assets/placeholder.svg'"/>
-        <div class="badge">${escapeHtml(item.label)}</div>
-      `;
-      el.addEventListener('click', ()=>loadIndex(item.idx, true));
-      thumbs.appendChild(el);
+    videoEl.addEventListener('click', async () => {
+      if (tried) return;
+      tried = true;
+      const chosen = await resolveFirstExisting(path);
+      videoEl.src = chosen ? url(chosen) : url(placeholder);
+      videoEl.play().catch(() => { /* ignore */ });
     });
 
-    btnPrev?.addEventListener('click', (e)=>{ e.preventDefault(); loadIndex(cur-1, true); });
-    btnNext?.addEventListener('click', (e)=>{ e.preventDefault(); loadIndex(cur+1, true); });
-    btnMute?.addEventListener('click', (e)=>{
-      e.preventDefault();
-      v.muted = !v.muted;
-      btnMute.textContent = v.muted ? '🔇' : '🔊';
-    });
-
-    hero.addEventListener('click', async ()=>{
-      try{
-        if(v.paused){
-          await v.play();
-          hero.classList.remove('fallback');
-        }else{
-          v.pause();
-        }
-      }catch(_e){
-        hero.classList.add('fallback');
-      }
-    });
-
-    loadIndex(0);
-    restartAuto();
+    videoEl.onerror = () => {
+      videoEl.onerror = null;
+      videoEl.src = url(placeholder);
+    };
   }
 
-  async function renderFooterBrands(cfg){
-    const host = $$('#footerBrands');
-    if(!host) return;
+  // ---------- Tab controller ----------
+  function setActiveTab(tab) {
+    const tabs = $$$('.tabBtn[data-tab]');
+    const panels = $$$('[data-tab]');
 
-    const candidates = [
-      {name:'INTERACT', img:(cfg.brandImages && cfg.brandImages.interactGif) ? cfg.brandImages.interactGif : 'assets/interact.gif'},
-      {name:'Bayer', img:(cfg.brandImages && cfg.brandImages.bayerLogo) ? cfg.brandImages.bayerLogo : 'assets/bayer.png'},
-      {name:'Buctril Super', img:(cfg.brandImages && cfg.brandImages.buctril) ? cfg.brandImages.buctril : 'assets/buctril.jpg'},
-      {name:'Atlantis', img:(cfg.brandImages && cfg.brandImages.atlantis) ? cfg.brandImages.atlantis : 'assets/atlantis.jpg'},
-      {name:'Products', img:(cfg.brandImages && cfg.brandImages.products) ? cfg.brandImages.products : 'assets/products.jpg'}
-    ];
+    tabs.forEach(a => {
+      const is = a.dataset.tab === tab;
+      a.classList.toggle('tabBtn--active', is);
+      a.setAttribute('aria-selected', is ? 'true' : 'false');
+    });
 
-    host.innerHTML = '';
-    for(const c of candidates){
-      const resolved = await resolveExistingAsset(c.img);
-      if(!resolved) continue;
-      const pill = document.createElement('div');
-      pill.className = 'brandPill';
-      pill.innerHTML = `<img alt="${escapeHtml(c.name)}" src="${escapeHtml(resolveUrl(resolved))}"/><span>${escapeHtml(c.name)}</span>`;
-      host.appendChild(pill);
+    panels.forEach(p => {
+      const is = p.getAttribute('data-tab') === tab;
+      p.classList.toggle('hidden', !is);
+    });
+
+    document.dispatchEvent(new CustomEvent('tabchange', { detail: { tab } }));
+  }
+
+  function syncTabFromHash() {
+    setActiveTab(activeTabFromHash());
+  }
+
+  // ---------- Loading ----------
+  async function fetchJson(path, why) {
+    const u = url(path);
+    const r = await fetch(u, { cache: 'no-store' });
+    if (!r.ok) {
+      throw new Error(`${why} failed (${r.status}): ${u}`);
     }
+    return await r.json();
   }
 
-
-  
-  async function initBgVideo(cfg) {
-    const v = $$('#bgVideo');
-    if(!v) return;
-    const src0 = cfg.backgroundVideo || 'assets/bg.mp4';
-    const src = await resolveExistingAsset(src0);
-    if(!src){
-      // Keep the element but don’t break layout; background falls back to gradient.
-      v.removeAttribute('src');
-      v.style.display = 'none';
+  async function loadCampaignRegistry() {
+    try {
+      const reg = await fetchJson('data/campaigns.json', 'campaign registry');
+      state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
       return;
+    } catch (e) {
+      // Fallback to root campaigns.json (some repos place it there)
+      try {
+        const reg = await fetchJson('campaigns.json', 'campaign registry (root)');
+        state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
+        return;
+      } catch (e2) {
+        throw e;
+      }
     }
-    v.src = resolveUrl(src);
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    v.autoplay = true;
-    v.preload = 'metadata';
+  }
 
-    // Try autoplay; if blocked, show paused first frame and allow tap to start.
-    try{
-      const p = v.play();
-      if(p && p.catch) await p;
-    }catch(_e){
-      v.classList.add('paused');
-    }
-    v.addEventListener('click', async ()=>{
-      try{ await v.play(); v.classList.remove('paused'); }catch(_e){}
+  function setStatus(msg, kind = '') {
+    const el = $$('#statusBox');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'status' + (kind ? ' status--' + kind : '');
+  }
+
+  function setMapStatus(msg, ok = false) {
+    const el = $$('#mapStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'badge' + (ok ? ' badge--ok' : '');
+  }
+
+  // ---------- Leaflet loader (avoid race conditions + blocked CDNs) ----------
+  let leafletPromise = null;
+
+  function ensureLeafletCss() {
+    if (document.querySelector('link[data-leaflet-css="1"], link#leafletCss')) return;
+    const hrefs = [
+      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+      'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
+    ];
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.dataset.leafletCss = '1';
+    link.href = hrefs[0];
+    document.head.appendChild(link);
+
+    // Best-effort fallbacks if a CDN is blocked.
+    let i = 0;
+    link.onerror = () => {
+      i += 1;
+      if (i < hrefs.length) link.href = hrefs[i];
+    };
+  }
+
+  function loadScriptOnce(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[data-leaflet-src="${src}"]`);
+      if (existing) {
+        // If it is already loaded, resolve. If not, wait for load/error.
+        if (existing.dataset.loaded === '1') return resolve(true);
+        existing.addEventListener('load', () => resolve(true), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
+        return;
+      }
+
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.dataset.leafletSrc = src;
+      s.addEventListener('load', () => { s.dataset.loaded = '1'; resolve(true); }, { once: true });
+      s.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
+      document.head.appendChild(s);
     });
   }
 
+  async function ensureLeafletReady({ timeoutMs = 8000 } = {}) {
+    if (window.L && window.L.map) return true;
+    if (leafletPromise) return leafletPromise;
 
-  function donutSvg(parts, centerText, subText) {
-    // parts: [{label, value(0..1), colorClass}]
-    const size = 132;
-    const r = 50;
-    const c = 2 * Math.PI * r;
-    let offset = 0;
-    const segs = parts.map((p, i) => {
-      const len = clamp(p.value, 0, 1) * c;
-      const dash = `${len} ${c - len}`;
-      const el = `<circle class="donutSeg ${p.colorClass||''}" cx="${size/2}" cy="${size/2}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${-offset}" />`;
-      offset += len;
-      return el;
-    }).join('');
-    const legend = parts.filter(p=>p.label).map(p => `<span class="legendItem"><span class="dot ${p.colorClass||''}"></span>${p.label}</span>`).join('');
-    return `
-      <div class="donut">
-        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-          <circle class="donutTrack" cx="${size/2}" cy="${size/2}" r="${r}"/>
-          ${segs}
-          <text x="50%" y="48%" text-anchor="middle" class="donutCenter">${centerText}</text>
-          <text x="50%" y="62%" text-anchor="middle" class="donutSub">${subText||''}</text>
-        </svg>
-        <div class="legend">${legend}</div>
-      </div>
-    `;
+    leafletPromise = (async () => {
+      ensureLeafletCss();
+
+      const srcs = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+      ];
+
+      const start = Date.now();
+      for (const src of srcs) {
+        try {
+          await loadScriptOnce(src);
+
+          // Wait a tick for globals to attach.
+          await new Promise(r => setTimeout(r, 0));
+          if (window.L && window.L.map) return true;
+        } catch (_e) {
+          // try next
+        }
+
+        if (Date.now() - start > timeoutMs) break;
+      }
+      return !!(window.L && window.L.map);
+    })();
+
+    return leafletPromise;
   }
 
-  function injectDonutStyles() {
-    if ($$('#donutStyle')) return;
-    const s = document.createElement('style');
-    s.id = 'donutStyle';
-    s.textContent = `
-      .donutTrack{fill:none; stroke: rgba(26,41,71,.55); stroke-width: 12}
-      .donutSeg{fill:none; stroke-width: 12; stroke-linecap: butt}
-      .donutCenter{fill:#e9f0ff; font-size:16px; font-weight:900}
-      .donutSub{fill:#a9b7d6; font-size:10px}
-      .legend{margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; font-size:11px; color:#a9b7d6}
-      .legendItem{display:flex; gap:6px; align-items:center}
-      .dot{width:10px; height:10px; border-radius:999px; background:#4c6fff}
-      .c1{stroke:#4c6fff}.c2{stroke:#22c55e}.c3{stroke:#f59e0b}.c4{stroke:#ef4444}
-      .dot.c1{background:#4c6fff}.dot.c2{background:#22c55e}.dot.c3{background:#f59e0b}.dot.c4{background:#ef4444}
-    `;
-    document.head.appendChild(s);
+  function setRangeHint() {
+    const el = $$('#rangeHint');
+    if (!el || !state.dateMin || !state.dateMax) return;
+    el.textContent = `Campaign duration: ${formatDateInput(state.dateMin)} to ${formatDateInput(state.dateMax)}`;
   }
 
-  function computeTopReason(sessions, key='use') {
-    const counts = new Map();
-    for (const s of sessions) {
-      const obj = key==='use' ? (s.reasonsUse||{}) : (s.reasonsNotUse||{});
-      for (const [k,v] of Object.entries(obj)) {
-        if (!v || v<=0) continue;
-        counts.set(k, (counts.get(k)||0) + v);
+  function applyDateInputs() {
+    const fromEl = $$('#dateFrom');
+    const toEl = $$('#dateTo');
+
+    const from = parseDateSafe(fromEl?.value);
+    const to = parseDateSafe(toEl?.value);
+
+    if (!from || !to) {
+      state.dateFrom = state.dateMin;
+      state.dateTo = state.dateMax;
+    } else {
+      state.dateFrom = from;
+      state.dateTo = to;
+      if (state.dateFrom > state.dateTo) {
+        const tmp = state.dateFrom;
+        state.dateFrom = state.dateTo;
+        state.dateTo = tmp;
       }
     }
-    const sorted = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]);
-    return sorted.length ? {label: sorted[0][0], value: sorted[0][1]} : {label:'—', value:0};
+
+    filterSessions();
+    renderAll();
   }
 
-  function computeCompetitors(sessions) {
-    const m = new Map();
-    for (const s of sessions) {
-      const txt = (s.competitors||'').trim();
-      if (!txt) continue;
-      txt.split(/[;,]/).map(x=>x.trim()).filter(Boolean).forEach(b=>{
-        m.set(b, (m.get(b)||0) + 1);
-      });
-    }
-    const sorted = Array.from(m.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    return sorted.length ? sorted.map(([b,c])=>`${b} (${c})`).join(', ') : '—';
+  function resetDateInputs() {
+    const fromEl = $$('#dateFrom');
+    const toEl = $$('#dateTo');
+
+    if (fromEl && state.dateMin) fromEl.value = formatDateInput(state.dateMin);
+    if (toEl && state.dateMax) toEl.value = formatDateInput(state.dateMax);
+
+    applyDateInputs();
   }
 
   function filterSessions() {
-    const district = $$('#districtSelect').value;
-    const q = ($$('#searchInput').value || '').toLowerCase().trim();
-    const from = $$('#fromDate').value ? parseDateSafe($$('#fromDate').value) : null;
-    const to = $$('#toDate').value ? parseDateSafe($$('#toDate').value) : null;
+    const a = state.dateFrom;
+    const b = state.dateTo;
+    state.filteredSessions = state.sessions.filter(s => {
+      const d = parseDateSafe(s.date);
+      if (!d) return false;
+      return d >= a && d <= b;
+    });
+  }
 
-    const res = state.sessions.filter(s => {
-      if (district && district !== 'ALL' && (s.district||'') !== district) return false;
-      if (from) {
-        const d = parseDateSafe(s.date);
-        if (d && d < from) return false;
+  // ---------- Render ----------
+  function renderSummary() {
+    $$('#kpiSessions').textContent = fmtInt(state.filteredSessions.length);
+
+    // Farmers/acres from sheets_index if available; else from session fields
+    let farmers = 0;
+    let acres = 0;
+    let scoreSum = 0;
+    let scoreN = 0;
+
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+
+    for (const s of state.filteredSessions) {
+      const si = idx?.get(s.sheetRef);
+      if (si) {
+        farmers += Number(si.farmers_present || 0);
+        acres += Number(si.acres || 0);
+      } else {
+        // fallback
+        farmers += Number(s.farmersPresent || 0);
+        acres += Number(s.acres || 0);
       }
-      if (to) {
-        const d = parseDateSafe(s.date);
-        // inclusive end
-        const t2 = new Date(to.getTime() + 24*3600*1000 - 1);
-        if (d && d > t2) return false;
+      if (Number.isFinite(Number(s.score))) {
+        scoreSum += Number(s.score);
+        scoreN += 1;
       }
-      if (q) {
-        const blob = `${s.city} ${s.district} ${s.spot} ${s.village} ${(s.host&&s.host.name)||''} ${(s.dealer&&s.dealer.name)||''} ${(s.salesRep&&s.salesRep.name)||''}`.toLowerCase();
-        if (!blob.includes(q)) return false;
-      }
-      return true;
+    }
+
+    $$('#kpiFarmers').textContent = fmtInt(farmers);
+    $$('#kpiAcres').textContent = fmt1(acres);
+    $$('#kpiScore').textContent = scoreN ? fmt1(scoreSum / scoreN) : '—';
+
+    // top sessions table (by score)
+    const top = [...state.filteredSessions].sort((a,b) => Number(b.score||0) - Number(a.score||0)).slice(0, 10);
+    const tbody = $$('#topSessionsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = top.map(s => {
+      const sid = esc(s.id);
+      const sheet = esc(s.sheetRef || '');
+      const date = esc(s.date || '');
+      const district = esc(s.district || '');
+      const village = esc(s.village || s.spot || '');
+      const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
+      const si = idx?.get(s.sheetRef);
+      const f = si ? fmtInt(si.farmers_present) : '—';
+      const a = si ? fmt1(si.acres) : '—';
+      const hrefSheet = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
+      return `<tr data-session-id="${sid}">
+        <td>${date}</td>
+        <td><span class="badge">${sheet}</span></td>
+        <td>${district}</td>
+        <td>${village}</td>
+        <td>${f}</td>
+        <td>${a}</td>
+        <td>${score}</td>
+        <td><a class="btn btnSmall" href="${hrefSheet}">Open sheet</a></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderSessionsTable() {
+    const tbody = $$('#sessionsTable tbody');
+    if (!tbody) return;
+
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+
+    const rows = state.filteredSessions.map(s => {
+      const sid = esc(s.id);
+      const date = esc(s.date || '');
+      const sheet = esc(s.sheetRef || '');
+      const district = esc(s.district || '');
+      const village = esc(s.village || s.spot || '');
+      const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
+      const si = idx?.get(s.sheetRef);
+      const f = si ? fmtInt(si.farmers_present) : '—';
+      const a = si ? fmt1(si.acres) : '—';
+
+      const hrefSheet = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+
+      return `<tr data-session-id="${sid}">
+        <td>${date}</td>
+        <td><span class="badge">${sheet}</span></td>
+        <td>${district}</td>
+        <td>${village}</td>
+        <td>${f}</td>
+        <td>${a}</td>
+        <td>${score}</td>
+        <td style="white-space:nowrap">
+          <a class="btn btnSmall" href="${hrefSheet}">Sheet</a>
+          <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+          <button class="btn btnSmall btnGhost" data-action="preview">Preview</button>
+        </td>
+      </tr>`;
     });
 
-    state.filtered = res;
-    state.page = 1;
+    tbody.innerHTML = rows.join('');
 
-    const distLabel = (district && district !== 'ALL') ? district : 'All districts';
-    const dateLabel = (from || to) ? `${from ? fmtISO(from) : '…'} → ${to ? fmtISO(to) : '…'}` : 'All dates';
-    $$('#selectionChip').textContent = `${distLabel} • ${dateLabel}`;
-  }
+    // Row click: preview
+    tbody.onclick = (ev) => {
+      const tr = ev.target.closest('tr[data-session-id]');
+      if (!tr) return;
 
-  function updateKPIs() {
-    const s = state.filtered;
-    const sessions = s.length;
-    const farmers = s.reduce((a,x)=>a+(x.metrics?.farmers||0),0);
-    const acres = s.reduce((a,x)=>a+(x.metrics?.wheatAcres||0),0);
-    const scores = s.map(x=>x.score).filter(v=>typeof v==='number');
-    const avgScore = scores.length ? scores.reduce((a,v)=>a+v,0)/scores.length : null;
+      // If clicking a link, allow navigation
+      if (ev.target.closest('a')) return;
 
-    $$('#kSessions').textContent = fmtInt(sessions);
-    $$('#kFarmers').textContent = fmtInt(farmers);
-    $$('#kAcres').textContent = fmtInt(acres);
-    $$('#kScore').textContent = avgScore===null ? '—' : fmt1(avgScore);
+      // Only preview on button or row click
+      const sid = Number(tr.dataset.sessionId);
+      openDrawer(sid);
+    };
 
-    // donuts
-    injectDonutStyles();
-
-    const avgAwareness = avg(s.map(x=>x.metrics?.awarenessPct));
-    const avgUsed = avg(s.map(x=>x.metrics?.usedLastYearPct));
-    const avgDef = avg(s.map(x=>x.metrics?.definitePct));
-    const avgMaybe = avg(s.map(x=>x.metrics?.maybePct));
-    const avgNot = avg(s.map(x=>x.metrics?.notInterestedPct));
-    const avgUnderstand = avg(s.map(x=>x.metrics?.avgUnderstanding)); // 0..3
-
-    // Intent donut: definite/maybe/not
-    const defV = (avgDef??0)/100;
-    const maybeV = (avgMaybe??0)/100;
-    const notV = (avgNot??0)/100;
-    const rem = clamp(1 - (defV+maybeV+notV), 0, 1);
-    $$('#donutIntent').innerHTML = donutSvg([
-      {label:'Definite', value:defV, colorClass:'c2'},
-      {label:'Maybe', value:maybeV, colorClass:'c3'},
-      {label:'Not', value:notV, colorClass:'c4'},
-      {label:'Other', value:rem, colorClass:'c1'},
-    ], `${avgDef===null?'—':Math.round(avgDef)}%`, 'definite');
-    $$('#metaIntent').textContent = `Avg definite intent across selection.`;
-
-    // Awareness donut
-    const aware = (avgAwareness??0)/100;
-    $$('#donutAwareness').innerHTML = donutSvg([
-      {label:'Aware', value:aware, colorClass:'c1'},
-      {label:'Not aware', value:1-aware, colorClass:'c4'},
-    ], `${avgAwareness===null?'—':Math.round(avgAwareness)}%`, 'aware');
-    $$('#metaAwareness').textContent = `Average awareness in the filtered set.`;
-
-    // Understanding donut
-    const u = (avgUnderstand??0)/3;
-    $$('#donutUnderstanding').innerHTML = donutSvg([
-      {label:'Understood', value:u, colorClass:'c2'},
-      {label:'Gap', value:1-u, colorClass:'c3'},
-    ], `${avgUnderstand===null?'—':fmt1(avgUnderstand)}`, '/ 3');
-    $$('#metaUnderstanding').textContent = `Average understanding across 5 key messages (0–3).`;
-
-    // Coverage donut: acres vs estimated buctril acres
-    const est = s.reduce((a,x)=>a+(x.metrics?.estimatedBuctrilAcres||0),0);
-    const cov = acres>0 ? clamp(est/acres,0,1) : 0;
-    $$('#donutCoverage').innerHTML = donutSvg([
-      {label:'Est. Buctril acres', value:cov, colorClass:'c2'},
-      {label:'Other acres', value:1-cov, colorClass:'c1'},
-    ], acres?`${Math.round(cov*100)}%`:'—', 'share');
-    $$('#metaCoverage').textContent = `Est. product acres vs total wheat acres.`;
-
-    // Top reasons
-    const topUse = computeTopReason(s,'use');
-    const topNot = computeTopReason(s,'not');
-    $$('#topUse').textContent = topUse.label || '—';
-    $$('#topNotUse').textContent = topNot.label || '—';
-    $$('#topCompetitors').textContent = computeCompetitors(s);
-
-    // counters
-    const imageCount = s.reduce((a,x)=>a + (x.media?.images?.length||0), 0);
-    const videoCount = s.reduce((a,x)=>a + (x.media?.videos?.length||0), 0);
-    $$('#mSessions').textContent = `${fmtInt(s.length)} Sessions`;
-    $$('#mImages').textContent = `${fmtInt(imageCount)} Images`;
-    $$('#mVideos').textContent = `${fmtInt(videoCount)} Videos`;
-  }
-
-  function avg(list) {
-    const nums = list.filter(v => typeof v === 'number' && !Number.isNaN(v));
-    if (!nums.length) return null;
-    return nums.reduce((a,v)=>a+v,0)/nums.length;
-  }
-
-  function rebuildDistrictOptions() {
-    const sel = $$('#districtSelect');
-    const districts = Array.from(new Set(state.sessions.map(s=>s.district).filter(Boolean))).sort();
-    sel.innerHTML = `<option value="ALL">All</option>` + districts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  // Sessions table
-  function renderTable() {
-    const start = (state.page-1)*state.pageSize;
-    const chunk = state.filtered.slice(start, start+state.pageSize);
-
-    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
-    $$('#pageInfo').textContent = `Page ${state.page} / ${totalPages}`;
-    $$('#prevBtn').disabled = state.page<=1;
-    $$('#nextBtn').disabled = state.page>=totalPages;
-
-    const tbody = $$('#sessionsTbody');
-    if (!chunk.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="muted">No sessions match the filters.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = chunk.map(s => `
-      <tr class="rowBtn" data-id="${s.id}">
-        <td>${s.date || '—'}</td>
-        <td>${escapeHtml(s.district || s.city || '—')}</td>
-        <td>${escapeHtml(s.spot || '—')}</td>
-        <td class="num">${fmtInt(s.metrics?.farmers)}</td>
-        <td class="num">${fmtInt(s.metrics?.wheatAcres)}</td>
-        <td class="num">${s.metrics?.definitePct ?? '—'}</td>
-        <td class="num">${s.metrics?.awarenessPct ?? '—'}</td>
-        <td class="num">${s.score ?? '—'}</td>
-      </tr>
-    `).join('');
-
-    $$$('tr.rowBtn', tbody).forEach(tr => tr.addEventListener('click', () => {
-      const id = Number(tr.dataset.id);
-      const s = state.sessions.find(x=>x.id===id);
-      if (s) openSession(s);
-    }));
-  }
-
-  // Media wall
-  function renderMediaWall() {
-    const host = $$('#mediaWall');
-    if(!host) return;
-
-    host.innerHTML = '';
-    for(const s of state.filtered){
-      const card = document.createElement('div');
-      card.className = 'mwCard';
-      card.innerHTML = `
-        <div class="mwStack" data-id="${escapeHtml(String(s.id))}">
-          <img class="mwImg" id="mwImg-${escapeHtml(String(s.id))}" alt="" loading="lazy" src="${escapeHtml(resolveUrl('assets/placeholder.svg'))}"/>
-          <img class="mwImg mwAlt" id="mwAlt-${escapeHtml(String(s.id))}" alt="" loading="lazy" src="${escapeHtml(resolveUrl('assets/placeholder.svg'))}" style="opacity:0"/>
-          <video class="mwVid" id="mwVid-${escapeHtml(String(s.id))}" muted playsinline loop preload="metadata" style="opacity:0"></video>
-          <div class="mwBadge">${escapeHtml(s.location?.district || s.location?.city || 'Session')}</div>
-        </div>
-        <div class="mwMeta">
-          <div class="mwTitle">Session ${escapeHtml(String(s.id))} • ${escapeHtml(s.date || '')}</div>
-          <div class="mwSub">${escapeHtml(fmtInt(s.metrics?.farmers))} farmers • Score ${escapeHtml(String(Math.round(s.score||0)))}/100</div>
-        </div>
-      `;
-      const stack = card.querySelector('.mwStack');
-      stack.addEventListener('click', ()=>openSession(s));
-      host.appendChild(card);
-
-      // hydrate with real media
-      hydrateMediaCard(s);
-    }
-  }
-
-  async function hydrateMediaCard(s){
-    const id = String(s.id);
-    const img = $$('#mwImg-'+id);
-    const alt = $$('#mwAlt-'+id);
-    const vid = $$('#mwVid-'+id);
-    if(!img || !alt || !vid) return;
-
-    const resolved = await resolveSessionMedia(s);
-    const imgs = resolved.items.filter(x=>x.kind==='image').map(x=>x.url);
-    const vids = resolved.items.filter(x=>x.kind==='video').map(x=>x.url);
-
-    if(imgs[0]){
-      img.src = resolveUrl(imgs[0]);
-    }
-    if(imgs[1]){
-      alt.src = resolveUrl(imgs[1]);
-      alt.style.opacity = '1';
-    }else{
-      alt.style.display = 'none';
-    }
-    if(vids[0]){
-      vid.src = resolveUrl(vids[0]);
-      vid.style.opacity = '0.0';
-      // Reveal video on hover (desktop) or on tap (mobile)
-      const parent = img.closest('.mwStack');
-      parent.addEventListener('mouseenter', ()=>{ vid.style.opacity='1'; try{vid.play();}catch{} });
-      parent.addEventListener('mouseleave', ()=>{ vid.style.opacity='0'; try{vid.pause();}catch{} });
-      parent.addEventListener('touchstart', ()=>{ vid.style.opacity='1'; try{vid.play();}catch{} }, {passive:true});
-    }else{
-      vid.style.display = 'none';
-    }
-  }  // Map
-  function initMap() {
-    const el = $$('#map');
-    if (!window.L || !el) {
-      $$('#mapFallback').classList.remove('hidden');
-      el.classList.add('hidden');
-      return;
-    }
-
-    const map = L.map('map', { zoomControl: false });
-    state.map = map;
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    L.control.zoom({ position:'bottomright' }).addTo(map);
-
-    // Delegate popup button clicks
-    map.getContainer().addEventListener('click', (ev)=>{
-      const btn = ev.target && ev.target.closest ? ev.target.closest('.popupBtn') : null;
-      if(!btn) return;
-      const id = btn.getAttribute('data-session');
-      const s = (state.filtered||[]).find(x=>String(x.id)===String(id)) || (state.sessions||[]).find(x=>String(x.id)===String(id));
-      if(s) openSession(s);
+    // Button preview
+    tbody.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('button[data-action="preview"]');
+      if (!btn) return;
+      const tr = ev.target.closest('tr[data-session-id]');
+      if (!tr) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      openDrawer(Number(tr.dataset.sessionId));
     });
-
-    renderMarkers();
-    fitMap();
   }
 
-  function markerColor(score) {
-    if (typeof score !== 'number') return '#4c6fff';
-    if (score >= 80) return '#22c55e';
-    if (score >= 65) return '#f59e0b';
-    return '#ef4444';
+  function firstMediaImage(s) {
+    const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
+    if (imgs.length) return imgs[0];
+    return '';
   }
 
-  function renderMarkers() {
-    if (!state.map || !window.L) return;
-    // clear
-    state.markers.forEach(m => { try{ m.remove(); } catch{} });
-    state.markers = [];
-
-    for (const s of state.filtered) {
-      const lat = s.geo?.lat, lng = s.geo?.lng;
-      if (typeof lat !== 'number' || typeof lng !== 'number') continue;
-      const acres = s.metrics?.wheatAcres || 0;
-      const radius = clamp(Math.sqrt(acres||0) * 1.6, 6, 26);
-      const col = markerColor(s.score);
-      const marker = L.circleMarker([lat,lng], {
-        radius,
-        color: col,
-        weight: 2,
-        fillColor: col,
-        fillOpacity: 0.55
-      }).addTo(state.map);
-
-      const district = s.location?.district || s.location?.city || '—';
-      const farmers = s.metrics?.farmers || 0;
-      const score = Math.round(s.score || 0);
-
-      const popupHtml = `
-        <div class="mapPopup">
-          <div class="mpTitle">${escapeHtml(district)} <span class="mpMeta">• Session ${escapeHtml(String(s.id||''))}</span></div>
-          <div class="mpRow">
-            <span>Farmers</span><strong>${escapeHtml(String(farmers))}</strong>
-            <span style="margin-left:10px">Score</span><strong>${escapeHtml(String(score))}</strong>
-          </div>
-          <button class="popupBtn" data-session="${escapeHtml(String(s.id))}">View session details</button>
-        </div>
-      `;
-      marker.bindPopup(popupHtml, { closeButton:true, autoPan:true });
-
-      marker.on('click', () => {
-        openSession(s);
-        try{ marker.openPopup(); }catch{}
-        // Ensure session panel is visible on small screens
-        const drawer = $$('#drawer');
-        drawer?.scrollIntoView({behavior:'smooth', block:'start'});
-      });
-
-      state.markers.push(marker);
-    }
-  }
-
-  function fitMap() {
-    if (!state.map || !state.markers.length) return;
-    const g = L.featureGroup(state.markers);
-    state.map.fitBounds(g.getBounds().pad(0.2));
-  }
-
-  
-  async function resolveSessionMedia(s){
-    const base = (state.media && state.media.galleryBase) ? state.media.galleryBase : 'assets/gallery/';
-    const id = String(s.id||'').trim();
-    const dedupe = (arr)=>Array.from(new Set(arr.filter(Boolean)));
-    const imgCandidates = dedupe([
-      ...(s.media?.images||[]),
-      `${base}${id}.jpeg`, `${base}${id}a.jpeg`,
-      `${base}${id}.jpg`, `${base}${id}a.jpg`,
-      `${base}${id}.png`, `${base}${id}a.png`
-    ]);
-    const vidCandidates = dedupe([
-      ...(s.media?.videos||[]),
-      `${base}${id}.mp4`, `${base}${id}a.mp4`
-    ]);
-
-    const images = [];
-    for(const u of imgCandidates){ if(await assetExists(u)) images.push(u); }
-    const videos = [];
-    for(const u of vidCandidates){ if(await assetExists(u)) videos.push(u); }
-    const items = [
-      ...images.slice(0,3).map(u=>({kind:'image', url:u})),
-      ...videos.slice(0,2).map(u=>({kind:'video', url:u})),
-      ...images.slice(3).map(u=>({kind:'image', url:u})),
-      ...videos.slice(2).map(u=>({kind:'video', url:u}))
-    ].slice(0,10);
-    return { items };
-  }
-
-// Session drawer
-  async function openSession(s) {
-    state.selected = s;
-    const drawer = $$('#drawer');
-    drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
-
-    $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
-    $$('#dSub').textContent = `${safeStr(s.province||s.location?.province||'Pakistan')} • ${fmtInt(s.metrics?.farmers||0)} farmers • ${fmtInt(s.metrics?.acres||s.metrics?.wheatAcres||0)} acres`;
-
-    $$('#dHost').textContent = safeStr(s.people?.host || s.host);
-    $$('#dRep').textContent = safeStr(s.people?.rep || s.rep);
-    $$('#dDealer').textContent = safeStr(s.people?.dealer || s.dealer);
-
-    $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
-    $$('#dAcres').textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
-    $$('#dAwareness').textContent = fmtPct(s.metrics?.awarenessPct);
-    $$('#dIntent').textContent = fmtPct(s.metrics?.intentPct);
-    $$('#dClarity').textContent = fmtPct(s.metrics?.clarityPct);
-    $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
-
-    // Share / maps
-    const lat = s.geo?.lat, lng = s.geo?.lng;
-    const mapsUrl = (typeof lat==='number' && typeof lng==='number') ? `https://www.google.com/maps?q=${lat},${lng}` : '';
-    const openMaps = $$('#openMapsBtn');
-    if(openMaps){
-      openMaps.disabled = !mapsUrl;
-      openMaps.onclick = ()=>{ if(mapsUrl) window.open(mapsUrl, '_blank'); };
-    }
-    const shareBtn = $$('#shareSessionBtn');
-    if(shareBtn){
-      shareBtn.onclick = async ()=> {
-        const u = new URL(window.location.href);
-        u.searchParams.set('campaign', state.campaign?.id || '');
-        u.hash = `session-${s.id}`;
-        await shareUrl(u.toString(), `Session ${s.id} • ${state.campaign?.name||''}`);
-      };
-    }
-
-    // Media (only existing files)
-    const mediaHost = $$('#sessionMedia');
-    if(mediaHost){
-      mediaHost.innerHTML = '';
-      const resolved = await resolveSessionMedia(s);
-      if(!resolved.items.length){
-        mediaHost.innerHTML = '<div class="emptyState">No media mapped for this session yet.</div>';
-      }else{
-        for(const it of resolved.items){
-          const tile = document.createElement('button');
-          tile.className = 'mediaTile';
-          tile.type = 'button';
-          tile.innerHTML = (it.kind==='video')
-            ? `<div class="mediaInner"><video muted playsinline preload="metadata" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"></video><div class="tag">VID</div></div>`
-            : `<div class="mediaInner"><img alt="" loading="lazy" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"/><div class="tag">IMG</div></div>`;
-          tile.addEventListener('click', ()=>openLightbox(it));
-          mediaHost.appendChild(tile);
-        }
-      }
-    }
-  }
-
-  // Feedback
-  function validEmail(s) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s||'').trim());
-  }
-  function validPkPhone(s) {
-    const t = (s||'').replace(/\s+/g,'').trim();
-    return /^(\+?92|0)?3\d{9}$/.test(t);
-  }
-
-  function feedbackPayload() {
-    const name = $$('#fbName').value.trim();
-    const email = $$('#fbEmail').value.trim();
-    const phone = $$('#fbPhone').value.trim();
-    const text = $$('#fbText').value.trim();
-    const ok = (validEmail(email) || validPkPhone(phone)) && text.length >= 3;
-    return { ok, name, email, phone, text };
-  }
-
-  function buildFeedbackMessage(p) {
-    const sel = $$('#selectionChip').textContent;
+  function allMediaItems(s) {
+    const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
+    const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
     return [
-      `INTERACT Campaign Feedback`,
-      `Campaign: ${state.campaign?.name||state.campaign?.id||'—'}`,
-      `Selection: ${sel}`,
-      `Name: ${p.name||'—'}`,
-      `Email: ${p.email||'—'}`,
-      `Phone: ${p.phone||'—'}`,
-      ``,
-      p.text
-    ].join('\n');
+      ...imgs.map(p => ({ type: 'image', path: p })),
+      ...vids.map(p => ({ type: 'video', path: p })),
+    ];
   }
 
-  function sendEmailFeedback() {
-    const p = feedbackPayload();
-    if (!p.ok) {
-      alert('Please enter valid email or phone, and write feedback.');
-      return;
+  function renderMedia() {
+    const grid = $$('#mediaGrid');
+    if (!grid) return;
+
+    const cards = state.filteredSessions.map(s => {
+      const sid = esc(s.id);
+      const sheet = esc(s.sheetRef || '');
+      const district = esc(s.district || '');
+      const village = esc(s.village || s.spot || '');
+      const img = firstMediaImage(s);
+      const title = `${sheet} • ${district} • ${village}`;
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+      return `<div class="mediaCard" data-session-id="${sid}">
+        <div class="mediaThumb">
+          <img data-media-thumb="1" alt="${esc(title)}" />
+        </div>
+        <div class="mediaMeta">
+          <div class="mediaTitle">${esc(title)}</div>
+          <div class="mediaActions">
+            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
+            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+            <button class="btn btnSmall btnGhost" data-action="open">Open</button>
+          </div>
+        </div>
+        <div class="hidden" data-thumb-path="${esc(img)}"></div>
+      </div>`;
+    });
+
+    grid.innerHTML = cards.join('');
+
+    // attach thumbs
+    $$$('[data-media-thumb="1"]', grid).forEach(img => {
+      const card = img.closest('.mediaCard');
+      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
+      attachSmartImage(img, p || 'assets/placeholder.svg');
+    });
+
+    grid.onclick = (ev) => {
+      const card = ev.target.closest('.mediaCard[data-session-id]');
+      if (!card) return;
+      const sid = Number(card.dataset.sessionId);
+      if (ev.target.closest('a')) return;
+
+      // Open lightbox with all items
+      openLightbox(sid);
+    };
+  }
+
+  function renderAll() {
+    renderSummary();
+    renderSessionsTable();
+    renderMedia();
+    updateMapData(); // markers reflect filter
+  }
+
+  // ---------- Drawer ----------
+  function closeDrawer() {
+    const ov = $$('#drawerOverlay');
+    const dr = $$('#sessionDrawer');
+    if (ov) ov.classList.add('hidden');
+    if (dr) dr.classList.add('hidden');
+    if (ov) ov.setAttribute('aria-hidden', 'true');
+    if (dr) dr.setAttribute('aria-hidden', 'true');
+  }
+
+  async function openDrawer(sessionId) {
+    const s = state.sessionsById.get(Number(sessionId));
+    if (!s) return;
+
+    const ov = $$('#drawerOverlay');
+    const dr = $$('#sessionDrawer');
+    if (ov) ov.classList.remove('hidden');
+    if (dr) dr.classList.remove('hidden');
+    if (ov) ov.setAttribute('aria-hidden', 'false');
+    if (dr) dr.setAttribute('aria-hidden', 'false');
+
+    $$('#drawerTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+    $$('#drawerSub').textContent = `${s.date || ''} • ${s.district || ''} • ${s.village || s.spot || ''}`;
+
+    // KPIs from sheets index if possible
+    const si = state.sheetsIndex?.sheets?.find(x => x.sheet === s.sheetRef);
+    $$('#dFarmers').textContent = si ? fmtInt(si.farmers_present) : '—';
+    $$('#dAcres').textContent = si ? fmt1(si.acres) : '—';
+    $$('#dScore').textContent = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
+
+    const meta = [
+      s.city ? `City: ${esc(s.city)}` : '',
+      s.district ? `District: ${esc(s.district)}` : '',
+      s.spot ? `Spot: ${esc(s.spot)}` : '',
+      s.dealer?.name ? `Dealer: ${esc(s.dealer.name)}` : '',
+      s.salesRep?.name ? `Sales: ${esc(s.salesRep.name)}` : '',
+      s.host?.name ? `Host: ${esc(s.host.name)}` : '',
+    ].filter(Boolean).join(' • ');
+    $$('#dMeta').innerHTML = meta || '<span class="muted">—</span>';
+
+    // Links
+    const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
+    const detailsUrl = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+    $$('#dOpenSheet').setAttribute('href', sheetUrl);
+    $$('#dOpenDetails').setAttribute('href', detailsUrl);
+
+    // Google Maps
+    const lat = Number(s.geo?.lat);
+    const lng = Number(s.geo?.lng);
+    const g = (Number.isFinite(lat) && Number.isFinite(lng)) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
+    $$('#dOpenMaps').setAttribute('href', g);
+
+    // Sheet summary fetch
+    const sumEl = $$('#dSheetSummary');
+    if (sumEl) sumEl.textContent = 'Loading…';
+    try {
+      const sheet = await fetchJson(`data/${state.campaignId}/sheets/${s.sheetRef}.json`, 'sheet');
+      const fb = sheet.feedback || {};
+      const farmers = Array.isArray(sheet.farmers) ? sheet.farmers : [];
+      const top = [...farmers].sort((a,b) => Number(b.acres||0)-Number(a.acres||0)).slice(0,5);
+
+      const topHtml = top.length
+        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(x.acres ?? ''))} acres</li>`).join('')}</ul>`
+        : '<div class="muted">No farmer rows found in sheet.</div>';
+
+      const hostComment = fb.host_comment ? `<div><b>Host comment:</b> ${esc(fb.host_comment)}</div>` : '';
+      const mgr = fb.manager_note ? `<div><b>Manager note:</b> ${esc(fb.manager_note)}</div>` : '';
+      const sales = fb.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(fb.sales_feedback)}</div>` : '';
+
+      sumEl.innerHTML = `
+        <div class="muted">Sheet: <b>${esc(sheet.meta?.sheet || s.sheetRef)}</b> • Date: <b>${esc(sheet.meta?.date || s.date || '')}</b></div>
+        ${hostComment}
+        ${mgr}
+        ${sales}
+        <div class="divider"></div>
+        <div><b>Top farmers (by acres)</b></div>
+        ${topHtml}
+      `;
+    } catch (e) {
+      if (sumEl) sumEl.innerHTML = `<div class="muted">Could not load sheet summary.</div><div class="smallMuted">${esc(e.message)}</div>`;
     }
-    const body = encodeURIComponent(buildFeedbackMessage(p));
-    const subject = encodeURIComponent(`Campaign dashboard feedback — ${state.campaign?.id||''}`);
-    window.location.href = `mailto:interact@paksaf.com?subject=${subject}&body=${body}`;
-  }
 
-  function sendWhatsAppFeedback() {
-    const p = feedbackPayload();
-    if (!p.ok) {
-      alert('Please enter valid email or phone, and write feedback.');
-      return;
-    }
-    const msg = encodeURIComponent(buildFeedbackMessage(p));
-    window.open(`https://wa.me/923303570463?text=${msg}`, '_blank');
-  }
-
-  async function boot() {
-    try{
-      setStatus('loading campaigns…');
-      let reg = null;
-      try {
-        reg = await fetchJson(url('data/campaigns.json'));
-      } catch(e) {
-        console.warn('campaigns.json missing; using fallback', e);
-      }
-      state.campaigns = (reg && reg.campaigns) ? reg.campaigns : [];
-      if (!state.campaigns.length) {
-        const fallbackId = getCampaignFromQuery() || 'buctril-super-2025';
-        state.campaigns = [{ id: fallbackId, name: fallbackId }];
-      }
-      const cs = $$('#campaignSelect');
-      cs.innerHTML = state.campaigns.map(c => `<option value="${c.id}">${escapeHtml(c.name||c.id)}</option>`).join('');
-
-      const wanted = getCampaignFromQuery();
-      const chosen = state.campaigns.find(c=>c.id===wanted) || state.campaigns[0];
-      if (!chosen) throw new Error('No campaigns defined');
-      cs.value = chosen.id;
-      setQueryCampaign(chosen.id);
-
-      cs.addEventListener('change', async () => {
-        const id = cs.value;
-        const c = state.campaigns.find(x=>x.id===id);
-        if (c) {
-          setQueryCampaign(c.id);
-          await loadCampaign(c);
+    // Media
+    const mediaEl = $$('#dMedia');
+    if (mediaEl) {
+      mediaEl.innerHTML = '';
+      const items = allMediaItems(s).slice(0, 8);
+      for (const it of items) {
+        if (it.type === 'image') {
+          const img = document.createElement('img');
+          img.className = 'thumb';
+          img.alt = s.sheetRef || 'image';
+          img.loading = 'lazy';
+          mediaEl.appendChild(img);
+          attachSmartImage(img, it.path);
+          img.onclick = () => openLightbox(Number(s.id));
+        } else {
+          const wrap = document.createElement('div');
+          wrap.className = 'thumbVideo';
+          const v = document.createElement('video');
+          v.className = 'thumb';
+          v.muted = true;
+          v.playsInline = true;
+          v.setAttribute('playsinline','');
+          wrap.appendChild(v);
+          mediaEl.appendChild(wrap);
+          attachSmartVideo(v, it.path);
+          wrap.onclick = () => openLightbox(Number(s.id));
         }
-      });
-
-      await loadCampaign(chosen);
-      wireUi();
-      setStatus('ready');
-    }catch(e){
-      console.error(e);
-      setStatus(`error: ${e.message || e}`, 'warn');
-      // leave UI usable but show hint
-      fatalError(e);
+      }
+      if (!items.length) {
+        mediaEl.innerHTML = '<div class="muted">No media listed for this session.</div>';
+      }
     }
   }
 
-  async function loadCampaign(c) {
-    state.campaign = c;
-    setStatus(`loading ${c.id}…`);
-    // load media first (for header/bg)
-    state.media = await fetchJson(url(c.mediaUrl));
-    await initBgVideo(state.media);
-    renderHero(state.media);
-    await renderFooterBrands(state.media);
+  function bindDrawer() {
+    const closeBtn = $$('#drawerClose');
+    const ov = $$('#drawerOverlay');
+    closeBtn?.addEventListener('click', closeDrawer);
+    ov?.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        closeDrawer();
+        closeLightbox();
+      }
+    });
+  }
 
-    const payload = await fetchJson(url(c.sessionsUrl));
-    state.sessions = payload.sessions || payload || [];
-    rebuildDistrictOptions();
-    // default district all
-    $$('#districtSelect').value = 'ALL';
+  // ---------- Lightbox ----------
+  function closeLightbox() {
+    const lb = $$('#lightbox');
+    if (lb) lb.classList.remove('open');
+    const body = $$('#lbBody');
+    if (body) body.innerHTML = '';
+  }
+
+  function bindLightbox() {
+    $$('#lbClose')?.addEventListener('click', closeLightbox);
+    $$('#lightbox')?.addEventListener('click', (ev) => {
+      if (ev.target && ev.target.id === 'lightbox') closeLightbox();
+    });
+  }
+
+  async function openLightbox(sessionId) {
+    const s = state.sessionsById.get(Number(sessionId));
+    if (!s) return;
+    const lb = $$('#lightbox');
+    const body = $$('#lbBody');
+    if (!lb || !body) return;
+
+    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+
+    lb.classList.add('open');
+    body.innerHTML = '';
+
+    const items = allMediaItems(s);
+    if (!items.length) {
+      body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+      return;
+    }
+
+    // Show first item large; rest as thumbnails
+    const main = items[0];
+    if (main.type === 'image') {
+      const img = document.createElement('img');
+      img.className = 'lightboxMedia';
+      img.alt = 'image';
+      body.appendChild(img);
+      attachSmartImage(img, main.path);
+    } else {
+      const v = document.createElement('video');
+      v.className = 'lightboxMedia';
+      v.controls = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline','');
+      body.appendChild(v);
+      const chosen = await resolveFirstExisting(main.path);
+      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
+    }
+
+    if (items.length > 1) {
+      const row = document.createElement('div');
+      row.className = 'mediaRow';
+      for (const it of items.slice(1, 12)) {
+        if (it.type === 'image') {
+          const t = document.createElement('img');
+          t.className = 'thumb';
+          t.alt = 'thumb';
+          t.loading = 'lazy';
+          row.appendChild(t);
+          attachSmartImage(t, it.path);
+          t.onclick = () => {
+            body.innerHTML = '';
+            lb.classList.add('open');
+            openLightbox(sessionId); // simplest refresh
+          };
+        } else {
+          const tv = document.createElement('video');
+          tv.className = 'thumb';
+          tv.muted = true;
+          tv.playsInline = true;
+          tv.setAttribute('playsinline','');
+          row.appendChild(tv);
+          attachSmartVideo(tv, it.path);
+          tv.onclick = () => {
+            body.innerHTML = '';
+            lb.classList.add('open');
+            openLightbox(sessionId);
+          };
+        }
+      }
+      body.appendChild(row);
+    }
+  }
+
+  // ---------- Map ----------
+  async function ensureMapReady() {
+    const el = $$('#leafletMap');
+    if (!el) return;
+
+    // Lazily load Leaflet when the Map tab is opened.
+    setMapStatus('Loading map…', false);
+    const ok = await ensureLeafletReady({ timeoutMs: 9000 });
+    if (!ok) {
+      setMapStatus('Map library blocked', false);
+      $$('#mapFallback')?.classList.remove('hidden');
+      return;
+    }
+
+    if (state.map) {
+      state.map.invalidateSize();
+      updateMapData();
+      return;
+    }
+
+    try {
+      const map = window.L.map(el, { zoomControl: true });
+      state.map = map;
+      state.markerLayer = window.L.layerGroup().addTo(map);
+
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      updateMapData();
+      setMapStatus('Ready', true);
+      setTimeout(() => map.invalidateSize(), 250);
+    } catch (e) {
+      setMapStatus('Failed', false);
+      $$('#mapFallback')?.classList.remove('hidden');
+    }
+  }
+
+  function updateMapData() {
+    if (!state.map || !state.markerLayer || !window.L) return;
+
+    state.markerLayer.clearLayers();
+    state.markersBySessionId.clear();
+
+    const pts = [];
+    for (const s of state.filteredSessions) {
+      const lat = Number(s.geo?.lat);
+      const lng = Number(s.geo?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+      pts.push([lat, lng]);
+
+      const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
+      const detailsUrl = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+      const g = `https://www.google.com/maps?q=${lat},${lng}`;
+
+      const popup = `
+        <div style="min-width:220px">
+          <div><b>Session ${esc(s.id)}</b> • <span class="badge">${esc(s.sheetRef || '')}</span></div>
+          <div class="smallMuted">${esc(s.date || '')} • ${esc(s.district || '')}</div>
+          <div class="smallMuted">${esc(s.village || s.spot || '')}</div>
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+            <a class="btn btnSmall" href="${sheetUrl}">Open sheet</a>
+            <a class="btn btnSmall btnGhost" href="${detailsUrl}">Details</a>
+            <a class="btn btnSmall btnGhost" href="${g}" target="_blank" rel="noopener">Maps</a>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btnSmall btnGhost" data-preview="${esc(s.id)}">Preview</button>
+          </div>
+        </div>`;
+
+      const marker = window.L.circleMarker([lat, lng], {
+        radius: 7,
+        weight: 2,
+        color: '#4c6fff',
+        fillColor: '#4c6fff',
+        fillOpacity: 0.35
+      });
+      marker.bindPopup(popup);
+      marker.addTo(state.markerLayer);
+      state.markersBySessionId.set(Number(s.id), marker);
+    }
+
+    if (pts.length) {
+      const bounds = window.L.latLngBounds(pts);
+      state.map.fitBounds(bounds.pad(0.15));
+    }
+
+    // One-time delegated click handler inside Leaflet popup for Preview button
+    state.map.off('popupopen');
+    state.map.on('popupopen', (e) => {
+      const node = e.popup.getElement();
+      if (!node) return;
+      const btn = node.querySelector('button[data-preview]');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const sid = Number(btn.getAttribute('data-preview'));
+        openDrawer(sid);
+      });
+    });
+  }
+
+  // ---------- Feedback ----------
+  function bindFeedback() {
+    const key = 'harvest_horizons_feedback';
+    const txt = $$('#fbText');
+    const msg = $$('#fbMsg');
+
+    try {
+      const v = localStorage.getItem(key);
+      if (txt && v) txt.value = v;
+    } catch (_e) { /* ignore */ }
+
+    $$('#fbSave')?.addEventListener('click', () => {
+      try {
+        localStorage.setItem(key, txt?.value || '');
+        if (msg) msg.textContent = 'Saved.';
+      } catch (_e) {
+        if (msg) msg.textContent = 'Could not save in this browser.';
+      }
+    });
+
+    $$('#fbClear')?.addEventListener('click', () => {
+      if (txt) txt.value = '';
+      try { localStorage.removeItem(key); } catch (_e) {}
+      if (msg) msg.textContent = 'Cleared.';
+    });
+  }
+
+  // ---------- Campaign selection ----------
+  function renderCampaignSelect() {
+    const sel = $$('#campaignSelect');
+    if (!sel) return;
+
+    sel.innerHTML = state.campaigns.map(c => {
+      const id = esc(c.id);
+      const name = esc(c.name || c.id);
+      return `<option value="${id}">${name}</option>`;
+    }).join('');
+
+    sel.value = state.campaignId || (state.campaigns[0]?.id ?? '');
+    sel.onchange = () => {
+      const id = sel.value;
+      window.location.href = `index.html?campaign=${encodeURIComponent(id)}#summary`;
+    };
+  }
+
+  async function loadCampaign(id) {
+    state.campaignId = id;
+    state.campaign = state.campaigns.find(c => c.id === id) || state.campaigns[0] || null;
+    if (!state.campaign) throw new Error('No campaigns configured.');
+
+    setStatus('Loading sessions…');
+
+    const sessionsPath = state.campaign.sessionsUrl || `data/${id}/sessions.json`;
+    const mediaPath = state.campaign.mediaUrl || `data/${id}/media.json`;
+    const sheetsIndexPath = state.campaign.sheetsIndexUrl || `data/${id}/sheets_index.json`;
+
+    // Sessions
+    const sj = await fetchJson(sessionsPath, 'sessions');
+    const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
+    state.sessions = sessions;
+    state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
+
+    // Optional sheets index
+    try {
+      state.sheetsIndex = await fetchJson(sheetsIndexPath, 'sheets index');
+    } catch (_e) {
+      state.sheetsIndex = null;
+    }
+
+    // Optional media config
+    try {
+      state.mediaCfg = await fetchJson(mediaPath, 'media config');
+    } catch (_e) {
+      state.mediaCfg = null;
+    }
+
+    // Campaign date range
+    // Prefer explicit campaign start/end if provided; otherwise derive from sessions.
+    const dates = sessions.map(s => parseDateSafe(s.date)).filter(Boolean);
+    if (!dates.length) throw new Error('No session dates found.');
+    dates.sort((a,b) => a - b);
+
+    const cfgStart = parseDateSafe(state.campaign.startDate);
+    const cfgEnd = parseDateSafe(state.campaign.endDate);
+
+    state.dateMin = cfgStart || dates[0];
+    state.dateMax = cfgEnd || dates[dates.length - 1];
+
+    // If config dates are outside actual data, clamp range to data to avoid empty view by default.
+    if (state.dateMin < dates[0]) state.dateMin = dates[0];
+    if (state.dateMax > dates[dates.length - 1]) state.dateMax = dates[dates.length - 1];
+
+    state.dateFrom = state.dateMin;
+    state.dateTo = state.dateMax;
+
+    // Setup date inputs min/max and defaults
+    const fromEl = $$('#dateFrom');
+    const toEl = $$('#dateTo');
+    if (fromEl && toEl) {
+      fromEl.min = formatDateInput(state.dateMin);
+      fromEl.max = formatDateInput(state.dateMax);
+      toEl.min = formatDateInput(state.dateMin);
+      toEl.max = formatDateInput(state.dateMax);
+      fromEl.value = formatDateInput(state.dateMin);
+      toEl.value = formatDateInput(state.dateMax);
+    }
+    setRangeHint();
 
     filterSessions();
-    updateKPIs();
-    renderTable();
-    renderMediaWall();
-
-    // map
-    if (!state.map) {
-      initMap();
-    } else {
-      renderMarkers();
-      fitMap();
-    }
-    setStatus('loaded');
+    renderAll();
+    setStatus('Loaded.', 'ok');
   }
 
-  function wireUi() {
-    $$('#applyBtn').addEventListener('click', () => {
-      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
-    });
-    $$('#resetBtn').addEventListener('click', () => {
-      $$('#districtSelect').value = 'ALL';
-      $$('#searchInput').value = '';
-      $$('#fromDate').value = '';
-      $$('#toDate').value = '';
-      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
-    });
-    $$('#exportBtn').addEventListener('click', () => {
-      if (!state.filtered.length) { alert('Nothing to export for current filters.'); return; }
-      exportCsv();
-    });
+  // ---------- Events ----------
+  function bindTopControls() {
+    $$('#applyBtn')?.addEventListener('click', applyDateInputs);
+    $$('#resetBtn')?.addEventListener('click', resetDateInputs);
+    $$('#exportBtn')?.addEventListener('click', exportCsv);
 
-    $$('#prevBtn').addEventListener('click', () => { if (state.page>1){ state.page--; renderTable(); } });
-    $$('#nextBtn').addEventListener('click', () => {
-      const totalPages = Math.max(1, Math.ceil(state.filtered.length/state.pageSize));
-      if (state.page<totalPages){ state.page++; renderTable(); }
-    });
+    // Apply on Enter in date inputs
+    $$('#dateFrom')?.addEventListener('change', applyDateInputs);
+    $$('#dateTo')?.addEventListener('change', applyDateInputs);
+  }
 
-    $$('#fitBtn').addEventListener('click', fitMap);
-    $$('#mapResetBtn').addEventListener('click', () => { renderMarkers(); fitMap(); });
+  function exportCsv() {
+    const rows = [];
+    rows.push(['id','sheetRef','date','district','village','score'].join(','));
+    for (const s of state.filteredSessions) {
+      const row = [
+        s.id,
+        s.sheetRef,
+        s.date,
+        (s.district || '').replaceAll(',', ' '),
+        (s.village || s.spot || '').replaceAll(',', ' '),
+        s.score ?? ''
+      ];
+      rows.push(row.map(x => String(x ?? '').replaceAll('\n',' ').replaceAll('\r',' ')).join(','));
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${state.campaignId || 'campaign'}_sessions.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
 
-    $$('#drawerClose').addEventListener('click', () => $$('#sessionDrawer').classList.add('hidden'));
-    $$('#openMapsBtn').addEventListener('click', () => {
-      const s = state.selected;
-      if (!s) return;
-      const lat = s.geo?.lat, lng = s.geo?.lng;
-      if (typeof lat === 'number' && typeof lng === 'number') {
-        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
-      } else {
-        alert('No coordinates available for this session.');
+  function bindTabEvents() {
+    window.addEventListener('hashchange', syncTabFromHash);
+    document.addEventListener('tabchange', (e) => {
+      const tab = e.detail?.tab;
+      if (tab === 'map') {
+        // Give Leaflet time to render after display
+        setTimeout(ensureMapReady, 50);
+        setTimeout(() => state.map?.invalidateSize(), 200);
       }
     });
-    $$('#shareSessionBtn').addEventListener('click', async () => {
-      const s = state.selected;
-      if (!s) return;
-      const u = new URL(window.location.href);
-      u.searchParams.set('campaign', state.campaign?.id || '');
-      u.hash = `session-${s.id}`;
-      await shareUrl(u.toString(), `Session ${s.id} • ${state.campaign?.name||''}`);
-    });
+  }
 
-    // lightbox
-    $$('#lightboxClose').addEventListener('click', closeLightbox);
-    $$('#lightbox').addEventListener('click', (e) => { if (e.target.id==='lightbox') closeLightbox(); });
-    document.addEventListener('keydown', (e) => { if (e.key==='Escape') closeLightbox(); });
+  // ---------- Boot ----------
+  async function boot() {
+    try {
+      bindDrawer();
+      bindLightbox();
+      bindFeedback();
+      bindTopControls();
+      bindTabEvents();
 
-    $$('#shareMediaBtn').addEventListener('click', () => {
-      if (!state.selectedMediaUrl) return;
-      shareUrl(state.selectedMediaUrl, 'Campaign media');
-    });
-    $$('#copyLinkBtn').addEventListener('click', async () => {
-      if (!state.selectedMediaUrl) return;
-      try{ await navigator.clipboard.writeText(state.selectedMediaUrl); alert('Link copied.'); }
-      catch{ prompt('Copy link:', state.selectedMediaUrl); }
-    });
+      await loadCampaignRegistry();
 
-    // feedback
-    $$('#emailFeedbackBtn').addEventListener('click', sendEmailFeedback);
-    $$('#waFeedbackBtn').addEventListener('click', sendWhatsAppFeedback);
+      const req = qs();
+      const id = req.get('campaign') || state.campaigns[0]?.id;
+      renderCampaignSelect();
+
+      await loadCampaign(id);
+
+      // Initial tab
+      syncTabFromHash();
+
+      // If landing directly on #map, init map
+      if (activeTabFromHash() === 'map') {
+        setTimeout(ensureMapReady, 50);
+      }
+
+      // Close drawer if overlay state inconsistent
+      closeDrawer();
+
+      // Wire drawer overlay state
+      $$('#drawerOverlay')?.classList.add('hidden');
+      $$('#sessionDrawer')?.classList.add('hidden');
+
+      // Close buttons for lightbox
+      $$('#lbClose')?.addEventListener('click', closeLightbox);
+
+      // Set map status
+      setMapStatus('Ready when opened', true);
+    } catch (e) {
+      console.error(e);
+      setStatus(e.message || 'Failed to load.', 'bad');
+    }
   }
 
   boot();

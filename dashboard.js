@@ -1,1223 +1,909 @@
-
 (() => {
   'use strict';
 
-  const $$ = (sel, root=document) => root.querySelector(sel);
-  const $$$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const fmtInt = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : new Intl.NumberFormat().format(Math.round(n));
-  const fmt1 = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : (Math.round(n*10)/10).toFixed(1);
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const safeStr = (v) => (v === null || v === undefined || String(v).trim()==='' ? '—' : String(v).trim());
-
-  const BASE = new URL('./', window.location.href); // resolves /WheatCampaign/
-  const url = (rel) => new URL(rel, BASE).toString();
-
-  // Normalize asset paths so '/assets/..' does not escape the GitHub Pages sub-path
-  const resolveUrl = (p) => {
-    const s = String(p || '').trim();
-    if (!s) return '';
-    if (/^(https?:)?\/\//i.test(s) || s.startsWith('data:') || s.startsWith('blob:')) return s;
-    // prevent absolute-path resolution to origin root (breaks /WheatCampaign/ hosting)
-    return url(s.replace(/^\/+/, ''));
-  };
-
-  // Attribute-safe escaping (for src/href attributes)
-  function escapeAttr(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-
-
-  function parseDateSafe(val) {
-    if (!val) return null;
-    const s = String(val).trim();
-    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (iso) {
-      const d = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
-      return isNaN(d.getTime()) ? null : d;
-    }
-    const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-    if (dmy) {
-      const d = new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
-      return isNaN(d.getTime()) ? null : d;
-    }
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  function fmtISO(d) {
-    if (!d) return '';
-    const yyyy = String(d.getFullYear());
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  // Lightbox (used by session media + gallery)
-  function openLightbox(item) {
-    const lb = document.getElementById('lightbox');
-    const body = document.getElementById('lightboxBody');
-    if (!lb || !body) return;
-    const rawUrl = item && item.url ? item.url : '';
-    const srcUrl = resolveUrl(rawUrl);
-    if (!srcUrl) return;
-
-    state.selectedMediaUrl = srcUrl;
-
-    const kind = String(item?.kind || item?.type || '').toLowerCase();
-    const src = escapeAttr(srcUrl);
-
-    body.innerHTML = (kind === 'video')
-      ? `<video src="${src}" controls autoplay playsinline style="width:100%;max-height:75vh;border-radius:14px;background:#000"></video>`
-      : `<img src="${src}" alt="" style="max-width:100%;max-height:75vh;border-radius:14px" />`;
-
-    lb.classList.remove('hidden');
-    lb.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeLightbox() {
-    const lb = document.getElementById('lightbox');
-    const body = document.getElementById('lightboxBody');
-    if (body) body.innerHTML = '';
-    if (lb) {
-      lb.classList.add('hidden');
-      lb.setAttribute('aria-hidden', 'true');
-    }
-    state.selectedMediaUrl = null;
-    document.body.style.overflow = '';
-  }
-
-
-  // Asset path tolerance: GitHub Pages is case-sensitive; allow common case/typo variants.
-  const assetCandidates = (p) => {
-    const sRaw = String(p || '').trim();
-    if (!sRaw) return [];
-    const s0 = sRaw.replace(/^\/+/, '');
-
-    const out = [];
-    const add = (x) => { if (x) out.push(String(x).replace(/^\/+/, '')); };
-
-    add(s0);
-
-    // Common repo pattern: sessions.json sometimes stores media under "gallery/.."
-    if (s0.startsWith('gallery/')) add('assets/' + s0);
-
-    // If not already under assets/, try prefixing
-    if (!s0.startsWith('assets/') && !s0.startsWith('data/')) add('assets/' + s0);
-
-    const parts = s0.split('/');
-    const fname = parts[parts.length - 1] || '';
-    const basePath = parts.slice(0, -1).join('/');
-    const withName = (name) => (basePath ? basePath + '/' : '') + name;
-
-    const lower = fname.toLowerCase();
-    const upperFirst = lower ? (lower.charAt(0).toUpperCase() + lower.slice(1)) : fname;
-
-    if (lower && lower !== fname) add(withName(lower));
-    if (upperFirst && upperFirst !== fname) add(withName(upperFirst));
-
-    // Extension tolerance (.jpg <-> .jpeg)
-    const swapExt = (name) => {
-      const n = String(name || '');
-      if (n.toLowerCase().endsWith('.jpg')) return n.slice(0, -4) + '.jpeg';
-      if (n.toLowerCase().endsWith('.jpeg')) return n.slice(0, -5) + '.jpg';
-      return '';
-    };
-    const swapped = swapExt(fname);
-    if (swapped) add(withName(swapped));
-
-    // Common typo seen in repo history
-    if (lower === 'products.jpg' || lower === 'products.jpeg') add(withName(lower.replace('products', 'poducts')));
-    if (lower === 'poducts.jpg' || lower === 'poducts.jpeg') add(withName(lower.replace('poducts', 'products')));
-
-    // Apply assets/ prefix to all relative candidates
-    for (const c of out.slice()) {
-      if (!c.startsWith('assets/') && !c.startsWith('data/')) add('assets/' + c);
-    }
-
-    return Array.from(new Set(out));
-  };
-
-  async function resolveExistingAsset(p) {
-    const raw = String(p || '').trim();
-    if (!raw) return '';
-
-    // Absolute URLs / special schemes: return as-is
-    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
-
-    for (const c of assetCandidates(raw)) {
-      try {
-        if (await assetExists(c)) return c;
-      } catch (_) {
-        // ignore transient fetch/HEAD issues
-      }
-    }
-
-    const lower = raw.toLowerCase();
-    if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov')) {
-      // self-contained fallback
-      if (await assetExists('assets/placeholder-video.mp4')) return 'assets/placeholder-video.mp4';
-      return '';
-    }
-    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.gif') || lower.endsWith('.svg')) {
-      return 'assets/placeholder.svg';
-    }
-    return '';
-  }
-
+  const $$ = (sel, root = document) => root.querySelector(sel);
+  const $$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const state = {
     campaigns: [],
     campaign: null,
-    sessions: [],
-    media: null,
-    filtered: [],
-    map: null,
-    markers: [],
+    mediaCfg: null,
+    sheetsIndex: null,
+    allSessions: [],
+    filteredSessions: [],
+    filters: {
+      district: '',
+      q: '',
+      from: '',
+      to: ''
+    },
     page: 1,
     pageSize: 12,
+    map: null,
+    markerLayer: null,
     selected: null,
-    selectedMediaUrl: null
+    selectedMediaUrl: null,
+    mediaPreviewsEnabled: false
   };
 
-  function setStatus(msg, type='info') {
-    const el = $$('#statusChip');
-    if (el) {
-      el.textContent = `Status: ${msg}`;
-      el.classList.toggle('warnChip', type === 'warn');
-    }
-    const app = $$('#app') || document.body;
-    const m = String(msg || '').toLowerCase();
-    if (app) app.classList.toggle('loading', m.startsWith('loading'));
+  function url(path) {
+    // Always resolve relative to the current document (works on GitHub Pages subpaths)
+    return new URL(String(path || ''), document.baseURI).toString();
   }
 
-  function fatalError(err) {
-    const msg = (err && err.message) ? err.message : String(err || 'Unknown error');
-    setStatus(`error: ${msg}`, 'warn');
-    const hint = document.getElementById('fatalHint');
-    if (hint) {
-      hint.style.display = 'block';
-      hint.textContent = msg;
-    }
-    const tbl = document.getElementById('sessionsTable');
-    if (tbl) {
-      tbl.innerHTML = `<tbody><tr><td colspan="7" class="muted">
-        Dashboard failed to load data. Please confirm these URLs exist and return JSON:
-        <div class="mono" style="margin-top:8px">
-          /WheatCampaign/data/campaigns.json<br/>
-          /WheatCampaign/data/${encodeURIComponent(getCampaignFromQuery()||'buctril-super-2025')}/sessions.json
-        </div>
-        <div class="muted" style="margin-top:8px">Open DevTools Console to see exact failing URL.</div>
-      </td></tr></tbody>`;
-    }
+  async function fetchJson(path) {
+    const res = await fetch(url(path), { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to fetch ${path} (HTTP ${res.status})`);
+    return res.json();
   }
 
-
-  async function fetchJson(relUrl, timeoutMs=12000) {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), timeoutMs);
-    try{
-      const res = await fetch(relUrl, { cache: 'no-store', signal: controller.signal });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${relUrl}`);
-      return await res.json();
-    } finally {
-      clearTimeout(t);
-    }
-  }
-
-  // Asset existence cache (prevents rendering placeholder tiles for missing files)
-  const _existsCache = new Map();
-  async function assetExists(relUrl){
-    const key = String(relUrl||'');
-    if(_existsCache.has(key)) return _existsCache.get(key);
-    const u = url(String(relUrl||'').replace(/^\/?/,''));
-    let ok = false;
-    try{
-      let res = await fetch(u, { method:'HEAD', cache:'no-store' });
-      if(res && res.ok) ok = true;
-      else{
-        res = await fetch(u, { method:'GET', cache:'no-store' });
-        ok = !!(res && res.ok);
-      }
-    }catch{ ok = false; }
-    _existsCache.set(key, ok);
-    return ok;
-  }
-
-  function getCampaignFromQuery() {
-    const p = new URLSearchParams(window.location.search);
-    return p.get('campaign');
-  }
-
-  function setQueryCampaign(id) {
-    const u = new URL(window.location.href);
-    u.searchParams.set('campaign', id);
-    history.replaceState({}, '', u.toString());
-  }
-
-  
-  function renderHero(cfg){
-    const hero = $$('#heroPlayer');
-    const v = $$('#heroVideo');
-    const poster = $$('#heroPoster');
-    const thumbs = $$('#heroThumbs');
-    const t = $$('#heroTitle');
-    const s = $$('#heroSub');
-    const btnPrev = $$('#heroPrev');
-    const btnNext = $$('#heroNext');
-    const btnMute = $$('#heroMute');
-    if(!hero || !v || !poster || !thumbs) return;
-
-    const seq = Array.isArray(cfg && cfg.headerSequence) ? cfg.headerSequence : [];
-
-    if (!seq.length) {
-      hero.innerHTML = '<img src="assets/placeholder.svg" alt="Campaign" style="width:100%;height:100%;object-fit:cover">';
-      return;
-    }
-
-    const playlist = seq.map((x, idx)=>({
-      idx,
-      label: x.label || `Header ${idx+1}`,
-      title: x.title || x.label || 'Campaign highlights',
-      video: x.video || '',
-      poster: x.poster || 'assets/placeholder.svg'
-    }));
-
-    let cur = 0;
-    let autoTimer = null;
-
-    function setActiveThumb(){
-      $$$('.heroThumb', thumbs).forEach((el)=>el.classList.remove('active'));
-      const el = thumbs.querySelector(`[data-idx="${cur}"]`);
-      if(el) el.classList.add('active');
-    }
-
-    async function loadIndex(i, user=false){
-      if(!playlist.length) return;
-      cur = (i + playlist.length) % playlist.length;
-      const item = playlist[cur];
-
-      t.textContent = item.title;
-      s.textContent = 'If video does not auto-play on iPhone, tap once to start.';
-      setActiveThumb();
-
-      const vidPath = item.video ? await resolveExistingAsset(item.video) : '';
-      const posterPath = item.poster ? (await resolveExistingAsset(item.poster)) : '';
-      const hasVid = !!vidPath;
-      const hasPoster = !!posterPath;
-
-      const posterSrc = resolveUrl(hasPoster ? posterPath : 'assets/placeholder.svg');
-      poster.src = posterSrc;
-
-      if(hasVid){
-        hero.classList.remove('fallback');
-        v.src = resolveUrl(vidPath);
-        v.load();
-        try{
-          const p = v.play();
-          if(p && p.catch) await p;
-        }catch(_e){
-          hero.classList.add('fallback');
-          s.textContent = 'Tap to play (autoplay blocked by device/browser).';
-        }
-      }else{
-        hero.classList.add('fallback');
-        v.removeAttribute('src');
-        v.load();
-        s.textContent = 'Video not found. Showing poster image.';
-      }
-
-      if(user){
-        // If user interacted, keep autoplay rotation but slower.
-        restartAuto(11000);
-      }
-    }
-
-    function restartAuto(ms=8500){
-      if(autoTimer) window.clearInterval(autoTimer);
-      if(!playlist.length) return;
-      autoTimer = window.setInterval(()=>loadIndex(cur+1), ms);
-    }
-
-    // Build thumbs
-    thumbs.innerHTML = '';
-    playlist.slice(0, 4).forEach((item)=>{
-      const el = document.createElement('div');
-      el.className = 'heroThumb';
-      el.dataset.idx = String(item.idx);
-      el.innerHTML = `
-        <img alt="" src="${escapeHtml(resolveUrl(item.poster || 'assets/placeholder.svg'))}" onerror="this.src='assets/placeholder.svg'"/>
-        <div class="badge">${escapeHtml(item.label)}</div>
-      `;
-      el.addEventListener('click', ()=>loadIndex(item.idx, true));
-      thumbs.appendChild(el);
-    });
-
-    btnPrev?.addEventListener('click', (e)=>{ e.preventDefault(); loadIndex(cur-1, true); });
-    btnNext?.addEventListener('click', (e)=>{ e.preventDefault(); loadIndex(cur+1, true); });
-    btnMute?.addEventListener('click', (e)=>{
-      e.preventDefault();
-      v.muted = !v.muted;
-      btnMute.textContent = v.muted ? '🔇' : '🔊';
-    });
-
-    hero.addEventListener('click', async ()=>{
-      try{
-        if(v.paused){
-          await v.play();
-          hero.classList.remove('fallback');
-        }else{
-          v.pause();
-        }
-      }catch(_e){
-        hero.classList.add('fallback');
-      }
-    });
-
-    loadIndex(0);
-    restartAuto();
-  }
-
-  async function renderFooterBrands(cfg){
-    const host = $$('#footerBrands');
-    if(!host) return;
-
-    const candidates = [
-      {name:'INTERACT', img:(cfg.brandImages && cfg.brandImages.interactGif) ? cfg.brandImages.interactGif : 'assets/interact.gif'},
-      {name:'Bayer', img:(cfg.brandImages && cfg.brandImages.bayerLogo) ? cfg.brandImages.bayerLogo : 'assets/bayer.png'},
-      {name:'Buctril Super', img:(cfg.brandImages && cfg.brandImages.buctril) ? cfg.brandImages.buctril : 'assets/buctril.jpg'},
-      {name:'Atlantis', img:(cfg.brandImages && cfg.brandImages.atlantis) ? cfg.brandImages.atlantis : 'assets/atlantis.jpg'},
-      {name:'Products', img:(cfg.brandImages && cfg.brandImages.products) ? cfg.brandImages.products : 'assets/products.jpg'}
-    ];
-
-    host.innerHTML = '';
-    for(const c of candidates){
-      const resolved = await resolveExistingAsset(c.img);
-      if(!resolved) continue;
-      const pill = document.createElement('div');
-      pill.className = 'brandPill';
-      pill.innerHTML = `<img alt="${escapeHtml(c.name)}" src="${escapeHtml(resolveUrl(resolved))}"/><span>${escapeHtml(c.name)}</span>`;
-      host.appendChild(pill);
-    }
-  }
-
-
-  
-  async function initBgVideo(cfg) {
-    const v = $$('#bgVideo');
-    if(!v) return;
-    const src0 = cfg.backgroundVideo || 'assets/bg.mp4';
-    const src = await resolveExistingAsset(src0);
-    if(!src){
-      // Keep the element but don’t break layout; background falls back to gradient.
-      v.removeAttribute('src');
-      v.style.display = 'none';
-      return;
-    }
-    v.src = resolveUrl(src);
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    v.autoplay = true;
-    v.preload = 'metadata';
-
-    // Try autoplay; if blocked, show paused first frame and allow tap to start.
-    try{
-      const p = v.play();
-      if(p && p.catch) await p;
-    }catch(_e){
-      v.classList.add('paused');
-    }
-    v.addEventListener('click', async ()=>{
-      try{ await v.play(); v.classList.remove('paused'); }catch(_e){}
-    });
-  }
-
-
-  function donutSvg(parts, centerText, subText) {
-    // parts: [{label, value(0..1), colorClass}]
-    const size = 132;
-    const r = 50;
-    const c = 2 * Math.PI * r;
-    let offset = 0;
-    const segs = parts.map((p, i) => {
-      const len = clamp(p.value, 0, 1) * c;
-      const dash = `${len} ${c - len}`;
-      const el = `<circle class="donutSeg ${p.colorClass||''}" cx="${size/2}" cy="${size/2}" r="${r}" stroke-dasharray="${dash}" stroke-dashoffset="${-offset}" />`;
-      offset += len;
-      return el;
-    }).join('');
-    const legend = parts.filter(p=>p.label).map(p => `<span class="legendItem"><span class="dot ${p.colorClass||''}"></span>${p.label}</span>`).join('');
-    return `
-      <div class="donut">
-        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-          <circle class="donutTrack" cx="${size/2}" cy="${size/2}" r="${r}"/>
-          ${segs}
-          <text x="50%" y="48%" text-anchor="middle" class="donutCenter">${centerText}</text>
-          <text x="50%" y="62%" text-anchor="middle" class="donutSub">${subText||''}</text>
-        </svg>
-        <div class="legend">${legend}</div>
-      </div>
-    `;
-  }
-
-  function injectDonutStyles() {
-    if ($$('#donutStyle')) return;
-    const s = document.createElement('style');
-    s.id = 'donutStyle';
-    s.textContent = `
-      .donutTrack{fill:none; stroke: rgba(26,41,71,.55); stroke-width: 12}
-      .donutSeg{fill:none; stroke-width: 12; stroke-linecap: butt}
-      .donutCenter{fill:#e9f0ff; font-size:16px; font-weight:900}
-      .donutSub{fill:#a9b7d6; font-size:10px}
-      .legend{margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; font-size:11px; color:#a9b7d6}
-      .legendItem{display:flex; gap:6px; align-items:center}
-      .dot{width:10px; height:10px; border-radius:999px; background:#4c6fff}
-      .c1{stroke:#4c6fff}.c2{stroke:#22c55e}.c3{stroke:#f59e0b}.c4{stroke:#ef4444}
-      .dot.c1{background:#4c6fff}.dot.c2{background:#22c55e}.dot.c3{background:#f59e0b}.dot.c4{background:#ef4444}
-    `;
-    document.head.appendChild(s);
-  }
-
-  function computeTopReason(sessions, key='use') {
-    const counts = new Map();
-    for (const s of sessions) {
-      const obj = key==='use' ? (s.reasonsUse||{}) : (s.reasonsNotUse||{});
-      for (const [k,v] of Object.entries(obj)) {
-        if (!v || v<=0) continue;
-        counts.set(k, (counts.get(k)||0) + v);
-      }
-    }
-    const sorted = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]);
-    return sorted.length ? {label: sorted[0][0], value: sorted[0][1]} : {label:'—', value:0};
-  }
-
-  function computeCompetitors(sessions) {
-    const m = new Map();
-    for (const s of sessions) {
-      const txt = (s.competitors||'').trim();
-      if (!txt) continue;
-      txt.split(/[;,]/).map(x=>x.trim()).filter(Boolean).forEach(b=>{
-        m.set(b, (m.get(b)||0) + 1);
-      });
-    }
-    const sorted = Array.from(m.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    return sorted.length ? sorted.map(([b,c])=>`${b} (${c})`).join(', ') : '—';
-  }
-
-  function filterSessions() {
-    const district = $$('#districtSelect').value;
-    const q = ($$('#searchInput').value || '').toLowerCase().trim();
-    const from = $$('#fromDate').value ? parseDateSafe($$('#fromDate').value) : null;
-    const to = $$('#toDate').value ? parseDateSafe($$('#toDate').value) : null;
-
-    const res = state.sessions.filter(s => {
-      if (district && district !== 'ALL' && (s.district||'') !== district) return false;
-      if (from) {
-        const d = parseDateSafe(s.date);
-        if (d && d < from) return false;
-      }
-      if (to) {
-        const d = parseDateSafe(s.date);
-        // inclusive end
-        const t2 = new Date(to.getTime() + 24*3600*1000 - 1);
-        if (d && d > t2) return false;
-      }
-      if (q) {
-        const blob = `${s.city} ${s.district} ${s.spot} ${s.village} ${(s.host&&s.host.name)||''} ${(s.dealer&&s.dealer.name)||''} ${(s.salesRep&&s.salesRep.name)||''}`.toLowerCase();
-        if (!blob.includes(q)) return false;
-      }
-      return true;
-    });
-
-    state.filtered = res;
-    state.page = 1;
-
-    const distLabel = (district && district !== 'ALL') ? district : 'All districts';
-    const dateLabel = (from || to) ? `${from ? fmtISO(from) : '…'} → ${to ? fmtISO(to) : '…'}` : 'All dates';
-    $$('#selectionChip').textContent = `${distLabel} • ${dateLabel}`;
-  }
-
-  function updateKPIs() {
-    const s = state.filtered;
-    const sessions = s.length;
-    const farmers = s.reduce((a,x)=>a+(x.metrics?.farmers||0),0);
-    const acres = s.reduce((a,x)=>a+(x.metrics?.wheatAcres||0),0);
-    const scores = s.map(x=>x.score).filter(v=>typeof v==='number');
-    const avgScore = scores.length ? scores.reduce((a,v)=>a+v,0)/scores.length : null;
-
-    $$('#kSessions').textContent = fmtInt(sessions);
-    $$('#kFarmers').textContent = fmtInt(farmers);
-    $$('#kAcres').textContent = fmtInt(acres);
-    $$('#kScore').textContent = avgScore===null ? '—' : fmt1(avgScore);
-
-    // donuts
-    injectDonutStyles();
-
-    const avgAwareness = avg(s.map(x=>x.metrics?.awarenessPct));
-    const avgUsed = avg(s.map(x=>x.metrics?.usedLastYearPct));
-    const avgDef = avg(s.map(x=>x.metrics?.definitePct));
-    const avgMaybe = avg(s.map(x=>x.metrics?.maybePct));
-    const avgNot = avg(s.map(x=>x.metrics?.notInterestedPct));
-    const avgUnderstand = avg(s.map(x=>x.metrics?.avgUnderstanding)); // 0..3
-
-    // Intent donut: definite/maybe/not
-    const defV = (avgDef??0)/100;
-    const maybeV = (avgMaybe??0)/100;
-    const notV = (avgNot??0)/100;
-    const rem = clamp(1 - (defV+maybeV+notV), 0, 1);
-    $$('#donutIntent').innerHTML = donutSvg([
-      {label:'Definite', value:defV, colorClass:'c2'},
-      {label:'Maybe', value:maybeV, colorClass:'c3'},
-      {label:'Not', value:notV, colorClass:'c4'},
-      {label:'Other', value:rem, colorClass:'c1'},
-    ], `${avgDef===null?'—':Math.round(avgDef)}%`, 'definite');
-    $$('#metaIntent').textContent = `Avg definite intent across selection.`;
-
-    // Awareness donut
-    const aware = (avgAwareness??0)/100;
-    $$('#donutAwareness').innerHTML = donutSvg([
-      {label:'Aware', value:aware, colorClass:'c1'},
-      {label:'Not aware', value:1-aware, colorClass:'c4'},
-    ], `${avgAwareness===null?'—':Math.round(avgAwareness)}%`, 'aware');
-    $$('#metaAwareness').textContent = `Average awareness in the filtered set.`;
-
-    // Understanding donut
-    const u = (avgUnderstand??0)/3;
-    $$('#donutUnderstanding').innerHTML = donutSvg([
-      {label:'Understood', value:u, colorClass:'c2'},
-      {label:'Gap', value:1-u, colorClass:'c3'},
-    ], `${avgUnderstand===null?'—':fmt1(avgUnderstand)}`, '/ 3');
-    $$('#metaUnderstanding').textContent = `Average understanding across 5 key messages (0–3).`;
-
-    // Coverage donut: acres vs estimated buctril acres
-    const est = s.reduce((a,x)=>a+(x.metrics?.estimatedBuctrilAcres||0),0);
-    const cov = acres>0 ? clamp(est/acres,0,1) : 0;
-    $$('#donutCoverage').innerHTML = donutSvg([
-      {label:'Est. Buctril acres', value:cov, colorClass:'c2'},
-      {label:'Other acres', value:1-cov, colorClass:'c1'},
-    ], acres?`${Math.round(cov*100)}%`:'—', 'share');
-    $$('#metaCoverage').textContent = `Est. product acres vs total wheat acres.`;
-
-    // Top reasons
-    const topUse = computeTopReason(s,'use');
-    const topNot = computeTopReason(s,'not');
-    $$('#topUse').textContent = topUse.label || '—';
-    $$('#topNotUse').textContent = topNot.label || '—';
-    $$('#topCompetitors').textContent = computeCompetitors(s);
-
-    // counters
-    const imageCount = s.reduce((a,x)=>a + (x.media?.images?.length||0), 0);
-    const videoCount = s.reduce((a,x)=>a + (x.media?.videos?.length||0), 0);
-    $$('#mSessions').textContent = `${fmtInt(s.length)} Sessions`;
-    $$('#mImages').textContent = `${fmtInt(imageCount)} Images`;
-    $$('#mVideos').textContent = `${fmtInt(videoCount)} Videos`;
-  }
-
-  function avg(list) {
-    const nums = list.filter(v => typeof v === 'number' && !Number.isNaN(v));
-    if (!nums.length) return null;
-    return nums.reduce((a,v)=>a+v,0)/nums.length;
-  }
-
-  function rebuildDistrictOptions() {
-    const sel = $$('#districtSelect');
-    const districts = Array.from(new Set(state.sessions.map(s=>s.district).filter(Boolean))).sort();
-    sel.innerHTML = `<option value="ALL">All</option>` + districts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  function safeStr(v) {
+    if (v === null || v === undefined) return '';
+    return String(v);
   }
 
   function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const div = document.createElement('div');
+    div.textContent = safeStr(s);
+    return div.innerHTML;
   }
 
-  // Share helper (Web Share API with clipboard fallback)
-  async function shareUrl(urlToShare, title) {
-    const u = String(urlToShare || '').trim();
-    if (!u) return;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: title || 'INTERACT Campaign', url: u });
-        return;
-      } catch (err) {
-        // user cancelled or share failed; fall through to clipboard
-        console.debug('shareUrl fallback:', err);
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(u);
-      alert('Link copied to clipboard!');
-    } catch (err) {
-      prompt('Copy this link:', u);
-    }
+  function fmtInt(n) {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return '—';
+    return Math.round(x).toLocaleString();
   }
 
-
-  // Sessions table
-  function renderTable() {
-    const start = (state.page-1)*state.pageSize;
-    const chunk = state.filtered.slice(start, start+state.pageSize);
-
-    const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
-    $$('#pageInfo').textContent = `Page ${state.page} / ${totalPages}`;
-    $$('#prevBtn').disabled = state.page<=1;
-    $$('#nextBtn').disabled = state.page>=totalPages;
-
-    const tbody = $$('#sessionsTbody');
-    if (!chunk.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="muted">No sessions match the filters.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = chunk.map(s => `
-      <tr class="rowBtn" data-id="${s.id}">
-        <td>${s.date || '—'}</td>
-        <td>${escapeHtml(s.district || s.city || '—')}</td>
-        <td>${escapeHtml(s.spot || '—')}</td>
-        <td class="num">${fmtInt(s.metrics?.farmers)}</td>
-        <td class="num">${fmtInt(s.metrics?.wheatAcres)}</td>
-        <td class="num">${s.metrics?.definitePct ?? '—'}</td>
-        <td class="num">${s.metrics?.awarenessPct ?? '—'}</td>
-        <td class="num">${s.score ?? '—'}</td>
-      </tr>
-    `).join('');
-
-    $$$('tr.rowBtn', tbody).forEach(tr => tr.addEventListener('click', () => {
-      const id = Number(tr.dataset.id);
-      const s = state.sessions.find(x=>x.id===id);
-      if (s) openSession(s);
-    }));
+  function fmtPct(n) {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return '—';
+    return `${Math.round(x)}%`;
   }
 
-  // Media wall
-  function renderMediaWall() {
-    const host = $$('#mediaWall');
-    if(!host) return;
-
-    host.innerHTML = '';
-    for(const s of state.filtered){
-      const card = document.createElement('div');
-      card.className = 'mwCard';
-      card.innerHTML = `
-        <div class="mwStack" data-id="${escapeHtml(String(s.id))}">
-          <img class="mwImg" id="mwImg-${escapeHtml(String(s.id))}" alt="" loading="lazy" src="${escapeHtml(resolveUrl('assets/placeholder.svg'))}"/>
-          <img class="mwImg mwAlt" id="mwAlt-${escapeHtml(String(s.id))}" alt="" loading="lazy" src="${escapeHtml(resolveUrl('assets/placeholder.svg'))}" style="opacity:0"/>
-          <video class="mwVid" id="mwVid-${escapeHtml(String(s.id))}" muted playsinline loop preload="metadata" style="opacity:0"></video>
-          <div class="mwBadge">${escapeHtml(s.location?.district || s.location?.city || 'Session')}</div>
-        </div>
-        <div class="mwMeta">
-          <div class="mwTitle">Session ${escapeHtml(String(s.id))} • ${escapeHtml(s.date || '')}</div>
-          <div class="mwSub">${escapeHtml(fmtInt(s.metrics?.farmers))} farmers • Score ${escapeHtml(String(Math.round(s.score||0)))}/100</div>
-        </div>
-      `;
-      const stack = card.querySelector('.mwStack');
-      stack.addEventListener('click', ()=>openSession(s));
-      host.appendChild(card);
-
-      // hydrate with real media
-      hydrateMediaCard(s);
-    }
+  function parseDateSafe(s) {
+    const t = Date.parse(String(s || ''));
+    if (!Number.isFinite(t)) return null;
+    return new Date(t);
   }
 
-  async function hydrateMediaCard(s){
-    const id = String(s.id);
-    const img = $$('#mwImg-'+id);
-    const alt = $$('#mwAlt-'+id);
-    const vid = $$('#mwVid-'+id);
-    if(!img || !alt || !vid) return;
+  function formatDateHuman(s) {
+    const d = parseDateSafe(s);
+    if (!d) return safeStr(s || '—');
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  }
 
-    const resolved = await resolveSessionMedia(s);
-    const imgs = resolved.items.filter(x=>x.kind==='image').map(x=>x.url);
-    const vids = resolved.items.filter(x=>x.kind==='video').map(x=>x.url);
+  function formatDateInput(s) {
+    const d = parseDateSafe(s);
+    if (!d) return '';
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
-    if(imgs[0]){
-      img.src = resolveUrl(imgs[0]);
-    }
-    if(imgs[1]){
-      alt.src = resolveUrl(imgs[1]);
-      alt.style.opacity = '1';
-    }else{
-      alt.style.display = 'none';
-    }
-    if(vids[0]){
-      vid.src = resolveUrl(vids[0]);
-      vid.style.opacity = '0.0';
-      // Reveal video on hover (desktop) or on tap (mobile)
-      const parent = img.closest('.mwStack');
-      parent.addEventListener('mouseenter', ()=>{ vid.style.opacity='1'; try{vid.play();}catch{} });
-      parent.addEventListener('mouseleave', ()=>{ vid.style.opacity='0'; try{vid.pause();}catch{} });
-      parent.addEventListener('touchstart', ()=>{ vid.style.opacity='1'; try{vid.play();}catch{} }, {passive:true});
-    }else{
-      vid.style.display = 'none';
-    }
-  }  // Map
-  
+  function setStatus(msg, type = 'info') {
+    const el = $$('#statusChip');
+    if (!el) return;
+    el.textContent = `Status: ${msg}`;
+    el.classList.toggle('warnChip', type === 'warn');
+  }
+
+  function getCampaignIdFromUrl() {
+    const qs = new URLSearchParams(location.search);
+    return qs.get('campaign') || '';
+  }
+
+  function setCampaignInUrl(campaignId) {
+    const u = new URL(location.href);
+    u.searchParams.set('campaign', campaignId);
+    // keep hash
+    location.href = u.toString();
+  }
 
   function activeTab() {
     return (location.hash || '#summary').replace(/^#/, '');
   }
 
-  function ensureMapReady() {
-    if (activeTab() !== 'sessions') {
-      state.mapPending = true;
-      return;
+  function sessionTitle(s) {
+    const ref = s.sheetRef ? ` ${s.sheetRef}` : '';
+    const spot = s.spot || s.village || '';
+    const dist = s.district || s.city || '';
+    return `${dist}${spot ? ' • ' + spot : ''}${ref ? ' •' + ref : ''}`.trim();
+  }
+
+  function openInMapsUrl(lat, lng, label) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
+    const q = encodeURIComponent(label || `${lat},${lng}`);
+    return `https://www.google.com/maps?q=${q}&ll=${lat},${lng}`;
+  }
+
+  function aggregateTop(objList, keyFn) {
+    const m = new Map();
+    for (const it of objList) {
+      const k = keyFn(it);
+      if (!k) continue;
+      m.set(k, (m.get(k) || 0) + 1);
     }
-    state.mapPending = false;
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+  }
 
-    if (!state.map) initMap();
+  function renderDonut(el, pct, centerLabel) {
+    if (!el) return;
+    const p = Math.max(0, Math.min(100, Number(pct) || 0));
+    const size = 116;
+    const stroke = 14;
+    const r = (size - stroke) / 2;
+    const c = 2 * Math.PI * r;
+    const off = c * (1 - p / 100);
 
-    if (state.map) {
-      // Leaflet can render blank if initialized while hidden
-      setTimeout(() => {
-        try { state.map.invalidateSize(); } catch (_) {}
-      }, 50);
-      renderMarkers();
-      fitMap();
+    el.innerHTML = `
+      <div style="position:relative;width:${size}px;height:${size}px;">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" stroke="rgba(255,255,255,.14)" stroke-width="${stroke}" fill="none"></circle>
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" stroke="rgba(76,111,255,.95)" stroke-width="${stroke}" fill="none"
+            stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+            transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+          <div style="font-size:22px;font-weight:800;line-height:1;">${Math.round(p)}%</div>
+          <div style="font-size:12px;opacity:.78;">${escapeHtml(centerLabel || '')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function populateCampaignSelect() {
+    const sel = $$('#campaignSelect');
+    if (!sel) return;
+
+    sel.innerHTML = '';
+    for (const c of state.campaigns) {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name || c.id;
+      if (state.campaign && c.id === state.campaign.id) opt.selected = true;
+      sel.appendChild(opt);
+    }
+
+    sel.addEventListener('change', () => {
+      const next = sel.value;
+      if (!next) return;
+      setCampaignInUrl(next);
+    });
+  }
+
+  function populateDistrictSelect() {
+    const sel = $$('#districtSelect');
+    if (!sel) return;
+
+    const districts = Array.from(new Set(state.allSessions.map(s => safeStr(s.district || s.city || '').trim()).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b));
+
+    const current = state.filters.district;
+    sel.innerHTML = '<option value="">All districts</option>';
+    for (const d of districts) {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      if (d === current) opt.selected = true;
+      sel.appendChild(opt);
     }
   }
-function initMap() {
-    const el = $$('#leafletMap');
-    if (!window.L || !el) {
-      const fb = $$('#mapFallback');
-      if (fb) fb.classList.remove('hidden');
-      if (el) el.classList.add('hidden');
-      return;
-    }
 
-    const map = L.map('leafletMap', { zoomControl: false });
-    state.map = map;
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    L.control.zoom({ position:'bottomright' }).addTo(map);
+  function readFiltersFromUI() {
+    state.filters.district = safeStr($$('#districtSelect')?.value || '').trim();
+    state.filters.q = safeStr($$('#searchInput')?.value || '').trim();
+    state.filters.from = safeStr($$('#fromDate')?.value || '').trim();
+    state.filters.to = safeStr($$('#toDate')?.value || '').trim();
+  }
 
-    // Delegate popup button clicks
-    map.getContainer().addEventListener('click', (ev)=>{
-      const btn = ev.target && ev.target.closest ? ev.target.closest('.popupBtn') : null;
-      if(!btn) return;
-      const id = btn.getAttribute('data-session');
-      const s = (state.filtered||[]).find(x=>String(x.id)===String(id)) || (state.sessions||[]).find(x=>String(x.id)===String(id));
-      if(s) openSession(s);
+  function resetFiltersUI() {
+    const districtSelect = $$('#districtSelect');
+    if (districtSelect) districtSelect.value = '';
+    const q = $$('#searchInput');
+    if (q) q.value = '';
+    const from = $$('#fromDate');
+    if (from) from.value = '';
+    const to = $$('#toDate');
+    if (to) to.value = '';
+
+    state.filters = { district: '', q: '', from: '', to: '' };
+  }
+
+  function applyFilters(resetPage = false) {
+    if (resetPage) state.page = 1;
+
+    const q = state.filters.q.toLowerCase();
+    const district = state.filters.district.toLowerCase();
+    const from = state.filters.from ? Date.parse(state.filters.from) : null;
+    const to = state.filters.to ? Date.parse(state.filters.to) : null;
+
+    const filtered = state.allSessions.filter(s => {
+      const d = safeStr(s.district || s.city || '').toLowerCase();
+      if (district && d !== district) return false;
+
+      if (q) {
+        const hay = [
+          s.sheetRef, s.spot, s.village, s.district, s.city,
+          s.host?.name, s.salesRep?.name, s.dealer?.nearest, s.dealer?.name
+        ].map(safeStr).join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+
+      const dt = Date.parse(s.date || '');
+      if (Number.isFinite(from) && Number.isFinite(dt) && dt < from) return false;
+      if (Number.isFinite(to) && Number.isFinite(dt) && dt > to) return false;
+
+      return true;
     });
 
-    renderMarkers();
-    fitMap();
+    // Sort newest first
+    filtered.sort((a, b) => Date.parse(b.date || '') - Date.parse(a.date || ''));
+
+    state.filteredSessions = filtered;
+
+    renderSelectionChip();
+    renderSummary();
+    renderSessionsTable();
+    updateMapData();
+
+    if (state.mediaPreviewsEnabled) renderMediaWall(true);
   }
 
-  function markerColor(score) {
-    if (typeof score !== 'number') return '#4c6fff';
-    if (score >= 80) return '#22c55e';
-    if (score >= 65) return '#f59e0b';
-    return '#ef4444';
+  function renderSelectionChip() {
+    const el = $$('#selectionChip');
+    if (!el) return;
+
+    const parts = [];
+    if (state.filters.district) parts.push(state.filters.district);
+    if (state.filters.q) parts.push(`search: ${state.filters.q}`);
+    if (state.filters.from) parts.push(`from ${state.filters.from}`);
+    if (state.filters.to) parts.push(`to ${state.filters.to}`);
+    el.textContent = parts.length ? `Filter: ${parts.join(' • ')}` : 'Filter: none';
   }
 
-  function renderMarkers() {
-    if (!state.map || !window.L) return;
-    // clear
-    state.markers.forEach(m => { try{ m.remove(); } catch{} });
-    state.markers = [];
+  function renderSummary() {
+    const ss = state.filteredSessions;
 
-    for (const s of state.filtered) {
-      const lat = s.geo?.lat, lng = s.geo?.lng;
-      if (typeof lat !== 'number' || typeof lng !== 'number') continue;
-      const acres = s.metrics?.wheatAcres || 0;
-      const radius = clamp(Math.sqrt(acres||0) * 1.6, 6, 26);
-      const col = markerColor(s.score);
-      const marker = L.circleMarker([lat,lng], {
-        radius,
-        color: col,
-        weight: 2,
-        fillColor: col,
-        fillOpacity: 0.55
-      }).addTo(state.map);
+    const totalSessions = ss.length;
+    const totalFarmers = ss.reduce((a, s) => a + (Number(s.metrics?.farmers) || 0), 0);
+    const totalAcres = ss.reduce((a, s) => a + (Number(s.metrics?.wheatAcres) || Number(s.metrics?.acres) || 0), 0);
+    const avgScore = ss.length ? (ss.reduce((a, s) => a + (Number(s.score) || 0), 0) / ss.length) : 0;
 
-      const district = s.location?.district || s.location?.city || '—';
-      const farmers = s.metrics?.farmers || 0;
-      const score = Math.round(s.score || 0);
+    $$('#sSessions') && ($$('#sSessions').textContent = fmtInt(totalSessions));
+    $$('#sFarmers') && ($$('#sFarmers').textContent = fmtInt(totalFarmers));
+    $$('#sAcres') && ($$('#sAcres').textContent = fmtInt(totalAcres));
+    $$('#sScore') && ($$('#sScore').textContent = ss.length ? `${avgScore.toFixed(1)}` : '—');
 
-      const popupHtml = `
-        <div class="mapPopup">
-          <div class="mpTitle">${escapeHtml(district)} <span class="mpMeta">• Session ${escapeHtml(String(s.id||''))}</span></div>
-          <div class="mpRow">
-            <span>Farmers</span><strong>${escapeHtml(String(farmers))}</strong>
-            <span style="margin-left:10px">Score</span><strong>${escapeHtml(String(score))}</strong>
-          </div>
-          <button class="popupBtn" data-session="${escapeHtml(String(s.id))}">View session details</button>
-        </div>
+    // Donuts (average %)
+    const avgAwareness = ss.length ? (ss.reduce((a, s) => a + (Number(s.metrics?.awarenessPct) || 0), 0) / ss.length) : 0;
+    const avgDefinite = ss.length ? (ss.reduce((a, s) => a + (Number(s.metrics?.definitePct) || 0), 0) / ss.length) : 0;
+    // Understanding: map scale 1-5 -> percent
+    const avgUnderstandingRaw = ss.length ? (ss.reduce((a, s) => a + (Number(s.metrics?.avgUnderstanding) || 0), 0) / ss.length) : 0;
+    const avgUnderstanding = Math.max(0, Math.min(100, (avgUnderstandingRaw / 5) * 100));
+
+    renderDonut($$('#donutIntent'), avgDefinite, 'avg definite');
+    $$('#metaIntent') && ($$('#metaIntent').textContent = `${fmtPct(avgDefinite)} average definite intent`);
+
+    renderDonut($$('#donutAwareness'), avgAwareness, 'avg aware');
+    $$('#metaAwareness') && ($$('#metaAwareness').textContent = `${fmtPct(avgAwareness)} average awareness`);
+
+    renderDonut($$('#donutUnderstanding'), avgUnderstanding, 'avg (1–5)');
+    $$('#metaUnderstanding') && ($$('#metaUnderstanding').textContent = `${avgUnderstandingRaw ? avgUnderstandingRaw.toFixed(1) : '—'} / 5 average understanding`);
+
+    // Coverage: estimated buctril acres over wheat acres
+    const est = ss.reduce((a, s) => a + (Number(s.metrics?.estimatedBuctrilAcres) || 0), 0);
+    const cov = totalAcres ? (est / totalAcres) * 100 : 0;
+    renderDonut($$('#donutCoverage'), cov, 'est share');
+    $$('#metaCoverage') && ($$('#metaCoverage').textContent = `${fmtPct(cov)} estimated coverage share`);
+
+    // Top reasons
+    const topUse = aggregateTop(ss, s => safeStr(s.topReasonUse || '').trim());
+    const topNot = aggregateTop(ss, s => safeStr(s.topReasonNotUse || '').trim());
+    const topComp = aggregateTop(ss, s => safeStr(s.competitors || '').trim());
+
+    $$('#topUse') && ($$('#topUse').textContent = topUse.length ? `${topUse[0][0]} (${topUse[0][1]})` : '—');
+    $$('#topNotUse') && ($$('#topNotUse').textContent = topNot.length ? `${topNot[0][0]} (${topNot[0][1]})` : '—');
+    $$('#topCompetitors') && ($$('#topCompetitors').textContent = topComp.length ? `${topComp[0][0]} (${topComp[0][1]})` : '—');
+
+    // Date range
+    const dates = ss.map(s => Date.parse(s.date || '')).filter(Number.isFinite).sort((a, b) => a - b);
+    const range = dates.length ? `${formatDateHuman(new Date(dates[0]).toISOString().slice(0,10))} → ${formatDateHuman(new Date(dates[dates.length - 1]).toISOString().slice(0,10))}` : '—';
+    $$('#range') && ($$('#range').textContent = range);
+  }
+
+  function renderSessionsTable() {
+    const tbody = $$('#sessionsTbody');
+    if (!tbody) return;
+
+    const ss = state.filteredSessions;
+    const totalPages = Math.max(1, Math.ceil(ss.length / state.pageSize));
+    state.page = Math.min(state.page, totalPages);
+
+    const start = (state.page - 1) * state.pageSize;
+    const pageItems = ss.slice(start, start + state.pageSize);
+
+    tbody.innerHTML = '';
+    for (const s of pageItems) {
+      const tr = document.createElement('tr');
+      tr.tabIndex = 0;
+      tr.innerHTML = `
+        <td>${escapeHtml(s.sheetRef || '')}</td>
+        <td>${escapeHtml(formatDateHuman(s.date))}</td>
+        <td>${escapeHtml(s.district || s.city || '')}</td>
+        <td>${escapeHtml(s.spot || s.village || '')}</td>
+        <td class="num">${escapeHtml(fmtInt(s.metrics?.farmers))}</td>
+        <td class="num">${escapeHtml(fmtInt(s.metrics?.wheatAcres))}</td>
+        <td class="num">${escapeHtml(fmtPct(s.metrics?.awarenessPct))}</td>
+        <td class="num">${escapeHtml(fmtPct(s.metrics?.definitePct))}</td>
+        <td class="num">${escapeHtml((Number(s.score) || 0).toFixed(1))}</td>
       `;
-      marker.bindPopup(popupHtml, { closeButton:true, autoPan:true });
-
-      marker.on('click', () => {
-        openSession(s);
-        try{ marker.openPopup(); }catch{}
-        // Ensure session panel is visible on small screens
-        const drawer = $$('#drawer');
-        drawer?.scrollIntoView({behavior:'smooth', block:'start'});
-      });
-
-      state.markers.push(marker);
+      tr.addEventListener('click', () => openSession(s));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter') openSession(s); });
+      tbody.appendChild(tr);
     }
+
+    $$('#pageInfo') && ($$('#pageInfo').textContent = `Page ${state.page} / ${totalPages}`);
+    $$('#prevBtn') && ($$('#prevBtn').disabled = state.page <= 1);
+    $$('#nextBtn') && ($$('#nextBtn').disabled = state.page >= totalPages);
   }
 
-  function fitMap() {
-    if (!state.map || !state.markers.length) return;
-    const g = L.featureGroup(state.markers);
-    state.map.fitBounds(g.getBounds().pad(0.2));
-  }
-
-  
-  async function resolveSessionMedia(s) {
-    const base = (state.media && state.media.galleryBase) ? String(state.media.galleryBase).replace(/^\/+/, '') : 'assets/gallery/';
-    const id = String(s.id || '').trim();
-    const dedupe = (arr) => Array.from(new Set(arr.filter(Boolean)));
-
-    const normalize = (u) => {
-      const raw = String(u || '').trim();
-      if (!raw) return '';
-      if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
-      const rel = raw.replace(/^\/+/, '');
-      if (rel.startsWith('assets/') || rel.startsWith('data/')) return rel;
-      if (base && rel.startsWith(base)) return rel;
-
-      // sessions.json often stores "gallery/..." while galleryBase already points to "assets/gallery/"
-      if (rel.startsWith('gallery/')) return base + rel.replace(/^gallery\//, '');
-
-      // filename-only or other relative path: treat as relative to galleryBase
-      return base + rel;
-    };
-
-    const imgCandidates = dedupe([
-      ...((s.media?.images || []).map(normalize)),
-      `${base}${id}.jpeg`, `${base}${id}a.jpeg`,
-      `${base}${id}.jpg`, `${base}${id}a.jpg`,
-      `${base}${id}.png`, `${base}${id}a.png`
-    ]);
-    const vidCandidates = dedupe([
-      ...((s.media?.videos || []).map(normalize)),
-      `${base}${id}.mp4`, `${base}${id}a.mp4`
-    ]);
-
-    const images = [];
-    for (const u of imgCandidates) { if (await assetExists(u)) images.push(u); }
-    const videos = [];
-    for (const u of vidCandidates) { if (await assetExists(u)) videos.push(u); }
-
-    const items = [
-      ...videos.map(url => ({ kind: 'video', url })),
-      ...images.map(url => ({ kind: 'image', url }))
+  function downloadCsv() {
+    const ss = state.filteredSessions;
+    const cols = [
+      ['sheetRef', 'sheetRef'],
+      ['date', 'date'],
+      ['district', 'district'],
+      ['spot', 'spot'],
+      ['farmers', s => s.metrics?.farmers],
+      ['wheatAcres', s => s.metrics?.wheatAcres],
+      ['awarenessPct', s => s.metrics?.awarenessPct],
+      ['definitePct', s => s.metrics?.definitePct],
+      ['score', 'score']
     ];
 
-    return { items, images, videos };
+    const lines = [];
+    lines.push(cols.map(c => `"${c[0]}"`).join(','));
+    for (const s of ss) {
+      const row = cols.map(([_, getter]) => {
+        const v = (typeof getter === 'function') ? getter(s) : s[getter];
+        const txt = safeStr(v).replace(/"/g, '""');
+        return `"${txt}"`;
+      }).join(',');
+      lines.push(row);
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const fname = `${state.campaign?.id || 'campaign'}-sessions.csv`;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
   }
 
-// Session drawer
+  function openDrawer() {
+    const drawer = $$('#sessionDrawer');
+    const backdrop = $$('#drawerBackdrop');
+    if (!drawer || !backdrop) return;
+    drawer.classList.remove('hidden');
+    backdrop.classList.remove('hidden');
+    // trigger transition
+    requestAnimationFrame(() => drawer.classList.add('open'));
+  }
+
+  function closeDrawer() {
+    const drawer = $$('#sessionDrawer');
+    const backdrop = $$('#drawerBackdrop');
+    if (!drawer || !backdrop) return;
+    drawer.classList.remove('open');
+    // wait for transition
+    setTimeout(() => {
+      drawer.classList.add('hidden');
+      backdrop.classList.add('hidden');
+    }, 180);
+  }
+
+  async function loadSheetSummary(sheetRef) {
+    const host = $$('#drawerSheet');
+    if (!host) return;
+
+    if (!sheetRef || !state.campaign?.id) {
+      host.innerHTML = '<div class="muted">No sheet reference for this session.</div>';
+      return;
+    }
+
+    host.innerHTML = '<div class="muted">Loading sheet…</div>';
+    try {
+      const sheet = await fetchJson(`data/${state.campaign.id}/sheets/${sheetRef}.json`);
+      const meta = sheet.meta || {};
+      const fb = sheet.feedback || {};
+      const sig = sheet.signatures || {};
+
+      const rows = [];
+      rows.push(['Village', meta.village || meta.spot || '—']);
+      rows.push(['District', meta.district || '—']);
+      rows.push(['Farmers', fmtInt(meta.farmers_present)]);
+      rows.push(['Acres', fmtInt(meta.acres)]);
+      if (fb.host_comment) rows.push(['Host comment', fb.host_comment]);
+      if (fb.manager_note) rows.push(['Manager note', fb.manager_note]);
+
+      const sigHtml = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+          ${sig.host ? `<div><div class="muted" style="margin-bottom:6px;">Host signature</div><img src="${escapeHtml(sig.host)}" alt="Host signature" style="width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.10)"/></div>` : ''}
+          ${sig.sales ? `<div><div class="muted" style="margin-bottom:6px;">Sales signature</div><img src="${escapeHtml(sig.sales)}" alt="Sales signature" style="width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.10)"/></div>` : ''}
+        </div>
+      `;
+
+      host.innerHTML = `
+        ${rows.map(([k, v]) => `<div class="row"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div>`).join('')}
+        ${sigHtml}
+      `;
+    } catch (err) {
+      console.warn('Sheet load failed:', err);
+      host.innerHTML = '<div class="muted">Sheet summary unavailable.</div>';
+    }
+  }
+
+  function sessionMediaItems(s) {
+    const media = s.media || {};
+    const imgs = Array.isArray(media.images) ? media.images : [];
+    const vids = Array.isArray(media.videos) ? media.videos : [];
+    return {
+      images: imgs,
+      videos: vids
+    };
+  }
+
+  function normalizeGalleryPath(p) {
+    const raw = safeStr(p).trim();
+    if (!raw) return '';
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
+
+    // sessions.json stores "gallery/.."
+    if (raw.startsWith('gallery/')) return `assets/${raw}`;
+    // already under assets/
+    if (raw.startsWith('assets/')) return raw;
+    return `assets/gallery/${raw.replace(/^\/+/, '')}`;
+  }
+
+  function renderDrawerMedia(s) {
+    const host = $$('#drawerMedia');
+    if (!host) return;
+
+    const { images, videos } = sessionMediaItems(s);
+    const items = [
+      ...images.map(x => ({ type: 'image', path: x })),
+      ...videos.map(x => ({ type: 'video', path: x }))
+    ];
+
+    if (!items.length) {
+      host.innerHTML = '<div class="muted">No media references for this session.</div>';
+      return;
+    }
+
+    // Do not auto-load missing assets: show filenames and load-on-click
+    host.innerHTML = items.map((it, i) => {
+      const p = normalizeGalleryPath(it.path);
+      const label = it.type === 'video' ? 'Video' : 'Image';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div style="min-width:0;">
+            <div style="font-weight:700;">${label} ${i + 1}</div>
+            <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;">${escapeHtml(it.path)}</div>
+          </div>
+          <button class="btn" data-open-media="${escapeHtml(p)}" data-media-type="${it.type}">Open</button>
+        </div>
+      `;
+    }).join('');
+
+    $$$('[data-open-media]', host).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = btn.getAttribute('data-open-media') || '';
+        const t = btn.getAttribute('data-media-type') || 'image';
+        openLightbox(p, t);
+      });
+    });
+  }
+
   async function openSession(s) {
     state.selected = s;
-    const drawer = $$('#drawer');
-    drawer?.scrollIntoView({behavior:'smooth', block:'nearest'});
 
-    $$('#dTitle').textContent = `${safeStr(s.district||s.location?.district||s.location?.city||'Session')} • ${safeStr(s.date||'')}`;
-    $$('#dSub').textContent = `${safeStr(s.province||s.location?.province||'Pakistan')} • ${fmtInt(s.metrics?.farmers||0)} farmers • ${fmtInt(s.metrics?.acres||s.metrics?.wheatAcres||0)} acres`;
+    $$('#dTitle') && ($$('#dTitle').textContent = sessionTitle(s));
+    $$('#dSub') && ($$('#dSub').textContent = `${formatDateHuman(s.date)} • ${fmtInt(s.metrics?.farmers)} farmers • ${fmtInt(s.metrics?.wheatAcres)} acres`);
 
-    $$('#dHost').textContent = safeStr(s.people?.host || s.host);
-    $$('#dRep').textContent = safeStr(s.people?.rep || s.rep);
-    $$('#dDealer').textContent = safeStr(s.people?.dealer || s.dealer);
+    $$('#dHost') && ($$('#dHost').textContent = `${safeStr(s.host?.name || '')}${s.host?.phone ? ' (' + safeStr(s.host.phone) + ')' : ''}`.trim() || '—');
+    $$('#dRep') && ($$('#dRep').textContent = `${safeStr(s.salesRep?.name || '')}${s.salesRep?.phone ? ' (' + safeStr(s.salesRep.phone) + ')' : ''}`.trim() || '—');
+    $$('#dDealer') && ($$('#dDealer').textContent = `${safeStr(s.dealer?.nearest || s.dealer?.name || '')}${s.dealer?.phone ? ' (' + safeStr(s.dealer.phone) + ')' : ''}`.trim() || '—');
 
-    $$('#dFarmers').textContent = fmtInt(s.metrics?.farmers);
-    $$('#dAcres').textContent = fmtInt(s.metrics?.acres || s.metrics?.wheatAcres);
-    $$('#dAwareness').textContent = fmtPct(s.metrics?.awarenessPct);
-    $$('#dIntent').textContent = fmtPct(s.metrics?.intentPct);
-    $$('#dClarity').textContent = fmtPct(s.metrics?.clarityPct);
-    $$('#dScore').textContent = `${fmtInt(Math.round(s.score||0))}/100`;
+    $$('#dFarmers') && ($$('#dFarmers').textContent = fmtInt(s.metrics?.farmers));
+    $$('#dAcres') && ($$('#dAcres').textContent = fmtInt(s.metrics?.wheatAcres));
+    $$('#dDefinite') && ($$('#dDefinite').textContent = fmtPct(s.metrics?.definitePct));
+    $$('#dScore') && ($$('#dScore').textContent = (Number(s.score) || 0).toFixed(1));
+    $$('#dTopUse') && ($$('#dTopUse').textContent = safeStr(s.topReasonUse || '—'));
+    $$('#dTopNotUse') && ($$('#dTopNotUse').textContent = safeStr(s.topReasonNotUse || '—'));
 
-    // Share / maps
-    const lat = s.geo?.lat, lng = s.geo?.lng;
-    const mapsUrl = (typeof lat==='number' && typeof lng==='number') ? `https://www.google.com/maps?q=${lat},${lng}` : '';
-    const openMaps = $$('#openMapsBtn');
-    if(openMaps){
-      openMaps.disabled = !mapsUrl;
-      openMaps.onclick = ()=>{ if(mapsUrl) window.open(mapsUrl, '_blank'); };
+    // Action buttons
+    const mapsBtn = $$('#openMapsBtn');
+    if (mapsBtn) {
+      const lat = Number(s.geo?.lat);
+      const lng = Number(s.geo?.lng);
+      const link = openInMapsUrl(lat, lng, sessionTitle(s));
+      mapsBtn.disabled = !link;
+      mapsBtn.onclick = () => { if (link) window.open(link, '_blank', 'noopener'); };
     }
+
     const shareBtn = $$('#shareSessionBtn');
-    if(shareBtn){
-      shareBtn.onclick = async ()=> {
-        const u = new URL(window.location.href);
+    if (shareBtn) {
+      shareBtn.onclick = async () => {
+        const u = new URL(location.href);
         u.searchParams.set('campaign', state.campaign?.id || '');
-        u.hash = `session-${s.id}`;
-        await shareUrl(u.toString(), `Session ${s.id} • ${state.campaign?.name||''}`);
+        u.hash = `session-${s.sheetRef || s.id}`;
+        await shareUrl(u.toString(), `Session ${s.sheetRef || s.id}`);
       };
     }
 
-    // Media (only existing files)
-    const mediaHost = $$('#sessionMedia');
-    if(mediaHost){
-      mediaHost.innerHTML = '';
-      const resolved = await resolveSessionMedia(s);
-      if(!resolved.items.length){
-        mediaHost.innerHTML = '<div class="emptyState">No media mapped for this session yet.</div>';
-      }else{
-        for(const it of resolved.items){
-          const tile = document.createElement('button');
-          tile.className = 'mediaTile';
-          tile.type = 'button';
-          tile.innerHTML = (it.kind==='video')
-            ? `<div class="mediaInner"><video muted playsinline preload="metadata" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"></video><div class="tag">VID</div></div>`
-            : `<div class="mediaInner"><img alt="" loading="lazy" src="${escapeHtml(url(it.url.replace(/^\/?/,'') ))}"/><div class="tag">IMG</div></div>`;
-          tile.addEventListener('click', ()=>openLightbox(it));
-          mediaHost.appendChild(tile);
-        }
-      }
+    const openSheetBtn = $$('#openSheetBtn');
+    if (openSheetBtn) {
+      const ref = s.sheetRef || '';
+      openSheetBtn.disabled = !ref;
+      openSheetBtn.onclick = () => {
+        if (!ref) return;
+        const u = new URL('sheets.html', document.baseURI);
+        u.searchParams.set('campaign', state.campaign?.id || '');
+        u.searchParams.set('sheet', ref);
+        window.open(u.toString(), '_blank', 'noopener');
+      };
     }
+
+    renderDrawerMedia(s);
+    await loadSheetSummary(s.sheetRef);
+
+    openDrawer();
   }
 
-  // Feedback
-  function validEmail(s) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s||'').trim());
-  }
-  function validPkPhone(s) {
-    const t = (s||'').replace(/\s+/g,'').trim();
-    return /^(\+?92|0)?3\d{9}$/.test(t);
-  }
+  function openLightbox(assetUrl, type = 'image') {
+    const lb = $$('#lightbox');
+    const body = $$('#lightboxBody');
+    if (!lb || !body) return;
 
-  function feedbackPayload() {
-    const name = $$('#fbName').value.trim();
-    const email = $$('#fbEmail').value.trim();
-    const phone = $$('#fbPhone').value.trim();
-    const text = $$('#fbText').value.trim();
-    const ok = (validEmail(email) || validPkPhone(phone)) && text.length >= 3;
-    return { ok, name, email, phone, text };
-  }
+    state.selectedMediaUrl = assetUrl;
 
-  function buildFeedbackMessage(p) {
-    const sel = $$('#selectionChip').textContent;
-    return [
-      `INTERACT Campaign Feedback`,
-      `Campaign: ${state.campaign?.name||state.campaign?.id||'—'}`,
-      `Selection: ${sel}`,
-      `Name: ${p.name||'—'}`,
-      `Email: ${p.email||'—'}`,
-      `Phone: ${p.phone||'—'}`,
-      ``,
-      p.text
-    ].join('\n');
-  }
-
-  function sendEmailFeedback() {
-    const p = feedbackPayload();
-    if (!p.ok) {
-      alert('Please enter valid email or phone, and write feedback.');
-      return;
+    const safeUrl = escapeHtml(assetUrl);
+    if (type === 'video') {
+      body.innerHTML = `
+        <video controls preload="metadata" style="width:100%;max-height:70vh;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:#000" src="${safeUrl}">
+          Sorry, your browser cannot play this video.
+        </video>
+        <div class="muted" style="margin-top:8px;">If this shows an error or stays blank, the video file is missing on the server.</div>
+      `;
+    } else {
+      body.innerHTML = `
+        <img src="${safeUrl}" alt="Media" style="width:100%;max-height:70vh;object-fit:contain;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:#0b0f19"
+          onerror="this.onerror=null;this.src='assets/placeholder.svg';" />
+        <div class="muted" style="margin-top:8px;">If you see a placeholder, the image file is missing on the server.</div>
+      `;
     }
-    const body = encodeURIComponent(buildFeedbackMessage(p));
-    const subject = encodeURIComponent(`Campaign dashboard feedback — ${state.campaign?.id||''}`);
-    window.location.href = `mailto:interact@paksaf.com?subject=${subject}&body=${body}`;
+
+    lb.classList.remove('hidden');
+    lb.setAttribute('aria-hidden', 'false');
   }
 
-  function sendWhatsAppFeedback() {
-    const p = feedbackPayload();
-    if (!p.ok) {
-      alert('Please enter valid email or phone, and write feedback.');
-      return;
-    }
-    const msg = encodeURIComponent(buildFeedbackMessage(p));
-    window.open(`https://wa.me/923303570463?text=${msg}`, '_blank');
+  function closeLightbox() {
+    const lb = $$('#lightbox');
+    const body = $$('#lightboxBody');
+    if (!lb || !body) return;
+    lb.classList.add('hidden');
+    lb.setAttribute('aria-hidden', 'true');
+    body.innerHTML = '';
+    state.selectedMediaUrl = null;
   }
 
-  async function boot() {
-    try{
-      setStatus('loading campaigns…');
-      let reg = null;
+  async function shareUrl(u, title) {
+    const urlToShare = safeStr(u);
+    if (!urlToShare) return;
+
+    if (navigator.share) {
       try {
-        // Robustly resolve campaigns index (repo layout has changed a few times)
-        const candidates = [url('data/campaigns.json'), url('campaigns.json')];
-        for (const cUrl of candidates) {
-          reg = await fetchJson(cUrl);
-          if (reg && (Array.isArray(reg) || Array.isArray(reg.campaigns))) break;
-          reg = null;
-        }
-      } catch (e) {
-        console.warn('campaigns index missing; using fallback', e);
-        reg = null;
+        await navigator.share({ title: title || 'INTERACT Campaign', url: urlToShare });
+        return;
+      } catch (err) {
+        // cancelled
       }
-      state.campaigns = (reg && reg.campaigns) ? reg.campaigns : [];
-      if (!state.campaigns.length) {
-        const fallbackId = getCampaignFromQuery() || 'buctril-super-2025';
-        state.campaigns = [{
-          id: fallbackId,
-          title: fallbackId.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()),
-          subtitle: 'Campaign insights for brand management • INTERACT',
-          sessionsUrl: `data/${fallbackId}/sessions.json`,
-          peopleUrl: `data/${fallbackId}/people.json`,
-          farmersUrl: `data/${fallbackId}/farmers.json`,
-          mediaUrl: `data/${fallbackId}/media.json`,
-          sheetsIndexUrl: `data/${fallbackId}/sheets/sheets_index.json`,
-          branding: { logoUrl: 'assets/bayer.svg' }
-        }];
-      }
-      const cs = $$('#campaignSelect');
-      cs.innerHTML = state.campaigns.map(c => `<option value="${c.id}">${escapeHtml(c.name||c.id)}</option>`).join('');
+    }
+    try {
+      await navigator.clipboard.writeText(urlToShare);
+      alert('Link copied to clipboard.');
+    } catch (err) {
+      prompt('Copy this link:', urlToShare);
+    }
+  }
 
-      const wanted = getCampaignFromQuery();
-      const chosen = state.campaigns.find(c=>c.id===wanted) || state.campaigns[0];
-      if (!chosen) throw new Error('No campaigns defined');
-      cs.value = chosen.id;
-      setQueryCampaign(chosen.id);
+  
+  function renderMediaWall(force = false) {
+    const host = $$('#mediaWall');
+    if (!host) return;
 
-      cs.addEventListener('change', async () => {
-        const id = cs.value;
-        const c = state.campaigns.find(x=>x.id===id);
-        if (c) {
-          setQueryCampaign(c.id);
-          await loadCampaign(c);
+    const ss = state.filteredSessions;
+
+    const counts = ss.reduce((acc, s) => {
+      const m = sessionMediaItems(s);
+      acc.sessions += 1;
+      acc.images += m.images.length;
+      acc.videos += m.videos.length;
+      return acc;
+    }, { sessions: 0, images: 0, videos: 0 });
+
+    $$('#mSessions') && ($$('#mSessions').textContent = `${counts.sessions} Sessions`);
+    $$('#mImages') && ($$('#mImages').textContent = `${counts.images} Images`);
+    $$('#mVideos') && ($$('#mVideos').textContent = `${counts.videos} Videos`);
+
+    const hint = $$('#mediaHint');
+    if (hint) {
+      hint.textContent = state.mediaPreviewsEnabled
+        ? 'Previews enabled. If you see 404 errors, deploy your media under assets/gallery/ using the same filenames as sessions.json.'
+        : 'Previews are off to avoid 404 spam. Click “Load media previews” to try thumbnails (requires media files deployed under assets/gallery/).';
+    }
+
+    // Lightweight cards: no automatic <video> loads. Images are optional (behind a toggle).
+    host.innerHTML = ss.map(s => {
+      const m = sessionMediaItems(s);
+      const imageCount = m.images.length;
+      const videoCount = m.videos.length;
+      const thumb = (state.mediaPreviewsEnabled && m.images[0]) ? normalizeGalleryPath(m.images[0]) : 'assets/placeholder.svg';
+
+      return `
+        <div class="mediaCard" data-open-session="${escapeHtml(s.sheetRef || s.id)}" role="button" tabindex="0">
+          <div class="mediaThumb" style="background-image:url('${escapeHtml(thumb)}');background-size:cover;background-position:center;display:flex;align-items:flex-end;justify-content:flex-start;">
+            <div style="width:100%;padding:10px;background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));border-radius:16px;">
+              <div style="font-size:20px;font-weight:900;">${escapeHtml(s.sheetRef || '')}</div>
+              <div class="muted">${escapeHtml(formatDateHuman(s.date))}</div>
+            </div>
+          </div>
+          <div class="mediaMeta">
+            <div class="mediaTitle">${escapeHtml(s.district || s.city || '')}</div>
+            <div class="muted">${escapeHtml(s.spot || s.village || '')}</div>
+            <div class="muted">${imageCount} images • ${videoCount} videos</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    $$$('.mediaCard[data-open-session]', host).forEach(card => {
+      const open = () => {
+        const ref = card.getAttribute('data-open-session');
+        const s = state.filteredSessions.find(x => safeStr(x.sheetRef || x.id) === safeStr(ref));
+        if (s) openSession(s);
+      };
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
+    });
+  }
+
+
+  // --- Map ---
+  function initMap() {
+    const el = $$('#leafletMap');
+    const fb = $$('#mapFallback');
+    if (!el) return;
+
+    if (!window.L) {
+      fb && fb.classList.remove('hidden');
+      el.classList.add('hidden');
+      renderMapListFallback();
+      return;
+    }
+
+    fb && fb.classList.add('hidden');
+    el.classList.remove('hidden');
+
+    if (state.map) return; // already
+
+    const map = window.L.map(el, { zoomControl: false });
+    state.map = map;
+    state.markerLayer = window.L.layerGroup().addTo(map);
+
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    window.L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Click handling for marker popup buttons (if any in future)
+    updateMapData();
+  }
+
+  function updateMapData() {
+    if (activeTab() === 'map') {
+      if (!state.map) initMap();
+    }
+    if (!state.map || !state.markerLayer || !window.L) {
+      renderMapListFallback();
+      return;
+    }
+
+    state.markerLayer.clearLayers();
+    const points = [];
+
+    for (const s of state.filteredSessions) {
+      const lat = Number(s.geo?.lat);
+      const lng = Number(s.geo?.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+      points.push([lat, lng]);
+
+      const marker = window.L.circleMarker([lat, lng], {
+        radius: 7,
+        weight: 2,
+        fillOpacity: 0.8
+      });
+
+      const html = `
+        <div style="min-width:220px">
+          <div style="font-weight:900;margin-bottom:4px;">${escapeHtml(s.sheetRef || '')} • ${escapeHtml(s.district || '')}</div>
+          <div style="margin-bottom:6px;">${escapeHtml(s.spot || s.village || '')}</div>
+          <div class="muted" style="margin-bottom:6px;">${escapeHtml(formatDateHuman(s.date))} • ${escapeHtml(fmtInt(s.metrics?.farmers))} farmers</div>
+          <button class="btn" data-open-session="${escapeHtml(s.sheetRef || s.id)}" style="width:100%;">Open session</button>
+        </div>
+      `;
+      marker.bindPopup(html);
+
+      marker.on('popupopen', (ev) => {
+        const container = ev.popup.getElement();
+        if (!container) return;
+        const btn = container.querySelector('[data-open-session]');
+        if (btn) {
+          btn.addEventListener('click', () => openSession(s));
         }
       });
 
-      await loadCampaign(chosen);
-      wireUi();
-      setStatus('ready');
-    }catch(e){
-      console.error(e);
-      setStatus(`error: ${e.message || e}`, 'warn');
-      // leave UI usable but show hint
-      fatalError(e);
-    }
-  }
-
-  async function loadCampaign(c) {
-    state.campaign = c;
-    setStatus(`loading ${c.id}…`);
-    // load media first (for header/bg)
-    state.media = await fetchJson(url(c.mediaUrl));
-    await initBgVideo(state.media);
-    try { renderHero(state.media || {}); } catch (err) { console.warn("Hero render failed:", err); }
-    await renderFooterBrands(state.media);
-
-    const payload = await fetchJson(url(c.sessionsUrl));
-    state.sessions = payload.sessions || payload || [];
-    rebuildDistrictOptions();
-    // Ensure date range defaults to actual session window (prevents locale parsing issues)
-    try {
-      const dates = state.sessions
-        .map(s => parseDateSafe(s.date || s.Date || s.session_date || s.SessionDate))
-        .filter(d => d && !Number.isNaN(d.getTime()))
-        .sort((a,b)=>a-b);
-      if (dates.length) {
-        const min = dates[0];
-        const max = dates[dates.length-1];
-        const fromEl = $$('#fromDate');
-        const toEl = $$('#toDate');
-        const curFrom = parseDateSafe(fromEl.value);
-        const curTo = parseDateSafe(toEl.value);
-        // if empty/invalid or wildly off (> 7 days outside), reset
-        const tooOff = (d, ref) => !d || Number.isNaN(d.getTime()) || Math.abs(d - ref) > 7*24*3600*1000;
-        if (tooOff(curFrom, min)) fromEl.value = formatDateInput(min);
-        if (tooOff(curTo, max)) toEl.value = formatDateInput(max);
-      }
-    } catch (e) {
-      console.warn('date-range-init failed', e);
+      marker.addTo(state.markerLayer);
     }
 
-    // default district all
-    $$('#districtSelect').value = 'ALL';
-
-    filterSessions();
-    updateKPIs();
-    renderTable();
-    renderMediaWall();
-
-    // map
-    if (!state.map) {
-      initMap();
+    // Fit map
+    if (points.length) {
+      try {
+        state.map.fitBounds(points, { padding: [24, 24] });
+      } catch (_) {}
     } else {
-      renderMarkers();
-      fitMap();
+      try { state.map.setView([30.0, 70.0], 5); } catch (_) {}
     }
-    setStatus('loaded');
   }
 
-  function wireUi() {
-    $$('#applyBtn').addEventListener('click', () => {
-      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
-    });
-    $$('#resetBtn').addEventListener('click', () => {
-      $$('#districtSelect').value = 'ALL';
-      $$('#searchInput').value = '';
-      $$('#fromDate').value = '';
-      $$('#toDate').value = '';
-      filterSessions(); updateKPIs(); renderTable(); renderMediaWall(); renderMarkers(); fitMap();
-    });
-    $$('#exportBtn').addEventListener('click', () => {
-      if (!state.filtered.length) { alert('Nothing to export for current filters.'); return; }
-      exportCsv();
-    });
+  function renderMapListFallback() {
+    const host = $$('#mapList');
+    if (!host) return;
 
-    $$('#prevBtn').addEventListener('click', () => { if (state.page>1){ state.page--; renderTable(); } });
-    $$('#nextBtn').addEventListener('click', () => {
-      const totalPages = Math.max(1, Math.ceil(state.filtered.length/state.pageSize));
-      if (state.page<totalPages){ state.page++; renderTable(); }
-    });
+    const rows = state.filteredSessions
+      .filter(s => Number.isFinite(Number(s.geo?.lat)) && Number.isFinite(Number(s.geo?.lng)))
+      .slice(0, 20)
+      .map(s => {
+        const lat = Number(s.geo?.lat);
+        const lng = Number(s.geo?.lng);
+        const link = openInMapsUrl(lat, lng, sessionTitle(s));
+        const label = `${safeStr(s.sheetRef || '')} • ${safeStr(s.district || '')} • ${safeStr(s.spot || s.village || '')}`;
+        return `<a href="${escapeHtml(link)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+      })
+      .join('');
 
-    $$('#fitBtn').addEventListener('click', fitMap);
-    $$('#mapResetBtn').addEventListener('click', () => { renderMarkers(); fitMap(); });
+    host.innerHTML = rows || '<div class="muted">No geo points available in the current filter.</div>';
+  }
 
-    $$('#drawerClose').addEventListener('click', () => $$('#sessionDrawer').classList.add('hidden'));
-    $$('#openMapsBtn').addEventListener('click', () => {
-      const s = state.selected;
-      if (!s) return;
-      const lat = s.geo?.lat, lng = s.geo?.lng;
-      if (typeof lat === 'number' && typeof lng === 'number') {
-        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
-      } else {
-        alert('No coordinates available for this session.');
-      }
-    });
-    $$('#shareSessionBtn').addEventListener('click', async () => {
-      const s = state.selected;
-      if (!s) return;
-      const u = new URL(window.location.href);
-      u.searchParams.set('campaign', state.campaign?.id || '');
-      u.hash = `session-${s.id}`;
-      await shareUrl(u.toString(), `Session ${s.id} • ${state.campaign?.name||''}`);
-    });
+  // --- Bindings ---
+  function bindUI() {
+    // Filters
+    $$('#applyBtn')?.addEventListener('click', () => { readFiltersFromUI(); applyFilters(true); });
+    $$('#resetBtn')?.addEventListener('click', () => { resetFiltersUI(); applyFilters(true); });
+    $$('#exportBtn')?.addEventListener('click', downloadCsv);
 
-    // lightbox
-    $$('#lightboxClose').addEventListener('click', closeLightbox);
-    $$('#lightbox').addEventListener('click', (e) => { if (e.target.id==='lightbox') closeLightbox(); });
-    document.addEventListener('keydown', (e) => { if (e.key==='Escape') closeLightbox(); });
+    // Pagination
+    $$('#prevBtn')?.addEventListener('click', () => { state.page = Math.max(1, state.page - 1); renderSessionsTable(); });
+    $$('#nextBtn')?.addEventListener('click', () => { state.page += 1; renderSessionsTable(); });
 
-    $$('#shareMediaBtn').addEventListener('click', () => {
+    // Drawer close
+    $$('#drawerClose')?.addEventListener('click', closeDrawer);
+    $$('#drawerBackdrop')?.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeLightbox(); } });
+
+    // Lightbox close
+    $$('#lightboxClose')?.addEventListener('click', closeLightbox);
+    $$('#lightbox')?.addEventListener('click', (e) => { if (e.target && e.target.id === 'lightbox') closeLightbox(); });
+
+    $$('#shareMediaBtn')?.addEventListener('click', () => {
       if (!state.selectedMediaUrl) return;
       shareUrl(state.selectedMediaUrl, 'Campaign media');
     });
-    $$('#copyLinkBtn').addEventListener('click', async () => {
+    $$('#copyLinkBtn')?.addEventListener('click', async () => {
       if (!state.selectedMediaUrl) return;
-      try{ await navigator.clipboard.writeText(state.selectedMediaUrl); alert('Link copied.'); }
-      catch{ prompt('Copy link:', state.selectedMediaUrl); }
+      try { await navigator.clipboard.writeText(state.selectedMediaUrl); alert('Link copied.'); }
+      catch { prompt('Copy link:', state.selectedMediaUrl); }
     });
 
-    // feedback
-    $$('#emailFeedbackBtn').addEventListener('click', sendEmailFeedback);
-    $$('#waFeedbackBtn').addEventListener('click', sendWhatsAppFeedback);
-  
+    // Media previews toggle
+    $$('#loadMediaBtn')?.addEventListener('click', () => {
+      state.mediaPreviewsEnabled = true;
+      renderMediaWall(true);
+    });
 
-    // Ensure map renders correctly when the Sessions tab becomes visible
+    // Map buttons
+    $$('#fitBtn')?.addEventListener('click', () => {
+      if (state.map) updateMapData();
+    });
+    $$('#mapResetBtn')?.addEventListener('click', () => {
+      state.filters = { ...state.filters, district: '', q: '', from: '', to: '' };
+      resetFiltersUI();
+      applyFilters(true);
+    });
+
+    // Tab changes: initialize map when entering map tab
     window.addEventListener('hashchange', () => {
-      if (activeTab() === 'sessions') ensureMapReady();
+      if (activeTab() === 'map') initMap();
+      // If hash indicates a session: #session-D1S1 or #session-1
+      const h = activeTab();
+      if (h.startsWith('session-')) {
+        const ref = h.replace(/^session-/, '');
+        const s = state.filteredSessions.find(x => safeStr(x.sheetRef) === ref || safeStr(x.id) === ref);
+        if (s) openSession(s);
+      }
     });
 
-    // If the page loads directly into Sessions, initialize after bindings
-    if (activeTab() === 'sessions') ensureMapReady();
-}
+    if (activeTab() === 'map') initMap();
+  }
+
+  async function loadCampaign(c) {
+    setStatus('loading campaign…');
+    const sessionsDoc = await fetchJson(c.sessionsUrl);
+    state.allSessions = Array.isArray(sessionsDoc.sessions) ? sessionsDoc.sessions : [];
+    state.filteredSessions = state.allSessions.slice();
+
+    // Prefill default date range inputs
+    const dates = state.allSessions.map(s => Date.parse(s.date || '')).filter(Number.isFinite).sort((a, b) => a - b);
+    if (dates.length) {
+      const from = formatDateInput(new Date(dates[0]).toISOString().slice(0, 10));
+      const to = formatDateInput(new Date(dates[dates.length - 1]).toISOString().slice(0, 10));
+      // Only set if empty
+      if ($$('#fromDate') && !$$('#fromDate').value) $$('#fromDate').value = from;
+      if ($$('#toDate') && !$$('#toDate').value) $$('#toDate').value = to;
+    }
+
+    // media cfg (optional)
+    try { state.mediaCfg = await fetchJson(c.mediaUrl); } catch (_) { state.mediaCfg = null; }
+
+    // sheets index (optional)
+    try { state.sheetsIndex = await fetchJson(c.sheetsIndexUrl); } catch (_) { state.sheetsIndex = null; }
+
+    populateDistrictSelect();
+  }
+
+  async function boot() {
+    try {
+      setStatus('starting…');
+      const campaignsDoc = await fetchJson('data/campaigns.json');
+      state.campaigns = Array.isArray(campaignsDoc.campaigns) ? campaignsDoc.campaigns : [];
+      const cid = getCampaignIdFromUrl() || state.campaigns[0]?.id;
+      state.campaign = state.campaigns.find(x => x.id === cid) || state.campaigns[0];
+
+      if (!state.campaign) {
+        setStatus('no campaigns found', 'warn');
+        return;
+      }
+
+      populateCampaignSelect();
+      await loadCampaign(state.campaign);
+      bindUI();
+      applyFilters(true);
+      renderMediaWall(true); // lightweight view, still no auto-load
+      setStatus('ready');
+    } catch (err) {
+      console.error(err);
+      setStatus('failed to load', 'warn');
+      const host = $$('#mediaWall');
+      if (host) host.innerHTML = `<div class="warn">Failed to load data. ${escapeHtml(err.message || err)}</div>`;
+    }
+  }
 
   boot();
-})()
-function formatDateInput(d) {
-    const dt = (d instanceof Date) ? d : parseDateSafe(d);
-    if (!dt || Number.isNaN(dt.getTime())) return '';
-    const yyyy = dt.getFullYear();
-    const mm = String(dt.getMonth() + 1).padStart(2, '0');
-    const dd = String(dt.getDate()).padStart(2, '0');
-    // HTML date inputs require YYYY-MM-DD
-    return `${yyyy}-${mm}-${dd}`;
-  }
-;
+})();

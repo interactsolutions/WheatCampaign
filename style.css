@@ -405,3 +405,76 @@ body{
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+
+/* --- Overlay session drawer (v3) --- */
+.drawerBackdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(2px);
+  z-index: 60;
+}
+.drawerOverlay{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(420px, 92vw);
+  background: rgba(10,14,22,.96);
+  border-left: 1px solid rgba(255,255,255,.08);
+  z-index: 70;
+  overflow: auto;
+  transform: translateX(102%);
+  transition: transform .18s ease-out;
+  box-shadow: -18px 0 42px rgba(0,0,0,.45);
+}
+.drawerOverlay.open{
+  transform: translateX(0);
+}
+.drawerOverlay .drawerTop{
+  position: sticky;
+  top: 0;
+  background: rgba(10,14,22,.96);
+  backdrop-filter: blur(6px);
+  z-index: 2;
+}
+.drawerSheet{
+  margin: 10px 0 16px 0;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255,255,255,.18);
+}
+.drawerSheet .row{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.drawerSheet .row:last-child{ border-bottom: none; }
+.drawerSheet .k{ color: rgba(255,255,255,.72); }
+.drawerSheet .v{ color: rgba(255,255,255,.92); text-align:right; }
+.mapList{
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+.mapList a{
+  display:block;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.92);
+}
+.mapList a:hover{ background: rgba(255,255,255,.07); }
+.mediaLoadRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  margin: 8px 0 12px 0;
+}
+@media (max-width: 860px){
+  .drawerOverlay{ width: 100vw; }
+}

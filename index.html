@@ -7,7 +7,7 @@
   <title>INTERACT • Campaign Dashboard</title>
   <link rel="stylesheet" href="style.css"/>
   <!-- Leaflet (map) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';">
 </head>
 <body>
   <div class="bg">
@@ -150,7 +150,7 @@
       </section>
     </section>
 
-    <section class="card mapCard hidden" data-tab="sessions" id="sessions">
+    <section class="card mapCard hidden" data-tab="map" id="map">
         <div class="mapHeader">
           <div>
             <h2>Map view</h2>
@@ -166,44 +166,13 @@
           <div id="mapFallback" class="mapFallback hidden">
             <div class="warn">Map unavailable on this device/network.</div>
             <div class="muted">You can still browse sessions and open locations in Google Maps from each session profile.</div>
+            <div id="mapList" class="mapList"></div>
           </div>
         </div>
-
-        <aside class="drawer" id="sessionDrawer" aria-label="Session profile">
-          <div class="drawerTop">
-            <div>
-              <div class="drawerTitle" id="dTitle">Session —</div>
-              <div class="drawerSub muted" id="dSub">—</div>
-            </div>
-            <button class="iconBtn" id="drawerClose" title="Close">
-              <span aria-hidden="true">✕</span>
-            </button>
-          </div>
-
-          <div class="drawerGrid">
-            <div class="kv"><div class="k">Host</div><div class="v" id="dHost">—</div></div>
-            <div class="kv"><div class="k">Sales rep</div><div class="v" id="dRep">—</div></div>
-            <div class="kv"><div class="k">Dealer</div><div class="v" id="dDealer">—</div></div>
-            <div class="kv"><div class="k">Farmers</div><div class="v" id="dFarmers">—</div></div>
-            <div class="kv"><div class="k">Wheat acres</div><div class="v" id="dAcres">—</div></div>
-            <div class="kv"><div class="k">Definite</div><div class="v" id="dDefinite">—</div></div>
-            <div class="kv"><div class="k">Score</div><div class="v" id="dScore">—</div></div>
-            <div class="kv"><div class="k">Top reason to use</div><div class="v" id="dTopUse">—</div></div>
-            <div class="kv"><div class="k">Top reason not to use</div><div class="v" id="dTopNotUse">—</div></div>
-          </div>
-
-          <div class="drawerActions">
-            <button class="btn" id="openMapsBtn">Open in Maps</button>
-            <button class="btn" id="shareSessionBtn">Share session</button>
-          </div>
-
-          <h3 class="drawerSectionTitle">Session media</h3>
-          <div id="drawerMedia" class="drawerMedia"></div>
-        </aside>
-      </section>
+</section>
     </section>
 
-    <section class="card hidden" data-tab="sessions" id="sessionsList">
+    <section class="card hidden" data-tab="sessions" id="sessions">
       <div class="sectionHeader">
         <div>
           <h2>Sessions</h2>
@@ -243,7 +212,8 @@
         </div>
       </div>
 
-      <div class="mediaWall" id="mediaWall">
+      <div class="mediaLoadRow"><button class="btn" id="loadMediaBtn">Load media previews</button><div class="muted" id="mediaHint"></div></div>
+      <div class="mediaWall" id="mediaWall"
         <div class="muted">Loading…</div>
       </div>
     </section>
@@ -288,7 +258,46 @@
       <div class="muted">Powered by <strong>INTERACT</strong> — multi-campaign field intelligence dashboards.</div>
     </footer>
 
-  </main>
+  
+  <div id="drawerBackdrop" class="drawerBackdrop hidden" aria-hidden="true"></div>
+  <aside class="drawerOverlay hidden" id="sessionDrawer" aria-label="Session profile">
+<div class="drawerTop">
+            <div>
+              <div class="drawerTitle" id="dTitle">Session —</div>
+              <div class="drawerSub muted" id="dSub">—</div>
+            </div>
+            <button class="iconBtn" id="drawerClose" title="Close">
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+
+          <div class="drawerGrid">
+            <div class="kv"><div class="k">Host</div><div class="v" id="dHost">—</div></div>
+            <div class="kv"><div class="k">Sales rep</div><div class="v" id="dRep">—</div></div>
+            <div class="kv"><div class="k">Dealer</div><div class="v" id="dDealer">—</div></div>
+            <div class="kv"><div class="k">Farmers</div><div class="v" id="dFarmers">—</div></div>
+            <div class="kv"><div class="k">Wheat acres</div><div class="v" id="dAcres">—</div></div>
+            <div class="kv"><div class="k">Definite</div><div class="v" id="dDefinite">—</div></div>
+            <div class="kv"><div class="k">Score</div><div class="v" id="dScore">—</div></div>
+            <div class="kv"><div class="k">Top reason to use</div><div class="v" id="dTopUse">—</div></div>
+            <div class="kv"><div class="k">Top reason not to use</div><div class="v" id="dTopNotUse">—</div></div>
+          </div>
+
+          <div class="drawerActions">
+            <button class="btn" id="openMapsBtn">Open in Maps</button>
+            <button class="btn" id="shareSessionBtn">Share session</button>
+          </div>
+
+          <h3 class="drawerSectionTitle">Session media</h3>
+          <div id="drawerMedia" class="drawerMedia"></div>
+          <h3 class="drawerSectionTitle">Session sheet summary</h3>
+          <div id="drawerSheet" class="drawerSheet"><div class="muted">Open a session to load sheet summary.</div></div>
+          <div class="drawerActions">
+            <button class="btn" id="openSheetBtn">Open sheet</button>
+          </div>
+  </aside>
+
+</main>
 
   <div class="lightbox hidden" id="lightbox" aria-hidden="true">
     <div class="lightboxInner">
@@ -301,8 +310,29 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
-  <script src="dashboard.js?v=20251230" defer></script>
+  <script>
+  // Leaflet loader with CDN fallback (some networks block unpkg)
+  window.__loadLeafletFallback = (function(){
+    var tried = 0;
+    var fallbacks = [
+      'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+    ];
+    return function(){
+      if (window.L) return;
+      var u = fallbacks[tried++];
+      if (!u) return;
+      var s = document.createElement('script');
+      s.src = u;
+      s.crossOrigin = 'anonymous';
+      s.onerror = window.__loadLeafletFallback;
+      document.head.appendChild(s);
+    };
+  })();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"
+        onerror="window.__loadLeafletFallback && window.__loadLeafletFallback()"></script>
+  <script src="dashboard.js?v=20260101" defer></script>
 <script>
 /* Tab fallback: keeps navigation working even if dashboard.js fails to load */
 (function(){

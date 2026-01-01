@@ -12,6 +12,11 @@
         onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
 </head>
 <body>
+  <!-- Background video -->
+  <div class="bg">
+    <video class="bgVideo" src="assets/bg.mp4" autoplay muted loop playsinline></video>
+    <div class="bgShade"></div>
+  </div>
   <header class="topbar">
     <div class="brand">
       <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
@@ -38,6 +43,15 @@
           <button class="btn btnGhost" id="exportBtn">Export CSV</button>
         </div>
         <div id="rangeHint" class="smallMuted"></div>
+      </div>
+      <!-- Added filters for farmer (host) name and city -->
+      <div class="control">
+        <label for="nameFilter">Farmer name</label>
+        <input id="nameFilter" type="text" placeholder="Search by host name" />
+      </div>
+      <div class="control">
+        <label for="cityFilter">City</label>
+        <input id="cityFilter" type="text" placeholder="Search by city" />
       </div>
     </div>
   </header>

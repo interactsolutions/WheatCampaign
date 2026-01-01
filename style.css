@@ -150,6 +150,65 @@ body{
 .donutWrap{height:136px; display:flex; align-items:center; justify-content:center}
 .donutMeta{margin-top:8px; font-size:12px}
 
+/* Donut chart styles for summary */
+.donutGrid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  justify-content:space-between;
+}
+.donutCard{
+  flex:1 1 120px;
+  border:1px solid rgba(26,41,71,.55);
+  border-radius:16px;
+  background:rgba(7,11,20,.28);
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.donutTitle{
+  margin-bottom:8px;
+  font-size:13px;
+  color:#dbe5ff;
+  text-align:center;
+}
+.donutWrap{
+  position:relative;
+  width:120px;
+  height:120px;
+}
+.donut{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background: conic-gradient(var(--color, var(--brand)) calc(var(--percent) * 1%), rgba(255,255,255,.1) 0%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.donut::before{
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:70%;
+  height:70%;
+  border-radius:50%;
+  background:rgba(7,11,20,1);
+}
+.donutValue{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:16px;
+  font-weight:700;
+  color:#e9f0ff;
+}
+
 .insightsRow{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; padding:0 14px 14px}
 .insight{border:1px solid rgba(26,41,71,.55); border-radius:16px; background:rgba(7,11,20,.28); padding:12px}
 .insightLabel{font-size:11px; color:var(--muted2)}

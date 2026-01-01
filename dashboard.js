@@ -46,6 +46,9 @@
     map: null,
     markerLayer: null,
     markersBySessionId: new Map(),
+    // Filters for host (farmer) name and city
+    nameFilter: '',
+    cityFilter: '',
   };
 
   // ---------- Parsing / formatting ----------
@@ -459,6 +462,12 @@
       }
     }
 
+    // Capture additional filters for farmer (host) name and city
+    const nameEl = $$('#nameFilter');
+    const cityEl = $$('#cityFilter');
+    state.nameFilter = nameEl ? String(nameEl.value || '').trim() : '';
+    state.cityFilter = cityEl ? String(cityEl.value || '').trim() : '';
+
     filterSessions();
     renderAll();
   }
@@ -470,6 +479,14 @@
     if (fromEl && state.dateMin) fromEl.value = formatDateInput(state.dateMin);
     if (toEl && state.dateMax) toEl.value = formatDateInput(state.dateMax);
 
+    // Clear any text filters
+    const nameEl = $$('#nameFilter');
+    const cityEl = $$('#cityFilter');
+    if (nameEl) nameEl.value = '';
+    if (cityEl) cityEl.value = '';
+    state.nameFilter = '';
+    state.cityFilter = '';
+
     applyDateInputs();
   }
 
@@ -479,7 +496,19 @@
     state.filteredSessions = state.sessions.filter(s => {
       const d = parseDateSafe(s.date);
       if (!d) return false;
-      return d >= a && d <= b;
+      // Date range filter
+      if (d < a || d > b) return false;
+      // Host (farmer) name filter: match host.name substring if provided
+      if (state.nameFilter) {
+        const name = String(s.host?.name || '').toLowerCase();
+        if (!name.includes(state.nameFilter.toLowerCase())) return false;
+      }
+      // City filter
+      if (state.cityFilter) {
+        const city = String(s.city || '').toLowerCase();
+        if (!city.includes(state.cityFilter.toLowerCase())) return false;
+      }
+      return true;
     });
   }
 
@@ -588,25 +617,50 @@
     const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
     const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
 
-    // ---------- Funnel (bars) ----------
+    // ---------- Funnel (donut charts) ----------
     const funnelEl = $$('#funnel');
     if (funnelEl) {
       const items = [
-        { label: 'Awareness', width: awarenessAvg, display: pct(awarenessAvg) },
-        { label: 'Used last year', width: usedLastYearAvg, display: pct(usedLastYearAvg) },
-        { label: 'Definite intent', width: definiteAvg, display: pct(definiteAvg) },
-        { label: 'Maybe', width: maybeAvg, display: pct(maybeAvg) },
-        { label: 'Not interested', width: notInterestedAvg, display: pct(notInterestedAvg) },
-        { label: 'Understanding (avg)', width: (Number.isFinite(understandingAvg) ? (understandingAvg / 3 * 100) : 0), display: (Number.isFinite(understandingAvg) ? (fmt1(understandingAvg) + ' / 3') : '—') },
+        { label: 'Awareness', pct: awarenessAvg },
+        { label: 'Used last year', pct: usedLastYearAvg },
+        { label: 'Definite intent', pct: definiteAvg },
+        { label: 'Maybe', pct: maybeAvg },
+        { label: 'Not interested', pct: notInterestedAvg },
+        { label: 'Understanding', pct: (Number.isFinite(understandingAvg) ? (understandingAvg / 3 * 100) : NaN) },
       ];
-      funnelEl.innerHTML = items.map(x => {
-        const w = Math.max(0, Math.min(100, Number(x.width) || 0));
-        return `<div class="barRow">
-          <div class="barLabel">${esc(x.label)}</div>
-          <div class="barTrack"><div class="barFill" style="width:${w}%; background:rgba(255,255,255,.65)"></div></div>
-          <div class="barVal">${esc(x.display)}</div>
+      // Define custom colors for each donut based on semantic meaning
+      const colors = {
+        'Awareness': 'var(--brand)',
+        'Used last year': 'var(--brand2)',
+        'Definite intent': '#8e44ad',
+        'Maybe': '#f59e0b',
+        'Not interested': 'var(--danger)',
+        'Understanding': '#eab308'
+      };
+      let html = '<div class="donutGrid">';
+      for (const it of items) {
+        const raw = Number(it.pct);
+        const pctVal = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
+        const color = colors[it.label] || 'var(--brand)';
+        // Display value: percentages for most, understanding displays raw value / 3
+        let display;
+        if (it.label === 'Understanding') {
+          display = Number.isFinite(understandingAvg) ? (fmt1(understandingAvg) + ' / 3') : '—';
+        } else {
+          display = Number.isFinite(raw) ? (fmt1(pctVal) + '%') : '—';
+        }
+        html += `<div class="donutCard">
+          <div class="donutTitle">${esc(it.label)}</div>
+          <div class="donutWrap">
+            <div class="donut" style="--percent:${pctVal}; --color:${color};">
+              <span class="donutValue">${esc(display)}</span>
+            </div>
+          </div>
+          <div class="donutMeta"></div>
         </div>`;
-      }).join('');
+      }
+      html += '</div>';
+      funnelEl.innerHTML = html;
     }
 
     // ---------- Top sessions table (by score) ----------
@@ -790,6 +844,13 @@
     return '';
   }
 
+  // Return the first video reference for a session if available.
+  function firstMediaVideo(s) {
+    const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
+    if (vids.length) return vids[0];
+    return '';
+  }
+
   function allMediaItems(s) {
     const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
     const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
@@ -808,12 +869,23 @@
       const sheet = esc(s.sheetRef || '');
       const district = esc(s.district || '');
       const village = esc(s.village || s.spot || '');
+      // Determine thumbnail: prefer first video if available; otherwise first image
+      const vidPath = firstMediaVideo(s);
+      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
       const img = firstMediaImage(s);
       const title = `${sheet} • ${district} • ${village}`;
       const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+      // Build thumb markup
+      let thumb;
+      if (vidPath) {
+        // Show auto-playing muted preview
+        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+      } else {
+        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
+      }
       return `<div class="mediaCard" data-session-id="${sid}">
         <div class="mediaThumb">
-          <img data-media-thumb="1" alt="${esc(title)}" />
+          ${thumb}
         </div>
         <div class="mediaMeta">
           <div class="mediaTitle">${esc(title)}</div>
@@ -1342,6 +1414,10 @@
     // Apply on Enter in date inputs
     $$('#dateFrom')?.addEventListener('change', applyDateInputs);
     $$('#dateTo')?.addEventListener('change', applyDateInputs);
+
+    // Apply automatically when name or city filters change
+    $$('#nameFilter')?.addEventListener('input', applyDateInputs);
+    $$('#cityFilter')?.addEventListener('input', applyDateInputs);
   }
 
   function exportCsv() {

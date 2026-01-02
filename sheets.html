@@ -80,16 +80,6 @@
     return await r.json();
   }
 
-  // Mask phone numbers for privacy. Returns an en dash when empty. Keeps
-  // only the last 4 digits and hides the remainder. Example: 03078802008 →
-  // ***-***-2008. See details.html for similar implementation.
-  function maskPhone(phone) {
-    const s = String(phone ?? '').replace(/\D+/g, '');
-    if (!s) return '—';
-    const last = s.slice(-4);
-    return '***-***-' + last;
-  }
-
   function normalizeMediaPath(p) {
     const raw = String(p ?? '').trim();
     if (!raw) return '';
@@ -194,14 +184,9 @@
       });
       for (const row of farmers) {
         const tr = document.createElement('tr');
-        rawCols.forEach(c => {
+        cols.forEach(c => {
           const td = document.createElement('td');
-          let val = row && row[c] != null ? row[c] : '';
-          // Mask phone numbers to avoid exposing PII
-          if (c === 'phone') {
-            val = maskPhone(val);
-          }
-          td.textContent = String(val);
+          td.textContent = (row && row[c] != null) ? String(row[c]) : '';
           tr.appendChild(td);
         });
         body.appendChild(tr);

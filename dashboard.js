@@ -327,35 +327,27 @@
   // ---------- Loading ----------
   async function fetchJson(path, why) {
     const u = url(path);
-    try {
-      const r = await fetch(u, { cache: 'no-store' });
-      if (!r.ok) {
-        throw new Error(`${why} failed (${r.status})`);
-      }
-      return await r.json();
-    } catch (e) {
-      console.error(`Error loading ${why} from ${u}:`, e);
-      setStatus(`Error loading ${why}: ${e.message}. Check network or file paths.`, 'bad');
-      return null;
+    const r = await fetch(u, { cache: 'no-store' });
+    if (!r.ok) {
+      throw new Error(`${why} failed (${r.status}): ${u}`);
     }
+    return await r.json();
   }
 
   async function loadCampaignRegistry() {
-    showSpinner(true);
     try {
-      const reg1 = await fetchJson('data/campaigns.json', 'campaign registry');
-      if (reg1) {
-        state.campaigns = Array.isArray(reg1.campaigns) ? reg1.campaigns : [];
-        return;
-      }
+      const reg = await fetchJson('data/campaigns.json', 'campaign registry');
+      state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
+      return;
+    } catch (e) {
       // Fallback to root campaigns.json (some repos place it there)
-      const reg2 = await fetchJson('campaigns.json', 'campaign registry (root)');
-      if (reg2) {
-        state.campaigns = Array.isArray(reg2.campaigns) ? reg2.campaigns : [];
+      try {
+        const reg = await fetchJson('campaigns.json', 'campaign registry (root)');
+        state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
         return;
+      } catch (e2) {
+        throw e;
       }
-    } finally {
-      showSpinner(false);
     }
   }
 
@@ -371,14 +363,6 @@
     if (!el) return;
     el.textContent = msg;
     el.className = 'badge' + (ok ? ' badge--ok' : '');
-  }
-
-  // Show or hide the global loading spinner. Pass true to show, false to hide.
-  function showSpinner(show = true) {
-    const el = document.getElementById('globalSpinner');
-    if (el) {
-      el.classList.toggle('hidden', !show);
-    }
   }
 
   // ---------- Leaflet loader (avoid race conditions + blocked CDNs) ----------
@@ -1631,7 +1615,6 @@
   }
 
   async function loadCampaign(id) {
-    showSpinner(true);
     state.campaignId = id;
     state.campaign = state.campaigns.find(c => c.id === id) || state.campaigns[0] || null;
     if (!state.campaign) throw new Error('No campaigns configured.');
@@ -1644,43 +1627,28 @@
 
     // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
-    const sessions = (sj && Array.isArray(sj.sessions)) ? sj.sessions : (Array.isArray(sj) ? sj : []);
+    const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
     state.sessions = sessions;
     state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
 
     // Optional sheets index
-    const si = await fetchJson(sheetsIndexPath, 'sheets index');
-    state.sheetsIndex = si || null;
+    try {
+      state.sheetsIndex = await fetchJson(sheetsIndexPath, 'sheets index');
+    } catch (_e) {
+      state.sheetsIndex = null;
+    }
 
     // Optional media config
-    const mc = await fetchJson(mediaPath, 'media config');
-    state.mediaCfg = mc || null;
+    try {
+      state.mediaCfg = await fetchJson(mediaPath, 'media config');
+    } catch (_e) {
+      state.mediaCfg = null;
+    }
 
     // Campaign date range
     // Prefer explicit campaign start/end if provided; otherwise derive from sessions.
     const dates = sessions.map(s => parseDateSafe(s.date)).filter(Boolean);
-    // If there are no valid dates, gracefully fallback instead of throwing. We'll
-    // still call renderAll() so the UI can display blanks and summary text. If
-    // sessions array is empty this allows the dashboard to show "No
-    // sessions" messages rather than being stuck on "Loading…". We also
-    // avoid throwing so the caller's catch does not prevent rendering.
-    if (!dates.length) {
-      state.dateMin = null;
-      state.dateMax = null;
-      state.dateFrom = null;
-      state.dateTo = null;
-      // Clear date inputs
-      const fromEl = $$('#dateFrom');
-      const toEl = $$('#dateTo');
-      if (fromEl) { fromEl.min = ''; fromEl.max = ''; fromEl.value = ''; }
-      if (toEl) { toEl.min = ''; toEl.max = ''; toEl.value = ''; }
-      setRangeHint();
-      filterSessions();
-      renderAll();
-      setStatus('No sessions found.', 'bad');
-      showSpinner(false);
-      return;
-    }
+    if (!dates.length) throw new Error('No session dates found.');
     dates.sort((a,b) => a - b);
 
     const cfgStart = parseDateSafe(state.campaign.startDate);
@@ -1712,7 +1680,6 @@
     filterSessions();
     renderAll();
     setStatus('Loaded.', 'ok');
-    showSpinner(false);
   }
 
   // ---------- Events ----------
@@ -1834,9 +1801,6 @@
     } catch (e) {
       console.error(e);
       setStatus(e.message || 'Failed to load.', 'bad');
-    } finally {
-      // Hide spinner if it is still visible (e.g. after an error)
-      showSpinner(false);
     }
   }
 

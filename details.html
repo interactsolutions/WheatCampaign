@@ -78,20 +78,6 @@
   };
 
   const num = (v) => (typeof v === 'number' && Number.isFinite(v)) ? v : NaN;
-
-  // Mask a phone number for privacy. Keeps only the last 4 digits and
-  // replaces the rest with asterisks. If the value is missing or too
-  // short, returns an en dash. This helps prevent exposing PII in
-  // publicly hosted JSON files. Examples:
-  //   03078802008 -> ***-***-2008
-  //   12345 -> ***-12345 (shows whatever digits remain)
-  function maskPhone(phone) {
-    const s = String(phone ?? '').replace(/\D+/g, '');
-    if (!s) return '—';
-    // If fewer than 4 digits, just return last digits with asterisks
-    const last = s.slice(-4);
-    return '***-***-' + last;
-  }
   const BASE = new URL('.', location.href);
   const url = (p)=>new URL(p, BASE).toString();
   const qs = new URLSearchParams(location.search);
@@ -237,23 +223,23 @@
   }
 
   async function boot() {
-      const sj = await fetchJson(`data/${campaign}/sessions.json`);
-      const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
-      const s = sessions.find(x => Number(x.id) === sessionId);
-      if (!s) throw new Error('Session not found.');
+    const sj = await fetchJson(`data/${campaign}/sessions.json`);
+    const sessions = Array.isArray(sj.sessions) ? sj.sessions : [];
+    const s = sessions.find(x => Number(x.id) === sessionId);
+    if (!s) throw new Error('Session not found.');
 
-      $$('#hdr').innerHTML = `<b>Session ${esc(s.id)}</b> • <span class="badge">${esc(s.sheetRef||'')}</span> • ${esc(s.date||'')}`;
-      $$('#overview').innerHTML = `
-        <div><b>District:</b> ${esc(s.district||'')}</div>
-        <div><b>Village/Spot:</b> ${esc(s.village||s.spot||'')}</div>
-        <div><b>Dealer:</b> ${esc(s.dealer?.nearest||s.dealer?.name||'')}</div>
-        <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(maskPhone(s.host?.phone))}</div>
-        <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(maskPhone(s.salesRep?.phone))}</div>
-        <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
-        ${s.topReasonUse ? `<div><b>Top reason to use:</b> ${esc(s.topReasonUse)}</div>` : ''}
-        ${s.topReasonNotUse ? `<div><b>Top reason not to use:</b> ${esc(s.topReasonNotUse)}</div>` : ''}
-        ${s.competitors ? `<div><b>Competitors:</b> ${esc(s.competitors)}</div>` : ''}
-      `;
+    $$('#hdr').innerHTML = `<b>Session ${esc(s.id)}</b> • <span class="badge">${esc(s.sheetRef||'')}</span> • ${esc(s.date||'')}`;
+    $$('#overview').innerHTML = `
+      <div><b>District:</b> ${esc(s.district||'')}</div>
+      <div><b>Village/Spot:</b> ${esc(s.village||s.spot||'')}</div>
+      <div><b>Dealer:</b> ${esc(s.dealer?.nearest||s.dealer?.name||'')}</div>
+      <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(s.host?.phone||'')}</div>
+      <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(s.salesRep?.phone||'')}</div>
+      <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
+      ${s.topReasonUse ? `<div><b>Top reason to use:</b> ${esc(s.topReasonUse)}</div>` : ''}
+      ${s.topReasonNotUse ? `<div><b>Top reason not to use:</b> ${esc(s.topReasonNotUse)}</div>` : ''}
+      ${s.competitors ? `<div><b>Competitors:</b> ${esc(s.competitors)}</div>` : ''}
+    `;
 
         // Outcome KPIs and recommended actions
     const mtr = s.metrics || {};

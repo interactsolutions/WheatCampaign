@@ -938,33 +938,3 @@ body{
 [data-theme="light"] .priority-low{
   background:rgba(24,163,78,.16);
 }
-
-/* Loading spinner overlay. Covers the entire viewport and centers a
-   message. Use a semi-transparent backdrop to dim the UI while
-   preventing user interaction. */
-.spinner{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100vw;
-  height:100vh;
-  background:rgba(0,0,0,.45);
-  backdrop-filter: blur(2px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-.spinner.hidden{display:none;}
-.spinnerContent{
-  background:rgba(0,0,0,.75);
-  color:#ffffff;
-  padding:14px 20px;
-  border-radius:12px;
-  font-size:16px;
-  box-shadow:0 4px 12px rgba(0,0,0,.3);
-}
-[data-theme="light"] .spinnerContent{
-  background:rgba(245,248,255,.95);
-  color:#0d1d34;
-}

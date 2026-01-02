@@ -17,13 +17,6 @@
     <video class="bgVideo" src="assets/bg.mp4" autoplay muted loop playsinline></video>
     <div class="bgShade"></div>
   </div>
-
-  <!-- Global loading spinner. Initially hidden, this overlay is shown
-       whenever data is being fetched. The spinner sits above all
-       content with a semi-transparent backdrop to prevent interaction. -->
-  <div id="globalSpinner" class="spinner hidden">
-    <div class="spinnerContent">Loading…</div>
-  </div>
   <header class="topbar">
     <div class="brand">
       <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
@@ -106,15 +99,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Primary tab navigation placed inside the header. Grouping the dashboard
+         tabs (Summary, Map, Sessions, Media, Feedback) with the brand and
+         theme toggle improves access and keeps these controls visible near the
+         top of the page. -->
+    <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
+      <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
+      <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
+      <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
+      <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
+      <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
+    </nav>
   </header>
 
-  <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
-    <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
-    <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
-    <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
-    <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
-    <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-  </nav>
+  
 
   <main id="app" class="">
     <section class="tabPanel grid2" data-tab="summary" id="summary">

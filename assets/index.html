@@ -1,365 +1,455 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#0b1220"/>
-  <title>INTERACT • Campaign Dashboard</title>
-  <link rel="stylesheet" href="style.css"/>
-  <!-- Leaflet (map) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Harvest Horizons Dashboard</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=20260101" />
+  <!-- Leaflet CSS with fallback chain -->
+  <link id="leafletCss" rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
 </head>
 <body>
+  <!-- Background video -->
   <div class="bg">
-    <video id="bgVideo" class="bgVideo" autoplay muted loop playsinline preload="metadata"></video>
+    <video class="bgVideo" src="assets/bg.mp4" autoplay muted loop playsinline></video>
     <div class="bgShade"></div>
   </div>
-
-  <header class="header">
-    <div class="headerInner">
-      <div class="brand">
-        <div class="brandMark" aria-label="Brand header">
-  <img class="brandLogo" src="assets/bayer.svg" alt="Bayer" />
-  <div class="brandText">
-    <div class="brandName">Wheat Campaign Dashboard</div>
-    <div class="brandSub">Campaign insights for brand management · INTERACT</div>
-  </div>
-</div>
-        <div class="brandSub">Insights, coverage and field media — built for teams, partners and the community.</div>
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
+      <div>
+        <div class="brandTitle">Harvest Horizons</div>
+        <div class="brandSub">Campaign dashboard</div>
       </div>
-      <div class="headerActions">
-        <a class="chip link" href="./details.html?campaign=buctril-super-2025">Detailed view</a>
-        <a class="chip link" href="#feedback">Send feedback</a>
-      </div>
+      <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
+      <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
     </div>
 
-    <div class="heroWrap">
-      <div class="heroPlayer" id="heroPlayer" aria-label="Header video playlist">
-        <video id="heroVideo" muted autoplay playsinline loop preload="metadata"></video>
-        <img id="heroPoster" alt="" />
+    <!-- Hero video slider moved inside the header. Placing the hero before the controls
+         allows the media content to sit above the date and campaign filters. When
+         the page is scrolled the sticky header will keep the controls visible
+         while the hero naturally scrolls out of view. -->
+    <div class="heroWrap" id="heroWrap">
+      <div class="heroPlayer" id="heroPlayer">
+        <video id="heroVideo" autoplay muted loop playsinline></video>
         <div class="heroOverlay"></div>
         <div class="heroCaption">
-          <div class="heroTitle" id="heroTitle">Campaign highlights</div>
-          <div class="heroSub" id="heroSub">If video does not auto-play on iPhone, tap once to start.</div>
+          <div id="heroTitle" class="heroTitle"></div>
+          <div id="heroSub" class="heroSub"></div>
         </div>
+        <!-- Controls and thumbnail icons overlay the video. The previous/next buttons
+             remain in the top right corner, while the thumbnail icons line up along
+             the bottom edge. -->
         <div class="heroControls">
-          <button class="iconBtn" id="heroPrev" title="Previous">‹</button>
-          <button class="iconBtn" id="heroNext" title="Next">›</button>
-          <button class="iconBtn" id="heroMute" title="Mute/Unmute">🔇</button>
+          <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
+          <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
+        </div>
+        <div class="heroThumbs" id="heroThumbs"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label for="campaignSelect">Campaign</label>
+        <select id="campaignSelect"></select>
+      </div>
+
+      <div class="control">
+        <label>Date range</label>
+        <!-- The entire range (from, to) and all action buttons live inside one flex row. This
+             ensures a single-line layout on wider screens while still wrapping cleanly
+             on narrow viewports. The Export CSV button was moved into the same row as
+             Apply/Reset to avoid dropping to a separate line. -->
+        <div class="rangeRow">
+          <input id="dateFrom" type="date" />
+          <span class="muted">to</span>
+          <input id="dateTo" type="date" />
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn btnGhost" id="resetBtn">Reset</button>
+          <button class="btn btnGhost" id="exportBtn">Export CSV</button>
+        </div>
+        <div id="rangeHint" class="smallMuted"></div>
+      </div>
+      <!-- Filters for farmer (host) name and city -->
+      <div class="control">
+        <label for="nameFilter">Farmer name</label>
+        <input id="nameFilter" type="text" placeholder="Search by host name" />
+      </div>
+      <div class="control">
+        <label for="cityFilter">City</label>
+        <input id="cityFilter" type="text" placeholder="Search by city" />
+      </div>
+
+      <!-- Additional filters: allow filtering by district and by score range. These help
+           campaign managers quickly narrow down sessions based on geography and
+           performance metrics. -->
+      <div class="control">
+        <label for="districtFilter">District</label>
+        <input id="districtFilter" type="text" placeholder="Search by district" />
+      </div>
+      <div class="control">
+        <label>Score range</label>
+        <div class="scoreRangeRow">
+          <input id="scoreMin" type="number" placeholder="Min score" min="0" max="100" step="0.1" />
+          <span class="muted">to</span>
+          <input id="scoreMax" type="number" placeholder="Max score" min="0" max="100" step="0.1" />
         </div>
       </div>
-      <div class="heroThumbs" id="heroThumbs" aria-label="Header video thumbnails"></div>
     </div>
+
+    <!-- Primary tab navigation placed inside the header. Grouping the dashboard
+         tabs (Summary, Map, Sessions, Media, Feedback) with the brand and
+         theme toggle improves access and keeps these controls visible near the
+         top of the page. -->
+    <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
+      <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
+      <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
+      <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
+      <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
+      <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
+    </nav>
   </header>
 
-  <main class="main">
-    <section class="controls card">
-      <div class="controlsRow">
-        <div class="control">
-          <label>Campaign</label>
-          <select id="campaignSelect"></select>
-        </div>
-        <div class="control">
-          <label>District</label>
-          <select id="districtSelect"></select>
-        </div>
-        <div class="control">
-          <label>Search</label>
-          <input id="searchInput" placeholder="Host, dealer, village, spot…"/>
-        </div>
-        <div class="control">
-          <label>Date range</label>
-          <div class="dateRange">
-            <input id="fromDate" type="date"/>
-            <span class="to">to</span>
-            <input id="toDate" type="date"/>
-          </div>
-        </div>
-        <div class="control actions">
-          <label class="srOnly">Actions</label>
-          <button class="btn primary" id="applyBtn">Apply</button>
-          <button class="btn" id="resetBtn">Reset</button>
-          <button class="btn" id="exportBtn">Export</button>
-        </div>
-      </div>
+  
 
-      <div class="statusRow">
-        <div class="chips">
-          <span class="chip" id="selectionChip">All districts • All dates</span>
-          <span class="chip muted" id="statusChip">Status: initializing…</span>
-          <div id="fatalHint" class="fatalHint" style="display:none"></div>
+  <main id="app" class="">
+    <section class="tabPanel grid2" data-tab="summary" id="summary">
+      <section class="card">
+        <h2>Executive summary</h2>
+        <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
+        
+        <div class="kpis">
+          <!-- Each KPI tile is given a specific class for color-coded icon dots. These
+               classes correspond to CSS rules that prepend a colored circle before
+               the label text, adding visual variety without external icon assets. -->
+          <div class="kpi kpi--sessions"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
+          <div class="kpi kpi--farmers"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
+          <div class="kpi kpi--acres"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
+          <div class="kpi kpi--estacres"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
+          <div class="kpi kpi--awareness"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
+          <div class="kpi kpi--definite"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
+          <div class="kpi kpi--used"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
+          <div class="kpi kpi--score"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
-        <div class="miniKPIs">
-          <div class="miniKpi"><div class="miniLabel">Sessions</div><div class="miniVal" id="kSessions">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Farmers</div><div class="miniVal" id="kFarmers">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Acres</div><div class="miniVal" id="kAcres">—</div></div>
-          <div class="miniKpi"><div class="miniLabel">Avg Score</div><div class="miniVal" id="kScore">—</div></div>
+
+        <!-- Last updated timestamp and summary takeaways are inserted here. The date
+             reflects the most recent session loaded, reassuring users about data
+             freshness. The takeaways card surfaces the top two focus districts
+             based on the priority table, giving managers an at‑a‑glance view of
+             where to act next. -->
+        <div id="lastUpdated" class="smallMuted"></div>
+        <div id="summaryTakeaways" class="summaryTakeaways"></div>
+
+        <div class="divider"></div>
+        <div class="tableWrap">
+          <table class="sessionTable" id="topSessionsTable">
+            <thead>
+              <tr>
+                <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Open</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
-      </div>
-    </section>
 
-      <div class="tabs" role="tablist" aria-label="Dashboard sections">
-        <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
-        <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
-        <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
-        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
-        <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-      </div>
-
-
-    <section class="grid2" data-tab="summary" id="summary">
-      <section class="card" id="insights">
-        <h2>Campaign insights at a glance</h2>
-        <p class="muted">Clear, comparable metrics for stakeholder decisions: awareness, intent, understanding, and coverage.</p>
-        <div class="donutGrid">
-          <div class="donutCard">
-            <div class="donutTitle">Adoption intent</div>
-            <div class="donutWrap" id="donutIntent"></div>
-            <div class="donutMeta muted" id="metaIntent">—</div>
-          </div>
-          <div class="donutCard">
-            <div class="donutTitle">Brand awareness</div>
-            <div class="donutWrap" id="donutAwareness"></div>
-            <div class="donutMeta muted" id="metaAwareness">—</div>
-          </div>
-          <div class="donutCard">
-            <div class="donutTitle">Message understanding</div>
-            <div class="donutWrap" id="donutUnderstanding"></div>
-            <div class="donutMeta muted" id="metaUnderstanding">—</div>
-          </div>
-          <div class="donutCard">
-            <div class="donutTitle">Coverage by acres</div>
-            <div class="donutWrap" id="donutCoverage"></div>
-            <div class="donutMeta muted" id="metaCoverage">—</div>
-          </div>
-        </div>
-        <div class="insightsRow">
-          <div class="insight">
-            <div class="insightLabel">Top reason to use</div>
-            <div class="insightVal" id="topUse">—</div>
-          </div>
-          <div class="insight">
-            <div class="insightLabel">Top reason not to use</div>
-            <div class="insightVal" id="topNotUse">—</div>
-          </div>
-          <div class="insight">
-            <div class="insightLabel">Competitors mentioned</div>
-            <div class="insightVal" id="topCompetitors">—</div>
-          </div>
+        <!-- Attendance donut chart: shows distribution of farmers present per session as a percentage
+             of the total farmers reached. The chart is rendered via Chart.js in dashboard.js.
+             The canvas element will be hidden if no data is available. -->
+        <div class="divider"></div>
+        <h3>Sessions by farmers attendance</h3>
+        <div class="attendanceWrap">
+          <canvas id="attendanceDonut"></canvas>
         </div>
       </section>
-    </section>
 
-    <section class="card mapCard hidden" data-tab="map" id="map">
-        <div class="mapHeader">
-          <div>
-            <h2>Map view</h2>
-            <p class="muted">Spots are shown by default. Tap a spot to open the session profile with people, performance and media.</p>
-          </div>
-          <div class="mapBtns">
-            <button class="btn" id="fitBtn">Fit</button>
-            <button class="btn" id="mapResetBtn">Reset</button>
-          </div>
-        </div>
-        <div class="mapWrap">
-          <div id="leafletMap" class="map">Loading map…</div>
-          <div id="mapFallback" class="mapFallback hidden">
-            <div class="warn">Map unavailable on this device/network.</div>
-            <div class="muted">You can still browse sessions and open locations in Google Maps from each session profile.</div>
-          </div>
+      
+      <section class="card">
+        <h2>Outcome funnel and priorities</h2>
+        <div class="muted">Percentages are weighted by farmers present (or session farmers if sheet summaries are unavailable).</div>
+
+        <div id="funnel" class="funnel">
+          <div class="muted">Loading…</div>
         </div>
 
-        <aside class="drawer" id="sessionDrawer" aria-label="Session profile">
-          <div class="drawerTop">
-            <div>
-              <div class="drawerTitle" id="dTitle">Session —</div>
-              <div class="drawerSub muted" id="dSub">—</div>
-            </div>
-            <button class="iconBtn" id="drawerClose" title="Close">
-              <span aria-hidden="true">✕</span>
-            </button>
-          </div>
+        <div class="divider"></div>
+        <h3>Where to focus next</h3>
+        <div class="smallMuted">Lowest definite intent first (tie-breaker: lower score). Use this list to plan follow-ups, dealer touchpoints, and demo plots.</div>
+        <!-- Provide a simple export button for managers who wish to take this
+             prioritization table offline. -->
+        <div class="actionsRow" style="margin:8px 0">
+          <button class="btn btnGhost btnSmall" id="priorityExportBtn">Export CSV</button>
+        </div>
+        <div class="tableWrap">
+          <table class="sessionTable" id="priorityDistrictsTable">
+            <thead>
+              <tr>
+                <th>District</th><th>Sessions</th><th>Farmers</th><th>Acres</th><th>Awareness</th><th>Definite</th><th>Avg score</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
 
-          <div class="drawerGrid">
-            <div class="kv"><div class="k">Host</div><div class="v" id="dHost">—</div></div>
-            <div class="kv"><div class="k">Sales rep</div><div class="v" id="dRep">—</div></div>
-            <div class="kv"><div class="k">Dealer</div><div class="v" id="dDealer">—</div></div>
-            <div class="kv"><div class="k">Farmers</div><div class="v" id="dFarmers">—</div></div>
-            <div class="kv"><div class="k">Wheat acres</div><div class="v" id="dAcres">—</div></div>
-            <div class="kv"><div class="k">Definite</div><div class="v" id="dDefinite">—</div></div>
-            <div class="kv"><div class="k">Score</div><div class="v" id="dScore">—</div></div>
-            <div class="kv"><div class="k">Top reason to use</div><div class="v" id="dTopUse">—</div></div>
-            <div class="kv"><div class="k">Top reason not to use</div><div class="v" id="dTopNotUse">—</div></div>
+        <div class="divider"></div>
+        <div class="grid2">
+          <div class="card card--flat">
+            <h3>Top adoption drivers</h3>
+            <!-- Bar chart container for drivers. Bars will be drawn via JS -->
+            <div id="driversChart" class="barChart"><div class="muted">Loading…</div></div>
           </div>
-
-          <div class="drawerActions">
-            <button class="btn" id="openMapsBtn">Open in Maps</button>
-            <button class="btn" id="shareSessionBtn">Share session</button>
+          <div class="card card--flat">
+            <h3>Top barriers</h3>
+            <!-- Bar chart container for barriers -->
+            <div id="barriersChart" class="barChart"><div class="muted">Loading…</div></div>
           </div>
+        </div>
 
-          <h3 class="drawerSectionTitle">Session media</h3>
-          <div id="drawerMedia" class="drawerMedia"></div>
-        </aside>
+        <div class="divider"></div>
+        <h3>Data readiness</h3>
+        <div id="statusBox" class="status">Loading…</div>
+        <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
       </section>
+
     </section>
 
-    <section class="card hidden" data-tab="sessions" id="sessions">
-      <div class="sectionHeader">
+    <section class="tabPanel card mapCard" data-tab="map" id="map">
+      <div class="mapHeader">
         <div>
-          <h2>Sessions</h2>
-          <p class="muted">Filter by district and date to view exact sessions and their outcomes. Tap a row to open the session profile.</p>
+          <h2>Map view</h2>
+          <div class="muted">Markers reflect the currently filtered date range.</div>
         </div>
-        <div class="pager">
-          <button class="btn" id="prevBtn">Prev</button>
-          <span class="muted" id="pageInfo">Page 1 / 1</span>
-          <button class="btn" id="nextBtn">Next</button>
-        </div>
+        <div id="mapStatus" class="badge">Loading…</div>
       </div>
+      <div id="leafletMap" class="map">Loading map…</div>
+      <div class="divider"></div>
+      <div id="mapFallback" class="smallMuted hidden">
+        Map library could not be loaded. Use the Sessions table and “Open in Google Maps” links in details.
+      </div>
+    </section>
 
+    <section class="tabPanel card" data-tab="sessions" id="sessions">
+      <div class="row">
+        <h2>Sessions</h2>
+        <div class="muted">Click a row to preview; use buttons to open sheet/details.</div>
+      </div>
       <div class="tableWrap">
-        <table class="table" id="sessionsTable">
+        <table class="sessionTable" id="sessionsTable">
           <thead>
             <tr>
-              <th>Date</th><th>District</th><th>Spot</th><th class="num">Farmers</th><th class="num">Acres</th><th class="num">Definite %</th><th class="num">Awareness %</th><th class="num">Score</th>
+              <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Actions</th>
             </tr>
           </thead>
-          <tbody id="sessionsTbody">
-            <tr><td colspan="8" class="muted">Loading…</td></tr>
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </section>
 
-    <section class="card hidden" data-tab="media" id="media">
-      <div class="sectionHeader">
-        <div>
-          <h2>Media wall</h2>
-          <p class="muted">Animated cards combine each session’s photo and video. Only items from <code>assets/gallery/</code> are shown.</p>
-        </div>
-        <div class="mediaCounters">
-          <div class="chip" id="mSessions">— Sessions</div>
-          <div class="chip" id="mImages">— Images</div>
-          <div class="chip" id="mVideos">— Videos</div>
-        </div>
+    <section class="tabPanel card" data-tab="media" id="media">
+      <div class="row">
+        <h2>Media</h2>
+        <div class="muted">Thumbnails are pulled from assets/gallery. Missing files will fall back to placeholders.</div>
       </div>
-
-      <div class="mediaWall" id="mediaWall">
-        <div class="muted">Loading…</div>
-      </div>
-    </section>
+      <div id="mediaGrid" class="mediaGrid"></div>
     </section>
 
-    <section class="card hidden" data-tab="feedback" id="feedback">
-      <h2>Share feedback</h2>
-      <p class="muted">Help us improve field activations. Provide your email or phone and send feedback to INTERACT.</p>
-
-      <div class="feedbackGrid">
-        <div class="control">
-          <label>Name (optional)</label>
-          <input id="fbName" placeholder="Your name"/>
+    <section class="tabPanel card" data-tab="feedback" id="feedback">
+      <h2>Feedback</h2>
+      <div class="muted">We value your feedback. Send us a message via WhatsApp or email by providing the appropriate contact information below.</div>
+      <div class="divider"></div>
+      <div class="grid2">
+        <!-- Feedback form: collects phone or email and a message, and provides buttons to send via WhatsApp or email. -->
+        <div class="card">
+          <div class="control">
+            <label for="fbPhone">Phone (WhatsApp)</label>
+            <input type="tel" id="fbPhone" placeholder="Enter phone number" />
+          </div>
+          <div class="control">
+            <label for="fbEmail">Email</label>
+            <input type="email" id="fbEmail" placeholder="Enter email address" />
+          </div>
+          <div class="control">
+            <label for="fbMessage">Message</label>
+            <textarea id="fbMessage" rows="6" placeholder="Type your feedback here…"></textarea>
+          </div>
+          <div class="drawerActions">
+            <button class="btn" id="fbSendWhatsApp">Send via WhatsApp</button>
+            <button class="btn btnGhost" id="fbSendEmail">Send via Email</button>
+          </div>
+          <div id="fbFeedbackMsg" class="smallMuted"></div>
         </div>
-        <div class="control">
-          <label>Email</label>
-          <input id="fbEmail" placeholder="name@example.com"/>
+        <div class="card">
+          <h3>Quick links</h3>
+          <ul class="muted">
+            <li><a href="healthcheck.html" class="link">Healthcheck</a></li>
+            <li><a href="sheets.html" class="link">Sheets browser</a></li>
+            <li><a href="report.html" class="link">Campaign analysis report</a></li>
+          </ul>
         </div>
-        <div class="control">
-          <label>Phone</label>
-          <input id="fbPhone" placeholder="+92XXXXXXXXXX"/>
-        </div>
-        <div class="control full">
-          <label>Feedback</label>
-          <textarea id="fbText" rows="4" placeholder="What worked well? What should be improved?"></textarea>
-        </div>
-      </div>
-
-      <div class="feedbackActions">
-        <div class="muted">Send to <a class="link" href="mailto:interact@paksaf.com">interact@paksaf.com</a> • Contact <a class="link" href="tel:+92355223233">+92355223233</a> • WhatsApp <a class="link" href="https://wa.me/923303570463" target="_blank" rel="noopener">+923303570463</a></div>
-        <div class="btnRow">
-          <button class="btn" id="emailFeedbackBtn">Email feedback</button>
-          <button class="btn whatsapp" id="waFeedbackBtn">WhatsApp feedback</button>
-        </div>
-        <div class="muted small" id="fbValidate"></div>
-        <div class="muted small" id="fbHint">We will only use your contact to follow up on the feedback if needed.</div>
       </div>
     </section>
-
-    <footer class="footer">
-      <div class="footerBrands" id="footerBrands" aria-label="Brand assets"></div>
-      <div class="muted">Powered by <strong>INTERACT</strong> — multi-campaign field intelligence dashboards.</div>
-    </footer>
-
   </main>
 
-  <div class="lightbox hidden" id="lightbox" aria-hidden="true">
-    <div class="lightboxInner">
-      <button class="iconBtn lightboxClose" id="lightboxClose" title="Close">✕</button>
-      <div class="lightboxBody" id="lightboxBody"></div>
-      <div class="lightboxActions">
-        <button class="btn" id="shareMediaBtn">Share</button>
-        <button class="btn" id="copyLinkBtn">Copy link</button>
+  <!-- Unified footer: combines the static-host and offline-friendly notes into a single footer. -->
+  <footer class="footer" aria-label="Footer">
+    <div class="footerBrands">
+      <div class="brandPill">
+        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
+        <span>INTERACT Solutions</span>
       </div>
+      <div class="brandPill">
+        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+        <span>Bayer Crop Science</span>
+      </div>
+    </div>
+    <div class="smallMuted">This dashboard is designed to be static‑host friendly and offline‑friendly. Use the Healthcheck to validate data and asset availability.</div>
+  </footer>
+
+  <!-- Session drawer overlay -->
+  <div class="drawerOverlay hidden" id="drawerOverlay" aria-hidden="true"></div>
+  <aside class="drawer hidden" id="sessionDrawer" aria-hidden="true" aria-label="Session details">
+    <div class="drawerTop">
+      <div>
+        <div class="drawerTitle" id="drawerTitle">Session</div>
+        <div class="drawerSub" id="drawerSub">—</div>
+      </div>
+      <button class="iconBtn" id="drawerClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="drawerBody">
+      <div class="kpis kpis--compact">
+        <div class="kpi"><div class="kpiLabel">Farmers</div><div class="kpiVal" id="dFarmers">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Acres</div><div class="kpiVal" id="dAcres">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Score</div><div class="kpiVal" id="dScore">—</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div id="dMeta" class="muted"></div>
+
+      <div class="divider"></div>
+      <h3>Outcomes</h3>
+      <div id="dOutcomes" class="muted">—</div>
+
+      <div class="divider"></div>
+      <h3>Recommended next actions</h3>
+      <ul id="dActions" class="bullets"><li class="muted">—</li></ul>
+
+      <div class="divider"></div>
+      <div class="drawerActions">
+        <a class="btn" id="dOpenSheet" href="#">Open sheet</a>
+        <a class="btn btnGhost" id="dOpenDetails" href="#">Open details</a>
+        <a class="btn btnGhost" id="dOpenMaps" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+
+      <div class="divider"></div>
+      <h3>Sheet summary</h3>
+      <div id="dSheetSummary" class="muted">Loading…</div>
+
+      <div class="divider"></div>
+      <h3>Media</h3>
+      <div id="dMedia" class="mediaRow"></div>
+    </div>
+  </aside>
+
+  <!-- Lightbox for media -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
+    <div class="lightboxInner">
+      <div class="lightboxTop">
+        <div id="lbTitle" class="muted">Media</div>
+        <button class="iconBtn" id="lbClose" aria-label="Close">✕</button>
+      </div>
+      <div class="lightboxBody" id="lbBody"></div>
     </div>
   </div>
 
+
+  <!-- Load Chart.js before the dashboard script to enable the attendance donut chart. -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
+
+  <script src="dashboard.js?v=20260101"></script>
+
+  <!-- Hero slider initialization -->
   <script>
-  // Leaflet loader with CDN fallback (some networks block unpkg)
-  window.__loadLeafletFallback = (function(){
-    var tried = 0;
-    var fallbacks = [
-      'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+  (function() {
+    // Define the videos to cycle through in the hero slider. Each entry can have
+    // a title and caption for display in the overlay.
+    const videos = [
+      { file: 'assets/atlantis.mp4', title: 'Atlantis', caption: 'Atlantis field application' },
+      { file: 'assets/bayer.mp4', title: 'Bayer', caption: 'Bayer promotional clip' },
+      { file: 'assets/buctril.mp4', title: 'Buctril', caption: 'Buctril product demo' },
+      { file: 'assets/interact.mp4', title: 'Interact', caption: 'Interact Solutions overview' }
     ];
-    return function(){
-      if (window.L) return;
-      var u = fallbacks[tried++];
-      if (!u) return;
-      var s = document.createElement('script');
-      s.src = u;
-      s.crossOrigin = 'anonymous';
-      s.onerror = window.__loadLeafletFallback;
-      document.head.appendChild(s);
-    };
+    let current = 0;
+    const heroVideo = document.getElementById('heroVideo');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSub = document.getElementById('heroSub');
+    const thumbContainer = document.getElementById('heroThumbs');
+    const prevBtn = document.getElementById('heroPrev');
+    const nextBtn = document.getElementById('heroNext');
+    // Function to update the hero player to the specified index
+    function setHero(i) {
+      current = (i + videos.length) % videos.length;
+      const v = videos[current];
+      if (heroVideo) {
+        heroVideo.src = v.file;
+        // Restart playback when source changes
+        heroVideo.load();
+      }
+      if (heroTitle) heroTitle.textContent = v.title;
+      if (heroSub) heroSub.textContent = v.caption;
+      // Update active state on thumbnails
+      Array.from(thumbContainer.children).forEach((el, idx) => {
+        if (idx === current) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+    }
+    // Build thumbnail elements once DOM is ready
+    videos.forEach((v, idx) => {
+      const d = document.createElement('div');
+      d.className = 'heroThumb';
+      // Use a small preview video for each thumb; fallback to image if missing
+      d.innerHTML = `<video autoplay loop muted playsinline src="${v.file}"></video><div class="badge">${idx+1}</div>`;
+      d.addEventListener('click', () => setHero(idx));
+      thumbContainer.appendChild(d);
+    });
+    // Navigation buttons
+    prevBtn?.addEventListener('click', () => setHero(current - 1));
+    nextBtn?.addEventListener('click', () => setHero(current + 1));
+    // Initialize the first video
+    setHero(0);
   })();
-</script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"
-        onerror="window.__loadLeafletFallback && window.__loadLeafletFallback()"></script>
-  <script src="dashboard.js?v=20251230" defer></script>
-<script>
-/* Tab fallback: keeps navigation working even if dashboard.js fails to load */
-(function(){
-  function $$ (sel, root){ return (root||document).querySelector(sel); }
-  function $$$ (sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
-  function setActive(tab){
-    tab = (tab||'summary').replace(/^#/, '');
-    var btns = $$$('.tabBtn[data-tab]');
-    var secs = $$$('section[data-tab]');
-    btns.forEach(function(b){
-      var on = (b.getAttribute('data-tab')===tab);
-      b.classList.toggle('tabBtn--active', on);
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    secs.forEach(function(s){
-      var on = (s.getAttribute('data-tab')===tab);
-      s.classList.toggle('hidden', !on);
-    });
-  }
-  document.addEventListener('click', function(e){
-    var a = e.target && e.target.closest ? e.target.closest('.tabBtn[data-tab]') : null;
-    if(!a) return;
-    // allow hash update, but ensure UI updates immediately
-    var tab = a.getAttribute('data-tab');
-    setActive(tab);
-  }, true);
+  </script>
 
-  window.addEventListener('hashchange', function(){
-    setActive((location.hash||'#summary').slice(1));
-  });
-
-  document.addEventListener('DOMContentLoaded', function(){
-    // initialize from hash
-    setActive((location.hash||'#summary').slice(1));
-  });
-})();
-</script>
+  <!-- Theme toggle initialization -->
+  <script>
+  (function() {
+    // Toggle between light and dark themes based on the time of day or user interaction.
+    const htmlEl = document.documentElement;
+    const toggleBtn = document.getElementById('themeToggle');
+    function applyTheme(t) {
+      htmlEl.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      if (toggleBtn) toggleBtn.textContent = (t === 'light') ? '🌙' : '☀';
+    }
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') {
+      applyTheme(saved);
+    } else {
+      const hr = new Date().getHours();
+      const defaultTheme = (hr >= 6 && hr < 18) ? 'light' : 'dark';
+      applyTheme(defaultTheme);
+    }
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const current = htmlEl.getAttribute('data-theme');
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
+    }
+  })();
+  </script>
 </body>
 </html>

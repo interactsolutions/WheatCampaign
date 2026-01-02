@@ -1,0 +1,1604 @@
+{
+  "sessions": [
+    {
+      "id": 1,
+      "sheet": "D1S1",
+      "date": "2025-11-24",
+      "district": "Ubaro",
+      "village": "Ameen khan Chacharr",
+      "host": {
+        "name": "Hakim Ali Chachar",
+        "phone": " 0306-8250645",
+        "feedbackName": "Hakim Ali",
+        "feedbackPhone": "0306-8250645",
+        "rating": "Excellent",
+        "comment": "Excellent",
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Sadiq Hussain",
+        "phone": "0301-2124357",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Amar Lal, Amar Lal Pesticides",
+        "phone": "0300-3263827"
+      },
+      "coord": {
+        "raw": "28°09'13.2\"N 69°48'59.7\"E",
+        "lat": 28.153666666666666,
+        "lng": 69.81658333333333
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D1S2",
+      "date": "2025-11-24",
+      "district": "Ubaro",
+      "village": "Naseer Dhondo ",
+      "host": {
+        "name": "Jam Wali Dhino",
+        "phone": "0300-3267636",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": "Any competitor schemes in past/future (credit, discount, gifts)?",
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Jam Wali",
+        "phone": "0300 - 3267636",
+        "comment": "Host Comments about session:",
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Amar Lal, Amar Lal Pesticides",
+        "phone": "0300-3263827"
+      },
+      "coord": {
+        "raw": "28°08'04.8\"N 69°50'12.1\"E",
+        "lat": 28.134666666666668,
+        "lng": 69.83669444444443
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D2S1",
+      "date": "2025-11-25",
+      "district": "Dharki",
+      "village": "Matal Mahar",
+      "host": {
+        "name": "M. Moosa",
+        "phone": " 0300-3660064",
+        "feedbackName": "M. Moosa",
+        "feedbackPhone": "0300- 3660064",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "waqar Ahmad",
+        "phone": "0311-2121427",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Papu Ram, New Darvaish Pesicide",
+        "phone": "0333-7248105"
+      },
+      "coord": {
+        "raw": "28°01'58.2\"N 69°42'14.7\"E",
+        "lat": 28.032833333333333,
+        "lng": 69.70408333333333
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D2S2",
+      "date": "2025-11-25",
+      "district": "Dharki",
+      "village": "Abdullah Rajni ",
+      "host": {
+        "name": "Shafique Ahmed ",
+        "phone": " 0309-3897158",
+        "feedbackName": "Shafiq Ahmed",
+        "feedbackPhone": "0304-3897158",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Tanveer Ahmed",
+        "phone": "0320-1323046",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Papu Ram, New Darvaish Pesicide",
+        "phone": "0333-7248105"
+      },
+      "coord": {
+        "raw": "28°00'29.6\"N 69°43'34.1\"E",
+        "lat": 28.008222222222223,
+        "lng": 69.7261388888889
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D2S3",
+      "date": "2025-11-25",
+      "district": "Dharki",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D3S1",
+      "date": "2025-11-26",
+      "district": "Ghotki",
+      "village": "Abdullah Laakhan",
+      "host": {
+        "name": "Ali Nawaz",
+        "phone": "0300-3117949",
+        "feedbackName": "Ali Nawaz",
+        "feedbackPhone": "0300-3117449",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Farooq Ahmad",
+        "phone": "0305-3014237",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Ameer Bukhash, Ameer Bukhsh Pest",
+        "phone": "0302-3157094"
+      },
+      "coord": {
+        "raw": "28°01'58.6\"N 69°22'54.6\"E",
+        "lat": 28.032944444444443,
+        "lng": 69.38183333333333
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D3S2",
+      "date": "2025-11-26",
+      "district": "Ghotki",
+      "village": "M. Qasim Ghooto",
+      "host": {
+        "name": "Raeis M. Punal",
+        "phone": "0300-3262285",
+        "feedbackName": "Raees Muhammad",
+        "feedbackPhone": "0300-3262285",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Hizbullah",
+        "phone": "0315-7810700",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Ameer Bukhash, Ameer Bukhsh Pest",
+        "phone": "0302-3157094"
+      },
+      "coord": {
+        "raw": "28°02'06.1\"N 69°15'52.7\"E",
+        "lat": 28.03502777777778,
+        "lng": 69.26463888888888
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D3S3",
+      "date": "2025-11-26",
+      "district": "Ghotki",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D4S1",
+      "date": "2025-11-27",
+      "district": "Ghotki",
+      "village": "Darri Chachar",
+      "host": {
+        "name": "Fayaz Ahmed ",
+        "phone": " 0300-2326598",
+        "feedbackName": "Fiaz Ahmad",
+        "feedbackPhone": "0300-3626598",
+        "rating": "V. Good And informative",
+        "comment": "V. Good And informative",
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Imtiaz Ahmad",
+        "phone": "0307-2235762",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Sahil Kumar, SSD Evergreen",
+        "phone": "0300-4218988"
+      },
+      "coord": {
+        "raw": "27°52'42.7\"N 69°15'44.7\"E",
+        "lat": 27.87852777777778,
+        "lng": 69.26241666666667
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D4S2",
+      "date": "2025-11-27",
+      "district": "Ghotki",
+      "village": "Kalati Gabol",
+      "host": {
+        "name": "Abdul Rasheed",
+        "phone": "0300-3194825",
+        "feedbackName": "Abdul Rasheed",
+        "feedbackPhone": "0300-3194825",
+        "rating": null,
+        "comment": "Excellent",
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Bahadur Ali",
+        "phone": "0300-9316971",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Ravi Kumar, SSD Evergreen",
+        "phone": "0300-3292555"
+      },
+      "coord": {
+        "raw": "27°50'55.0\"N 69°26'10.0\"E",
+        "lat": 27.84861111111111,
+        "lng": 69.43611111111112
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D4S3",
+      "date": "2025-11-27",
+      "district": "Ghotki",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D5S1",
+      "date": "2025-11-28",
+      "district": "Jaferabad",
+      "village": "Haji Darya Khan",
+      "host": {
+        "name": "Haji Darya khan",
+        "phone": "0300-8920333",
+        "feedbackName": "Haji Darya Khan",
+        "feedbackPhone": "0300-8920333",
+        "rating": "Informative and useful for farmers",
+        "comment": "Informative and useful for farmers",
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Khuda Bukhsh",
+        "phone": "0300-1156695",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Putab Raay, Sanjay Fertilizers",
+        "phone": "0300-317/018"
+      },
+      "coord": {
+        "raw": "28°12'34.3\"N 68°34'34.3\"E",
+        "lat": 28.209527777777776,
+        "lng": 68.57619444444444
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D5S2",
+      "date": "2025-11-28",
+      "district": "Jaferabad",
+      "village": "Qaeim Khan Khossa 2",
+      "host": {
+        "name": " Haji ShahaL khan",
+        "phone": "0300-3174711",
+        "feedbackName": "Haji Shahal",
+        "feedbackPhone": "0300-3174 111",
+        "rating": "V. Good and interracice.",
+        "comment": "V. Good and interracice.",
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Khuda Bukhsh",
+        "phone": "0300-1156695",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Purtab Roy, Sanjay Fertilizer Agency",
+        "phone": "030-317/018"
+      },
+      "coord": {
+        "raw": "28°11'22.1\"N 68°35'18.0\"E",
+        "lat": 28.18947222222222,
+        "lng": 68.58833333333332
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D5S3",
+      "date": "2025-11-28",
+      "district": "Jaferabad",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D6S1",
+      "date": "2025-11-29",
+      "district": "Ranipur",
+      "village": "Allah Wadhayo",
+      "host": {
+        "name": "Ali Dino",
+        "phone": "0300-3727407",
+        "feedbackName": "Allah Wadhayo",
+        "feedbackPhone": "Yes",
+        "rating": "Allah Wadhayo",
+        "comment": "Allah Wadhayo",
+        "signature": null
+      },
+      "sales": {
+        "name": "Allah Wadhayo",
+        "phone": null,
+        "comment": "Allah Wadhayo",
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Shah M. Mangi, Mangi Fertilizers",
+        "phone": "0300-9348853"
+      },
+      "coord": {
+        "raw": "27°05'41.2\"N 68°35'22.9\"E",
+        "lat": 27.094777777777775,
+        "lng": 68.58969444444443
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D6S2",
+      "date": "2025-11-29",
+      "district": "Ranipur",
+      "village": "Haji Khabar Malaha",
+      "host": {
+        "name": "Anwar Ali",
+        "phone": "0305-3691795",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Shah M. Mangi, Mangi Fertilizers",
+        "phone": "0300-9348853"
+      },
+      "coord": {
+        "raw": "27°02'26.2\"N 68°33'47.6\"E",
+        "lat": 27.04061111111111,
+        "lng": 68.56322222222222
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D6S3",
+      "date": "2025-11-29",
+      "district": "Ranipur",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D7S1",
+      "date": "2025-12-01",
+      "district": "Mehrabpur",
+      "village": "Saein Daad Marri",
+      "host": {
+        "name": "Ghulam Abbas",
+        "phone": "0304-0187132",
+        "feedbackName": "Ghulam Abbas",
+        "feedbackPhone": "0304-0187132",
+        "rating": "It was a good session ful i use/al information",
+        "comment": "It was a good session ful i use/al information",
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Farhan All Urar",
+        "phone": "0300-2198404",
+        "comment": "میرا نام عرفان علی ہے۔ آج بائیر کراپ سائنس کی ٹیم یہاں آئی انہوں نے پیچیس گندم (کَندم) میں جو جڑی بوٹیوں کے کنٹرول کے بارے حسین بتایا۔ کسانوں کو بہت کچھ سیکھنے کو ملا۔",
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Shalid Rajput, Zain Pesticide Shop",
+        "phone": "0308-3213080"
+      },
+      "coord": {
+        "raw": "27°09'37.4\"N 68°19'48.3\"E",
+        "lat": 27.16038888888889,
+        "lng": 68.33008333333333
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D7S2",
+      "date": "2025-12-01",
+      "district": "Mehrabpur",
+      "village": "Pir Watiyo",
+      "host": {
+        "name": "Ghulam Sarwar",
+        "phone": "0304-1783160",
+        "feedbackName": "Ghulam Sarwar",
+        "feedbackPhone": "0304-1783160",
+        "rating": "Excellent, full of information",
+        "comment": "Excellent, full of information",
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Muhammad Saleem",
+        "phone": "0302-112607",
+        "comment": "آج ہمارے پاس بائیر کراپ سائنس پاکستان کے نمائندے جسی گائوں بھر وتّو ایک میٹنگ رکھی جس میں گندم میں آنے والے جڑی بوٹی کے بارے بریفنگ دی جس میں بلکنلئیر چوڑے بتی استعمال اور نوکیلئے بتی یہ انلائنس شیئر کے استعمال کے حوالے سے بتایا اس پروگرام سے علاقائی کے زمینداروں کو کافی فائدہ ہوا۔",
+        "signature": null
+      },
+      "dealer": {
+        "name": "Shalid Rajput, Zain Pesticide Shop",
+        "phone": "0308-3213080"
+      },
+      "coord": {
+        "raw": "27°07'17.9\"N 68°19'59.2\"E",
+        "lat": 27.12163888888889,
+        "lng": 68.33311111111111
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D7S3",
+      "date": "2025-12-01",
+      "district": "Mehrabpur",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D8S1",
+      "date": "2025-11-29",
+      "district": "Dadu",
+      "village": "Manali",
+      "host": {
+        "name": "Abdul Razzaq",
+        "phone": "0300-3212418",
+        "feedbackName": "Manahi",
+        "feedbackPhone": null,
+        "rating": "Manahi",
+        "comment": "0328-1896821",
+        "signature": null
+      },
+      "sales": {
+        "name": "Manahi",
+        "phone": null,
+        "comment": "Ghulam Hussain",
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Dilep Kumar, Tilani Barai Markaz",
+        "phone": "0300-8317220"
+      },
+      "coord": {
+        "raw": "26°44'08.8\"N 68°00'37.7\"E",
+        "lat": 26.735777777777777,
+        "lng": 68.01047222222222
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D8S2",
+      "date": "2025-11-29",
+      "district": "Dadu",
+      "village": "Golo Potho",
+      "host": {
+        "name": "Jewan Abro",
+        "phone": " 0300-3137977",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": "6. Competition & Dealer Feedback",
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": "Any competitor schemes in past/future (credit, discount, gifts)?",
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Dilep Kumar, Tilani Zarai Markaz",
+        "phone": "0301-837/920"
+      },
+      "coord": {
+        "raw": "26°43'18.6\"N 67°59'10.0\"E",
+        "lat": 26.721833333333333,
+        "lng": 67.98611111111111
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D8S3",
+      "date": "2025-11-29",
+      "district": "Dadu",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": 0,
+        "feedbackPhone": 0,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D9S1",
+      "date": "2025-12-03",
+      "district": "Muzaffar Ghar ",
+      "village": "Bassti Seerein",
+      "host": {
+        "name": "Bilal Gorai",
+        "phone": " 0307-6344702",
+        "feedbackName": "Bilal Gorai",
+        "feedbackPhone": " 0307-6344702",
+        "rating": "Excellent",
+        "comment": "Excellent",
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Táriq Husain",
+        "phone": "0301-4590967",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Sari Ahmed, Al Sarn & Brother",
+        "phone": "0300-4936442"
+      },
+      "coord": {
+        "raw": "30°01'07.0\"N 71°07'10.7\"E",
+        "lat": 30.01861111111111,
+        "lng": 71.11963888888889
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D9S2",
+      "date": "2025-12-03",
+      "district": "Muzaffar Ghar ",
+      "village": "Topi Maanay wali",
+      "host": {
+        "name": "M. Bilal Chandio",
+        "phone": "0345-7352033",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": "Top competitor brands mentioned (write names)",
+        "signature": null
+      },
+      "sales": {
+        "name": "Full of beautiful infoormation, v. good",
+        "phone": null,
+        "comment": "Dealer attitude to Buctril Super (supportive / neutral / prefers other brands)",
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Shahzed Khan, Khan Agro Services",
+        "phone": "0303-2193472"
+      },
+      "coord": {
+        "raw": "29°59'24.2\"N 71°06'37.1\"E",
+        "lat": 29.990055555555557,
+        "lng": 71.11030555555556
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D9S3",
+      "date": "2025-12-03",
+      "district": "Muzaffar Ghar ",
+      "village": "Phaty wala",
+      "host": {
+        "name": "Mujahid Hussain ",
+        "phone": " 0302-6131374",
+        "feedbackName": "Patty Wala",
+        "feedbackPhone": "Yes",
+        "rating": "Patty Wala",
+        "comment": "0329-6979569",
+        "signature": null
+      },
+      "sales": {
+        "name": "Patty Wala",
+        "phone": "Yes",
+        "comment": "0325-475114",
+        "signature": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Ali Hajish, Balcoh Agro Services",
+        "phone": "0345-7171771"
+      },
+      "coord": {
+        "raw": "30°10'30.0\"N 71°03'49.5\"E",
+        "lat": 30.175,
+        "lng": 71.06375
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D10S1",
+      "date": "2025-12-04",
+      "district": "Kot Adu",
+      "village": "Basti Haider Ghazi",
+      "host": {
+        "name": "Ghulan Hailer",
+        "phone": "0343 - 1349093",
+        "feedbackName": "Ghulan Hailer",
+        "feedbackPhone": "0343 - 1349093",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "M. Junaid",
+        "phone": "0348-0636385",
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": "Mudavar Farcoa, Haji & Sons",
+        "phone": "345-8541301"
+      },
+      "coord": {
+        "raw": "30°32'20.2\"N 70°58'33.1\"E",
+        "lat": 30.538944444444446,
+        "lng": 70.97586111111112
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D10S2",
+      "date": "2025-12-04",
+      "district": "Kot Adu",
+      "village": "Hanjrai Bangla Chaah Phaati wala",
+      "host": {
+        "name": "Naveed Ahmed",
+        "phone": " 0344-1073974",
+        "feedbackName": "Naveed Ahmed",
+        "feedbackPhone": " 0344-1073974",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Gulam Yasin",
+        "phone": "0341-8606797",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Nasir Ahmad, Uzair Khan Traders",
+        "phone": "0342-382/088"
+      },
+      "coord": {
+        "raw": "30°36'43.1\"N 70°55'01.8\"E",
+        "lat": 30.611972222222224,
+        "lng": 70.91716666666667
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D10S3",
+      "date": "2025-12-04",
+      "district": "Kot Adu",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": 0,
+        "feedbackPhone": 0,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D11S1",
+      "date": "2025-12-05",
+      "district": "Karor Lal esan",
+      "village": "Basti joya",
+      "host": {
+        "name": "Mushtaq  Hussain",
+        "phone": "0306-8513786",
+        "feedbackName": "Mushtaq  Hussain",
+        "feedbackPhone": "0306-8513786",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "M. Aslam",
+        "phone": "0300-9875514",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Azhar Hussain, Achas Comision Shop",
+        "phone": "0308-205622"
+      },
+      "coord": {
+        "raw": "31°09'39.5\"N 70°56'28.0\"E",
+        "lat": 31.16097222222222,
+        "lng": 70.94111111111111
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D11S2",
+      "date": "2025-12-05",
+      "district": "Karor Lal esan",
+      "village": "Chak 106 TDA",
+      "host": {
+        "name": "Mulazim Hussain",
+        "phone": "0307-8802008",
+        "feedbackName": "Mulazim Hussain",
+        "feedbackPhone": "0307-8802008",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "M. Shafi",
+        "phone": "0344 - 7144162",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Azhar Hussain, Achas Comision Shop",
+        "phone": "0308-205622"
+      },
+      "coord": {
+        "raw": "31°08'42.9\"N 71°01'52.8\"E",
+        "lat": 31.14525,
+        "lng": 71.03133333333334
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D11S3",
+      "date": "2025-12-05",
+      "district": "Karor Lal esan",
+      "village": "Bassti Maachi Buchi wala",
+      "host": {
+        "name": "M. SULEMAN",
+        "phone": "0308-1405556",
+        "feedbackName": "Basti Machi Buchi wala",
+        "feedbackPhone": null,
+        "rating": "Basti Machi Buchi wala",
+        "comment": "Basti Machi Buchi wala",
+        "signature": null
+      },
+      "sales": {
+        "name": "Basti Machi Buchi wala",
+        "phone": null,
+        "comment": "Basti Machi Buchi wala",
+        "signature": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Atta ullah, Ehsan Zarai Services",
+        "phone": "0301-4998520"
+      },
+      "coord": {
+        "raw": "31°21'20.7\"N 70°57'03.9\"E",
+        "lat": 31.35575,
+        "lng": 70.95108333333333
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D12S1",
+      "date": "2025-12-06",
+      "district": "Bhakkar",
+      "village": "Kandani",
+      "host": {
+        "name": "Zahoor Khan",
+        "phone": "0345-7659279",
+        "feedbackName": "Zahoor Khan",
+        "feedbackPhone": "0345-7659279",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Zeeshan Khan",
+        "phone": "0371-0397214",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Ghazanfer, Ghazanfer Traderrs",
+        "phone": "0317-7998764"
+      },
+      "coord": {
+        "raw": "31°28'50.4\"N 70°59'34.0\"E",
+        "lat": 31.480666666666664,
+        "lng": 70.99277777777777
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D12S2",
+      "date": "2025-12-06",
+      "district": "Bhakkar",
+      "village": "54-ML",
+      "host": {
+        "name": "Ch. Ghulam Murtaza",
+        "phone": "0315-6603754",
+        "feedbackName": "Ch. Ghulam Murtaza",
+        "feedbackPhone": "0315-6603754",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Syed Tasawar Abbas",
+        "phone": "0336-6631214",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Ghazanfer, Ghazanfer Traderrs",
+        "phone": "0317-7998764"
+      },
+      "coord": {
+        "raw": "31°43'58.9\"N 71°18'26.5\"E",
+        "lat": 31.733027777777775,
+        "lng": 71.3073611111111
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D12S3",
+      "date": "2025-12-06",
+      "district": "Bhakkar",
+      "village": "Majoka",
+      "host": {
+        "name": "Nazar Abbas",
+        "phone": " 0310-7789111",
+        "feedbackName": "Nazar Abbas",
+        "feedbackPhone": " 0310-7789111",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "M. Tahir",
+        "phone": "0307-5115767",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Asghar, Akhter Traders",
+        "phone": "0301-55277000"
+      },
+      "coord": {
+        "raw": "31°46'33.4\"N 71°01'47.5\"E",
+        "lat": 31.775944444444445,
+        "lng": 71.02986111111112
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D13S1",
+      "date": "2025-12-08",
+      "district": "Mianwali",
+      "village": "Kalor Sharif Kacha",
+      "host": {
+        "name": "Abid Hussain",
+        "phone": "0301-2068770",
+        "feedbackName": "Abid Hussain",
+        "feedbackPhone": "0301-2068770",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Arif Khan",
+        "phone": "0306-5306565",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Waseem Khan, Awais & Brothers",
+        "phone": "0300-0232627"
+      },
+      "coord": {
+        "raw": "32°44'03.5\"N 71°16'39.9\"E",
+        "lat": 32.73430555555556,
+        "lng": 71.27775
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D13S2",
+      "date": "2025-12-08",
+      "district": "Mianwali",
+      "village": "Kamar Mashaani Gulshan Colony",
+      "host": {
+        "name": "Taj Muhammad",
+        "phone": " 0300-7417465",
+        "feedbackName": "Taj Muhammad",
+        "feedbackPhone": " 0300-7417465",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Binyameen",
+        "phone": "0300-1828265",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Arshad, Arshad Zarai",
+        "phone": "0301-7802078"
+      },
+      "coord": {
+        "raw": "32°51'53.0\"N 71°20'23.0\"E",
+        "lat": 32.86472222222223,
+        "lng": 71.33972222222222
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D13S3",
+      "date": "2025-12-08",
+      "district": "Mianwali",
+      "village": "Daud KhaiL kacha",
+      "host": {
+        "name": "Shifaullah",
+        "phone": "0305-3126621",
+        "feedbackName": "Shifaullah",
+        "feedbackPhone": "0305-3126621",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Murtaza",
+        "phone": "0304-6747523",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Noor M. Khan, Al-Badar Zari Center",
+        "phone": "0301-6351412"
+      },
+      "coord": {
+        "raw": "32°50'50.0\"N 71°33'14.5\"E",
+        "lat": 32.84722222222222,
+        "lng": 71.55402777777778
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D14S1",
+      "date": "2025-12-09",
+      "district": "Sargodha",
+      "village": "Jharoola",
+      "host": {
+        "name": "Malik Sajid",
+        "phone": " 0300-5196990",
+        "feedbackName": "Jharoola",
+        "feedbackPhone": "May be",
+        "rating": "Jharoola",
+        "comment": "0300.7133299",
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Naved, Lajpal Traders",
+        "phone": 3457289040
+      },
+      "coord": {
+        "raw": "31°55'02.4\"N 72°21'48.1\"E",
+        "lat": 31.917333333333335,
+        "lng": 72.3633611111111
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D14S2",
+      "date": "2025-12-09",
+      "district": "Sargodha",
+      "village": "Habib pur Kangrra",
+      "host": {
+        "name": "M. IRFAN",
+        "phone": " 0302-7038789",
+        "feedbackName": "M. IRFAN",
+        "feedbackPhone": " 0302-7038789",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Syed Asim Murtaza",
+        "phone": "0342-5128639",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Nsveed, Lajpal Traders",
+        "phone": "0345-7289040"
+      },
+      "coord": {
+        "raw": "31°58'50.9\"N 72°27'50.2\"E",
+        "lat": 31.980805555555555,
+        "lng": 72.46394444444445
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D14S3",
+      "date": "2025-12-09",
+      "district": "Sargodha",
+      "village": "ChakrraLa",
+      "host": {
+        "name": "Arshad",
+        "phone": " 0346-3825513",
+        "feedbackName": "Arshad",
+        "feedbackPhone": " 0346-3825513",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Mubashir Siddiqui",
+        "phone": "0345-1718611",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Zaheer Abbas, M. Khan Zarai Markez",
+        "phone": "0345-1718570"
+      },
+      "coord": {
+        "raw": "32°05'48.7\"N 72°22'20.7\"E",
+        "lat": 32.09686111111111,
+        "lng": 72.37241666666667
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D15S1",
+      "date": "2025-12-10",
+      "district": "Phalia",
+      "village": "Machyana",
+      "host": {
+        "name": "Ziaullah Babar",
+        "phone": " 0347-6116938",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": "Ziaullah Babar",
+        "comment": "Ziaullah Babar",
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": "Contact,",
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": "32°34'08.1\"N 73°57'09.3\"E",
+        "lat": 32.56891666666667,
+        "lng": 73.95258333333334
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D15S2",
+      "date": "2025-12-10",
+      "district": "Phalia",
+      "village": "Sheikh Pur",
+      "host": {
+        "name": " Nadeem",
+        "phone": " 0304-1767621",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": " Nadeem",
+        "comment": "0304-1767621",
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": "Contact,",
+        "signature": null
+      },
+      "dealer": {
+        "name": "Ali Ehsan, Ali Traders",
+        "phone": "0301-626320"
+      },
+      "coord": {
+        "raw": "32°34'01.6\"N 74°09'21.3\"E",
+        "lat": 32.56711111111112,
+        "lng": 74.15591666666667
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D15S3",
+      "date": "2025-12-10",
+      "district": "Phalia",
+      "village": "Baghwal",
+      "host": {
+        "name": "M. Ashraf",
+        "phone": "0334-7262420",
+        "feedbackName": "M. Ashraf",
+        "feedbackPhone": "0334-7262420",
+        "rating": null,
+        "comment": "excellent",
+        "signature": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": "Ibrar Azhar",
+        "phone": "0306-0619613",
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Shafat Rafique, Mehr Raffique and sons",
+        "phone": "0324-4551430"
+      },
+      "coord": {
+        "raw": "32°36'14.9\"N 74°09'30.2\"E",
+        "lat": 32.60413888888889,
+        "lng": 74.1583888888889
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D16S1",
+      "date": "2025-12-11",
+      "district": "Chakwal",
+      "village": "Daleel Pur Khokhar Baala",
+      "host": {
+        "name": "Kamran",
+        "phone": " 0340-1598005",
+        "feedbackName": "Kamran",
+        "feedbackPhone": " 0340-1598005",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": "Iftikhar Shah, Makkah Zari Market",
+        "phone": "0333-5760664"
+      },
+      "coord": {
+        "raw": "32°44'07.6\"N 72°50'19.5\"E",
+        "lat": 32.73544444444445,
+        "lng": 72.83874999999999
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D16S2",
+      "date": "2025-12-11",
+      "district": "Chakwal",
+      "village": "DawaalmiaaL",
+      "host": {
+        "name": "Amir ",
+        "phone": "0345-5828098",
+        "feedbackName": "Amir ",
+        "feedbackPhone": "0345-5828098",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "Malik Tanveer, Haq Bahu Zarai Store",
+        "phone": "0346-6599586"
+      },
+      "coord": {
+        "raw": "32°43'44.0\"N 72°54'54.7\"E",
+        "lat": 32.72888888888889,
+        "lng": 72.91519444444445
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D16S3",
+      "date": "2025-12-11",
+      "district": "Chakwal",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": 0,
+        "feedbackPhone": 0,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    },
+    {
+      "id": 1,
+      "sheet": "D17S1",
+      "date": null,
+      "district": "Phalia",
+      "village": "Chak 262-GB",
+      "host": {
+        "name": "Raye Junaid",
+        "phone": " 0341-5719387",
+        "feedbackName": null,
+        "feedbackPhone": null,
+        "rating": null,
+        "comment": "6. Competition & Dealer Feedback",
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": "Any competitor schemes in past/future (credit, discount, gifts)?",
+        "signature": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Ehsan, Ehsan Corporation",
+        "phone": "0300-6562098"
+      },
+      "coord": {
+        "raw": "30°49'42.0\"N 72°35'49.6\"E",
+        "lat": 30.828333333333333,
+        "lng": 72.5971111111111
+      },
+      "quotes": []
+    },
+    {
+      "id": 2,
+      "sheet": "D17S2",
+      "date": null,
+      "district": "Phalia",
+      "village": "Chak 338 GB",
+      "host": {
+        "name": "M. Javaid",
+        "phone": " 0346-7423338",
+        "feedbackName": "M. Javaid",
+        "feedbackPhone": " 0346-7423338",
+        "rating": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      },
+      "dealer": {
+        "name": "M. Ehsan, Ehsan Corporation",
+        "phone": "0300-6562098"
+      },
+      "coord": {
+        "raw": "30°52'14.1\"N 72°28'26.9\"E",
+        "lat": 30.870583333333332,
+        "lng": 72.47413888888889
+      },
+      "quotes": []
+    },
+    {
+      "id": 3,
+      "sheet": "D17S3",
+      "date": null,
+      "district": "Phalia",
+      "village": null,
+      "host": {
+        "name": null,
+        "phone": null,
+        "feedbackName": 0,
+        "feedbackPhone": 0,
+        "rating": null,
+        "comment": null,
+        "signature": null
+      },
+      "sales": {
+        "name": null,
+        "phone": null,
+        "comment": null,
+        "signature": null
+      },
+      "dealer": {
+        "name": null,
+        "phone": null
+      },
+      "coord": {
+        "raw": null,
+        "lat": null,
+        "lng": null
+      },
+      "quotes": []
+    }
+  ]
+}

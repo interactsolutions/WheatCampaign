@@ -1,0 +1,26 @@
+{
+  "campaign": "Buctril Super – Wheat Activations 2025",
+  "totalSessions": 40,
+  "farmersPresent": 1454,
+  "wheatFarmers": 1442,
+  "wheatAcres": 22128,
+  "estimatedBuctrilAcres": 21187,
+  "awarenessCount": 1120,
+  "usedLastYearCount": 968,
+  "definiteCount": 1303,
+  "maybeCount": 136,
+  "notInterestedCount": 7,
+  "drivers": {
+    "Trust in Bayer brand": 1071,
+    "Safe on crop (no burning)": 893,
+    "Good past experience": 884,
+    "Better weed control vs other options": 877,
+    "Dealer strongly recommending": 40
+  },
+  "barriers": {
+    "Price too high": 207,
+    "No money / credit available": 80,
+    "Fear of crop damage / burning": 80,
+    "Happy with existing generic brand": 53
+  }
+}

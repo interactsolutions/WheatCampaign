@@ -1,180 +1,226 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Session Sheets – INTERACT Dashboard</title>
-  <link rel="stylesheet" href="./style.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Raw sheet viewer</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=20260101" />
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand__title">INTERACT</div>
-        <div class="brand__subtitle">Session Sheets Viewer</div>
+  <header class="topbar">
+    <div class="brand">
+      <div>
+        <div class="brandTitle">Raw sheet viewer</div>
+        <div class="brandSub">Audit underlying sheet exports. <a id="backLink" class="link" href="index.html">Back to report</a></div>
       </div>
-      <nav class="topbar__nav">
-        <a class="chip" href="./index.html">Dashboard</a>
-        <a class="chip chip--active" href="./sheets.html">Sheets</a>
-      </nav>
-    </header>
+    </div>
+    <div class="controls">
+      <div class="control">
+        <label for="sheetSelect">Sheet</label>
+        <select id="sheetSelect"></select>
+      </div>
+      <div class="control">
+        <label>Search</label>
+        <input id="sheetSearch" placeholder="D1S1, village, district…" />
+      </div>
+    </div>
+  </header>
 
-    <main class="container">
-      <section class="card">
-        <div class="card__head">
-          <h2>Browse individual session sheets</h2>
-          <p class="muted">Select a sheet to view the original form values, influencer farmers list, and feedback/signatures (if present in Excel).</p>
+  <main class="grid2">
+    <section class="card">
+      <h2>Sheet details</h2>
+      <div id="meta" class="muted">Loading…</div>
+      <div class="smallMuted">Use this view for audits and debugging. Business insights and actions are summarized on the main dashboard.</div>
+      <div class="divider"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Feedback</h3>
+          <div id="feedback" class="muted">—</div>
         </div>
-
-        <div class="grid2">
-          <div>
-            <label class="label">Campaign</label>
-            <select id="campaignSelect" class="input">
-              <option value="buctril-super-2025">buctril-super-2025</option>
-            </select>
-          </div>
-          <div>
-            <label class="label">Session Sheet</label>
-            <select id="sheetSelect" class="input"></select>
-          </div>
+        <div class="card">
+          <h3>Signatures</h3>
+          <div class="mediaRow" id="sigs"></div>
         </div>
+      </div>
 
-        <div id="sheetMeta" class="kv"></div>
+      <div class="divider"></div>
+      <h3>Farmers</h3>
+      <div class="tableWrap">
+        <table class="sessionTable" id="farmersTable">
+          <thead><tr id="farmersHead"></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-        <div class="divider"></div>
-        <h3>Key influencer farmers</h3>
-        <div class="tableWrap"><table class="table" id="farmersTable"></table></div>
-
-        <div class="divider"></div>
-        <h3>Host / sales feedback & signatures</h3>
-        <div id="feedbackBlock" class="grid2"></div>
-
-        <div class="divider"></div>
-        <h3>Full sheet data (scroll)</h3>
-        <div class="tableWrap"><table class="table table--dense" id="gridTable"></table></div>
-      </section>
-    </main>
-  </div>
+    <section class="card">
+      <h2>All sheets</h2>
+      <div id="sheetList" class="muted">Loading…</div>
+    </section>
+  </main>
 
 <script>
-(function(){
-  const $ = (s, r=document)=>r.querySelector(s);
-  const $el = (tag, cls)=>{ const e=document.createElement(tag); if(cls) e.className=cls; return e; };
+(() => {
+  'use strict';
+  const $$ = (s,r=document)=>r.querySelector(s);
+  const esc = (s)=>{const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML;};
+  const BASE = new URL('.', location.href);
+  const url = (p)=>new URL(p, BASE).toString();
+  const qs = new URLSearchParams(location.search);
+  const campaign = qs.get('campaign') || 'buctril-super-2025';
+  const requestedSheet = qs.get('sheet') || '';
 
-  const BASE = new URL('./', window.location.href);
-  const q = new URLSearchParams(location.search);
-  const campaign = q.get('campaign') || 'buctril-super-2025';
+  $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
 
-  function resolveUrl(p){ return new URL(p, BASE).toString(); }
-
-  async function getJson(p){
-    const res = await fetch(resolveUrl(p), {cache:'no-store'});
-    if(!res.ok) throw new Error('Fetch failed: '+p+' ('+res.status+')');
-    return res.json();
+  async function fetchJson(p) {
+    const r = await fetch(url(p), {cache:'no-store'});
+    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
+    return await r.json();
   }
 
-  function fmt(v){ return (v===null||v===undefined||v==='') ? '—' : v; }
+  function normalizeMediaPath(p) {
+    const raw = String(p ?? '').trim();
+    if (!raw) return '';
+    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+    let x = raw.replace(/^\.?\//,'').replace(/^\//,'');
+    if (x.startsWith('assets/')) return x;
+    if (x.startsWith('gallery/')) return 'assets/' + x;
+    if (!x.includes('/')) return 'assets/gallery/' + x;
+    return x;
+  }
 
-  function renderMeta(m){
-    const box = $('#sheetMeta');
-    box.innerHTML = '';
-    const items = [
-      ['Date', m.date], ['District', m.district], ['Village', m.village],
-      ['Host', m.host], ['Dealer', m.dealer], ['Dealer Contact', m.dealer_contact],
-      ['Farmers present', m.farmers_present], ['Acres', m.acres],
-      ['Coordinates', m.coord_raw]
-    ];
-    items.forEach(([k,v])=>{
-      const row = $el('div','kv__row');
-      row.innerHTML = `<div class="kv__k">${k}</div><div class="kv__v">${fmt(v)}</div>`;
-      box.appendChild(row);
+  function setImg(img, p) {
+    const ph = 'assets/placeholder.svg';
+    img.src = url(normalizeMediaPath(p) || ph);
+    img.onerror = ()=>{img.onerror=null; img.src=url(ph);};
+  }
+
+  let sheetsIndex = null;
+
+  function renderList(filterText='') {
+    const list = $$('#sheetList');
+    const f = filterText.trim().toLowerCase();
+    const items = (sheetsIndex?.sheets || []).filter(x => {
+      if (!f) return true;
+      return String(x.sheet||'').toLowerCase().includes(f)
+        || String(x.village||'').toLowerCase().includes(f)
+        || String(x.district||'').toLowerCase().includes(f);
     });
+    // Determine the currently selected sheet to highlight it in the list
+    const current = ($$('#sheetSelect')?.value || requestedSheet || '').toLowerCase();
+    list.innerHTML = `<div class="muted">Total: <b>${items.length}</b></div>` + 
+      `<ul class="muted">${items.slice(0,200).map(x => {
+        const href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(x.sheet)}`;
+        const isActive = String(x.sheet || '').toLowerCase() === current;
+        return `<li><a class="link${isActive ? ' active' : ''}" href="${href}">${esc(x.sheet)}</a> — ${esc(x.district||'')} — ${esc(x.village||'')}</li>`;
+      }).join('')}</ul>`;
   }
 
-  function renderFarmers(rows){
-    const t = $('#farmersTable');
-    const head = ['SN','Farmer','Phone','Village','Acres','Intent','Used before','Other brands/method'];
-    t.innerHTML = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
-    const tb = $el('tbody');
-    rows.forEach(r=>{
-      const tr = $el('tr');
-      tr.innerHTML = `<td>${fmt(r.sn)}</td><td>${fmt(r.name)}</td><td>${fmt(r.phone)}</td><td>${fmt(r.village)}</td><td>${fmt(r.acres)}</td><td>${fmt(r.intent)}</td><td>${fmt(r.used_before)}</td><td>${fmt(r.other_brands_method)}</td>`;
-      tb.appendChild(tr);
-    });
-    t.appendChild(tb);
-  }
+  async function loadSheet(sheetRef) {
+    const meta = $$('#meta');
+    const fb = $$('#feedback');
+    const sigs = $$('#sigs');
+    meta.textContent = 'Loading…';
+    fb.textContent = 'Loading…';
+    sigs.innerHTML = '';
 
-  function renderFeedback(fb, sigs){
-    const block = $('#feedbackBlock');
-    block.innerHTML = '';
-    const left = $el('div','cardLite');
-    const right = $el('div','cardLite');
+    try {
+      const sh = await fetchJson(`data/${campaign}/sheets/${sheetRef}.json`);
+      const m = sh.meta || {};
+      meta.innerHTML = `
+        <div><b>${esc(m.sheet||sheetRef)}</b> • Date: <b>${esc(m.date||'')}</b></div>
+        <div class="smallMuted">District: ${esc(m.district||'')} • Village: ${esc(m.village||'')} • Farmers present: ${esc(String(m.farmers_present||''))} • Acres: ${esc(String(m.acres||''))}</div>
+      `;
 
-    left.innerHTML = `
-      <h4>Host</h4>
-      <div class="muted">Name: <b>${fmt(fb.host_name)}</b></div>
-      <div class="muted">Phone: <b>${fmt(fb.host_phone)}</b></div>
-      <div class="muted">Comment:</div>
-      <div class="quote">${fmt(fb.host_comment)}</div>
-      ${sigs.host ? `<img class="sig" src="${resolveUrl(sigs.host)}" alt="Host signature"/>` : `<div class="muted">Signature: —</div>`}
-    `;
-    right.innerHTML = `
-      <h4>Sales</h4>
-      <div class="muted">Name: <b>${fmt(fb.sales_name)}</b></div>
-      <div class="muted">Phone: <b>${fmt(fb.sales_phone)}</b></div>
-      <div class="muted">Feedback:</div>
-      <div class="quote">${fmt(fb.sales_feedback)}</div>
-      ${sigs.sales ? `<img class="sig" src="${resolveUrl(sigs.sales)}" alt="Sales signature"/>` : `<div class="muted">Signature: —</div>`}
-    `;
-    block.appendChild(left);
-    block.appendChild(right);
-  }
+      const f = sh.feedback || {};
+      fb.innerHTML = `
+        ${f.host_comment ? `<div><b>Host comment:</b> ${esc(f.host_comment)}</div>` : ''}
+        ${f.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(f.sales_feedback)}</div>` : ''}
+        ${f.manager_note ? `<div><b>Manager note:</b> ${esc(f.manager_note)}</div>` : ''}
+        ${(!f.host_comment && !f.sales_feedback && !f.manager_note) ? '<div class="muted">—</div>' : ''}
+      `;
 
-  function renderGrid(grid){
-    const t = $('#gridTable');
-    t.innerHTML = '';
-    const thead = $el('thead');
-    const trh = $el('tr');
-    const cols = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-    trh.innerHTML = `<th class="sticky">Row</th>${cols.map(c=>`<th>${c}</th>`).join('')}`;
-    thead.appendChild(trh);
-    t.appendChild(thead);
+      const sig = sh.signatures || {};
+      const host = document.createElement('img');
+      host.className = 'thumb';
+      host.alt = 'Host signature';
+      setImg(host, sig.host);
+      const sales = document.createElement('img');
+      sales.className = 'thumb';
+      sales.alt = 'Sales signature';
+      setImg(sales, sig.sales);
+      sigs.appendChild(host);
+      sigs.appendChild(sales);
 
-    const tbody = $el('tbody');
-    grid.forEach((row, i)=>{
-      const tr = $el('tr');
-      const cells = row.map(v=>`<td>${fmt(v)}</td>`).join('');
-      tr.innerHTML = `<td class="sticky">${i+1}</td>${cells}`;
-      tbody.appendChild(tr);
-    });
-    t.appendChild(tbody);
-  }
+      // Farmers table
+      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
+      const head = $$('#farmersHead');
+      const body = $$('#farmersTable tbody');
+      head.innerHTML = '';
+      body.innerHTML = '';
+      // Derive table columns from the first farmer record. Map raw keys to
+      // human‑friendly headings. Fallback to a sensible default order if no
+      // records are present.
+      const rawCols = farmers.length ? Object.keys(farmers[0]) : ['sn','name','phone','village','acres','intent','used_before','other_brands_method'];
+      const colMap = {
+        sn: 'S#',
+        name: 'Name',
+        phone: 'Phone',
+        village: 'Village',
+        acres: 'Acres',
+        intent: 'Intent',
+        used_before: 'Used before',
+        other_brands_method: 'Other brands method',
+        district: 'District',
+        date: 'Date'
+      };
+      // Build the header row with friendly names where available
+      rawCols.forEach(c => {
+        const th = document.createElement('th');
+        th.textContent = colMap[c] || c;
+        head.appendChild(th);
+      });
+      for (const row of farmers) {
+        const tr = document.createElement('tr');
+        cols.forEach(c => {
+          const td = document.createElement('td');
+          td.textContent = (row && row[c] != null) ? String(row[c]) : '';
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      }
 
-  async function load(){
-    $('#campaignSelect').value = campaign;
-    const idx = await getJson(`data/${campaign}/sheets_index.json`);
-    const sel = $('#sheetSelect');
-    sel.innerHTML = idx.sheets.map(s=>`<option value="${s.sheet}">${s.sheet} — ${s.district || ''} / ${s.village || ''}</option>`).join('');
-    const fromQ = q.get('sheet');
-    if(fromQ && idx.sheets.some(x=>x.sheet===fromQ)) sel.value = fromQ;
-
-    async function openSheet(name){
-      const data = await getJson(`data/${campaign}/sheets/${name}.json`);
-      renderMeta(data.meta);
-      renderFarmers(data.farmers || []);
-      renderFeedback(data.feedback || {}, data.signatures || {});
-      renderGrid(data.grid || []);
+    } catch (e) {
+      meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the list on the right.</div>`;
+      fb.textContent = '—';
+      sigs.innerHTML = '';
+      // Clear the farmers table if the sheet is missing
+      const head = $$('#farmersHead');
+      const body = $$('#farmersTable tbody');
+      if (head) head.innerHTML = '';
+      if (body) body.innerHTML = '';
     }
-    sel.addEventListener('change', ()=>openSheet(sel.value));
-    await openSheet(sel.value);
   }
 
-  load().catch(err=>{
-    document.body.innerHTML = `<div style="padding:24px;font-family:system-ui;color:#fff;background:#0b1220;min-height:100vh">
-      <h2>Sheets viewer failed to load</h2>
-      <pre style="white-space:pre-wrap;color:#cfe0ff">${err.message}</pre>
-      <p>Confirm the file exists: <code>/data/${campaign}/sheets_index.json</code></p>
-    </div>`;
+  async function boot() {
+    sheetsIndex = await fetchJson(`data/${campaign}/sheets_index.json`);
+    const sel = $$('#sheetSelect');
+    sel.innerHTML = (sheetsIndex.sheets || []).map(x => `<option value="${esc(x.sheet)}">${esc(x.sheet)} — ${esc(x.district||'')} — ${esc(x.village||'')}</option>`).join('');
+    const initial = requestedSheet || sheetsIndex.sheets?.[0]?.sheet || '';
+    sel.value = initial;
+    sel.onchange = () => {
+      location.href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(sel.value)}`;
+    };
+    $$('#sheetSearch').addEventListener('input', (ev) => renderList(ev.target.value));
+    renderList('');
+    await loadSheet(initial);
+  }
+
+  boot().catch(e => {
+    $$('#meta').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
+    $$('#sheetList').textContent = '—';
   });
 })();
 </script>

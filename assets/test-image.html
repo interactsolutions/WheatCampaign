@@ -1,0 +1,36 @@
+<!-- Save as test-image.html and open in browser to get the image -->
+<html>
+<body>
+<canvas id="canvas" width="400" height="300"></canvas>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Gradient background
+  const gradient = ctx.createLinearGradient(0, 0, 400, 300);
+  gradient.addColorStop(0, '#0f1a2e');
+  gradient.addColorStop(1, '#111f39');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 400, 300);
+  
+  // Text
+  ctx.fillStyle = '#7dd3fc';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Test Media', 200, 150);
+  
+  ctx.fillStyle = '#86efac';
+  ctx.font = '16px Arial';
+  ctx.fillText('Gallery is working!', 200, 180);
+  
+  // Convert to data URL
+  const dataURL = canvas.toDataURL('image/jpeg');
+  const link = document.createElement('a');
+  link.href = dataURL;
+  link.download = 'test.jpg';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+</script>
+</body>
+</html>

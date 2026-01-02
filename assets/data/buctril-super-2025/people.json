@@ -1,0 +1,1181 @@
+{
+  "people": [
+    {
+      "role": "host",
+      "name": "Hakim Ali Chachar",
+      "phone": "0306-8250645",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ubaro",
+          "village": "Ameen khan Chacharr",
+          "date": "2025-11-24",
+          "comment": "Excellent"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Sadiq Hussain",
+      "phone": "0301-2124357",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ubaro",
+          "village": "Ameen khan Chacharr",
+          "date": "2025-11-24",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Jam Wali Dhino",
+      "phone": "0300-3267636",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Ubaro",
+          "village": "Naseer Dhondo ",
+          "date": "2025-11-24",
+          "comment": "Any competitor schemes in past/future (credit, discount, gifts)?"
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Jam Wali",
+      "phone": "0300 - 3267636",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Ubaro",
+          "village": "Naseer Dhondo ",
+          "date": "2025-11-24",
+          "comment": "Host Comments about session:"
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "M. Moosa",
+      "phone": "0300-3660064",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Dharki",
+          "village": "Matal Mahar",
+          "date": "2025-11-25",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "waqar Ahmad",
+      "phone": "0311-2121427",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Dharki",
+          "village": "Matal Mahar",
+          "date": "2025-11-25",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Shafique Ahmed",
+      "phone": "0309-3897158",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Dharki",
+          "village": "Abdullah Rajni ",
+          "date": "2025-11-25",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Tanveer Ahmed",
+      "phone": "0320-1323046",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Dharki",
+          "village": "Abdullah Rajni ",
+          "date": "2025-11-25",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Ali Nawaz",
+      "phone": "0300-3117949",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ghotki",
+          "village": "Abdullah Laakhan",
+          "date": "2025-11-26",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Farooq Ahmad",
+      "phone": "0305-3014237",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ghotki",
+          "village": "Abdullah Laakhan",
+          "date": "2025-11-26",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Raeis M. Punal",
+      "phone": "0300-3262285",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ghotki",
+          "village": "M. Qasim Ghooto",
+          "date": "2025-11-26",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Hizbullah",
+      "phone": "0315-7810700",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ghotki",
+          "village": "M. Qasim Ghooto",
+          "date": "2025-11-26",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Fayaz Ahmed",
+      "phone": "0300-2326598",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ghotki",
+          "village": "Darri Chachar",
+          "date": "2025-11-27",
+          "comment": "V. Good And informative"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Imtiaz Ahmad",
+      "phone": "0307-2235762",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ghotki",
+          "village": "Darri Chachar",
+          "date": "2025-11-27",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Abdul Rasheed",
+      "phone": "0300-3194825",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Ghotki",
+          "village": "Kalati Gabol",
+          "date": "2025-11-27",
+          "comment": "Excellent"
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Bahadur Ali",
+      "phone": "0300-9316971",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Ghotki",
+          "village": "Kalati Gabol",
+          "date": "2025-11-27",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Haji Darya khan",
+      "phone": "0300-8920333",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Jaferabad",
+          "village": "Haji Darya Khan",
+          "date": "2025-11-28",
+          "comment": "Informative and useful for farmers"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Khuda Bukhsh",
+      "phone": "0300-1156695",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Jaferabad",
+          "village": "Haji Darya Khan",
+          "date": "2025-11-28",
+          "comment": null
+        },
+        {
+          "sessionId": 2,
+          "district": "Jaferabad",
+          "village": "Qaeim Khan Khossa 2",
+          "date": "2025-11-28",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png",
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Haji ShahaL khan",
+      "phone": "0300-3174711",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Jaferabad",
+          "village": "Qaeim Khan Khossa 2",
+          "date": "2025-11-28",
+          "comment": "V. Good and interracice."
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Ali Dino",
+      "phone": "0300-3727407",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ranipur",
+          "village": "Allah Wadhayo",
+          "date": "2025-11-29",
+          "comment": "Allah Wadhayo"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "sales",
+      "name": "Allah Wadhayo",
+      "phone": "",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ranipur",
+          "village": "Allah Wadhayo",
+          "date": "2025-11-29",
+          "comment": "Allah Wadhayo"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Anwar Ali",
+      "phone": "0305-3691795",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Ranipur",
+          "village": "Haji Khabar Malaha",
+          "date": "2025-11-29",
+          "comment": null
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "host",
+      "name": "Ghulam Abbas",
+      "phone": "0304-0187132",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Mehrabpur",
+          "village": "Saein Daad Marri",
+          "date": "2025-12-01",
+          "comment": "It was a good session ful i use/al information"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Farhan All Urar",
+      "phone": "0300-2198404",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Mehrabpur",
+          "village": "Saein Daad Marri",
+          "date": "2025-12-01",
+          "comment": "میرا نام عرفان علی ہے۔ آج بائیر کراپ سائنس کی ٹیم یہاں آئی انہوں نے پیچیس گندم (کَندم) میں جو جڑی بوٹیوں کے کنٹرول کے بارے حسین بتایا۔ کسانوں کو بہت کچھ سیکھنے کو ملا۔"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Ghulam Sarwar",
+      "phone": "0304-1783160",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Mehrabpur",
+          "village": "Pir Watiyo",
+          "date": "2025-12-01",
+          "comment": "Excellent, full of information"
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Muhammad Saleem",
+      "phone": "0302-112607",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Mehrabpur",
+          "village": "Pir Watiyo",
+          "date": "2025-12-01",
+          "comment": "آج ہمارے پاس بائیر کراپ سائنس پاکستان کے نمائندے جسی گائوں بھر وتّو ایک میٹنگ رکھی جس میں گندم میں آنے والے جڑی بوٹی کے بارے بریفنگ دی جس میں بلکنلئیر چوڑے بتی استعمال اور نوکیلئے بتی یہ انلائنس شیئر کے استعمال کے حوالے سے بتایا اس پروگرام سے علاقائی کے زمینداروں کو کافی فائدہ ہوا۔"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "host",
+      "name": "Abdul Razzaq",
+      "phone": "0300-3212418",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Dadu",
+          "village": "Manali",
+          "date": "2025-11-29",
+          "comment": "0328-1896821"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "sales",
+      "name": "Manahi",
+      "phone": "",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Dadu",
+          "village": "Manali",
+          "date": "2025-11-29",
+          "comment": "Ghulam Hussain"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Jewan Abro",
+      "phone": "0300-3137977",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Dadu",
+          "village": "Golo Potho",
+          "date": "2025-11-29",
+          "comment": "6. Competition & Dealer Feedback"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "host",
+      "name": "Bilal Gorai",
+      "phone": "0307-6344702",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Muzaffar Ghar ",
+          "village": "Bassti Seerein",
+          "date": "2025-12-03",
+          "comment": "Excellent"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Táriq Husain",
+      "phone": "0301-4590967",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Muzaffar Ghar ",
+          "village": "Bassti Seerein",
+          "date": "2025-12-03",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "M. Bilal Chandio",
+      "phone": "0345-7352033",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Muzaffar Ghar ",
+          "village": "Topi Maanay wali",
+          "date": "2025-12-03",
+          "comment": "Top competitor brands mentioned (write names)"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "sales",
+      "name": "Full of beautiful infoormation, v. good",
+      "phone": "",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Muzaffar Ghar ",
+          "village": "Topi Maanay wali",
+          "date": "2025-12-03",
+          "comment": "Dealer attitude to Buctril Super (supportive / neutral / prefers other brands)"
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Mujahid Hussain",
+      "phone": "0302-6131374",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Muzaffar Ghar ",
+          "village": "Phaty wala",
+          "date": "2025-12-03",
+          "comment": "0329-6979569"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "sales",
+      "name": "Patty Wala",
+      "phone": "Yes",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Muzaffar Ghar ",
+          "village": "Phaty wala",
+          "date": "2025-12-03",
+          "comment": "0325-475114"
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Ghulan Hailer",
+      "phone": "0343 - 1349093",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Kot Adu",
+          "village": "Basti Haider Ghazi",
+          "date": "2025-12-04",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "M. Junaid",
+      "phone": "0348-0636385",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Kot Adu",
+          "village": "Basti Haider Ghazi",
+          "date": "2025-12-04",
+          "comment": null
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "host",
+      "name": "Naveed Ahmed",
+      "phone": "0344-1073974",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Kot Adu",
+          "village": "Hanjrai Bangla Chaah Phaati wala",
+          "date": "2025-12-04",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Gulam Yasin",
+      "phone": "0341-8606797",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Kot Adu",
+          "village": "Hanjrai Bangla Chaah Phaati wala",
+          "date": "2025-12-04",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Mushtaq  Hussain",
+      "phone": "0306-8513786",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Karor Lal esan",
+          "village": "Basti joya",
+          "date": "2025-12-05",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "M. Aslam",
+      "phone": "0300-9875514",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Karor Lal esan",
+          "village": "Basti joya",
+          "date": "2025-12-05",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Mulazim Hussain",
+      "phone": "0307-8802008",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Karor Lal esan",
+          "village": "Chak 106 TDA",
+          "date": "2025-12-05",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "M. Shafi",
+      "phone": "0344 - 7144162",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Karor Lal esan",
+          "village": "Chak 106 TDA",
+          "date": "2025-12-05",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "M. SULEMAN",
+      "phone": "0308-1405556",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Karor Lal esan",
+          "village": "Bassti Maachi Buchi wala",
+          "date": "2025-12-05",
+          "comment": "Basti Machi Buchi wala"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "sales",
+      "name": "Basti Machi Buchi wala",
+      "phone": "",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Karor Lal esan",
+          "village": "Bassti Maachi Buchi wala",
+          "date": "2025-12-05",
+          "comment": "Basti Machi Buchi wala"
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Zahoor Khan",
+      "phone": "0345-7659279",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Bhakkar",
+          "village": "Kandani",
+          "date": "2025-12-06",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Zeeshan Khan",
+      "phone": "0371-0397214",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Bhakkar",
+          "village": "Kandani",
+          "date": "2025-12-06",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Ch. Ghulam Murtaza",
+      "phone": "0315-6603754",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Bhakkar",
+          "village": "54-ML",
+          "date": "2025-12-06",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Syed Tasawar Abbas",
+      "phone": "0336-6631214",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Bhakkar",
+          "village": "54-ML",
+          "date": "2025-12-06",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Nazar Abbas",
+      "phone": "0310-7789111",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Bhakkar",
+          "village": "Majoka",
+          "date": "2025-12-06",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "M. Tahir",
+      "phone": "0307-5115767",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Bhakkar",
+          "village": "Majoka",
+          "date": "2025-12-06",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Abid Hussain",
+      "phone": "0301-2068770",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Mianwali",
+          "village": "Kalor Sharif Kacha",
+          "date": "2025-12-08",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Arif Khan",
+      "phone": "0306-5306565",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Mianwali",
+          "village": "Kalor Sharif Kacha",
+          "date": "2025-12-08",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Taj Muhammad",
+      "phone": "0300-7417465",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Mianwali",
+          "village": "Kamar Mashaani Gulshan Colony",
+          "date": "2025-12-08",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Binyameen",
+      "phone": "0300-1828265",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Mianwali",
+          "village": "Kamar Mashaani Gulshan Colony",
+          "date": "2025-12-08",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Shifaullah",
+      "phone": "0305-3126621",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Mianwali",
+          "village": "Daud KhaiL kacha",
+          "date": "2025-12-08",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Murtaza",
+      "phone": "0304-6747523",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Mianwali",
+          "village": "Daud KhaiL kacha",
+          "date": "2025-12-08",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Malik Sajid",
+      "phone": "0300-5196990",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Sargodha",
+          "village": "Jharoola",
+          "date": "2025-12-09",
+          "comment": "0300.7133299"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "host",
+      "name": "M. IRFAN",
+      "phone": "0302-7038789",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Sargodha",
+          "village": "Habib pur Kangrra",
+          "date": "2025-12-09",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Syed Asim Murtaza",
+      "phone": "0342-5128639",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Sargodha",
+          "village": "Habib pur Kangrra",
+          "date": "2025-12-09",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Arshad",
+      "phone": "0346-3825513",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Sargodha",
+          "village": "ChakrraLa",
+          "date": "2025-12-09",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Mubashir Siddiqui",
+      "phone": "0345-1718611",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Sargodha",
+          "village": "ChakrraLa",
+          "date": "2025-12-09",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Ziaullah Babar",
+      "phone": "0347-6116938",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Phalia",
+          "village": "Machyana",
+          "date": "2025-12-10",
+          "comment": "Ziaullah Babar"
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Nadeem",
+      "phone": "0304-1767621",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Phalia",
+          "village": "Sheikh Pur",
+          "date": "2025-12-10",
+          "comment": "0304-1767621"
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "M. Ashraf",
+      "phone": "0334-7262420",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Phalia",
+          "village": "Baghwal",
+          "date": "2025-12-10",
+          "comment": "excellent"
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "sales",
+      "name": "Ibrar Azhar",
+      "phone": "0306-0619613",
+      "sessions": [
+        {
+          "sessionId": 3,
+          "district": "Phalia",
+          "village": "Baghwal",
+          "date": "2025-12-10",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "3": "assets/signatures/buctril-super-2025/session-3-sales-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Kamran",
+      "phone": "0340-1598005",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Chakwal",
+          "village": "Daleel Pur Khokhar Baala",
+          "date": "2025-12-11",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "1": "assets/signatures/buctril-super-2025/session-1-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Amir",
+      "phone": "0345-5828098",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Chakwal",
+          "village": "DawaalmiaaL",
+          "date": "2025-12-11",
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    },
+    {
+      "role": "host",
+      "name": "Raye Junaid",
+      "phone": "0341-5719387",
+      "sessions": [
+        {
+          "sessionId": 1,
+          "district": "Phalia",
+          "village": "Chak 262-GB",
+          "date": null,
+          "comment": "6. Competition & Dealer Feedback"
+        }
+      ],
+      "signatures": {}
+    },
+    {
+      "role": "host",
+      "name": "M. Javaid",
+      "phone": "0346-7423338",
+      "sessions": [
+        {
+          "sessionId": 2,
+          "district": "Phalia",
+          "village": "Chak 338 GB",
+          "date": null,
+          "comment": null
+        }
+      ],
+      "signatures": {
+        "2": "assets/signatures/buctril-super-2025/session-2-host-395d5a7a04.png"
+      }
+    }
+  ],
+  "note": "Contains personal contact information and optional signatures."
+}

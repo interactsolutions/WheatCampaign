@@ -30,6 +30,7 @@
   <main class="grid2">
     <section class="card">
       <h2>Sheet details</h2>
+      <!-- meta holds session details and summary -->
       <div id="meta" class="muted">Loading…</div>
       <div class="smallMuted">Use this view for audits and debugging. Business insights and actions are summarized on the main dashboard.</div>
       <div class="divider"></div>
@@ -72,8 +73,10 @@
   const campaign = qs.get('campaign') || 'buctril-super-2025';
   const requestedSheet = qs.get('sheet') || '';
 
+  // update back link to maintain campaign context
   $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
 
+  // Basic fetch helper with error handling
   async function fetchJson(p) {
     const r = await fetch(url(p), {cache:'no-store'});
     if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
@@ -99,6 +102,7 @@
 
   let sheetsIndex = null;
 
+  // Render the list of sheets in the side panel, highlighting the current one
   function renderList(filterText='') {
     const list = $$('#sheetList');
     const f = filterText.trim().toLowerCase();
@@ -108,7 +112,6 @@
         || String(x.village||'').toLowerCase().includes(f)
         || String(x.district||'').toLowerCase().includes(f);
     });
-    // Determine the currently selected sheet to highlight it in the list
     const current = ($$('#sheetSelect')?.value || requestedSheet || '').toLowerCase();
     list.innerHTML = `<div class="muted">Total: <b>${items.length}</b></div>` + 
       `<ul class="muted">${items.slice(0,200).map(x => {
@@ -118,6 +121,16 @@
       }).join('')}</ul>`;
   }
 
+  // Helper to mask phone numbers for privacy
+  function maskPhone(p) {
+    const raw = String(p||'').replace(/\s+/g,'');
+    if (!raw) return '';
+    // keep last 4 digits if length >=4
+    const tail = raw.slice(-4);
+    return '***-***-' + tail;
+  }
+
+  // Load a sheet by reference, render meta, feedback, signatures and farmers
   async function loadSheet(sheetRef) {
     const meta = $$('#meta');
     const fb = $$('#feedback');
@@ -129,11 +142,33 @@
     try {
       const sh = await fetchJson(`data/${campaign}/sheets/${sheetRef}.json`);
       const m = sh.meta || {};
-      meta.innerHTML = `
+      // Build meta details
+      let metaHtml = `
         <div><b>${esc(m.sheet||sheetRef)}</b> • Date: <b>${esc(m.date||'')}</b></div>
         <div class="smallMuted">District: ${esc(m.district||'')} • Village: ${esc(m.village||'')} • Farmers present: ${esc(String(m.farmers_present||''))} • Acres: ${esc(String(m.acres||''))}</div>
       `;
 
+      // Farmers table summarisation
+      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
+      if (farmers.length > 0) {
+        const totalFarmers = farmers.length;
+        let totalAcres = 0;
+        let yesCount = 0;
+        let maybeCount = 0;
+        let otherCount = 0;
+        farmers.forEach(r => {
+          const a = parseFloat(r.acres) || 0;
+          totalAcres += a;
+          const intent = String(r.intent||'').toLowerCase();
+          if (intent.startsWith('y')) yesCount++;
+          else if (intent.startsWith('m')) maybeCount++;
+          else otherCount++;
+        });
+        metaHtml += `<div class="smallMuted">Summary: ${totalFarmers} farmers • ${totalAcres} acres • Definite: ${yesCount} • Maybe: ${maybeCount} • Others: ${otherCount}</div>`;
+      }
+      meta.innerHTML = metaHtml;
+
+      // Feedback
       const f = sh.feedback || {};
       fb.innerHTML = `
         ${f.host_comment ? `<div><b>Host comment:</b> ${esc(f.host_comment)}</div>` : ''}
@@ -142,6 +177,7 @@
         ${(!f.host_comment && !f.sales_feedback && !f.manager_note) ? '<div class="muted">—</div>' : ''}
       `;
 
+      // Signatures
       const sig = sh.signatures || {};
       const host = document.createElement('img');
       host.className = 'thumb';
@@ -154,15 +190,12 @@
       sigs.appendChild(host);
       sigs.appendChild(sales);
 
-      // Farmers table
-      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
+      // Render farmers table
       const head = $$('#farmersHead');
       const body = $$('#farmersTable tbody');
       head.innerHTML = '';
       body.innerHTML = '';
-      // Derive table columns from the first farmer record. Map raw keys to
-      // human‑friendly headings. Fallback to a sensible default order if no
-      // records are present.
+      // Determine columns
       const rawCols = farmers.length ? Object.keys(farmers[0]) : ['sn','name','phone','village','acres','intent','used_before','other_brands_method'];
       const colMap = {
         sn: 'S#',
@@ -176,7 +209,6 @@
         district: 'District',
         date: 'Date'
       };
-      // Build the header row with friendly names where available
       rawCols.forEach(c => {
         const th = document.createElement('th');
         th.textContent = colMap[c] || c;
@@ -184,19 +216,24 @@
       });
       for (const row of farmers) {
         const tr = document.createElement('tr');
-        cols.forEach(c => {
+        rawCols.forEach(c => {
           const td = document.createElement('td');
-          td.textContent = (row && row[c] != null) ? String(row[c]) : '';
+          let val = row && row[c] != null ? row[c] : '';
+          // mask phone numbers
+          if (c === 'phone') {
+            val = maskPhone(val);
+          }
+          td.textContent = String(val);
           tr.appendChild(td);
         });
         body.appendChild(tr);
       }
 
     } catch (e) {
+      // Show an informative message if the sheet fails to load
       meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the list on the right.</div>`;
       fb.textContent = '—';
       sigs.innerHTML = '';
-      // Clear the farmers table if the sheet is missing
       const head = $$('#farmersHead');
       const body = $$('#farmersTable tbody');
       if (head) head.innerHTML = '';

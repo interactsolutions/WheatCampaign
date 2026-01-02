@@ -1659,9 +1659,27 @@
     // Campaign date range
     // Prefer explicit campaign start/end if provided; otherwise derive from sessions.
     const dates = sessions.map(s => parseDateSafe(s.date)).filter(Boolean);
+    // If there are no valid dates, gracefully fallback instead of throwing. We'll
+    // still call renderAll() so the UI can display blanks and summary text. If
+    // sessions array is empty this allows the dashboard to show "No
+    // sessions" messages rather than being stuck on "Loading…". We also
+    // avoid throwing so the caller's catch does not prevent rendering.
     if (!dates.length) {
+      state.dateMin = null;
+      state.dateMax = null;
+      state.dateFrom = null;
+      state.dateTo = null;
+      // Clear date inputs
+      const fromEl = $$('#dateFrom');
+      const toEl = $$('#dateTo');
+      if (fromEl) { fromEl.min = ''; fromEl.max = ''; fromEl.value = ''; }
+      if (toEl) { toEl.min = ''; toEl.max = ''; toEl.value = ''; }
+      setRangeHint();
+      filterSessions();
+      renderAll();
+      setStatus('No sessions found.', 'bad');
       showSpinner(false);
-      throw new Error('No session dates found.');
+      return;
     }
     dates.sort((a,b) => a - b);
 

@@ -66,14 +66,15 @@ body{
 .chip.link:hover{background:rgba(76,111,255,.18)}
 
 .heroWrap{
-  /* Expand hero to full width when placed inside the header. */
+  /* Expand hero to full width when placed inside the header. The wrapper is
+     now a single-column container so the video occupies the full available
+     width. Thumbnails are overlaid on top of the video instead of sitting
+     alongside it. */
   max-width:100%;
   margin:0;
   padding:0 0 14px;
-  display:grid;
-  grid-template-columns: 1.3fr .7fr;
-  gap:12px;
-  align-items:stretch;
+  display:block;
+  position:relative;
 }
 .heroPlayer{
   position:relative;
@@ -95,11 +96,22 @@ body{
 .heroTitle{font-size:18px; font-weight:900}
 .heroSub{margin-top:6px; font-size:12px; color:var(--muted)}
 .heroControls{position:absolute; right:12px; top:12px; display:flex; gap:8px}
-.heroThumbs{display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px}
+.heroThumbs{
+  /* Overlay the thumbnail icons on the bottom right of the hero video. Use a
+     horizontal flex layout instead of a grid so the icons line up in a row. */
+  position:absolute;
+  right:14px;
+  bottom:14px;
+  display:flex;
+  gap:8px;
+  z-index:5;
+}
 .heroThumb{
   position:relative;
-  height:105px;
-  border-radius:16px;
+  /* Shrink thumbnails so they act as small icons over the video. */
+  width:58px;
+  height:40px;
+  border-radius:12px;
   overflow:hidden;
   border:1px solid rgba(26,41,71,.65);
   background:rgba(11,18,32,.5);
@@ -443,10 +455,10 @@ body{
 .lightboxActions{display:flex; gap:8px; justify-content:flex-end; padding:0 14px 14px}
 
 @media (max-width: 980px){
-  .heroWrap{grid-template-columns:1fr;}
+  /* Keep the hero in a single column layout on narrow screens. The video height
+     reduces slightly on medium breakpoints for better vertical fit. */
   .heroPlayer{height:200px;}
-  .heroThumbs{grid-template-columns: repeat(4, minmax(0,1fr));}
-  .heroThumb{height:72px;}
+  /* Thumbnails remain positioned absolutely; sizes remain consistent. */
 
   .controlsRow{grid-template-columns: 1fr 1fr; }
   .actions{grid-column:1/-1}
@@ -455,7 +467,7 @@ body{
   .headerMedia{display:none}
 }
 @media (max-width: 520px){
-  .heroThumbs{grid-template-columns: repeat(2, minmax(0,1fr));}
+  /* Further reduce hero video height on small screens */
   .heroPlayer{height:190px;}
 
   .mediaWall{grid-template-columns: 1fr}
@@ -660,7 +672,15 @@ body{
 
 
 /* v4 UI primitives */
-.rangeRow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.rangeRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  /* Keep the entire date range and action controls on a single line.
+     If the viewport is too narrow, horizontal scrolling may occur; the
+     responsive grid for .controls will handle wrapping at the control level. */
+  flex-wrap:nowrap;
+}
 .btnSmall{padding:8px 10px; font-size:12px; border-radius:10px}
 .btnGhost{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12)}
 .btnGhost:hover{background:rgba(255,255,255,.07)}
@@ -720,15 +740,22 @@ body{
 }
 
 /* Hero thumbnails custom sizing
-   Reduce the size of the hero thumbnails and allow more columns to be
-   displayed on wider viewports. Use !important to override earlier
-   definitions scattered in the stylesheet. */
+   Override earlier definitions so thumbnails overlay the video in a single row.
+   Use !important to ensure these styles trump the grid-based rules defined
+   elsewhere in the stylesheet. */
 .heroThumbs{
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)) !important;
+  position:absolute !important;
+  right:14px !important;
+  bottom:14px !important;
+  display:flex !important;
+  flex-direction:row !important;
   gap:8px !important;
+  z-index:5 !important;
 }
 .heroThumb{
-  height:60px !important;
+  width:58px !important;
+  height:40px !important;
+  border-radius:12px !important;
 }
 .heroThumb .badge{
   font-size:9px !important;

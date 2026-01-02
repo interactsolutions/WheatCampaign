@@ -680,7 +680,14 @@
       const sessionsByFarmers = fs
         .map(s => {
           const count = Number(s.metrics?.farmers || 0);
-          return { id: s.id, sheet: s.sheetRef || '', farmers: count };
+          // Compose a human-friendly label for the donut legend. Prefer the
+          // district name; fall back to village/spot or a generic label if
+          // unavailable. Include the session id for uniqueness.
+          let loc = (s.district || '').trim();
+          if (!loc) loc = (s.village || s.spot || '').trim();
+          if (!loc) loc = 'Session';
+          const label = `${loc} (S${s.id})`;
+          return { id: s.id, label, farmers: count };
         })
         .filter(x => x.farmers > 0)
         .sort((a, b) => b.farmers - a.farmers);
@@ -694,7 +701,7 @@
       let otherTotal = 0;
       sessionsByFarmers.forEach((item, idx) => {
         if (idx < maxSlices) {
-          labels.push(`S${item.id}`);
+          labels.push(item.label);
           data.push(item.farmers);
         } else {
           otherTotal += item.farmers;
@@ -1440,28 +1447,53 @@
 
   // ---------- Feedback ----------
   function bindFeedback() {
-    const key = 'harvest_horizons_feedback';
-    const txt = $$('#fbText');
-    const msg = $$('#fbMsg');
+    // Bind feedback form actions. The user can provide a phone number (for WhatsApp)
+    // and/or an email address. A message is always required. When the WhatsApp
+    // button is clicked and a phone number is provided, the browser opens a
+    // wa.me link with the encoded message. When the Email button is clicked
+    // and an email address is provided, the browser opens a mailto link with
+    // subject and body prefilled. A small status label displays validation
+    // feedback to the user.
+    const phoneInput = $$('#fbPhone');
+    const emailInput = $$('#fbEmail');
+    const msgInput = $$('#fbMessage');
+    const waBtn = $$('#fbSendWhatsApp');
+    const mailBtn = $$('#fbSendEmail');
+    const statusLabel = $$('#fbFeedbackMsg');
 
-    try {
-      const v = localStorage.getItem(key);
-      if (txt && v) txt.value = v;
-    } catch (_e) { /* ignore */ }
-
-    $$('#fbSave')?.addEventListener('click', () => {
-      try {
-        localStorage.setItem(key, txt?.value || '');
-        if (msg) msg.textContent = 'Saved.';
-      } catch (_e) {
-        if (msg) msg.textContent = 'Could not save in this browser.';
+    function displayStatus(t, ok = true) {
+      if (!statusLabel) return;
+      statusLabel.textContent = t;
+      statusLabel.style.color = ok ? '' : 'var(--danger)';
+    }
+    waBtn?.addEventListener('click', () => {
+      const phoneRaw = phoneInput?.value?.trim() || '';
+      const msg = msgInput?.value?.trim() || '';
+      // Remove non-digit characters; WhatsApp expects international numbers
+      const phone = phoneRaw.replace(/[^0-9]/g, '');
+      if (!phone) {
+        displayStatus('Please enter a valid phone number.', false);
+        return;
       }
+      const encoded = encodeURIComponent(msg);
+      const waUrl = `https://wa.me/${phone}?text=${encoded}`;
+      // Open in a new tab to avoid leaving the dashboard entirely
+      window.open(waUrl, '_blank');
+      displayStatus('Opening WhatsApp…');
     });
-
-    $$('#fbClear')?.addEventListener('click', () => {
-      if (txt) txt.value = '';
-      try { localStorage.removeItem(key); } catch (_e) {}
-      if (msg) msg.textContent = 'Cleared.';
+    mailBtn?.addEventListener('click', () => {
+      const email = emailInput?.value?.trim() || '';
+      const msg = msgInput?.value?.trim() || '';
+      if (!email) {
+        displayStatus('Please enter a valid email address.', false);
+        return;
+      }
+      const subject = encodeURIComponent('Feedback on Harvest Horizons Dashboard');
+      const body = encodeURIComponent(msg);
+      const mailto = `mailto:${email}?subject=${subject}&body=${body}`;
+      // Navigate away; mailto links open in the default mail client
+      window.location.href = mailto;
+      displayStatus('Opening email draft…');
     });
   }
 

@@ -40,12 +40,15 @@
           <div id="heroTitle" class="heroTitle"></div>
           <div id="heroSub" class="heroSub"></div>
         </div>
+        <!-- Controls and thumbnail icons overlay the video. The previous/next buttons
+             remain in the top right corner, while the thumbnail icons line up along
+             the bottom edge. -->
         <div class="heroControls">
           <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
           <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
         </div>
+        <div class="heroThumbs" id="heroThumbs"></div>
       </div>
-      <div class="heroThumbs" id="heroThumbs"></div>
     </div>
 
     <div class="controls">
@@ -219,24 +222,34 @@
 
     <section class="tabPanel card" data-tab="feedback" id="feedback">
       <h2>Feedback</h2>
-      <div class="muted">Optional notes for your team (stored locally in your browser).</div>
+      <div class="muted">We value your feedback. Send us a message via WhatsApp or email by providing the appropriate contact information below.</div>
       <div class="divider"></div>
       <div class="grid2">
+        <!-- Feedback form: collects phone or email and a message, and provides buttons to send via WhatsApp or email. -->
         <div class="card">
-          <label class="muted" for="fbText">Notes</label>
-          <textarea id="fbText" rows="8" placeholder="Write notes here…"></textarea>
-          <div class="drawerActions">
-            <button class="btn" id="fbSave">Save</button>
-            <button class="btn btnGhost" id="fbClear">Clear</button>
+          <div class="control">
+            <label for="fbPhone">Phone (WhatsApp)</label>
+            <input type="tel" id="fbPhone" placeholder="Enter phone number" />
           </div>
-          <div id="fbMsg" class="smallMuted"></div>
+          <div class="control">
+            <label for="fbEmail">Email</label>
+            <input type="email" id="fbEmail" placeholder="Enter email address" />
+          </div>
+          <div class="control">
+            <label for="fbMessage">Message</label>
+            <textarea id="fbMessage" rows="6" placeholder="Type your feedback here…"></textarea>
+          </div>
+          <div class="drawerActions">
+            <button class="btn" id="fbSendWhatsApp">Send via WhatsApp</button>
+            <button class="btn btnGhost" id="fbSendEmail">Send via Email</button>
+          </div>
+          <div id="fbFeedbackMsg" class="smallMuted"></div>
         </div>
         <div class="card">
           <h3>Quick links</h3>
           <ul class="muted">
             <li><a href="healthcheck.html" class="link">Healthcheck</a></li>
             <li><a href="sheets.html" class="link">Sheets browser</a></li>
-            <!-- Added link to the campaign analysis report -->
             <li><a href="report.html" class="link">Campaign analysis report</a></li>
           </ul>
         </div>

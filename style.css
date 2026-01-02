@@ -167,6 +167,17 @@ body{
   padding:10px 12px;
   outline:none;
 }
+
+/* Light theme: lighten form field backgrounds and borders for better
+   contrast against the light card backgrounds. Use semi-transparent
+   white/blue shades inspired by the light palette. */
+[data-theme="light"] .control input,
+[data-theme="light"] .control select,
+[data-theme="light"] .control textarea{
+  background: rgba(245, 248, 255, .55);
+  border-color: rgba(215, 224, 247, .85);
+  color: var(--text);
+}
 .control textarea{resize:vertical}
 .dateRange{display:flex; gap:8px; align-items:center}
 .dateRange .to{color:var(--muted2); font-size:12px}
@@ -240,6 +251,19 @@ body{
   color:#dbe5ff;
   text-align:center;
 }
+
+/* Light theme adjustments for the mini donut cards. These cards use a dark
+   translucent background by default which reduces contrast on the light
+   dashboard. Override the background and border to use a semi-opaque
+   white with a subtle blue border, and use the dark text colour for
+   titles. */
+[data-theme="light"] .donutCard{
+  background: rgba(245, 248, 255, .60);
+  border-color: rgba(215, 224, 247, .65);
+}
+[data-theme="light"] .donutTitle{
+  color: var(--text);
+}
 .donutWrap{
   position:relative;
   width:120px;
@@ -274,6 +298,16 @@ body{
   font-size:16px;
   font-weight:700;
   color:#e9f0ff;
+}
+
+/* In light mode swap donut centre colour and value colour to maintain
+   contrast on the lighter cards. The central circle becomes the card
+   colour and the text switches to the dark text colour. */
+[data-theme="light"] .donut::before{
+  background: var(--cardSolid);
+}
+[data-theme="light"] .donutValue{
+  color: var(--text);
 }
 
 .insightsRow{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; padding:0 14px 14px}
@@ -745,6 +779,21 @@ body{
   flex-direction:column;
   gap:10px;
   padding:0 14px 14px;
+}
+
+/*
+ * Light theme overrides for the bar charts. In day mode the default dark
+ * colours used for the bar labels and value text are too low contrast on
+ * white cards. Override these colours and the track fill to use darker
+ * hues that match the light palette. Also lighten the bar track so the
+ * coloured bar segments stand out clearly.
+ */
+[data-theme="light"] .barLabel,
+[data-theme="light"] .barVal{
+  color: var(--text);
+}
+[data-theme="light"] .barTrack{
+  background: rgba(13, 29, 52, .10);
 }
 
 .bullets{margin:0; padding-left:18px}

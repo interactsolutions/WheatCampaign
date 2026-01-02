@@ -27,7 +27,7 @@
     </div>
   </header>
 
-  <main class="grid2">
+  <main>
     <section class="card">
       <h2>Sheet details</h2>
       <!-- meta holds session details and summary -->
@@ -54,11 +54,6 @@
           <tbody></tbody>
         </table>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>All sheets</h2>
-      <div id="sheetList" class="muted">Loading…</div>
     </section>
   </main>
 
@@ -102,23 +97,28 @@
 
   let sheetsIndex = null;
 
-  // Render the list of sheets in the side panel, highlighting the current one
-  function renderList(filterText='') {
-    const list = $$('#sheetList');
+  // Populate the sheet dropdown based on search filter. If a filter is provided,
+  // limit the list to matching sheet codes, villages, or districts. Otherwise
+  // show all. Maintains the currently selected value when possible.
+  function updateOptions(filterText='') {
+    const sel = $$('#sheetSelect');
+    if (!sheetsIndex) return;
     const f = filterText.trim().toLowerCase();
-    const items = (sheetsIndex?.sheets || []).filter(x => {
-      if (!f) return true;
-      return String(x.sheet||'').toLowerCase().includes(f)
-        || String(x.village||'').toLowerCase().includes(f)
-        || String(x.district||'').toLowerCase().includes(f);
-    });
-    const current = ($$('#sheetSelect')?.value || requestedSheet || '').toLowerCase();
-    list.innerHTML = `<div class="muted">Total: <b>${items.length}</b></div>` + 
-      `<ul class="muted">${items.slice(0,200).map(x => {
-        const href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(x.sheet)}`;
-        const isActive = String(x.sheet || '').toLowerCase() === current;
-        return `<li><a class="link${isActive ? ' active' : ''}" href="${href}">${esc(x.sheet)}</a> — ${esc(x.district||'')} — ${esc(x.village||'')}</li>`;
-      }).join('')}</ul>`;
+    let items = (sheetsIndex.sheets || []);
+    if (f) {
+      items = items.filter(x => {
+        return String(x.sheet||'').toLowerCase().includes(f)
+          || String(x.village||'').toLowerCase().includes(f)
+          || String(x.district||'').toLowerCase().includes(f);
+      });
+    }
+    // Keep track of current selection
+    const current = sel.value;
+    sel.innerHTML = items.map(x => `<option value="${esc(x.sheet)}">${esc(x.sheet)} — ${esc(x.district||'')} — ${esc(x.village||'')}</option>`).join('');
+    // Restore previous selection if still present in filtered list
+    if (items.find(x => x.sheet === current)) {
+      sel.value = current;
+    }
   }
 
   // Helper to mask phone numbers for privacy
@@ -231,7 +231,7 @@
 
     } catch (e) {
       // Show an informative message if the sheet fails to load
-      meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the list on the right.</div>`;
+      meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the dropdown above.</div>`;
       fb.textContent = '—';
       sigs.innerHTML = '';
       const head = $$('#farmersHead');
@@ -250,14 +250,16 @@
     sel.onchange = () => {
       location.href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(sel.value)}`;
     };
-    $$('#sheetSearch').addEventListener('input', (ev) => renderList(ev.target.value));
-    renderList('');
+    // When typing in the search box, filter the options in the dropdown
+    $$('#sheetSearch').addEventListener('input', (ev) => updateOptions(ev.target.value));
+    // Initialise the dropdown with all sheets
+    updateOptions('');
     await loadSheet(initial);
   }
 
   boot().catch(e => {
     $$('#meta').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
-    $$('#sheetList').textContent = '—';
+    // If boot fails, there is no sheet list element anymore. Do nothing further here.
   });
 })();
 </script>

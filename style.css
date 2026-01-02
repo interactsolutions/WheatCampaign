@@ -884,6 +884,23 @@ body{
    appended at the end of the stylesheet to override any earlier rules
    where necessary.                                                  */
 
+/* Layout for headerRow: groups the brand and navigation tabs on a single line. When
+   the window is narrow, elements wrap gracefully but remain horizontally
+   aligned. */
+.headerRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.headerRow .tabBar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-left:auto;
+}
+
 /* Score range row used within the controls area. Mirrors the existing
    rangeRow styling but for numeric inputs. */
 .scoreRangeRow{

@@ -77,6 +77,18 @@
     return Number.isFinite(x) ? (fmt1(x) + '%') : '—';
   };
 
+  // Mask a phone number for privacy, retaining only the last 4 digits. If the
+  // provided value has fewer than 4 digits, return it unchanged. Dashes are
+  // inserted for readability (***-***-1234). Non-string inputs are returned
+  // as-is.
+  function maskPhone(p) {
+    const raw = String(p || '').replace(/\s+/g, '');
+    if (!raw) return '';
+    if (raw.length < 4) return raw;
+    const tail = raw.slice(-4);
+    return '***-***-' + tail;
+  }
+
   const num = (v) => (typeof v === 'number' && Number.isFinite(v)) ? v : NaN;
   const BASE = new URL('.', location.href);
   const url = (p)=>new URL(p, BASE).toString();
@@ -233,8 +245,8 @@
       <div><b>District:</b> ${esc(s.district||'')}</div>
       <div><b>Village/Spot:</b> ${esc(s.village||s.spot||'')}</div>
       <div><b>Dealer:</b> ${esc(s.dealer?.nearest||s.dealer?.name||'')}</div>
-      <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(s.host?.phone||'')}</div>
-      <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(s.salesRep?.phone||'')}</div>
+      <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(maskPhone(s.host?.phone)||'')}</div>
+      <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(maskPhone(s.salesRep?.phone)||'')}</div>
       <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
       ${s.topReasonUse ? `<div><b>Top reason to use:</b> ${esc(s.topReasonUse)}</div>` : ''}
       ${s.topReasonNotUse ? `<div><b>Top reason not to use:</b> ${esc(s.topReasonNotUse)}</div>` : ''}
@@ -295,22 +307,38 @@ const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${e
     const media = $$('#media');
     const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
     const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
-    const items = [...imgs.map(p=>({type:'image',path:p})), ...vids.map(p=>({type:'video',path:p}))];
+    // Combine images and videos into a single array and deduplicate by path. Some session
+    // definitions include duplicate file names (e.g. '24.jpeg' and '24a.jpeg' may point
+    // to the same content). Deduplicating here prevents rendering the same media twice.
+    const rawItems = [
+      ...imgs.map(p => ({ type: 'image', path: p })),
+      ...vids.map(p => ({ type: 'video', path: p }))
+    ];
+    const seen = new Set();
+    const items = [];
+    for (const it of rawItems) {
+      const pathKey = String(it.path || '').trim();
+      if (!pathKey) continue;
+      if (!seen.has(pathKey)) {
+        seen.add(pathKey);
+        items.push(it);
+      }
+    }
     if (!items.length) {
       media.innerHTML = '<div class="muted">No media for this session.</div>';
-      return;
+    } else {
+      media.innerHTML = items.map((it, i)=> {
+        return it.type === 'image'
+          ? `<div class="mediaThumb"><img data-i="${i}" alt="image"/></div>`
+          : `<div class="mediaThumb"><video data-i="${i}" controls playsinline></video></div>`;
+      }).join('');
+      items.forEach((it, i) => {
+        const el = media.querySelector(`[data-i="${i}"]`);
+        if (!el) return;
+        if (it.type === 'image') attachSmartImage(el, it.path);
+        else attachSmartVideo(el, it.path);
+      });
     }
-    media.innerHTML = items.map((it, i)=> {
-      return it.type==='image'
-        ? `<div class="mediaThumb"><img data-i="${i}" alt="image"/></div>`
-        : `<div class="mediaThumb"><video data-i="${i}" controls playsinline></video></div>`;
-    }).join('');
-    items.forEach((it, i)=> {
-      const el = media.querySelector(`[data-i="${i}"]`);
-      if (!el) return;
-      if (it.type==='image') attachSmartImage(el, it.path);
-      else attachSmartVideo(el, it.path);
-    });
   }
 
   boot().catch(e=> {

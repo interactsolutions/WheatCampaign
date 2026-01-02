@@ -18,14 +18,26 @@
     <div class="bgShade"></div>
   </div>
   <header class="topbar">
-    <div class="brand">
-      <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
-      <div>
-        <div class="brandTitle">Harvest Horizons</div>
-        <div class="brandSub">Campaign dashboard</div>
+    <!-- Group the brand and the tab navigation into a single row. This moves the primary
+         dashboard tabs up alongside the logo and theme toggle, improving accessibility
+         and freeing vertical space. -->
+    <div class="headerRow">
+      <div class="brand">
+        <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
+        <div>
+          <div class="brandTitle">Harvest Horizons</div>
+          <div class="brandSub">Campaign dashboard</div>
+        </div>
+        <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
+        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
       </div>
-      <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
-      <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
+      <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
+        <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
+        <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
+        <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
+        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
+        <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
+      </nav>
     </div>
 
     <!-- Hero video slider moved inside the header. Placing the hero before the controls
@@ -99,18 +111,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Primary tab navigation placed inside the header. Grouping the dashboard
-         tabs (Summary, Map, Sessions, Media, Feedback) with the brand and
-         theme toggle improves access and keeps these controls visible near the
-         top of the page. -->
-    <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
-      <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
-      <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
-      <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
-      <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
-      <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-    </nav>
   </header>
 
   

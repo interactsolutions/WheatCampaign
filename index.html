@@ -56,6 +56,10 @@
 
       <div class="control">
         <label>Date range</label>
+        <!-- The entire range (from, to) and all action buttons live inside one flex row. This
+             ensures a single-line layout on wider screens while still wrapping cleanly
+             on narrow viewports. The Export CSV button was moved into the same row as
+             Apply/Reset to avoid dropping to a separate line. -->
         <div class="rangeRow">
           <input id="dateFrom" type="date" />
           <span class="muted">to</span>

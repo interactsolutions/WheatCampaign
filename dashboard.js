@@ -960,6 +960,23 @@
     if (dr) dr.classList.add('hidden');
     if (ov) ov.setAttribute('aria-hidden', 'true');
     if (dr) dr.setAttribute('aria-hidden', 'true');
+    // Navigate back to the base page when a drawer is closed. When the user clicks
+    // outside the session preview (or hits Esc), return to the default summary
+    // tab by stripping any hash from the URL. Preserve existing query string
+    // parameters (e.g. campaign, date filters). Use location.pathname+search to
+    // avoid repeatedly appending hashes during navigation. If an exception
+    // occurs, silently ignore.
+    try {
+      const base = location.pathname + location.search;
+      // If already on index.html this will simply remove the hash and reload
+      // the summary tab. If executed from another tab (e.g. sessions hash)
+      // the anchor will be cleared.
+      if (location.hash) {
+        location.href = base;
+      }
+    } catch (_e) {
+      /* noop */
+    }
   }
 
   async function openDrawer(sessionId) {
@@ -1134,6 +1151,18 @@
     if (lb) lb.classList.remove('open');
     const body = $$('#lbBody');
     if (body) body.innerHTML = '';
+    // When the lightbox is closed, return to the base page so the user is not
+    // left on an orphaned hash state. This mirrors the behaviour implemented in
+    // closeDrawer(). Preserving pathname and query parameters ensures date
+    // filters and campaign selection remain intact.
+    try {
+      const base = location.pathname + location.search;
+      if (location.hash) {
+        location.href = base;
+      }
+    } catch (_e) {
+      /* ignore navigation errors */
+    }
   }
 
   function bindLightbox() {

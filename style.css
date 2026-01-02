@@ -863,6 +863,15 @@ body{
 .brandLogo{width:auto; height:36px; max-height:36px; object-fit:contain; filter: drop-shadow(0 10px 26px rgba(0,0,0,.28))}
 .brandTitle{font-size:18px; font-weight:900; letter-spacing:.2px}
 .brandSub{font-size:12px; color:var(--muted); margin-top:2px}
+
+/* Highlight the active sheet link in the raw sheet viewer list. The link for the
+   currently selected sheet is displayed in the brand colour and bolded to
+   provide visual feedback about the active selection. */
+#sheetList .active{
+  font-weight:600;
+  color:var(--brand);
+  text-decoration:underline;
+}
 @media (max-width: 980px){
   .topbar{flex-direction:column; align-items:stretch}
   /* In narrow viewports, keep the control grid responsive; no special width override needed */

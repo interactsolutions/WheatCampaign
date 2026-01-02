@@ -108,10 +108,13 @@
         || String(x.village||'').toLowerCase().includes(f)
         || String(x.district||'').toLowerCase().includes(f);
     });
+    // Determine the currently selected sheet to highlight it in the list
+    const current = ($$('#sheetSelect')?.value || requestedSheet || '').toLowerCase();
     list.innerHTML = `<div class="muted">Total: <b>${items.length}</b></div>` + 
       `<ul class="muted">${items.slice(0,200).map(x => {
         const href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(x.sheet)}`;
-        return `<li><a class="link" href="${href}">${esc(x.sheet)}</a> — ${esc(x.district||'')} — ${esc(x.village||'')}</li>`;
+        const isActive = String(x.sheet || '').toLowerCase() === current;
+        return `<li><a class="link${isActive ? ' active' : ''}" href="${href}">${esc(x.sheet)}</a> — ${esc(x.district||'')} — ${esc(x.village||'')}</li>`;
       }).join('')}</ul>`;
   }
 
@@ -157,10 +160,26 @@
       const body = $$('#farmersTable tbody');
       head.innerHTML = '';
       body.innerHTML = '';
-      const cols = farmers.length ? Object.keys(farmers[0]) : ['sn','name','phone','village','acres','intent','used_before','other_brands_method'];
-      cols.forEach(c => {
+      // Derive table columns from the first farmer record. Map raw keys to
+      // human‑friendly headings. Fallback to a sensible default order if no
+      // records are present.
+      const rawCols = farmers.length ? Object.keys(farmers[0]) : ['sn','name','phone','village','acres','intent','used_before','other_brands_method'];
+      const colMap = {
+        sn: 'S#',
+        name: 'Name',
+        phone: 'Phone',
+        village: 'Village',
+        acres: 'Acres',
+        intent: 'Intent',
+        used_before: 'Used before',
+        other_brands_method: 'Other brands method',
+        district: 'District',
+        date: 'Date'
+      };
+      // Build the header row with friendly names where available
+      rawCols.forEach(c => {
         const th = document.createElement('th');
-        th.textContent = c;
+        th.textContent = colMap[c] || c;
         head.appendChild(th);
       });
       for (const row of farmers) {
@@ -174,8 +193,14 @@
       }
 
     } catch (e) {
-      meta.innerHTML = `<div class="muted">Could not load sheet.</div><div class="smallMuted">${esc(e.message)}</div>`;
+      meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the list on the right.</div>`;
       fb.textContent = '—';
+      sigs.innerHTML = '';
+      // Clear the farmers table if the sheet is missing
+      const head = $$('#farmersHead');
+      const body = $$('#farmersTable tbody');
+      if (head) head.innerHTML = '';
+      if (body) body.innerHTML = '';
     }
   }
 

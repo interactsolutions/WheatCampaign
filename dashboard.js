@@ -663,6 +663,85 @@
       funnelEl.innerHTML = html;
     }
 
+    // ---------- Attendance donut chart ----------
+    // Draw a doughnut chart representing the distribution of farmers across
+    // sessions. We only display the chart if the canvas element is present
+    // and Chart.js has been loaded. To avoid overcrowding the chart with
+    // dozens of tiny slices, we show the top 8 sessions by farmer count
+    // individually and aggregate the remainder into an "Other" slice.
+    const attCanvas = $$('#attendanceDonut');
+    if (attCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
+      // Destroy any existing attendance chart to avoid duplicating charts on
+      // re-render (e.g. after changing filters).
+      if (window.attendanceChart && typeof window.attendanceChart.destroy === 'function') {
+        window.attendanceChart.destroy();
+      }
+      // Collect farmers per session and sort descending.
+      const sessionsByFarmers = fs
+        .map(s => {
+          const count = Number(s.metrics?.farmers || 0);
+          return { id: s.id, sheet: s.sheetRef || '', farmers: count };
+        })
+        .filter(x => x.farmers > 0)
+        .sort((a, b) => b.farmers - a.farmers);
+      // Choose up to eight individual slices. Aggregate the rest.
+      const maxSlices = 8;
+      const labels = [];
+      const data = [];
+      const colors = [
+        '#4c6fff','#22c55e','#f59e0b','#8e44ad','#f97316','#3b82f6','#eab308','#10b981','#a855f7','#ef4444'
+      ];
+      let otherTotal = 0;
+      sessionsByFarmers.forEach((item, idx) => {
+        if (idx < maxSlices) {
+          labels.push(`S${item.id}`);
+          data.push(item.farmers);
+        } else {
+          otherTotal += item.farmers;
+        }
+      });
+      if (otherTotal > 0) {
+        labels.push('Other');
+        data.push(otherTotal);
+      }
+      // Assign colors to slices; repeat palette if necessary.
+      const bgColors = data.map((_, i) => colors[i % colors.length]);
+      const ctx = attCanvas.getContext('2d');
+      window.attendanceChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{ data: data, backgroundColor: bgColors, borderColor: '#ffffff10', borderWidth: 1 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                usePointStyle: true,
+                padding: 12,
+                boxWidth: 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[ctx.dataIndex];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                  return `${lab}: ${val} farmers (${pct}%)`;
+                }
+              }
+            }
+          },
+          cutout: '50%'
+        }
+      });
+    }
+
     // ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {

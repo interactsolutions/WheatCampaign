@@ -97,14 +97,17 @@
         <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
         
         <div class="kpis">
-          <div class="kpi"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
-          <div class="kpi"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
+          <!-- Each KPI tile is given a specific class for color-coded icon dots. These
+               classes correspond to CSS rules that prepend a colored circle before
+               the label text, adding visual variety without external icon assets. -->
+          <div class="kpi kpi--sessions"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
+          <div class="kpi kpi--farmers"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
+          <div class="kpi kpi--acres"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
+          <div class="kpi kpi--estacres"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
+          <div class="kpi kpi--awareness"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
+          <div class="kpi kpi--definite"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
+          <div class="kpi kpi--used"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
+          <div class="kpi kpi--score"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
 
         <div class="divider"></div>
@@ -117,6 +120,15 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+
+        <!-- Attendance donut chart: shows distribution of farmers present per session as a percentage
+             of the total farmers reached. The chart is rendered via Chart.js in dashboard.js.
+             The canvas element will be hidden if no data is available. -->
+        <div class="divider"></div>
+        <h3>Sessions by farmers attendance</h3>
+        <div class="attendanceWrap">
+          <canvas id="attendanceDonut"></canvas>
         </div>
       </section>
 
@@ -305,6 +317,8 @@
   </div>
 
 
+  <!-- Load Chart.js before the dashboard script to enable the attendance donut chart. -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 
   <script src="dashboard.js?v=20260101"></script>

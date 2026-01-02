@@ -643,6 +643,80 @@ body{
 .thumb{width:88px; height:88px; object-fit:cover; border-radius:12px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03)}
 .thumbVideo{position:relative}
 .mediaRow{display:flex; gap:10px; flex-wrap:wrap}
+
+/* KPI dot icons
+   Each KPI tile is assigned a class (e.g. kpi--sessions) in the markup. The
+   following rules insert a small colored circle before the KPI label using
+   the ::before pseudo-element. This avoids the need for external icon assets
+   while still adding visual differentiation between metrics. Colors were
+   chosen for contrast on both dark and light themes. */
+.kpiLabel{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.kpiLabel::before{
+  content:'';
+  display:inline-block;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+}
+.kpi--sessions .kpiLabel::before { background:#4c6fff; }
+.kpi--farmers .kpiLabel::before { background:#22c55e; }
+.kpi--acres .kpiLabel::before { background:#f59e0b; }
+.kpi--estacres .kpiLabel::before { background:#eab308; }
+.kpi--awareness .kpiLabel::before { background:#8e44ad; }
+.kpi--definite .kpiLabel::before { background:#f97316; }
+.kpi--used .kpiLabel::before { background:#3b82f6; }
+.kpi--score .kpiLabel::before { background:#10b981; }
+
+/* Attendance donut chart container
+   Centers the donut canvas and limits its width for responsiveness. */
+.attendanceWrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:16px 0;
+}
+.attendanceWrap canvas{
+  max-width:420px;
+  width:100%;
+  height:auto;
+}
+
+/* Hero thumbnails custom sizing
+   Reduce the size of the hero thumbnails and allow more columns to be
+   displayed on wider viewports. Use !important to override earlier
+   definitions scattered in the stylesheet. */
+.heroThumbs{
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)) !important;
+  gap:8px !important;
+}
+.heroThumb{
+  height:60px !important;
+}
+.heroThumb .badge{
+  font-size:9px !important;
+  bottom:4px !important;
+  left:4px !important;
+}
+
+/* Media thumbnail improvements
+   Add subtle background and border to media thumbnails for improved
+   visual appeal. Increase border radius slightly and adjust colors
+   for light/dark modes. */
+.mediaThumb{
+  position:relative;
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+}
+[data-theme="light"] .mediaThumb{
+  background:rgba(0,0,0,.03);
+  border:1px solid rgba(0,0,0,.06);
+}
 .iconBtn{border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:inherit; border-radius:12px; padding:8px 10px; cursor:pointer}
 .iconBtn:hover{background:rgba(255,255,255,.08)}
 .status{padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03)}

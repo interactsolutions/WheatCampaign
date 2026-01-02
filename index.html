@@ -24,6 +24,8 @@
         <div class="brandTitle">Harvest Horizons</div>
         <div class="brandSub">Campaign dashboard</div>
       </div>
+      <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
+      <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
     </div>
 
     <!-- Hero video slider moved inside the header. Placing the hero before the controls
@@ -218,6 +220,8 @@
           <ul class="muted">
             <li><a href="healthcheck.html" class="link">Healthcheck</a></li>
             <li><a href="sheets.html" class="link">Sheets browser</a></li>
+            <!-- Added link to the campaign analysis report -->
+            <li><a href="report.html" class="link">Campaign analysis report</a></li>
           </ul>
         </div>
       </div>
@@ -350,6 +354,34 @@
     nextBtn?.addEventListener('click', () => setHero(current + 1));
     // Initialize the first video
     setHero(0);
+  })();
+  </script>
+
+  <!-- Theme toggle initialization -->
+  <script>
+  (function() {
+    // Toggle between light and dark themes based on the time of day or user interaction.
+    const htmlEl = document.documentElement;
+    const toggleBtn = document.getElementById('themeToggle');
+    function applyTheme(t) {
+      htmlEl.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      if (toggleBtn) toggleBtn.textContent = (t === 'light') ? '🌙' : '☀';
+    }
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') {
+      applyTheme(saved);
+    } else {
+      const hr = new Date().getHours();
+      const defaultTheme = (hr >= 6 && hr < 18) ? 'light' : 'dark';
+      applyTheme(defaultTheme);
+    }
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const current = htmlEl.getAttribute('data-theme');
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
+    }
   })();
   </script>
 </body>

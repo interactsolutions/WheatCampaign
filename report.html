@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buctril Super campaign analysis</title>
+  <!-- Reuse existing dashboard styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar" style="margin-bottom:1rem;">
+    <div class="brand">
+      <img src="assets/interact.gif" alt="INTERACT" style="width:32px; height:32px; margin-right:0.5rem;" />
+      <h1 style="display:inline; font-size:1.5rem;">Campaign analysis report</h1>
+    </div>
+  </header>
+  <main class="card" style="max-width:960px; margin:0 auto; padding:1rem;">
+    <h2>Session count discrepancy</h2>
+    <p>
+      The workbook <code>Buctril_Super_Activations.xlsx</code> contains <strong>50</strong>
+      individual session sheets (<code>D1S1</code>–<code>D17S3</code>). Ten of these sheets
+      (<code>D2S3</code>, <code>D3S3</code>, <code>D4S3</code>, <code>D5S3</code>,
+      <code>D6S3</code>, <code>D7S3</code>, <code>D8S3</code>, <code>D10S3</code>,
+      <code>D16S3</code> and <code>D17S3</code>) have no farmer counts, leaving
+      <strong>40</strong> usable sessions. The summary and dashboard should reflect 40 sessions, although the live dashboard currently lists 38.
+    </p>
+
+    <h2>Aggregated session metrics</h2>
+    <p>
+      Metrics were extracted from each of the 40 sessions with data. The table below sums key
+      figures across all sessions. Counts from empty sessions are excluded.
+    </p>
+    <div class="tableWrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Sum of 40 sessions</th>
+            <th>Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Farmers present</strong></td>
+            <td>1,454</td>
+            <td>Average ≈36 farmers per session. Counts appear to be doubled in the original Excel summary.</td>
+          </tr>
+          <tr>
+            <td><strong>Wheat farmers</strong></td>
+            <td>1,442</td>
+            <td>Nearly all attendees grow wheat; only 12 non‑wheat farmers.</td>
+          </tr>
+          <tr>
+            <td><strong>Total wheat acres represented</strong></td>
+            <td>22,128&nbsp;acres</td>
+            <td>Half of the 44,256 acres shown in the workbook’s summary due to a suspected doubling bug.</td>
+          </tr>
+          <tr>
+            <td><strong>Farmers aware of Buctril</strong></td>
+            <td>1,120</td>
+            <td>Farmers who already knew about Buctril before the activation.</td>
+          </tr>
+          <tr>
+            <td><strong>Farmers who used Buctril last year</strong></td>
+            <td>968</td>
+            <td>Shows existing adoption among attendees.</td>
+          </tr>
+          <tr>
+            <td><strong>Farmers who definitely intend to use</strong></td>
+            <td>1,303</td>
+            <td>Farmers expressing a firm commitment to use Buctril next season.</td>
+          </tr>
+          <tr>
+            <td><strong>Farmers maybe</strong></td>
+            <td>136</td>
+            <td>Farmers who said they would think about using Buctril.</td>
+          </tr>
+          <tr>
+            <td><strong>Farmers not interested</strong></td>
+            <td>7</td>
+            <td>Very few attendees rejected Buctril outright.</td>
+          </tr>
+          <tr>
+            <td><strong>Estimated Buctril acres</strong></td>
+            <td>21,187</td>
+            <td>Acres that farmers indicated they plan to spray with Buctril.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Top adoption drivers</h2>
+    <p>The reasons farmers gave for using Buctril were aggregated across all sessions. The most common drivers are listed below.</p>
+    <div class="tableWrapper">
+      <table>
+        <thead>
+          <tr><th>Reason</th><th>Mentions</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Trust in Bayer brand</td><td>1,071</td></tr>
+          <tr><td>Safe on crop (no burning)</td><td>893</td></tr>
+          <tr><td>Good past experience</td><td>884</td></tr>
+          <tr><td>Better weed control vs. other options</td><td>877</td></tr>
+          <tr><td>Dealer strongly recommending</td><td>40</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Top barriers</h2>
+    <p>The main reasons farmers hesitated to adopt Buctril are summarised below.</p>
+    <div class="tableWrapper">
+      <table>
+        <thead>
+          <tr><th>Reason</th><th>Mentions</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Price too high</td><td>207</td></tr>
+          <tr><td>No money / credit available</td><td>80</td></tr>
+          <tr><td>Fear of crop damage / burning</td><td>80</td></tr>
+          <tr><td>Happy with existing generic brand</td><td>53</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Issues observed</h2>
+    <ul>
+      <li><strong>Non‑tabular structure:</strong> Each session sheet is formatted as a form rather than a data table, making analysis difficult and error‑prone.</li>
+      <li><strong>Missing session data:</strong> Ten session sheets lack any counts. It’s unclear whether events were cancelled or data were lost.</li>
+      <li><strong>Duplicated counts in Excel summaries:</strong> The workbook’s summary tabs double all numeric totals. The dashboard uses correct counts, but the Excel formulas need correction.</li>
+      <li><strong>Inconsistent reason lists:</strong> Some reason entries contain phone numbers or dealer names instead of genuine reasons.</li>
+      <li><strong>No consolidated view:</strong> There is no single sheet summarising sessions with metrics. Managers must open individual sheets or rely on flawed summaries.</li>
+    </ul>
+
+    <h2>Recommendations</h2>
+    <ol>
+      <li><strong>Create a consolidated session table:</strong> Introduce a new sheet where each row represents a session and columns capture date, location, farmers, acres and adoption metrics. Include top drivers and barriers.</li>
+      <li><strong>Fix duplication in summary formulas:</strong> Review the formulas in the Excel workbook so totals match the session data.</li>
+      <li><strong>Address missing sessions:</strong> Populate the empty session sheets or remove them if events were cancelled.</li>
+      <li><strong>Clean up reason lists:</strong> Standardise reasons and remove stray text such as phone numbers. Provide clear categories.</li>
+      <li><strong>Create district‑level summaries:</strong> Use pivot tables to summarise sessions and adoption metrics by district or territory.</li>
+      <li><strong>Visualise key metrics:</strong> Incorporate charts to show awareness, definite intent and reasons for use/not use.</li>
+      <li><strong>Document assumptions and definitions:</strong> Add a documentation sheet explaining each metric and how values are calculated.</li>
+    </ol>
+
+    <p style="margin-top:2rem; font-style:italic;">
+      This report is based on the analysis performed on 2026-01-02. For more details, refer to the
+      source Excel file and updated session data.
+    </p>
+  </main>
+  <footer class="footer" aria-label="Footer" style="margin-top:2rem;">
+    <div class="footerBrands">
+      <div class="brandPill">
+        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'" />
+        <span>INTERACT Solutions</span>
+      </div>
+      <div class="brandPill">
+        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'" />
+        <span>Bayer Crop Science</span>
+      </div>
+    </div>
+    <div class="smallMuted" style="margin-top:0.5rem;">
+      Campaign analysis report for Buctril Super – Wheat Activations 2025
+    </div>
+  </footer>
+</body>
+</html>

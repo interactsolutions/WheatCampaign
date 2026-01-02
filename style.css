@@ -877,3 +877,64 @@ body{
   /* In narrow viewports, keep the control grid responsive; no special width override needed */
   .topbar .controls{width:100%}
 }
+
+/* ------------------------------------------------------------------ */
+/* Additional styles for dashboard enhancements (district & score filters,
+   summary takeaways callout, priority row colouring). These styles are
+   appended at the end of the stylesheet to override any earlier rules
+   where necessary.                                                  */
+
+/* Score range row used within the controls area. Mirrors the existing
+   rangeRow styling but for numeric inputs. */
+.scoreRangeRow{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.scoreRangeRow input[type="number"]{
+  flex:1 1 80px;
+  min-width:80px;
+  width:auto;
+}
+.scoreRangeRow span{
+  margin:0 4px;
+  font-size:12px;
+  color:var(--muted2);
+}
+
+/* Takeaways callout. This lightly shaded box highlights actionable
+   insights for managers, such as priority districts. */
+.summaryTakeaways{
+  margin-top:8px;
+  padding:10px 12px;
+  border-left:4px solid var(--brand);
+  background:rgba(76,111,255,.05);
+  color:var(--text);
+  font-size:14px;
+  border-radius:12px;
+}
+[data-theme="light"] .summaryTakeaways{
+  background:rgba(76,111,255,.08);
+}
+
+/* Priority row colouring: tint the rows in the "Where to focus next" table
+   according to urgency. Low definite intent and low scores trigger
+   red/orange backgrounds. Light theme overrides adjust the tint. */
+.priority-high{
+  background:rgba(239,68,68,.12);
+}
+.priority-medium{
+  background:rgba(245,158,11,.12);
+}
+.priority-low{
+  background:rgba(34,197,94,.12);
+}
+[data-theme="light"] .priority-high{
+  background:rgba(211,47,47,.16);
+}
+[data-theme="light"] .priority-medium{
+  background:rgba(197,106,0,.16);
+}
+[data-theme="light"] .priority-low{
+  background:rgba(24,163,78,.16);
+}

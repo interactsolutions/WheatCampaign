@@ -49,6 +49,13 @@
     // Filters for host (farmer) name and city
     nameFilter: '',
     cityFilter: '',
+
+    // Additional filters for district and score range. These are optional
+    // inputs that refine the sessions list based on geography or
+    // performance. When null/empty they do not constrain results.
+    districtFilter: '',
+    scoreMin: null,
+    scoreMax: null,
   };
 
   // ---------- Parsing / formatting ----------
@@ -468,6 +475,17 @@
     state.nameFilter = nameEl ? String(nameEl.value || '').trim() : '';
     state.cityFilter = cityEl ? String(cityEl.value || '').trim() : '';
 
+    // Capture district filter and score range inputs. If the user leaves
+    // fields blank the values remain empty/null, indicating no filter.
+    const districtEl = $$('#districtFilter');
+    state.districtFilter = districtEl ? String(districtEl.value || '').trim() : '';
+    const minEl = $$('#scoreMin');
+    const maxEl = $$('#scoreMax');
+    const minVal = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
+    const maxVal = maxEl && maxEl.value !== '' ? parseFloat(maxEl.value) : null;
+    state.scoreMin = Number.isFinite(minVal) ? minVal : null;
+    state.scoreMax = Number.isFinite(maxVal) ? maxVal : null;
+
     filterSessions();
     renderAll();
   }
@@ -486,6 +504,17 @@
     if (cityEl) cityEl.value = '';
     state.nameFilter = '';
     state.cityFilter = '';
+
+    // Reset district and score filters
+    const districtEl = $$('#districtFilter');
+    const minEl = $$('#scoreMin');
+    const maxEl = $$('#scoreMax');
+    if (districtEl) districtEl.value = '';
+    if (minEl) minEl.value = '';
+    if (maxEl) maxEl.value = '';
+    state.districtFilter = '';
+    state.scoreMin = null;
+    state.scoreMax = null;
 
     applyDateInputs();
   }
@@ -508,6 +537,20 @@
         const city = String(s.city || '').toLowerCase();
         if (!city.includes(state.cityFilter.toLowerCase())) return false;
       }
+
+      // District filter
+      if (state.districtFilter) {
+        const district = String(s.district || '').toLowerCase();
+        if (!district.includes(state.districtFilter.toLowerCase())) return false;
+      }
+
+      // Score range filter
+      if (Number.isFinite(state.scoreMin) || Number.isFinite(state.scoreMax)) {
+        const sc = Number(s.score);
+        if (!Number.isFinite(sc)) return false;
+        if (Number.isFinite(state.scoreMin) && sc < state.scoreMin) return false;
+        if (Number.isFinite(state.scoreMax) && sc > state.scoreMax) return false;
+      }
       return true;
     });
   }
@@ -515,6 +558,27 @@
   // ---------- Render ----------
   function renderSummary() {
     const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
+
+    // Update the last updated timestamp. Determine the most recent session
+    // date from the filtered set and display it under the KPI tiles. When
+    // there are no sessions loaded, clear the timestamp.
+    (function updateLastUpdated(){
+      const lastEl = $$('#lastUpdated');
+      if (!lastEl) return;
+      let latest = null;
+      for (const s of fs) {
+        const d = parseDateSafe(s.date);
+        if (d && (!latest || d > latest)) latest = d;
+      }
+      if (latest) {
+        // Use ISO format (YYYY-MM-DD) for clarity; could be replaced with
+        // locale-specific formatting if needed.
+        const iso = formatDateInput(latest);
+        lastEl.textContent = `Data as of ${iso}`;
+      } else {
+        lastEl.textContent = '';
+      }
+    })();
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     // ---------- Totals ----------
@@ -806,22 +870,56 @@
         byD.set(d, o);
       }
 
-      const rows = [...byD.values()].map(o => {
+      // Compute aggregated rows per district and derive recommended actions. The
+      // recommendations are based on weighted definite intent (de) thresholds.
+      let agg = [...byD.values()].map(o => {
         const aw = avg(o.awSum, o.awDen);
         const de = avg(o.deSum, o.deDen);
         const sc = avg(o.scSum, o.scDen);
         return { ...o, aw, de, sc };
-      }).sort((a,b) => {
+      });
+      // Sort by lowest definite intent then lowest score
+      agg.sort((a,b) => {
         const ad = Number.isFinite(a.de) ? a.de : 1e9;
         const bd = Number.isFinite(b.de) ? b.de : 1e9;
         if (ad !== bd) return ad - bd;
         const as = Number.isFinite(a.sc) ? a.sc : 1e9;
         const bs = Number.isFinite(b.sc) ? b.sc : 1e9;
         return as - bs;
-      }).slice(0, 8);
+      });
+      // Limit to top 8 districts
+      const rows = agg.slice(0, 8);
 
+      // Determine and display summary takeaways from the top two districts
+      const takeawayEl = $$('#summaryTakeaways');
+      if (takeawayEl) {
+        if (rows.length) {
+          const topNames = rows.slice(0, 2).map(r => r.district).filter(Boolean);
+          takeawayEl.textContent = topNames.length ? `Focus next on ${topNames.join(' and ')}` : '';
+        } else {
+          takeawayEl.textContent = '';
+        }
+      }
+
+      // Render table rows with recommended actions and row styling
       pdBody.innerHTML = rows.map(r => {
-        return `<tr>
+        let action = '—';
+        let cls = '';
+        const deVal = Number(r.de);
+        const scVal = Number(r.sc);
+        if (Number.isFinite(deVal)) {
+          if (deVal < 80) {
+            action = 'Arrange field demo';
+            cls = 'priority-high';
+          } else if (deVal < 90) {
+            action = 'Dealer visit';
+            cls = 'priority-medium';
+          } else {
+            action = 'Follow‑up call';
+            cls = 'priority-low';
+          }
+        }
+        return `<tr${cls ? ` class="${cls}"` : ''}>
           <td>${esc(r.district)}</td>
           <td>${fmtInt(r.sessions)}</td>
           <td>${r.farmers ? fmtInt(r.farmers) : '—'}</td>
@@ -829,6 +927,7 @@
           <td>${pct(r.aw)}</td>
           <td>${pct(r.de)}</td>
           <td>${Number.isFinite(r.sc) ? fmt1(r.sc) : '—'}</td>
+          <td>${esc(action)}</td>
         </tr>`;
       }).join('');
     }
@@ -1596,6 +1695,14 @@
     // Apply automatically when name or city filters change
     $$('#nameFilter')?.addEventListener('input', applyDateInputs);
     $$('#cityFilter')?.addEventListener('input', applyDateInputs);
+
+    // Apply automatically when district or score filters change
+    $$('#districtFilter')?.addEventListener('input', applyDateInputs);
+    $$('#scoreMin')?.addEventListener('input', applyDateInputs);
+    $$('#scoreMax')?.addEventListener('input', applyDateInputs);
+
+    // Export button for priority table
+    $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
   }
 
   function exportCsv() {
@@ -1616,6 +1723,28 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `${state.campaignId || 'campaign'}_sessions.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  // Export the priority districts table as CSV. Collects the district rows
+  // currently rendered in the table, including the recommended action,
+  // and triggers a download via a Blob. The filename incorporates the
+  // campaign identifier for clarity.
+  function exportPriorityCsv() {
+    const table = document.getElementById('priorityDistrictsTable');
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const header = ['District','Sessions','Farmers','Acres','Awareness','Definite','Avg score','Action'];
+    const csvRows = [header.join(',')];
+    rows.forEach(tr => {
+      const cells = Array.from(tr.children).map(td => td.textContent.trim().replace(/\n/g,' ').replace(/,/g,' '));
+      csvRows.push(cells.join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type:'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${state.campaignId || 'campaign'}_priority.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }

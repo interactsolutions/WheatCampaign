@@ -234,6 +234,9 @@
       <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(s.host?.phone||'')}</div>
       <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(s.salesRep?.phone||'')}</div>
       <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
+      ${s.topReasonUse ? `<div><b>Top reason to use:</b> ${esc(s.topReasonUse)}</div>` : ''}
+      ${s.topReasonNotUse ? `<div><b>Top reason not to use:</b> ${esc(s.topReasonNotUse)}</div>` : ''}
+      ${s.competitors ? `<div><b>Competitors:</b> ${esc(s.competitors)}</div>` : ''}
     `;
 
         // Outcome KPIs and recommended actions

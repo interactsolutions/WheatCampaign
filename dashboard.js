@@ -759,11 +759,37 @@
       }).join('');
     };
 
-    const drvEl = $$('#driversList');
-    if (drvEl) drvEl.innerHTML = listHtml(drivers);
+    // Render the top drivers and barriers as horizontal bar charts instead of plain lists.
+    // Each bar's length reflects the share of farmers citing that reason. When no data is
+    // available, a muted placeholder is shown instead. The charts are drawn into
+    // #driversChart and #barriersChart containers.
+    const renderBarChart = (mp, containerId) => {
+      const container = document.querySelector(containerId);
+      if (!container) return;
+      const total = totalFarmers || 0;
+      // Sort entries descending by count and take up to 6 entries.
+      const arr = [...mp.entries()].sort((a, b) => (Number(b[1] || 0) - Number(a[1] || 0))).slice(0, 6);
+      if (!arr.length) {
+        container.innerHTML = '<div class="muted">No entries captured.</div>';
+        return;
+      }
+      container.innerHTML = arr.map(([k, v]) => {
+        const n = Number(v) || 0;
+        // Compute share of total farmers; clamp between 0 and 100.
+        const pct = (total > 0) ? Math.min(Math.max(n / total * 100, 0), 100) : 0;
+        // Construct a bar row using existing barRow/barTrack/barFill styles. Use
+        // the CSS variable --brand (blue) for drivers and --danger (red) for barriers.
+        const colorVar = (containerId === '#driversChart') ? 'var(--brand)' : 'var(--danger)';
+        return `<div class="barRow">
+          <div class="barLabel">${esc(k)}</div>
+          <div class="barTrack"><div class="barFill" style="width:${pct.toFixed(1)}%; background:${colorVar};"></div></div>
+          <div class="barVal">${fmtInt(n)}${total > 0 ? ` (${fmt1(pct)}%)` : ''}</div>
+        </div>`;
+      }).join('');
+    };
 
-    const barEl = $$('#barriersList');
-    if (barEl) barEl.innerHTML = listHtml(barriers);
+    renderBarChart(drivers, '#driversChart');
+    renderBarChart(barriers, '#barriersChart');
 
     // ---------- Data readiness / status ----------
     setStatus(

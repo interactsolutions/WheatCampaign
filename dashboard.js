@@ -327,27 +327,35 @@
   // ---------- Loading ----------
   async function fetchJson(path, why) {
     const u = url(path);
-    const r = await fetch(u, { cache: 'no-store' });
-    if (!r.ok) {
-      throw new Error(`${why} failed (${r.status}): ${u}`);
+    try {
+      const r = await fetch(u, { cache: 'no-store' });
+      if (!r.ok) {
+        throw new Error(`${why} failed (${r.status})`);
+      }
+      return await r.json();
+    } catch (e) {
+      console.error(`Error loading ${why} from ${u}:`, e);
+      setStatus(`Error loading ${why}: ${e.message}. Check network or file paths.`, 'bad');
+      return null;
     }
-    return await r.json();
   }
 
   async function loadCampaignRegistry() {
+    showSpinner(true);
     try {
-      const reg = await fetchJson('data/campaigns.json', 'campaign registry');
-      state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
-      return;
-    } catch (e) {
-      // Fallback to root campaigns.json (some repos place it there)
-      try {
-        const reg = await fetchJson('campaigns.json', 'campaign registry (root)');
-        state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
+      const reg1 = await fetchJson('data/campaigns.json', 'campaign registry');
+      if (reg1) {
+        state.campaigns = Array.isArray(reg1.campaigns) ? reg1.campaigns : [];
         return;
-      } catch (e2) {
-        throw e;
       }
+      // Fallback to root campaigns.json (some repos place it there)
+      const reg2 = await fetchJson('campaigns.json', 'campaign registry (root)');
+      if (reg2) {
+        state.campaigns = Array.isArray(reg2.campaigns) ? reg2.campaigns : [];
+        return;
+      }
+    } finally {
+      showSpinner(false);
     }
   }
 
@@ -363,6 +371,14 @@
     if (!el) return;
     el.textContent = msg;
     el.className = 'badge' + (ok ? ' badge--ok' : '');
+  }
+
+  // Show or hide the global loading spinner. Pass true to show, false to hide.
+  function showSpinner(show = true) {
+    const el = document.getElementById('globalSpinner');
+    if (el) {
+      el.classList.toggle('hidden', !show);
+    }
   }
 
   // ---------- Leaflet loader (avoid race conditions + blocked CDNs) ----------
@@ -1615,6 +1631,7 @@
   }
 
   async function loadCampaign(id) {
+    showSpinner(true);
     state.campaignId = id;
     state.campaign = state.campaigns.find(c => c.id === id) || state.campaigns[0] || null;
     if (!state.campaign) throw new Error('No campaigns configured.');
@@ -1627,28 +1644,25 @@
 
     // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
-    const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
+    const sessions = (sj && Array.isArray(sj.sessions)) ? sj.sessions : (Array.isArray(sj) ? sj : []);
     state.sessions = sessions;
     state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
 
     // Optional sheets index
-    try {
-      state.sheetsIndex = await fetchJson(sheetsIndexPath, 'sheets index');
-    } catch (_e) {
-      state.sheetsIndex = null;
-    }
+    const si = await fetchJson(sheetsIndexPath, 'sheets index');
+    state.sheetsIndex = si || null;
 
     // Optional media config
-    try {
-      state.mediaCfg = await fetchJson(mediaPath, 'media config');
-    } catch (_e) {
-      state.mediaCfg = null;
-    }
+    const mc = await fetchJson(mediaPath, 'media config');
+    state.mediaCfg = mc || null;
 
     // Campaign date range
     // Prefer explicit campaign start/end if provided; otherwise derive from sessions.
     const dates = sessions.map(s => parseDateSafe(s.date)).filter(Boolean);
-    if (!dates.length) throw new Error('No session dates found.');
+    if (!dates.length) {
+      showSpinner(false);
+      throw new Error('No session dates found.');
+    }
     dates.sort((a,b) => a - b);
 
     const cfgStart = parseDateSafe(state.campaign.startDate);
@@ -1680,6 +1694,7 @@
     filterSessions();
     renderAll();
     setStatus('Loaded.', 'ok');
+    showSpinner(false);
   }
 
   // ---------- Events ----------
@@ -1801,6 +1816,9 @@
     } catch (e) {
       console.error(e);
       setStatus(e.message || 'Failed to load.', 'bad');
+    } finally {
+      // Hide spinner if it is still visible (e.g. after an error)
+      showSpinner(false);
     }
   }
 

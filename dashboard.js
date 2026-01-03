@@ -314,188 +314,6 @@
     };
   }
 
-  // Autoplaying video attachment for small thumbnail contexts (hero/drawer/lightbox).
-  // This loads the first resolvable video immediately and keeps it muted/looping.
-  async function attachAutoplayVideo(videoEl, path) {
-    const placeholder = 'assets/placeholder-video.mp4';
-    videoEl.preload = 'metadata';
-    videoEl.muted = true;
-    videoEl.loop = true;
-    videoEl.playsInline = true;
-    videoEl.setAttribute('playsinline', '');
-    videoEl.controls = false;
-    try {
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = url(chosen || placeholder);
-      videoEl.play().catch(() => { /* ignore autoplay blocks */ });
-    } catch (_e) {
-      videoEl.src = url(placeholder);
-    }
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
-  }
-
-  // ---------- Header hero sequence (auto-playing, one after another) ----------
-  // Uses media.json -> headerSequence to drive the hero player in the sticky header.
-  // Requirements:
-  // - autoplay muted videos
-  // - advance automatically (on ended, with a safety timeout)
-  // - show larger, clearer thumbnails
-  // - credit INTERACT as agency via local assets
-  function initHeroSequence() {
-    const cfg = state.mediaCfg;
-    const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
-    const heroVideo = document.getElementById('heroVideo');
-    const heroTitle = document.getElementById('heroTitle');
-    const heroSub = document.getElementById('heroSub');
-    const thumbs = document.getElementById('heroThumbs');
-    const prevBtn = document.getElementById('heroPrev');
-    const nextBtn = document.getElementById('heroNext');
-    if (!heroVideo || !thumbs || !items.length) return;
-
-    state._hero = state._hero || { idx: 0, timer: null, safety: null };
-    heroVideo.muted = true;
-    heroVideo.playsInline = true;
-    heroVideo.setAttribute('playsinline', '');
-    heroVideo.loop = false; // crucial for sequential playback
-
-    // Build thumbnail buttons
-    thumbs.innerHTML = '';
-    items.forEach((it, i) => {
-      const b = document.createElement('button');
-      b.className = 'heroThumb';
-      b.type = 'button';
-      b.setAttribute('aria-label', it.label ? `Show ${it.label}` : `Show item ${i+1}`);
-      b.dataset.idx = String(i);
-
-      const img = document.createElement('img');
-      img.alt = it.label || 'thumb';
-      img.loading = 'lazy';
-      b.appendChild(img);
-      attachSmartImage(img, it.poster || cfg?.placeholder || 'assets/placeholder.svg');
-
-      const badge = document.createElement('div');
-      badge.className = 'heroBadge';
-      badge.textContent = it.label || '';
-      b.appendChild(badge);
-
-      b.addEventListener('click', () => {
-        selectHero(i, true);
-      });
-      thumbs.appendChild(b);
-    });
-
-    function clearTimers() {
-      if (state._hero.timer) { clearTimeout(state._hero.timer); state._hero.timer = null; }
-      if (state._hero.safety) { clearTimeout(state._hero.safety); state._hero.safety = null; }
-    }
-
-    async function selectHero(i, userAction) {
-      if (!Number.isFinite(i)) return;
-      state._hero.idx = (i + items.length) % items.length;
-      clearTimers();
-
-      // active thumb state
-      Array.from(thumbs.children).forEach((el, idx) => {
-        if (idx === state._hero.idx) el.classList.add('is-active'); else el.classList.remove('is-active');
-      });
-
-      const it = items[state._hero.idx];
-      if (heroTitle) heroTitle.textContent = it.label || '';
-      if (heroSub) heroSub.textContent = '';
-
-      // Load video (with existence check). If not found, keep current and advance.
-      const chosen = await resolveFirstExisting(it.video || '');
-      if (!chosen) {
-        // No playable source; advance quickly
-        state._hero.timer = setTimeout(() => selectHero(state._hero.idx + 1, false), 2500);
-        return;
-      }
-
-      heroVideo.src = url(chosen);
-      try {
-        await heroVideo.play();
-      } catch (_e) {
-        // Autoplay blocked; still progress
-      }
-
-      // Advance on end + safety timeout (in case of very long videos or failure to emit ended)
-      heroVideo.onended = () => selectHero(state._hero.idx + 1, false);
-      state._hero.safety = setTimeout(() => {
-        try { heroVideo.pause(); } catch (_e) {}
-        selectHero(state._hero.idx + 1, false);
-      }, 18000);
-
-      // If user manually selected, restart the scrolling strip animation (optional)
-      if (userAction) {
-        // no-op for now
-      }
-    }
-
-    prevBtn?.addEventListener('click', () => selectHero(state._hero.idx - 1, true));
-    nextBtn?.addEventListener('click', () => selectHero(state._hero.idx + 1, true));
-
-    // Start from 0
-    selectHero(0, false);
-  }
-
-  function initHighlightsStrip() {
-    const cfg = state.mediaCfg;
-    const track = document.getElementById('highlightsTrack');
-    if (!track) return;
-    const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
-    // Use posters for a lightweight, always-available strip.
-    const posters = items.map(x => x.poster).filter(Boolean);
-    if (!posters.length) return;
-    track.innerHTML = '';
-    const seq = posters.concat(posters); // duplicate for seamless scroll
-    seq.forEach(p => {
-      const wrap = document.createElement('div');
-      wrap.className = 'highlightItem';
-      const img = document.createElement('img');
-      img.alt = 'highlight';
-      img.loading = 'lazy';
-      wrap.appendChild(img);
-      track.appendChild(wrap);
-      attachSmartImage(img, p);
-    });
-  }
-
-  function initChartCarouselAutoScroll() {
-    const el = document.getElementById('chartCarousel');
-    if (!el) return;
-    if (state._chartCarouselTimer) clearInterval(state._chartCarouselTimer);
-    let idx = 0;
-    const slides = Array.from(el.querySelectorAll('.chartSlide'));
-    if (slides.length < 2) return;
-
-    const scrollToIdx = (i) => {
-      const target = slides[i];
-      if (!target) return;
-      const left = target.offsetLeft;
-      el.scrollTo({ left, behavior: 'smooth' });
-    };
-
-    const tick = () => {
-      idx = (idx + 1) % slides.length;
-      scrollToIdx(idx);
-    };
-
-    // Pause on interaction
-    const pause = () => { if (state._chartCarouselTimer) { clearInterval(state._chartCarouselTimer); state._chartCarouselTimer = null; } };
-    const resume = () => { if (!state._chartCarouselTimer) state._chartCarouselTimer = setInterval(tick, 7000); };
-    el.addEventListener('mouseenter', pause);
-    el.addEventListener('mouseleave', resume);
-    el.addEventListener('touchstart', pause, { passive: true });
-    el.addEventListener('touchend', resume, { passive: true });
-
-    state._chartCarouselTimer = setInterval(tick, 7000);
-  }
-
-  // (deduplicated) use initHighlightsStrip() and initChartCarouselAutoScroll()
-
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
     const tabs = $$$('.tabBtn[data-tab]');
@@ -1683,7 +1501,7 @@
           v.setAttribute('playsinline','');
           wrap.appendChild(v);
           mediaEl.appendChild(wrap);
-          attachAutoplayVideo(v, it.path);
+          attachSmartVideo(v, it.path);
           wrap.onclick = () => openLightbox(Number(s.id));
         }
       }
@@ -1793,7 +1611,7 @@
           tv.playsInline = true;
           tv.setAttribute('playsinline','');
           row.appendChild(tv);
-          attachAutoplayVideo(tv, it.path);
+          attachSmartVideo(tv, it.path);
           tv.onclick = () => {
             body.innerHTML = '';
             lb.classList.add('open');
@@ -2238,11 +2056,6 @@
       renderCampaignSelect();
 
       await loadCampaign(id);
-
-      // Header sequence + highlights + compact chart carousel
-      initHeroSequence();
-      initHighlightsStrip();
-      initChartCarouselAutoScroll();
 
       // Initial tab
       syncTabFromHash();

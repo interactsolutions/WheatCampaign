@@ -58,8 +58,7 @@
         <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
         <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
         <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-        <!-- New tab for Looker Studio insights -->
-        <a class="tabBtn" data-tab="looker" role="tab" aria-selected="false" href="#looker">Looker Insights</a>
+        <!-- Looker Insights tab removed (report not in use) -->
       </nav>
     </div>
 
@@ -315,7 +314,29 @@
         <h2>Media</h2>
         <div class="muted">Thumbnails are pulled from assets/gallery. Missing files will fall back to placeholders.</div>
       </div>
+      <!-- Media toolbar: type filter, search, sort and progressive loading -->
+      <div class="mediaToolbar" role="region" aria-label="Media controls">
+        <div class="mediaSeg" role="group" aria-label="Media type">
+          <button class="segBtn segBtn--active" type="button" data-media-type="all">All</button>
+          <button class="segBtn" type="button" data-media-type="images">Images</button>
+          <button class="segBtn" type="button" data-media-type="videos">Videos</button>
+        </div>
+        <div class="mediaSearch">
+          <input id="mediaSearch" type="search" placeholder="Search media (sheet, district, village)" />
+        </div>
+        <div class="mediaSort">
+          <label class="srOnly" for="mediaSort">Sort</label>
+          <select id="mediaSort">
+            <option value="newest" selected>Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+      </div>
       <div id="mediaGrid" class="mediaGrid"></div>
+      <div class="mediaFooter">
+        <button class="btn btnGhost" id="mediaLoadMore" type="button">Load more</button>
+        <div class="smallMuted" id="mediaCount"></div>
+      </div>
     </section>
 
     <section class="tabPanel card" data-tab="feedback" id="feedback">
@@ -353,13 +374,7 @@
         </div>
       </div>
     </section>
-    <!-- Looker Insights tab: embed interactive Looker Studio report -->
-    <section class="tabPanel card" data-tab="looker" id="looker">
-      <h2>Looker Insights</h2>
-      <div class="muted">This tab displays interactive Looker Studio reports for deeper analysis and AI‑driven insights.</div>
-      <!-- Replace the src attribute with your actual Looker Studio report URL when available -->
-      <iframe src="https://datastudio.google.com/embed/reporting/" width="100%" height="800" frameborder="0" allowfullscreen></iframe>
-    </section>
+
   </main>
 
   <!-- Unified footer: combines the static-host and offline-friendly notes into a single footer. -->

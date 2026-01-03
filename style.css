@@ -1012,9 +1012,63 @@ tr:hover {
 .btnGhost{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12)}
 .btnGhost:hover{background:rgba(255,255,255,.07)}
 .tabBtn--active{border-color:rgba(76,111,255,.6); background:rgba(76,111,255,.12)}
-.mediaGrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px}
-.mediaCard{display:flex; flex-direction:column; gap:10px; border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:12px; background:rgba(255,255,255,.03)}
-.mediaThumb{aspect-ratio: 16/9; border-radius:14px; overflow:hidden; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center}
+.mediaToolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:8px 0 14px}
+.mediaSeg{display:flex; gap:6px; padding:6px; border:1px solid rgba(255,255,255,.12); border-radius:14px; background:rgba(255,255,255,.03)}
+.segBtn{border:1px solid transparent; background:transparent; color:var(--text); padding:8px 10px; border-radius:10px; font-size:12px; cursor:pointer}
+.segBtn:hover{background:rgba(255,255,255,.06)}
+.segBtn--active{border-color:rgba(0,188,255,.55); background:rgba(0,188,255,.14)}
+.mediaSearch input{min-width:260px}
+.mediaSort select{min-width:160px}
+
+/* Masonry-style media grid for better visual density */
+.mediaGrid{
+  column-gap:14px;
+  column-count:3;
+}
+@media (max-width: 1100px){.mediaGrid{column-count:2}}
+@media (max-width: 640px){.mediaGrid{column-count:1}}
+
+.mediaCard{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  padding:12px;
+  background:rgba(255,255,255,.03);
+  break-inside:avoid;
+  margin:0 0 14px;
+  position:relative;
+  overflow:hidden;
+}
+.mediaCard:hover{box-shadow:0 12px 30px rgba(0,0,0,.25)}
+
+.mediaThumb{aspect-ratio: 16/9; border-radius:14px; overflow:hidden; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; position:relative}
+.mediaThumb::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.55) 100%);
+  pointer-events:none;
+}
+.mediaBadge{
+  position:absolute;
+  top:10px;
+  left:10px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:600;
+  background:rgba(16,56,79,.72);
+  border:1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+}
+.mediaBadge svg{width:14px; height:14px}
+.mediaTitle{line-height:1.25}
+.mediaFooter{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px}
 .mediaThumb img, .mediaThumb video{width:100%; height:100%; object-fit:cover}
 .mediaMeta{display:flex; flex-direction:column; gap:8px}
 .mediaTitle{font-weight:600}
@@ -1024,6 +1078,13 @@ tr:hover {
 .thumb{width:88px; height:88px; object-fit:cover; border-radius:12px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03)}
 .thumbVideo{position:relative}
 .mediaRow{display:flex; gap:10px; flex-wrap:wrap}
+
+/* Light theme refinements for the media tab */
+[data-theme="light"] .mediaSeg{background:rgba(255,255,255,.70); border-color:rgba(16,56,79,.18)}
+[data-theme="light"] .segBtn:hover{background:rgba(16,56,79,.06)}
+[data-theme="light"] .mediaCard{background:rgba(255,255,255,.75); border-color:rgba(16,56,79,.14)}
+[data-theme="light"] .mediaCard:hover{box-shadow:0 12px 30px rgba(16,56,79,.12)}
+[data-theme="light"] .mediaBadge{background:rgba(255,255,255,.70); border-color:rgba(16,56,79,.20)}
 
 /* KPI dot icons
    Each KPI tile is assigned a class (e.g. kpi--sessions) in the markup. The

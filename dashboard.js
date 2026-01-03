@@ -27,8 +27,7 @@
     if (!h) return 'summary';
     // Support deep-links like #session-<id>
     if (h.startsWith('session-')) return 'sessions';
-    // Include the Looker tab in the recognised tab list so it can be activated via URL hash.
-    if (['summary','map','sessions','media','feedback','looker'].includes(h)) return h;
+    if (['summary','map','sessions','media','feedback'].includes(h)) return h;
     return 'summary';
   }
 
@@ -65,6 +64,13 @@
     districtFilter: '',
     scoreMin: null,
     scoreMax: null,
+
+    // Media tab controls
+    mediaType: 'all',
+    mediaSearch: '',
+    mediaSort: 'newest',
+    mediaLimit: 24,
+    _mediaBound: false,
   };
 
   // ---------- Parsing / formatting ----------
@@ -1174,7 +1180,86 @@
     const grid = $$('#mediaGrid');
     if (!grid) return;
 
-    const cards = state.filteredSessions.map(s => {
+    // Bind media toolbar events once
+    if (!state._mediaBound) {
+      state._mediaBound = true;
+
+      const seg = $$('.mediaSeg');
+      seg?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-media-type]');
+        if (!btn) return;
+        const t = btn.getAttribute('data-media-type') || 'all';
+        state.mediaType = t;
+        // Update active styling
+        $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
+        state.mediaLimit = 24;
+        renderMedia();
+      });
+
+      const search = $$('#mediaSearch');
+      if (search) {
+        search.addEventListener('input', () => {
+          state.mediaSearch = String(search.value || '').trim().toLowerCase();
+          state.mediaLimit = 24;
+          renderMedia();
+        });
+      }
+
+      const sort = $$('#mediaSort');
+      if (sort) {
+        sort.addEventListener('change', () => {
+          state.mediaSort = String(sort.value || 'newest');
+          renderMedia();
+        });
+      }
+
+      const more = $$('#mediaLoadMore');
+      if (more) {
+        more.addEventListener('click', () => {
+          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
+          renderMedia();
+        });
+      }
+    }
+
+    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
+    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+
+    const q = String(state.mediaSearch || '').trim().toLowerCase();
+    const type = String(state.mediaType || 'all');
+    const sortMode = String(state.mediaSort || 'newest');
+
+    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
+
+    // Filter to sessions that actually have media
+    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+
+    // Type filter
+    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
+    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+
+    // Text filter
+    if (q) {
+      list = list.filter(s => {
+        const sheet = String(s.sheetRef || '');
+        const district = String(s.district || '');
+        const village = String(s.village || s.spot || '');
+        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+      });
+    }
+
+    // Sort by date (fallback to original order)
+    list.sort((a, b) => {
+      const da = parseDateSafe(a.date)?.getTime() || 0;
+      const db = parseDateSafe(b.date)?.getTime() || 0;
+      return sortMode === 'oldest' ? (da - db) : (db - da);
+    });
+
+    const total = list.length;
+    const limit = Math.max(0, Number(state.mediaLimit || 24));
+    const shown = list.slice(0, limit);
+
+    const cards = shown.map(s => {
       const sid = esc(s.id);
       const sheet = esc(s.sheetRef || '');
       const district = esc(s.district || '');
@@ -1187,14 +1272,18 @@
       const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
       // Build thumb markup
       let thumb;
+      let badge;
       if (vidPath) {
         // Show auto-playing muted preview
         thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+        badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
         thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
+        badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
       }
       return `<div class="mediaCard" data-session-id="${sid}">
         <div class="mediaThumb">
+          ${badge}
           ${thumb}
         </div>
         <div class="mediaMeta">
@@ -1210,6 +1299,12 @@
     });
 
     grid.innerHTML = cards.join('');
+
+    // Update count + load more button
+    const countEl = $$('#mediaCount');
+    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
+    const moreBtn = $$('#mediaLoadMore');
+    if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
 
     // attach thumbs
     $$$('[data-media-thumb="1"]', grid).forEach(img => {

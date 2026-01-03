@@ -149,7 +149,15 @@
       `;
 
       // Farmers table summarisation
-      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
+      let farmers = Array.isArray(sh.farmers) ? sh.farmers.slice() : [];
+      // The first entry in some sheet exports may contain column names (e.g.,
+      // { sn:'Row', name:'Name', phone:'Phone Number', ... }). Filter out any
+      // header rows where `sn` equals 'Row' or `name` equals 'Name'.
+      farmers = farmers.filter(r => {
+        const snVal = String(r.sn || '').trim().toLowerCase();
+        const nameVal = String(r.name || '').trim().toLowerCase();
+        return !(snVal === 'row' || nameVal === 'name');
+      });
       if (farmers.length > 0) {
         const totalFarmers = farmers.length;
         let totalAcres = 0;

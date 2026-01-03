@@ -54,6 +54,10 @@
     nameFilter: '',
     cityFilter: '',
 
+    // Region filter (REG). This corresponds to the RGN codes (e.g. SKR, RYK)
+    // derived from the Initial sheet mapping of territories/districts to regions.
+    regionFilter: '',
+
     // Additional filters for district and score range. These are optional
     // inputs that refine the sessions list based on geography or
     // performance. When null/empty they do not constrain results.
@@ -497,10 +501,16 @@
     state.nameFilter = nameEl ? String(nameEl.value || '').trim() : '';
     state.cityFilter = cityEl ? String(cityEl.value || '').trim() : '';
 
-    // Capture district filter and score range inputs. If the user leaves
+    // Capture district, region, and score range inputs. If the user leaves
     // fields blank the values remain empty/null, indicating no filter.
     const districtEl = $$('#districtFilter');
     state.districtFilter = districtEl ? String(districtEl.value || '').trim() : '';
+
+    // Region filter: match sessions by region code (e.g. SKR, RYK). If the input is blank
+    // the filter is not applied. The input element is optional because not all
+    // dashboards will define a region filter. See index.html for the #regionFilter input.
+    const regionEl = $$('#regionFilter');
+    state.regionFilter = regionEl ? String(regionEl.value || '').trim() : '';
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
     const minVal = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
@@ -538,6 +548,11 @@
     state.scoreMin = null;
     state.scoreMax = null;
 
+    // Clear region filter
+    const regionEl = $$('#regionFilter');
+    if (regionEl) regionEl.value = '';
+    state.regionFilter = '';
+
     applyDateInputs();
   }
 
@@ -546,9 +561,13 @@
     const b = state.dateTo;
     state.filteredSessions = state.sessions.filter(s => {
       const d = parseDateSafe(s.date);
-      if (!d) return false;
-      // Date range filter
-      if (d < a || d > b) return false;
+      // If the date cannot be parsed (e.g., missing or not in YYYY-MM-DD format),
+      // treat the session as always within range. This allows sessions with
+      // malformed dates to appear in the dashboard rather than being silently
+      // excluded. Only enforce the date filter when a valid Date is available.
+      if (d) {
+        if (d < a || d > b) return false;
+      }
       // Host (farmer) name filter: match host.name substring if provided
       if (state.nameFilter) {
         const name = String(s.host?.name || '').toLowerCase();
@@ -558,6 +577,12 @@
       if (state.cityFilter) {
         const city = String(s.city || '').toLowerCase();
         if (!city.includes(state.cityFilter.toLowerCase())) return false;
+      }
+
+      // Region filter
+      if (state.regionFilter) {
+        const reg = String(s.region || '').toLowerCase();
+        if (!reg.includes(state.regionFilter.toLowerCase())) return false;
       }
 
       // District filter
@@ -1650,6 +1675,57 @@
     // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
     const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
+    // Assign derived region codes to each session. We map districts/territories
+    // to region codes (RGN) based on the Initial sheet. If no match is found
+    // the region remains blank. Matching ignores case and spaces for flexibility.
+    (function assignRegions() {
+      const regionMap = {
+        // Sukkur region (SKR)
+        'dadu': 'SKR',
+        'daharki': 'SKR',
+        'dharki': 'SKR',
+        'ghotki': 'SKR',
+        'jafferabad': 'SKR',
+        'jaferabad': 'SKR',
+        'jafarabad': 'SKR',
+        'jaferabad': 'SKR',
+        'mehrabpur': 'SKR',
+        'ranipur': 'SKR',
+        'sukkur': 'SKR',
+        'ubaro': 'SKR',
+        'ubauro': 'SKR',
+        // Rahim Yar Khan region (RYK)
+        'rahim yarkhan': 'RYK',
+        'rahim yar khan': 'RYK',
+        'rajan pur': 'RYK',
+        'rajanpur': 'RYK',
+        // Dera Ghazi Khan region (DGK)
+        'bhakkar': 'DGK',
+        'karor lal esan': 'DGK',
+        'kot adu': 'DGK',
+        'mianwali': 'DGK',
+        'muzaffar garh': 'DGK',
+        'muzaffargarh': 'DGK',
+        // Faisalabad region (FSD)
+        'chakwal': 'FSD',
+        'sargodha': 'FSD',
+        'toba tek singh': 'FSD',
+        // Gujranwala region (GUJ)
+        'phalia': 'GUJ'
+      };
+      for (const s of sessions) {
+        const district = String(s.district || '').toLowerCase().replace(/\s+/g, '');
+        let matchedRegion = '';
+        // Attempt direct match on district (no spaces)
+        for (const [key, reg] of Object.entries(regionMap)) {
+          const normKey = key.toLowerCase().replace(/\s+/g, '');
+          if (district === normKey) { matchedRegion = reg; break; }
+        }
+        // Assign region code
+        s.region = matchedRegion;
+      }
+    })();
+
     state.sessions = sessions;
     state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
 
@@ -1717,6 +1793,11 @@
     // Apply automatically when name or city filters change
     $$('#nameFilter')?.addEventListener('input', applyDateInputs);
     $$('#cityFilter')?.addEventListener('input', applyDateInputs);
+
+    // Apply automatically when region filter changes. This allows users to
+    // filter sessions by region code (REG) such as SKR, RYK, DGK. See
+    // index.html for the #regionFilter input.
+    $$('#regionFilter')?.addEventListener('input', applyDateInputs);
 
     // Apply automatically when district or score filters change
     $$('#districtFilter')?.addEventListener('input', applyDateInputs);

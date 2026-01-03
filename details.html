@@ -4,13 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Session details</title>
-  <link rel="icon" href="favicon.ico" />
+  <!-- Set the Interact logo as favicon for consistent branding -->
+  <!-- Use the Interact logo as the site favicon -->
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260101" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
+      <!-- Clickable Interact logo linking back to the main dashboard -->
+      <a href="index.html" class="brandLogoLink" aria-label="Home">
+        <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+      </a>
       <div>
         <div class="brandTitle">Session details</div>
         <div class="brandSub"><a id="backLink" class="link" href="index.html">Home</a></div>

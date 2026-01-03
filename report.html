@@ -7,12 +7,17 @@
   <!-- Reuse existing dashboard styles -->
   <!-- Use consistent dashboard styling and professional typography -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Use the Interact logo as the site favicon -->
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
   <link rel="stylesheet" href="style.css?v=20260101" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'" />
+      <!-- Clickable Interact logo linking back to the main dashboard -->
+      <a href="index.html" class="brandLogoLink" aria-label="Home">
+        <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+      </a>
       <div>
         <div class="brandTitle">Campaign analysis report</div>
         <div class="brandSub">Summary of campaign findings</div>

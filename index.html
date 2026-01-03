@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Harvest Horizons Dashboard</title>
-  <link rel="icon" href="favicon.ico" />
+  <!-- Set the Interact logo as the site favicon so the brand appears in the browser tab -->
+  <!-- Use the Interact logo as the site favicon so the brand appears in the browser tab -->
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260101" />
   <!-- Leaflet CSS with fallback chain -->
@@ -24,7 +26,10 @@
          and freeing vertical space. -->
     <div class="headerRow">
       <div class="brand">
-        <img src="assets/interact.gif" alt="INTERACT" class="brandLogo" onerror="this.style.display='none'"/>
+        <!-- Make the Interact logo a link back to the home page. Clicking the logo now returns users to index.html. -->
+        <a href="index.html" class="brandLogoLink" aria-label="Home">
+          <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+        </a>
         <div>
           <div class="brandTitle">Harvest Horizons</div>
           <div class="brandSub">Campaign dashboard</div>
@@ -92,8 +97,23 @@
         <input id="nameFilter" type="text" placeholder="Search by host name" />
       </div>
       <div class="control">
-        <label for="cityFilter">City</label>
-        <input id="cityFilter" type="text" placeholder="Search by city" />
+        <label for="cityFilter">Territory</label>
+        <input id="cityFilter" type="text" placeholder="Search by territory" />
+      </div>
+
+      <!-- New region filter based on RGN codes (column B of the Initial sheet).  Users can
+           search by region code (e.g. SKR, RYK, DGK, FSD, GUJ). A datalist offers
+           suggestions for common codes. -->
+      <div class="control">
+        <label for="regionFilter">Region (REG)</label>
+        <input id="regionFilter" type="text" placeholder="Search by region" list="regionOptions" />
+        <datalist id="regionOptions">
+          <option value="SKR">SKR</option>
+          <option value="RYK">RYK</option>
+          <option value="DGK">DGK</option>
+          <option value="FSD">FSD</option>
+          <option value="GUJ">GUJ</option>
+        </datalist>
       </div>
 
       <!-- Additional filters: allow filtering by district and by score range. These help

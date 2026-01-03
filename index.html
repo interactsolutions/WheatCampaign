@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <!-- Set a descriptive title aligned with Bayer’s initiative -->
   <title>Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</title>
-  <!-- Set the Interact logo as the site favicon so the brand appears in the browser tab -->
-  <!-- Use the Interact logo as the site favicon so the brand appears in the browser tab -->
-  <link rel="icon" type="image/png" href="assets/Interact.png" />
+  <!-- Favicons (tab/status icon) -->
+  <link rel="icon" href="assets/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260101" />
   <!-- Leaflet CSS with fallback chain -->
@@ -37,12 +39,14 @@
          and freeing vertical space. -->
     <div class="headerRow">
       <div class="brand">
-        <!-- Display the Bayer and Buctril logos side‑by‑side. Both images link back to the home page. -->
+        <!-- Display Bayer, Buctril and Interact logos side‑by‑side. All images link back to the home page. -->
         <a href="index.html" class="brandLogoLink" aria-label="Home">
-          <!-- Bayer Crop Science logo; falls back silently if unavailable -->
-          <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png" alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
-          <!-- Buctril Super logo; falls back silently if unavailable -->
-          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png" alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
+          <!-- Bayer Crop Science logo (prefer local SVG when available) -->
+          <img src="assets/bayer.svg" alt="Bayer Crop Science" class="brandLogo" onerror="this.onerror=null;this.src='https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png'" />
+          <!-- Buctril Super logo; remote fallback -->
+          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png" alt="Buctril Super" class="brandLogo" onerror="this.style.display='none'" />
+          <!-- Interact agency logo (ensures agency credit is visible in header) -->
+          <img src="assets/interact-icon.png" alt="Interact Solutions" class="brandLogo brandLogo--agency" onerror="this.style.display='none'" />
         </a>
         <div>
           <!-- Updated dashboard title and subtitle reflecting Bayer’s initiative -->
@@ -83,6 +87,11 @@
         </div>
         <div class="heroThumbs" id="heroThumbs"></div>
       </div>
+    </div>
+
+    <!-- Auto-scrolling highlights strip (posters / frequently-shown brand visuals). -->
+    <div class="highlights" aria-label="Highlights">
+      <div class="highlightsTrack" id="highlightsTrack"></div>
     </div>
 
     <div class="controls">
@@ -204,15 +213,21 @@
              of the total farmers reached. The chart is rendered via Chart.js in dashboard.js.
              The canvas element will be hidden if no data is available. -->
         <div class="divider"></div>
-        <h3>Sessions by farmers attendance</h3>
-        <div class="attendanceWrap">
-          <canvas id="attendanceDonut"></canvas>
-        </div>
-        <!-- Decision breakdown pie chart: visualises farmer decisions (definite, maybe and not interested) across all sessions. -->
-        <div class="divider"></div>
-        <h3>Decision breakdown</h3>
-        <div class="decisionWrap">
-          <canvas id="decisionPie"></canvas>
+
+        <!-- Auto-scrolling chart carousel (keeps pies compact and avoids a single fixed, oversized chart). -->
+        <div class="chartCarousel" id="chartCarousel" aria-label="Key charts">
+          <div class="chartSlide">
+            <h3>Sessions by farmers attendance</h3>
+            <div class="attendanceWrap">
+              <canvas id="attendanceDonut"></canvas>
+            </div>
+          </div>
+          <div class="chartSlide">
+            <h3>Decision breakdown</h3>
+            <div class="decisionWrap">
+              <canvas id="decisionPie"></canvas>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -379,17 +394,34 @@
 
   <!-- Unified footer: combines the static-host and offline-friendly notes into a single footer. -->
   <footer class="footer" aria-label="Footer">
-    <div class="footerBrands">
-      <div class="brandPill">
-        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
-        <span>INTERACT Solutions</span>
+    <div class="footerGrid">
+      <div class="footerCol">
+        <div class="footerTitle">Credits</div>
+        <div class="footerBrands">
+          <div class="brandPill">
+            <img src="assets/interact-icon.png" alt="INTERACT" onerror="this.style.display='none'"/>
+            <span>INTERACT Solutions (Agency)</span>
+          </div>
+          <div class="brandPill">
+            <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+            <span>Bayer Crop Science</span>
+          </div>
+        </div>
       </div>
-      <div class="brandPill">
-        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
-        <span>Bayer Crop Science</span>
+
+      <div class="footerCol">
+        <div class="footerTitle">Campaign</div>
+        <div class="muted">Buctril Super – Wheat Activations 2025</div>
+        <div class="smallMuted">Use <a class="link" href="healthcheck.html">Healthcheck</a> to validate JSON and asset availability before sharing.</div>
+      </div>
+
+      <div class="footerCol">
+        <div class="footerTitle">Data & Privacy</div>
+        <div class="smallMuted">Phone numbers are masked in UI views. Exported CSVs contain only filtered, on-screen fields.</div>
+        <div class="smallMuted">Built for static hosting (GitHub Pages) and offline review.</div>
       </div>
     </div>
-    <div class="smallMuted">This dashboard is designed to be static‑host friendly and offline‑friendly. Use the Healthcheck to validate data and asset availability.</div>
+    <div class="footerBottom smallMuted">© 2025–2026 • Bayer Crop Science • INTERACT Solutions</div>
   </footer>
 
   <!-- Session drawer overlay -->

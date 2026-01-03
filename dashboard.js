@@ -27,7 +27,8 @@
     if (!h) return 'summary';
     // Support deep-links like #session-<id>
     if (h.startsWith('session-')) return 'sessions';
-    if (['summary','map','sessions','media','feedback'].includes(h)) return h;
+    // Include the Looker tab in the recognised tab list so it can be activated via URL hash.
+    if (['summary','map','sessions','media','feedback','looker'].includes(h)) return h;
     return 'summary';
   }
 
@@ -860,6 +861,57 @@
       });
     }
 
+    // ---------- Decision breakdown pie chart ----------
+    const decisionCanvas = $$('#decisionPie');
+    if (decisionCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
+      if (window.decisionChart && typeof window.decisionChart.destroy === 'function') {
+        window.decisionChart.destroy();
+      }
+      let sumDef = 0, sumMaybe = 0, sumNot = 0;
+      for (const s of fs) {
+        // Farmers present for weighting; prefer sheet index when available.
+        const si = idx?.get(s.sheetRef);
+        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const m = s.metrics || {};
+        const def = num(m.definitePct);
+        const mb = num(m.maybePct);
+        const ni = num(m.notInterestedPct);
+        if (Number.isFinite(farmers) && farmers > 0) {
+          if (Number.isFinite(def)) sumDef += farmers * def / 100;
+          if (Number.isFinite(mb)) sumMaybe += farmers * mb / 100;
+          if (Number.isFinite(ni)) sumNot += farmers * ni / 100;
+        }
+      }
+      const labels = ['Definite','Maybe','Not interested'];
+      const data = [sumDef, sumMaybe, sumNot];
+      const bgColors = ['#89d329','#d9a420','#dc2626'];
+      const ctxPie = decisionCanvas.getContext('2d');
+      window.decisionChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors }] },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[ctx.dataIndex];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                  return `${lab}: ${Math.round(val)} farmers (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     // ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {
@@ -1506,6 +1558,14 @@
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
+      // Create an empty heatmap layer. The data points are populated in updateMapData().
+      try {
+        state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
+      } catch (_e) {
+        // If the heatmap plugin is not loaded, leave the layer undefined.
+        state.heatLayer = null;
+      }
+
       updateMapData();
       setMapStatus('Ready', true);
       setTimeout(() => map.invalidateSize(), 250);
@@ -1533,13 +1593,24 @@
     state.markerLayer.clearLayers();
     state.markersBySessionId.clear();
 
+    // Build a quick lookup of sheet metadata to obtain farmers and acreage.
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+
     const pts = [];
+    const heatPoints = [];
     for (const s of state.filteredSessions) {
       const lat = Number(s.geo?.lat);
       const lng = Number(s.geo?.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
       pts.push([lat, lng]);
+      // Compute heatmap intensity based on acres engaged. Use sheet index if available,
+      // falling back to session metrics. Default to 1 when no acreage is recorded.
+      let weight = 1;
+      const si = idx?.get(s.sheetRef);
+      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+      if (Number.isFinite(acres) && acres > 0) weight = acres;
+      heatPoints.push([lat, lng, weight]);
 
       const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
       const detailsUrl = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
@@ -1575,6 +1646,16 @@
     if (pts.length) {
       const bounds = window.L.latLngBounds(pts);
       state.map.fitBounds(bounds.pad(0.15));
+    }
+
+    // Update the heatmap layer with the new intensity points. Only do this if
+    // the heatLayer exists (it may be undefined if the plugin failed to load).
+    if (state.heatLayer && Array.isArray(heatPoints)) {
+      try {
+        state.heatLayer.setLatLngs(heatPoints);
+      } catch (_e) {
+        /* Ignore errors from the heatmap plugin */
+      }
     }
 
     // One-time delegated click handler inside Leaflet popup for Preview button
@@ -1898,6 +1979,24 @@
 
       // Close buttons for lightbox
       $$('#lbClose')?.addEventListener('click', closeLightbox);
+
+      // Bind heatmap toggle button. When clicked, add or remove the heat
+      // layer from the map and update the button text accordingly. The map
+      // and heatLayer are created lazily in ensureMapReady(), so guard
+      // against them being undefined.
+      const heatBtn = document.getElementById('toggleHeat');
+      if (heatBtn) {
+        heatBtn.addEventListener('click', () => {
+          if (!state.map || !state.heatLayer) return;
+          if (state.map.hasLayer(state.heatLayer)) {
+            state.map.removeLayer(state.heatLayer);
+            heatBtn.textContent = 'Show Heatmap';
+          } else {
+            state.heatLayer.addTo(state.map);
+            heatBtn.textContent = 'Hide Heatmap';
+          }
+        });
+      }
 
       // Set map status
       setMapStatus('Ready when opened', true);

@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Harvest Horizons Dashboard</title>
+  <!-- Set a descriptive title aligned with Bayer’s initiative -->
+  <title>Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</title>
   <!-- Set the Interact logo as the site favicon so the brand appears in the browser tab -->
   <!-- Use the Interact logo as the site favicon so the brand appears in the browser tab -->
   <link rel="icon" type="image/png" href="assets/Interact.png" />
@@ -17,7 +18,17 @@
 <body>
   <!-- Background video -->
   <div class="bg">
-    <video class="bgVideo" src="assets/bg.mp4" autoplay muted loop playsinline></video>
+    <!--
+      Use a full‑screen looping video for the page backdrop. A fallback source is
+      provided via the onerror attribute so that if the primary file
+      (bg.mp4) is missing or fails to load, the background will gracefully
+      switch to the Interact demo video. Both sources are muted and set to
+      autoplay/loop to provide a continuous ambient animation without
+      requiring user interaction.
+    -->
+    <video class="bgVideo" src="assets/bg.mp4" autoplay muted loop playsinline
+           onerror="this.onerror=null; this.src='assets/interact.mp4'">
+    </video>
     <div class="bgShade"></div>
   </div>
   <header class="topbar">
@@ -26,13 +37,17 @@
          and freeing vertical space. -->
     <div class="headerRow">
       <div class="brand">
-        <!-- Make the Interact logo a link back to the home page. Clicking the logo now returns users to index.html. -->
+        <!-- Display the Bayer and Buctril logos side‑by‑side. Both images link back to the home page. -->
         <a href="index.html" class="brandLogoLink" aria-label="Home">
-          <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+          <!-- Bayer Crop Science logo; falls back silently if unavailable -->
+          <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png" alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
+          <!-- Buctril Super logo; falls back silently if unavailable -->
+          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png" alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
         </a>
         <div>
-          <div class="brandTitle">Harvest Horizons</div>
-          <div class="brandSub">Campaign dashboard</div>
+          <!-- Updated dashboard title and subtitle reflecting Bayer’s initiative -->
+          <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
+          <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
         <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
         <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
@@ -43,6 +58,8 @@
         <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
         <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
         <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
+        <!-- New tab for Looker Studio insights -->
+        <a class="tabBtn" data-tab="looker" role="tab" aria-selected="false" href="#looker">Looker Insights</a>
       </nav>
     </div>
 
@@ -165,16 +182,24 @@
         <div id="summaryTakeaways" class="summaryTakeaways"></div>
 
         <div class="divider"></div>
-        <div class="tableWrap">
-          <table class="sessionTable" id="topSessionsTable">
-            <thead>
-              <tr>
-                <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Open</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <!-- Collapse the top sessions list into a <details> element. When open, the
+             table is visible; when closed, only the summary is shown. This
+             replicates the collapsible sections found in Excel dashboards
+             while preserving accessibility semantics. The summary text
+             indicates that the table lists the highest‑scoring sessions. -->
+        <details open>
+          <summary>Top sessions by score</summary>
+          <div class="tableWrap">
+            <table class="sessionTable" id="topSessionsTable">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Open</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
 
         <!-- Attendance donut chart: shows distribution of farmers present per session as a percentage
              of the total farmers reached. The chart is rendered via Chart.js in dashboard.js.
@@ -183,6 +208,12 @@
         <h3>Sessions by farmers attendance</h3>
         <div class="attendanceWrap">
           <canvas id="attendanceDonut"></canvas>
+        </div>
+        <!-- Decision breakdown pie chart: visualises farmer decisions (definite, maybe and not interested) across all sessions. -->
+        <div class="divider"></div>
+        <h3>Decision breakdown</h3>
+        <div class="decisionWrap">
+          <canvas id="decisionPie"></canvas>
         </div>
       </section>
 
@@ -203,17 +234,23 @@
         <div class="actionsRow" style="margin:8px 0">
           <button class="btn btnGhost btnSmall" id="priorityExportBtn">Export CSV</button>
         </div>
-        <div class="tableWrap">
-          <table class="sessionTable" id="priorityDistrictsTable">
-            <thead>
-              <tr>
-                <th>District</th><th>Sessions</th><th>Farmers</th><th>Acres</th><th>Awareness</th><th>Definite</th><th>Avg score</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <!-- Make the priority districts table collapsible to reduce visual
+             clutter. When collapsed, users see only the summary row; expanding
+             reveals the full list of districts. -->
+        <details open>
+          <summary>Priority districts</summary>
+          <div class="tableWrap">
+            <table class="sessionTable" id="priorityDistrictsTable">
+              <thead>
+                <tr>
+                  <th>District</th><th>Sessions</th><th>Farmers</th><th>Acres</th><th>Awareness</th><th>Definite</th><th>Avg score</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
 
         <div class="divider"></div>
         <div class="grid2">
@@ -246,6 +283,10 @@
         <div id="mapStatus" class="badge">Loading…</div>
       </div>
       <div id="leafletMap" class="map">Loading map…</div>
+      <!-- Heatmap toggle button allows switching between marker and heatmap layers. -->
+      <div class="mapControls" style="margin:12px 0; text-align:right;">
+        <button class="btn btnGhost btnSmall" id="toggleHeat">Show Heatmap</button>
+      </div>
       <div class="divider"></div>
       <div id="mapFallback" class="smallMuted hidden">
         Map library could not be loaded. Use the Sessions table and “Open in Google Maps” links in details.
@@ -311,6 +352,13 @@
           </ul>
         </div>
       </div>
+    </section>
+    <!-- Looker Insights tab: embed interactive Looker Studio report -->
+    <section class="tabPanel card" data-tab="looker" id="looker">
+      <h2>Looker Insights</h2>
+      <div class="muted">This tab displays interactive Looker Studio reports for deeper analysis and AI‑driven insights.</div>
+      <!-- Replace the src attribute with your actual Looker Studio report URL when available -->
+      <iframe src="https://datastudio.google.com/embed/reporting/" width="100%" height="800" frameborder="0" allowfullscreen></iframe>
     </section>
   </main>
 
@@ -389,6 +437,8 @@
 
   <!-- Load Chart.js before the dashboard script to enable the attendance donut chart. -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- Load Leaflet heatmap plugin for density visualisation on the map -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 
   <script src="dashboard.js?v=20260101"></script>

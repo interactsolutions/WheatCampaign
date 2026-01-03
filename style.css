@@ -5,17 +5,19 @@
 :root{
   /* Palette for dark mode: soft navy backgrounds with high-contrast text.
      Variables are tuned for readability and a modern aesthetic. */
-  --bg: #0a0f1c;
+  /* Updated Bayer colour palette for the dark theme */
+  --bg: #10384f;     /* Dark blue background */
   --card: #121a2e99;
   --cardSolid: #121a2e;
   --stroke: #2a3b5e;
   --text: #f0f4ff;
   --muted: #b0c4e6;
   --muted2: #8a9cc2;
-  --brand: #3b82f6;
-  --brand2: #10b981;
-  --warn: #f59e0b;
-  --danger: #ef4444;
+  --brand: #00bcff;    /* Bright Bayer blue */
+  --brand2: #89d329;   /* Bright Bayer green */
+  --warn: #d9a420;     /* Golden wheat accent */
+  --danger: #dc2626;
+  --wheat: #f1dbb3;    /* Wheat tone for borders */
   --radius: 12px;
   --shadow: 0 8px 24px rgba(0,0,0,0.25);
   --transition: 0.2s ease;
@@ -27,17 +29,19 @@
    `document.documentElement.dataset.theme = 'light'` or 'dark'. */
 /* Light (daytime) theme overrides: brighten backgrounds and increase contrast. */
 [data-theme="light"]{
+  /* Light theme palette reflecting Bayer colours */
   --bg: #f8fafc;
   --card: #ffffff99;
   --cardSolid: #ffffff;
   --stroke: #e2e8f0;
-  --text: #0f172a;
+  --text: #10384f;  /* Dark blue text for contrast */
   --muted: #64748b;
   --muted2: #475569;
-  --brand: #2563eb;
-  --brand2: #059669;
-  --warn: #d97706;
+  --brand: #00bcff;
+  --brand2: #89d329;
+  --warn: #d9a420;
   --danger: #dc2626;
+  --wheat: #f1dbb3;
   --shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
@@ -166,7 +170,8 @@ body{
 .main{max-width:1200px; margin:16px auto 60px; padding:0 16px}
 .card{
   background: var(--card);
-  border: 1px solid var(--stroke);
+  /* Use the wheat accent colour for card borders to evoke crop themes */
+  border: 1px solid var(--wheat);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 24px;
@@ -310,6 +315,22 @@ body{
 }
 [data-theme="light"] .donutTitle{
   color: var(--text);
+}
+
+/* Collapsible sections styled to resemble Excel expand/collapse controls */
+details {
+  margin: 10px 0;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--brand);
+  padding: 4px 0;
+  outline: none;
+}
+details[open] > summary {
+  border-bottom: 1px solid var(--stroke);
+  margin-bottom: 6px;
 }
 .donutWrap{
   position:relative;

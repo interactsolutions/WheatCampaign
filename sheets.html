@@ -24,6 +24,10 @@
         <label>Search</label>
         <input id="sheetSearch" placeholder="D1S1, village, district…" />
       </div>
+      <div class="control">
+        <label>Phones</label>
+        <button id="togglePhones" class="btnSmall" type="button">Show phones</button>
+      </div>
     </div>
   </header>
 
@@ -68,14 +72,40 @@
   const campaign = qs.get('campaign') || 'buctril-super-2025';
   const requestedSheet = qs.get('sheet') || '';
 
+  // State flag for phone masking. When true, full phone numbers are shown;
+  // when false, they are masked for privacy. Persist the preference in
+  // localStorage so toggling persists across pages.
+  let showFullPhones = false;
+  try {
+    showFullPhones = localStorage.getItem('showFullPhones') === 'true';
+  } catch (_e) {}
+
   // update back link to maintain campaign context
   $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
 
-  // Basic fetch helper with error handling
-  async function fetchJson(p) {
-    const r = await fetch(url(p), {cache:'no-store'});
-    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
-    return await r.json();
+  // Robust fetch helper with retry and timeout. Attempts to fetch the given
+  // path up to 3 times, aborting each request after a timeout. If all
+  // attempts fail, it throws an error. A descriptive message can be
+  // surfaced to the user by the caller.
+  async function fetchJson(p, retries = 3, timeout = 8000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const r = await fetch(url(p), { cache:'no-store', signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) throw new Error(`Status ${r.status}`);
+        return await r.json();
+      } catch (e) {
+        clearTimeout(timer);
+        if (attempt === retries) {
+          console.error(e);
+          throw new Error(`Unable to load ${p}: ${e.message}`);
+        }
+        await new Promise(res => setTimeout(res, 500 * attempt));
+      }
+    }
+    throw new Error(`Failed to load ${p}`);
   }
 
   function normalizeMediaPath(p) {
@@ -123,9 +153,13 @@
 
   // Helper to mask phone numbers for privacy
   function maskPhone(p) {
+    // If user preference is to show full phones, return the raw string. For
+    // missing values, return empty. Otherwise, mask all but the last four
+    // digits with asterisks and a dash separator.
     const raw = String(p||'').replace(/\s+/g,'');
     if (!raw) return '';
-    // keep last 4 digits if length >=4
+    if (showFullPhones) return raw;
+    if (raw.length < 4) return raw;
     const tail = raw.slice(-4);
     return '***-***-' + tail;
   }
@@ -150,13 +184,16 @@
 
       // Farmers table summarisation
       let farmers = Array.isArray(sh.farmers) ? sh.farmers.slice() : [];
-      // The first entry in some sheet exports may contain column names (e.g.,
-      // { sn:'Row', name:'Name', phone:'Phone Number', ... }). Filter out any
-      // header rows where `sn` equals 'Row' or `name` equals 'Name'.
+      // In many sheet exports, the first entry contains column headings rather
+      // than data (e.g., { sn:'Row', name:'Name', phone:'Phone Number', ... }).
+      // Filter out any rows where one or more values clearly indicate a
+      // header (e.g., "row", "name", "phone number", or "column n"). This
+      // avoids rendering the header row as data.
       farmers = farmers.filter(r => {
-        const snVal = String(r.sn || '').trim().toLowerCase();
-        const nameVal = String(r.name || '').trim().toLowerCase();
-        return !(snVal === 'row' || nameVal === 'name');
+        const vals = Object.values(r).map(v => String(v || '').trim().toLowerCase());
+        if (!vals.length) return false;
+        const isHeader = vals.some(v => v === 'row' || v === 'name' || v === 'phone number' || v.startsWith('column'));
+        return !isHeader;
       });
       if (farmers.length > 0) {
         const totalFarmers = farmers.length;
@@ -260,6 +297,24 @@
     };
     // When typing in the search box, filter the options in the dropdown
     $$('#sheetSearch').addEventListener('input', (ev) => updateOptions(ev.target.value));
+    // Initialise the phone toggle button. Use stored preference to decide
+    // whether to show or hide phone numbers. When clicked, flip the
+    // preference and reload the current sheet.
+    const phoneBtn = $$('#togglePhones');
+    if (phoneBtn) {
+      const updatePhoneBtn = () => {
+        phoneBtn.textContent = showFullPhones ? 'Hide phones' : 'Show phones';
+      };
+      updatePhoneBtn();
+      phoneBtn.addEventListener('click', () => {
+        showFullPhones = !showFullPhones;
+        try { localStorage.setItem('showFullPhones', String(showFullPhones)); } catch (_e) {}
+        updatePhoneBtn();
+        // Reload current sheet to update masking
+        const currentSheet = sel.value;
+        if (currentSheet) loadSheet(currentSheet).catch(e => console.error(e));
+      });
+    }
     // Initialise the dropdown with all sheets
     updateOptions('');
     await loadSheet(initial);

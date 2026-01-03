@@ -658,6 +658,29 @@ body{
 .tableWrap{overflow:auto}
 .sessionTable tbody tr{cursor:pointer}
 .sessionTable tbody tr:hover{background:rgba(76,111,255,.06)}
+.sessionTable th, .sessionTable td{
+  /* Prevent wrapping of long values such as masked phone numbers or village names */
+  white-space: nowrap;
+  padding:6px 8px;
+  vertical-align: top;
+}
+
+/* Simple spinner utility. Use with <span class="spinner"></span> to show a
+   lightweight loading indicator when fetching data. The spinner uses the
+   muted colour for the track and the brand colour for the top segment. */
+.spinner{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  border:2px solid var(--muted);
+  border-top-color: var(--brand);
+  border-radius:50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04)}
 .badge--ok{border-color:rgba(34,197,94,.4)}
 .badge--warn{border-color:rgba(245,158,11,.5)}

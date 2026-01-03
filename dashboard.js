@@ -1,5 +1,9 @@
 (() => {
   'use strict';
+  // Helper to fetch JSON files with retry and timeout support.
+  // This version improves resilience to network issues by retrying failed requests
+  // a limited number of times and aborting long-running requests. If all attempts
+  // fail, it will call setStatus() with an error message and rethrow the error.
 
   // ---------- DOM helpers ----------
   const $$ = (sel, root = document) => root.querySelector(sel);
@@ -325,13 +329,31 @@
   }
 
   // ---------- Loading ----------
-  async function fetchJson(path, why) {
-    const u = url(path);
-    const r = await fetch(u, { cache: 'no-store' });
-    if (!r.ok) {
-      throw new Error(`${why} failed (${r.status}): ${u}`);
+  async function fetchJson(path, why = path, retries = 3, timeout = 8000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const u = url(path);
+        const r = await fetch(u, { cache: 'no-store', signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) {
+          throw new Error(`${why} failed (${r.status})`);
+        }
+        return await r.json();
+      } catch (e) {
+        clearTimeout(timer);
+        if (attempt === retries) {
+          console.error(e);
+          setStatus(`Error loading ${why}: ${e.message}`, 'bad');
+          throw e;
+        }
+        // Exponential backoff: wait longer on subsequent attempts
+        await new Promise(res => setTimeout(res, 500 * attempt));
+      }
     }
-    return await r.json();
+    // Should never reach here
+    throw new Error(`Failed to fetch ${why}`);
   }
 
   async function loadCampaignRegistry() {

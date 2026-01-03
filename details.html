@@ -22,6 +22,10 @@
         <label>Session</label>
         <div id="hdr" class="muted">—</div>
       </div>
+      <div class="control">
+        <label>Phones</label>
+        <button id="togglePhones" class="btnSmall" type="button">Show phones</button>
+      </div>
     </div>
   </header>
 
@@ -81,9 +85,17 @@
   // provided value has fewer than 4 digits, return it unchanged. Dashes are
   // inserted for readability (***-***-1234). Non-string inputs are returned
   // as-is.
+  // Phone masking toggle. When showFullPhones is true, phone numbers will be
+  // rendered in full; otherwise, only the last four digits are shown.
+  let showFullPhones = false;
+  try {
+    showFullPhones = localStorage.getItem('showFullPhones') === 'true';
+  } catch (_e) {}
+
   function maskPhone(p) {
     const raw = String(p || '').replace(/\s+/g, '');
     if (!raw) return '';
+    if (showFullPhones) return raw;
     if (raw.length < 4) return raw;
     const tail = raw.slice(-4);
     return '***-***-' + tail;
@@ -98,10 +110,28 @@
 
   $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
 
-  async function fetchJson(p) {
-    const r = await fetch(url(p), {cache:'no-store'});
-    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
-    return await r.json();
+  // Robust fetch helper with retry and timeout. Similar to the version used
+  // in dashboard.js and sheets.html. Attempts to fetch the given path
+  // multiple times with a timeout. If all attempts fail, throws an error.
+  async function fetchJson(p, retries = 3, timeout = 8000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const r = await fetch(url(p), { cache:'no-store', signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) throw new Error(`Status ${r.status}`);
+        return await r.json();
+      } catch (e) {
+        clearTimeout(timer);
+        if (attempt === retries) {
+          console.error(e);
+          throw new Error(`Unable to load ${p}: ${e.message}`);
+        }
+        await new Promise(res => setTimeout(res, 500 * attempt));
+      }
+    }
+    throw new Error(`Failed to load ${p}`);
   }
 
   // --- Media path resolution (match dashboard behavior) ---
@@ -345,6 +375,24 @@ const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${e
     $$('#overview').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
     $$('#sheetSummary').textContent = '—';
   });
+
+  // Initialise the phone toggle button. Show current state (show/hide) and
+  // allow the user to flip the preference. Reloads the session view when
+  // toggled to apply the new masking.
+  const phoneBtn = document.getElementById('togglePhones');
+  if (phoneBtn) {
+    const updatePhoneBtn = () => {
+      phoneBtn.textContent = showFullPhones ? 'Hide phones' : 'Show phones';
+    };
+    updatePhoneBtn();
+    phoneBtn.addEventListener('click', () => {
+      showFullPhones = !showFullPhones;
+      try { localStorage.setItem('showFullPhones', String(showFullPhones)); } catch (_e) {}
+      updatePhoneBtn();
+      // Reload the page to apply the updated phone masking across all parts of the view
+      window.location.reload();
+    });
+  }
 })();
 </script>
 <!-- Theme toggle script for details page -->

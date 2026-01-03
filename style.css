@@ -1,55 +1,62 @@
 
+/* Import Inter font for a clean, professional look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root{
-  --bg:#070b14;
-  --card:#0b1220cc;
-  --cardSolid:#0b1220;
-  --stroke:#1a2947;
-  --text:#e9f0ff;
-  --muted:#a9b7d6;
-  --muted2:#7f90b8;
-  --brand:#4c6fff;
-  --brand2:#22c55e;
-  --warn:#f59e0b;
-  --danger:#ef4444;
-  --radius:18px;
-  --shadow: 0 16px 40px rgba(0,0,0,.35);
+  /* Palette for dark mode: soft navy backgrounds with high-contrast text.
+     Variables are tuned for readability and a modern aesthetic. */
+  --bg: #0a0f1c;
+  --card: #121a2e99;
+  --cardSolid: #121a2e;
+  --stroke: #2a3b5e;
+  --text: #f0f4ff;
+  --muted: #b0c4e6;
+  --muted2: #8a9cc2;
+  --brand: #3b82f6;
+  --brand2: #10b981;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.25);
+  --transition: 0.2s ease;
 }
 
 /* Light (daytime) theme overrides. When the `data-theme` attribute on the
    <html> or <body> element is set to "light", these variables replace the
    default dark values. To switch themes dynamically, set
    `document.documentElement.dataset.theme = 'light'` or 'dark'. */
+/* Light (daytime) theme overrides: brighten backgrounds and increase contrast. */
 [data-theme="light"]{
-  --bg:#f5f8ff;
-  --card:#ffffffcc;
-  --cardSolid:#ffffff;
-  --stroke:#d7e0f7;
-  --text:#0d1d34;
-  --muted:#647599;
-  --muted2:#7f8db0;
-  --brand:#3b5bdb;
-  --brand2:#18a34e;
-  --warn:#c56a00;
-  --danger:#d32f2f;
-  --radius:18px;
-  --shadow: 0 12px 28px rgba(0,0,0,.15);
+  --bg: #f8fafc;
+  --card: #ffffff99;
+  --cardSolid: #ffffff;
+  --stroke: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --muted2: #475569;
+  --brand: #2563eb;
+  --brand2: #059669;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  font-family:'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   overflow-x:hidden;
+  line-height:1.6;
+  font-size:16px;
 }
 
 .bg{position:fixed; inset:0; z-index:-2; background:#060a12}
-.bgVideo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(1.05) contrast(1.05); opacity:.42}
-.bgShade{position:absolute; inset:0; background: radial-gradient(1200px 500px at 20% 10%, rgba(76,111,255,.20), transparent 50%),
-  radial-gradient(900px 500px at 70% 35%, rgba(34,197,94,.12), transparent 60%),
-  linear-gradient(to bottom, rgba(7,11,20,.35), rgba(7,11,20,.85) 55%, rgba(7,11,20,1));}
+.bgVideo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(1.05) contrast(1.05); opacity:.3}
+/* Soften the shade overlay for a more professional look */
+.bgShade{position:absolute; inset:0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);}
 
 /* Light theme variant for the background shade. Use softer gradients and a light overlay
    when the page theme is set to light. */
@@ -59,9 +66,32 @@ body{
     linear-gradient(to bottom, rgba(245,248,255,.35), rgba(245,248,255,.75) 55%, rgba(245,248,255,.85));
 }
 
-.header{padding: max(18px, env(safe-area-inset-top)) 16px 14px; position:sticky; top:0; backdrop-filter: blur(10px); background: rgba(7,11,20,.35); border-bottom:1px solid rgba(26,41,71,.55); z-index:20}
-.headerInner{max-width:1200px; margin:0 auto; display:flex; gap:16px; align-items:flex-start; justify-content:space-between}
-.headerActions{display:flex; gap:10px; align-items:center}
+/* Header / topbar styling. Sticky for persistent navigation. */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--cardSolid);
+  padding: 16px 24px;
+  box-shadow: var(--shadow);
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap:16px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brandTitle{
+  font-size:1.25rem;
+  font-weight:600;
+}
+.brandSub{
+  font-size:0.875rem;
+  color: var(--muted);
+}
 .chip.link{cursor:pointer; text-decoration:none}
 .chip.link:hover{background:rgba(76,111,255,.18)}
 
@@ -136,9 +166,14 @@ body{
 .main{max-width:1200px; margin:16px auto 60px; padding:0 16px}
 .card{
   background: var(--card);
-  border:1px solid rgba(26,41,71,.65);
+  border: 1px solid var(--stroke);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  padding: 24px;
+  margin: 16px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .controls{padding:14px}
 .controls{
@@ -653,8 +688,24 @@ body{
 
 
 /* --- v4 regeneration fixes --- */
-.tabBar{display:flex; gap:10px; flex-wrap:wrap}
-.tabBtn{cursor:pointer}
+/* Navigation tabs */
+.tabBar{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.tabBtn{
+  padding:8px 16px;
+  border-radius: var(--radius);
+  text-decoration:none;
+  color: var(--muted);
+  font-weight:500;
+  transition: background var(--transition), color var(--transition);
+}
+.tabBtn:hover, .tabBtn--active{
+  background: var(--brand);
+  color:#fff;
+}
 .tableWrap{overflow:auto}
 .sessionTable tbody tr{cursor:pointer}
 .sessionTable tbody tr:hover{background:rgba(76,111,255,.06)}
@@ -680,6 +731,238 @@ body{
 
 @keyframes spin{
   to{ transform: rotate(360deg); }
+}
+
+/* === Modern UI theme overrides (January 2026) ===
+   These rules adjust the colour palette, typography, layout, and interactions
+   to create a clean, professional look consistent across all pages. Because
+   they appear at the end of the stylesheet, they override earlier values. */
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0a0f1c;
+  --card: #121a2e99;
+  --cardSolid: #121a2e;
+  --stroke: #2a3b5e;
+  --text: #f0f4ff;
+  --muted: #b0c4e6;
+  --muted2: #8a9cc2;
+  --brand: #3b82f6;
+  --brand2: #10b981;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.25);
+  --transition: 0.2s ease;
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --card: #ffffff99;
+  --cardSolid: #ffffff;
+  --stroke: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --muted2: #475569;
+  --brand: #2563eb;
+  --brand2: #059669;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+html {
+  transition: background var(--transition), color var(--transition);
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Background adjustments */
+.bgVideo {
+  opacity: 0.3;
+}
+.bgShade {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
+}
+
+/* Topbar styling */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--cardSolid);
+  padding: 16px 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brandTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.brandSub {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text);
+  transition: color var(--transition);
+}
+.iconBtn:hover {
+  color: var(--brand);
+}
+
+/* Navigation tabs */
+.tabBar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.tabBtn {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
+}
+.tabBtn:hover,
+.tabBtn--active {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Card styling */
+.card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin: 16px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tables */
+.tableWrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--stroke);
+}
+th {
+  background: var(--cardSolid);
+  font-weight: 600;
+  color: var(--text);
+}
+tr:nth-child(even) {
+  background: rgba(255,255,255,0.05);
+}
+tr:hover {
+  background: rgba(255,255,255,0.1);
+  transition: background var(--transition);
+}
+
+/* Buttons */
+.btn, .btnSmall {
+  padding: 8px 16px;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background var(--transition);
+}
+.btn:hover {
+  background: #2f66d4;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  border-top: 1px solid var(--stroke);
+}
+.footerBrands {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+.brandPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--card);
+  border-radius: 999px;
+}
+
+/* Summary takeaways and priority classes */
+.summaryTakeaways {
+  margin-top: 16px;
+  padding: 16px;
+  border-left: 4px solid var(--brand);
+  background: rgba(59,130,246,0.05);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+.priority-high { background: rgba(239,68,68,0.08); }
+.priority-medium { background: rgba(245,158,11,0.08); }
+.priority-low { background: rgba(34,197,94,0.08); }
+[data-theme="light"] .priority-high { background: rgba(239,68,68,0.12); }
+[data-theme="light"] .priority-medium { background: rgba(245,158,11,0.12); }
+[data-theme="light"] .priority-low { background: rgba(34,197,94,0.12); }
+
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tabBar {
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .controls {
+    flex-direction: column;
+  }
+  .card {
+    padding: 16px;
+    margin: 8px;
+  }
+  .kpis {
+    flex-direction: column;
+  }
+  table {
+    font-size: 0.75rem;
+  }
 }
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04)}
 .badge--ok{border-color:rgba(34,197,94,.4)}

@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <!-- Use the Interact logo as the site favicon -->
   <link rel="icon" type="image/png" href="assets/Interact.png" />
-  <link rel="stylesheet" href="style.css?v=20260101" />
+  <link rel="stylesheet" href="style.css?v=20260103" />
 </head>
 <body>
   <header class="topbar">
@@ -132,6 +132,26 @@
         </tbody>
       </table>
     </div>
+
+    <h2>Issues observed</h2>
+    <ul>
+      <li><strong>Non‑tabular structure:</strong> Each session sheet is formatted as a form rather than a data table, making analysis difficult and error‑prone.</li>
+      <li><strong>Missing session data:</strong> Ten session sheets lack any counts. It’s unclear whether events were cancelled or data were lost.</li>
+      <li><strong>Duplicated counts in Excel summaries:</strong> The workbook’s summary tabs double all numeric totals. The dashboard uses correct counts, but the Excel formulas need correction.</li>
+      <li><strong>Inconsistent reason lists:</strong> Some reason entries contain phone numbers or dealer names instead of genuine reasons.</li>
+      <li><strong>No consolidated view:</strong> There is no single sheet summarising sessions with metrics. Managers must open individual sheets or rely on flawed summaries.</li>
+    </ul>
+
+    <h2>Recommendations</h2>
+    <ol>
+      <li><strong>Create a consolidated session table:</strong> Introduce a new sheet where each row represents a session and columns capture date, location, farmers, acres and adoption metrics. Include top drivers and barriers.</li>
+      <li><strong>Fix duplication in summary formulas:</strong> Review the formulas in the Excel workbook so totals match the session data.</li>
+      <li><strong>Address missing sessions:</strong> Populate the empty session sheets or remove them if events were cancelled.</li>
+      <li><strong>Clean up reason lists:</strong> Standardise reasons and remove stray text such as phone numbers. Provide clear categories.</li>
+      <li><strong>Create district‑level summaries:</strong> Use pivot tables to summarise sessions and adoption metrics by district or territory.</li>
+      <li><strong>Visualise key metrics:</strong> Incorporate charts to show awareness, definite intent and reasons for use/not use.</li>
+      <li><strong>Document assumptions and definitions:</strong> Add a documentation sheet explaining each metric and how values are calculated.</li>
+    </ol>
 
     <p style="margin-top:2rem; font-style:italic;">
       This report is based on the analysis performed on 2026-01-02. For more details, refer to the

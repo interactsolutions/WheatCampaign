@@ -21,6 +21,7 @@
   --radius: 12px;
   --shadow: 0 8px 24px rgba(0,0,0,0.25);
   --transition: 0.2s ease;
+  --pageWidth: 1440px;
 }
 
 /* Light (daytime) theme overrides. When the `data-theme` attribute on the
@@ -123,6 +124,20 @@ body{
 .heroPlayer img{opacity:0; transition:opacity .25s ease}
 .heroPlayer.fallback img{opacity:1}
 .heroOverlay{position:absolute; inset:0; background: linear-gradient(to top, rgba(7,11,20,.92), rgba(7,11,20,.25) 55%, rgba(7,11,20,.15))}
+
+/* Shown only when autoplay is blocked (some browsers require a user gesture). */
+.heroTapHint{
+  position:absolute;
+  inset:auto 16px 16px 16px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(7,11,20,.55);
+  border:1px solid rgba(255,255,255,.10);
+  color:#f0f4ff;
+  font-size:12px;
+  backdrop-filter: blur(10px);
+}
+.heroTapHint.hidden{display:none;}
 [data-theme="light"] .heroOverlay{
   background: linear-gradient(to top, rgba(245,248,255,.92), rgba(245,248,255,.25) 55%, rgba(245,248,255,.15));
 }
@@ -167,7 +182,7 @@ body{
 .headerTile video, .headerTile img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
 .headerTile .badge{position:absolute; bottom:6px; left:6px; background:rgba(7,11,20,.65); border:1px solid rgba(255,255,255,.08); padding:3px 6px; border-radius:999px; font-size:10px; color:#dfe7ff}
 
-.main{max-width:1200px; margin:16px auto 60px; padding:0 16px}
+.main{max-width:var(--pageWidth); margin:16px auto 60px; padding:0 16px}
 .card{
   background: var(--card);
   /* Use the wheat accent colour for card borders to evoke crop themes */
@@ -175,10 +190,8 @@ body{
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 24px;
-  margin: 16px;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 16px auto;
+  max-width: var(--pageWidth);
 }
 .controls{padding:14px}
 .controls{
@@ -1248,9 +1261,126 @@ tr:hover {
   max-width:100%;
 }
 .brand{display:flex; align-items:center; gap:12px}
-.brandLogo{width:auto; height:36px; max-height:36px; object-fit:contain; filter: drop-shadow(0 10px 26px rgba(0,0,0,.28))}
+.brandLogo{
+  width:auto;
+  height:44px;
+  max-height:44px;
+  object-fit:contain;
+  border-radius:10px;
+  filter: drop-shadow(0 10px 26px rgba(0,0,0,.28));
+}
+.brandLogo--agency{height:40px; max-height:40px}
+.brandLogoLink{display:flex; align-items:center; gap:10px}
 .brandTitle{font-size:18px; font-weight:900; letter-spacing:.2px}
 .brandSub{font-size:12px; color:var(--muted); margin-top:2px}
+
+/* Hero carousel (header sequence) */
+.heroThumbs{gap:10px}
+.heroThumb{
+  width:78px;
+  height:52px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.18);
+  box-shadow:0 10px 26px rgba(0,0,0,.25);
+}
+.heroThumb img,
+.heroThumb video{width:100%; height:100%; object-fit:cover; display:block}
+.heroThumb .heroBadge{
+  position:absolute;
+  left:8px;
+  bottom:8px;
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.45);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.18);
+}
+
+/* Scrolling highlights strip */
+.highlights{
+  width:100%;
+  margin-top:10px;
+  overflow:hidden;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.14);
+}
+.highlightsTrack{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  align-items:center;
+  will-change:transform;
+  animation:highlightsScroll 28s linear infinite;
+}
+.highlights:hover .highlightsTrack{animation-play-state:paused}
+.highlightItem{
+  flex:0 0 auto;
+  width:140px;
+  height:78px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);
+}
+.highlightItem img{width:100%; height:100%; object-fit:cover; display:block}
+@keyframes highlightsScroll{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
+/* Chart carousel (keeps the decision pie compact and scrollable) */
+.chartCarousel{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:8px;
+}
+.chartSlide{
+  min-width:min(620px, 92vw);
+  scroll-snap-align:start;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  background:rgba(255,255,255,.04);
+}
+.attendanceWrap,
+.decisionWrap{
+  max-width:560px;
+  margin:0 auto;
+}
+.decisionWrap canvas,
+.attendanceWrap canvas{
+  width:100% !important;
+  height:240px !important;
+  max-height:240px;
+}
+
+@media (max-width: 640px){
+  .decisionWrap canvas,
+  .attendanceWrap canvas{
+    height:200px !important;
+    max-height:200px;
+  }
+}
+
+/* Footer improvements */
+.footerGrid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:18px;
+  align-items:start;
+}
+.footerTitle{font-weight:800; margin-bottom:8px}
+.footerBottom{margin-top:14px; opacity:.85}
+@media (max-width: 880px){
+  .footerGrid{grid-template-columns:1fr}
+}
 
 /* Highlight the active sheet link in the raw sheet viewer list. The link for the
    currently selected sheet is displayed in the brand colour and bolded to
@@ -1343,3 +1473,7 @@ tr:hover {
 [data-theme="light"] .priority-low{
   background:rgba(24,163,78,.16);
 }
+
+
+/* Build/version badge */
+.buildTag{font-size:12px; opacity:.75; margin-left:8px; padding:2px 6px; border:1px solid rgba(255,255,255,.25); border-radius:999px;}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Healthcheck</title>
   <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.css?v=20260101" />
+  <link rel="stylesheet" href="style.css?v=20260103" />
 </head>
 <body>
   <header class="topbar">
@@ -28,7 +28,8 @@
 (() => {
   'use strict';
   const BASE = new URL('.', location.href);
-  const url = (p)=>new URL(p, BASE).toString();
+  const BUILD = '20260103';
+  const url = (p)=>{const u=new URL(p, BASE); if(u.origin===BASE.origin && !u.searchParams.has('v')) u.searchParams.set('v', BUILD); return u.toString();};
   const out = document.getElementById('out');
   const esc = (s)=>{const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML;};
 

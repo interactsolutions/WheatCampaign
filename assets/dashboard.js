@@ -1,5 +1,9 @@
 (() => {
   'use strict';
+  // Helper to fetch JSON files with retry and timeout support.
+  // This version improves resilience to network issues by retrying failed requests
+  // a limited number of times and aborting long-running requests. If all attempts
+  // fail, it will call setStatus() with an error message and rethrow the error.
 
   // ---------- DOM helpers ----------
   const $$ = (sel, root = document) => root.querySelector(sel);
@@ -50,12 +54,23 @@
     nameFilter: '',
     cityFilter: '',
 
+    // Region filter (REG). This corresponds to the RGN codes (e.g. SKR, RYK)
+    // derived from the Initial sheet mapping of territories/districts to regions.
+    regionFilter: '',
+
     // Additional filters for district and score range. These are optional
     // inputs that refine the sessions list based on geography or
     // performance. When null/empty they do not constrain results.
     districtFilter: '',
     scoreMin: null,
     scoreMax: null,
+
+    // Media tab controls
+    mediaType: 'all',
+    mediaSearch: '',
+    mediaSort: 'newest',
+    mediaLimit: 24,
+    _mediaBound: false,
   };
 
   // ---------- Parsing / formatting ----------
@@ -299,6 +314,188 @@
     };
   }
 
+  // Autoplaying video attachment for small thumbnail contexts (hero/drawer/lightbox).
+  // This loads the first resolvable video immediately and keeps it muted/looping.
+  async function attachAutoplayVideo(videoEl, path) {
+    const placeholder = 'assets/placeholder-video.mp4';
+    videoEl.preload = 'metadata';
+    videoEl.muted = true;
+    videoEl.loop = true;
+    videoEl.playsInline = true;
+    videoEl.setAttribute('playsinline', '');
+    videoEl.controls = false;
+    try {
+      const chosen = await resolveFirstExisting(path);
+      videoEl.src = url(chosen || placeholder);
+      videoEl.play().catch(() => { /* ignore autoplay blocks */ });
+    } catch (_e) {
+      videoEl.src = url(placeholder);
+    }
+    videoEl.onerror = () => {
+      videoEl.onerror = null;
+      videoEl.src = url(placeholder);
+    };
+  }
+
+  // ---------- Header hero sequence (auto-playing, one after another) ----------
+  // Uses media.json -> headerSequence to drive the hero player in the sticky header.
+  // Requirements:
+  // - autoplay muted videos
+  // - advance automatically (on ended, with a safety timeout)
+  // - show larger, clearer thumbnails
+  // - credit INTERACT as agency via local assets
+  function initHeroSequence() {
+    const cfg = state.mediaCfg;
+    const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
+    const heroVideo = document.getElementById('heroVideo');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSub = document.getElementById('heroSub');
+    const thumbs = document.getElementById('heroThumbs');
+    const prevBtn = document.getElementById('heroPrev');
+    const nextBtn = document.getElementById('heroNext');
+    if (!heroVideo || !thumbs || !items.length) return;
+
+    state._hero = state._hero || { idx: 0, timer: null, safety: null };
+    heroVideo.muted = true;
+    heroVideo.playsInline = true;
+    heroVideo.setAttribute('playsinline', '');
+    heroVideo.loop = false; // crucial for sequential playback
+
+    // Build thumbnail buttons
+    thumbs.innerHTML = '';
+    items.forEach((it, i) => {
+      const b = document.createElement('button');
+      b.className = 'heroThumb';
+      b.type = 'button';
+      b.setAttribute('aria-label', it.label ? `Show ${it.label}` : `Show item ${i+1}`);
+      b.dataset.idx = String(i);
+
+      const img = document.createElement('img');
+      img.alt = it.label || 'thumb';
+      img.loading = 'lazy';
+      b.appendChild(img);
+      attachSmartImage(img, it.poster || cfg?.placeholder || 'assets/placeholder.svg');
+
+      const badge = document.createElement('div');
+      badge.className = 'heroBadge';
+      badge.textContent = it.label || '';
+      b.appendChild(badge);
+
+      b.addEventListener('click', () => {
+        selectHero(i, true);
+      });
+      thumbs.appendChild(b);
+    });
+
+    function clearTimers() {
+      if (state._hero.timer) { clearTimeout(state._hero.timer); state._hero.timer = null; }
+      if (state._hero.safety) { clearTimeout(state._hero.safety); state._hero.safety = null; }
+    }
+
+    async function selectHero(i, userAction) {
+      if (!Number.isFinite(i)) return;
+      state._hero.idx = (i + items.length) % items.length;
+      clearTimers();
+
+      // active thumb state
+      Array.from(thumbs.children).forEach((el, idx) => {
+        if (idx === state._hero.idx) el.classList.add('is-active'); else el.classList.remove('is-active');
+      });
+
+      const it = items[state._hero.idx];
+      if (heroTitle) heroTitle.textContent = it.label || '';
+      if (heroSub) heroSub.textContent = '';
+
+      // Load video (with existence check). If not found, keep current and advance.
+      const chosen = await resolveFirstExisting(it.video || '');
+      if (!chosen) {
+        // No playable source; advance quickly
+        state._hero.timer = setTimeout(() => selectHero(state._hero.idx + 1, false), 2500);
+        return;
+      }
+
+      heroVideo.src = url(chosen);
+      try {
+        await heroVideo.play();
+      } catch (_e) {
+        // Autoplay blocked; still progress
+      }
+
+      // Advance on end + safety timeout (in case of very long videos or failure to emit ended)
+      heroVideo.onended = () => selectHero(state._hero.idx + 1, false);
+      state._hero.safety = setTimeout(() => {
+        try { heroVideo.pause(); } catch (_e) {}
+        selectHero(state._hero.idx + 1, false);
+      }, 18000);
+
+      // If user manually selected, restart the scrolling strip animation (optional)
+      if (userAction) {
+        // no-op for now
+      }
+    }
+
+    prevBtn?.addEventListener('click', () => selectHero(state._hero.idx - 1, true));
+    nextBtn?.addEventListener('click', () => selectHero(state._hero.idx + 1, true));
+
+    // Start from 0
+    selectHero(0, false);
+  }
+
+  function initHighlightsStrip() {
+    const cfg = state.mediaCfg;
+    const track = document.getElementById('highlightsTrack');
+    if (!track) return;
+    const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
+    // Use posters for a lightweight, always-available strip.
+    const posters = items.map(x => x.poster).filter(Boolean);
+    if (!posters.length) return;
+    track.innerHTML = '';
+    const seq = posters.concat(posters); // duplicate for seamless scroll
+    seq.forEach(p => {
+      const wrap = document.createElement('div');
+      wrap.className = 'highlightItem';
+      const img = document.createElement('img');
+      img.alt = 'highlight';
+      img.loading = 'lazy';
+      wrap.appendChild(img);
+      track.appendChild(wrap);
+      attachSmartImage(img, p);
+    });
+  }
+
+  function initChartCarouselAutoScroll() {
+    const el = document.getElementById('chartCarousel');
+    if (!el) return;
+    if (state._chartCarouselTimer) clearInterval(state._chartCarouselTimer);
+    let idx = 0;
+    const slides = Array.from(el.querySelectorAll('.chartSlide'));
+    if (slides.length < 2) return;
+
+    const scrollToIdx = (i) => {
+      const target = slides[i];
+      if (!target) return;
+      const left = target.offsetLeft;
+      el.scrollTo({ left, behavior: 'smooth' });
+    };
+
+    const tick = () => {
+      idx = (idx + 1) % slides.length;
+      scrollToIdx(idx);
+    };
+
+    // Pause on interaction
+    const pause = () => { if (state._chartCarouselTimer) { clearInterval(state._chartCarouselTimer); state._chartCarouselTimer = null; } };
+    const resume = () => { if (!state._chartCarouselTimer) state._chartCarouselTimer = setInterval(tick, 7000); };
+    el.addEventListener('mouseenter', pause);
+    el.addEventListener('mouseleave', resume);
+    el.addEventListener('touchstart', pause, { passive: true });
+    el.addEventListener('touchend', resume, { passive: true });
+
+    state._chartCarouselTimer = setInterval(tick, 7000);
+  }
+
+  // (deduplicated) use initHighlightsStrip() and initChartCarouselAutoScroll()
+
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
     const tabs = $$$('.tabBtn[data-tab]');
@@ -325,13 +522,31 @@
   }
 
   // ---------- Loading ----------
-  async function fetchJson(path, why) {
-    const u = url(path);
-    const r = await fetch(u, { cache: 'no-store' });
-    if (!r.ok) {
-      throw new Error(`${why} failed (${r.status}): ${u}`);
+  async function fetchJson(path, why = path, retries = 3, timeout = 8000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const u = url(path);
+        const r = await fetch(u, { cache: 'no-store', signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) {
+          throw new Error(`${why} failed (${r.status})`);
+        }
+        return await r.json();
+      } catch (e) {
+        clearTimeout(timer);
+        if (attempt === retries) {
+          console.error(e);
+          setStatus(`Error loading ${why}: ${e.message}`, 'bad');
+          throw e;
+        }
+        // Exponential backoff: wait longer on subsequent attempts
+        await new Promise(res => setTimeout(res, 500 * attempt));
+      }
     }
-    return await r.json();
+    // Should never reach here
+    throw new Error(`Failed to fetch ${why}`);
   }
 
   async function loadCampaignRegistry() {
@@ -475,10 +690,16 @@
     state.nameFilter = nameEl ? String(nameEl.value || '').trim() : '';
     state.cityFilter = cityEl ? String(cityEl.value || '').trim() : '';
 
-    // Capture district filter and score range inputs. If the user leaves
+    // Capture district, region, and score range inputs. If the user leaves
     // fields blank the values remain empty/null, indicating no filter.
     const districtEl = $$('#districtFilter');
     state.districtFilter = districtEl ? String(districtEl.value || '').trim() : '';
+
+    // Region filter: match sessions by region code (e.g. SKR, RYK). If the input is blank
+    // the filter is not applied. The input element is optional because not all
+    // dashboards will define a region filter. See index.html for the #regionFilter input.
+    const regionEl = $$('#regionFilter');
+    state.regionFilter = regionEl ? String(regionEl.value || '').trim() : '';
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
     const minVal = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
@@ -516,6 +737,11 @@
     state.scoreMin = null;
     state.scoreMax = null;
 
+    // Clear region filter
+    const regionEl = $$('#regionFilter');
+    if (regionEl) regionEl.value = '';
+    state.regionFilter = '';
+
     applyDateInputs();
   }
 
@@ -524,9 +750,13 @@
     const b = state.dateTo;
     state.filteredSessions = state.sessions.filter(s => {
       const d = parseDateSafe(s.date);
-      if (!d) return false;
-      // Date range filter
-      if (d < a || d > b) return false;
+      // If the date cannot be parsed (e.g., missing or not in YYYY-MM-DD format),
+      // treat the session as always within range. This allows sessions with
+      // malformed dates to appear in the dashboard rather than being silently
+      // excluded. Only enforce the date filter when a valid Date is available.
+      if (d) {
+        if (d < a || d > b) return false;
+      }
       // Host (farmer) name filter: match host.name substring if provided
       if (state.nameFilter) {
         const name = String(s.host?.name || '').toLowerCase();
@@ -536,6 +766,12 @@
       if (state.cityFilter) {
         const city = String(s.city || '').toLowerCase();
         if (!city.includes(state.cityFilter.toLowerCase())) return false;
+      }
+
+      // Region filter
+      if (state.regionFilter) {
+        const reg = String(s.region || '').toLowerCase();
+        if (!reg.includes(state.regionFilter.toLowerCase())) return false;
       }
 
       // District filter
@@ -813,6 +1049,57 @@
       });
     }
 
+    // ---------- Decision breakdown pie chart ----------
+    const decisionCanvas = $$('#decisionPie');
+    if (decisionCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
+      if (window.decisionChart && typeof window.decisionChart.destroy === 'function') {
+        window.decisionChart.destroy();
+      }
+      let sumDef = 0, sumMaybe = 0, sumNot = 0;
+      for (const s of fs) {
+        // Farmers present for weighting; prefer sheet index when available.
+        const si = idx?.get(s.sheetRef);
+        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const m = s.metrics || {};
+        const def = num(m.definitePct);
+        const mb = num(m.maybePct);
+        const ni = num(m.notInterestedPct);
+        if (Number.isFinite(farmers) && farmers > 0) {
+          if (Number.isFinite(def)) sumDef += farmers * def / 100;
+          if (Number.isFinite(mb)) sumMaybe += farmers * mb / 100;
+          if (Number.isFinite(ni)) sumNot += farmers * ni / 100;
+        }
+      }
+      const labels = ['Definite','Maybe','Not interested'];
+      const data = [sumDef, sumMaybe, sumNot];
+      const bgColors = ['#89d329','#d9a420','#dc2626'];
+      const ctxPie = decisionCanvas.getContext('2d');
+      window.decisionChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors }] },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[ctx.dataIndex];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                  return `${lab}: ${Math.round(val)} farmers (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     // ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {
@@ -1075,7 +1362,86 @@
     const grid = $$('#mediaGrid');
     if (!grid) return;
 
-    const cards = state.filteredSessions.map(s => {
+    // Bind media toolbar events once
+    if (!state._mediaBound) {
+      state._mediaBound = true;
+
+      const seg = $$('.mediaSeg');
+      seg?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-media-type]');
+        if (!btn) return;
+        const t = btn.getAttribute('data-media-type') || 'all';
+        state.mediaType = t;
+        // Update active styling
+        $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
+        state.mediaLimit = 24;
+        renderMedia();
+      });
+
+      const search = $$('#mediaSearch');
+      if (search) {
+        search.addEventListener('input', () => {
+          state.mediaSearch = String(search.value || '').trim().toLowerCase();
+          state.mediaLimit = 24;
+          renderMedia();
+        });
+      }
+
+      const sort = $$('#mediaSort');
+      if (sort) {
+        sort.addEventListener('change', () => {
+          state.mediaSort = String(sort.value || 'newest');
+          renderMedia();
+        });
+      }
+
+      const more = $$('#mediaLoadMore');
+      if (more) {
+        more.addEventListener('click', () => {
+          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
+          renderMedia();
+        });
+      }
+    }
+
+    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
+    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+
+    const q = String(state.mediaSearch || '').trim().toLowerCase();
+    const type = String(state.mediaType || 'all');
+    const sortMode = String(state.mediaSort || 'newest');
+
+    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
+
+    // Filter to sessions that actually have media
+    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+
+    // Type filter
+    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
+    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+
+    // Text filter
+    if (q) {
+      list = list.filter(s => {
+        const sheet = String(s.sheetRef || '');
+        const district = String(s.district || '');
+        const village = String(s.village || s.spot || '');
+        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+      });
+    }
+
+    // Sort by date (fallback to original order)
+    list.sort((a, b) => {
+      const da = parseDateSafe(a.date)?.getTime() || 0;
+      const db = parseDateSafe(b.date)?.getTime() || 0;
+      return sortMode === 'oldest' ? (da - db) : (db - da);
+    });
+
+    const total = list.length;
+    const limit = Math.max(0, Number(state.mediaLimit || 24));
+    const shown = list.slice(0, limit);
+
+    const cards = shown.map(s => {
       const sid = esc(s.id);
       const sheet = esc(s.sheetRef || '');
       const district = esc(s.district || '');
@@ -1088,14 +1454,18 @@
       const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
       // Build thumb markup
       let thumb;
+      let badge;
       if (vidPath) {
         // Show auto-playing muted preview
         thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+        badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
         thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
+        badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
       }
       return `<div class="mediaCard" data-session-id="${sid}">
         <div class="mediaThumb">
+          ${badge}
           ${thumb}
         </div>
         <div class="mediaMeta">
@@ -1111,6 +1481,12 @@
     });
 
     grid.innerHTML = cards.join('');
+
+    // Update count + load more button
+    const countEl = $$('#mediaCount');
+    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
+    const moreBtn = $$('#mediaLoadMore');
+    if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
 
     // attach thumbs
     $$$('[data-media-thumb="1"]', grid).forEach(img => {
@@ -1307,7 +1683,7 @@
           v.setAttribute('playsinline','');
           wrap.appendChild(v);
           mediaEl.appendChild(wrap);
-          attachSmartVideo(v, it.path);
+          attachAutoplayVideo(v, it.path);
           wrap.onclick = () => openLightbox(Number(s.id));
         }
       }
@@ -1417,7 +1793,7 @@
           tv.playsInline = true;
           tv.setAttribute('playsinline','');
           row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
+          attachAutoplayVideo(tv, it.path);
           tv.onclick = () => {
             body.innerHTML = '';
             lb.classList.add('open');
@@ -1459,6 +1835,14 @@
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
+      // Create an empty heatmap layer. The data points are populated in updateMapData().
+      try {
+        state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
+      } catch (_e) {
+        // If the heatmap plugin is not loaded, leave the layer undefined.
+        state.heatLayer = null;
+      }
+
       updateMapData();
       setMapStatus('Ready', true);
       setTimeout(() => map.invalidateSize(), 250);
@@ -1486,13 +1870,24 @@
     state.markerLayer.clearLayers();
     state.markersBySessionId.clear();
 
+    // Build a quick lookup of sheet metadata to obtain farmers and acreage.
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+
     const pts = [];
+    const heatPoints = [];
     for (const s of state.filteredSessions) {
       const lat = Number(s.geo?.lat);
       const lng = Number(s.geo?.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
       pts.push([lat, lng]);
+      // Compute heatmap intensity based on acres engaged. Use sheet index if available,
+      // falling back to session metrics. Default to 1 when no acreage is recorded.
+      let weight = 1;
+      const si = idx?.get(s.sheetRef);
+      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+      if (Number.isFinite(acres) && acres > 0) weight = acres;
+      heatPoints.push([lat, lng, weight]);
 
       const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
       const detailsUrl = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
@@ -1528,6 +1923,16 @@
     if (pts.length) {
       const bounds = window.L.latLngBounds(pts);
       state.map.fitBounds(bounds.pad(0.15));
+    }
+
+    // Update the heatmap layer with the new intensity points. Only do this if
+    // the heatLayer exists (it may be undefined if the plugin failed to load).
+    if (state.heatLayer && Array.isArray(heatPoints)) {
+      try {
+        state.heatLayer.setLatLngs(heatPoints);
+      } catch (_e) {
+        /* Ignore errors from the heatmap plugin */
+      }
     }
 
     // One-time delegated click handler inside Leaflet popup for Preview button
@@ -1628,6 +2033,57 @@
     // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
     const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
+    // Assign derived region codes to each session. We map districts/territories
+    // to region codes (RGN) based on the Initial sheet. If no match is found
+    // the region remains blank. Matching ignores case and spaces for flexibility.
+    (function assignRegions() {
+      const regionMap = {
+        // Sukkur region (SKR)
+        'dadu': 'SKR',
+        'daharki': 'SKR',
+        'dharki': 'SKR',
+        'ghotki': 'SKR',
+        'jafferabad': 'SKR',
+        'jaferabad': 'SKR',
+        'jafarabad': 'SKR',
+        'jaferabad': 'SKR',
+        'mehrabpur': 'SKR',
+        'ranipur': 'SKR',
+        'sukkur': 'SKR',
+        'ubaro': 'SKR',
+        'ubauro': 'SKR',
+        // Rahim Yar Khan region (RYK)
+        'rahim yarkhan': 'RYK',
+        'rahim yar khan': 'RYK',
+        'rajan pur': 'RYK',
+        'rajanpur': 'RYK',
+        // Dera Ghazi Khan region (DGK)
+        'bhakkar': 'DGK',
+        'karor lal esan': 'DGK',
+        'kot adu': 'DGK',
+        'mianwali': 'DGK',
+        'muzaffar garh': 'DGK',
+        'muzaffargarh': 'DGK',
+        // Faisalabad region (FSD)
+        'chakwal': 'FSD',
+        'sargodha': 'FSD',
+        'toba tek singh': 'FSD',
+        // Gujranwala region (GUJ)
+        'phalia': 'GUJ'
+      };
+      for (const s of sessions) {
+        const district = String(s.district || '').toLowerCase().replace(/\s+/g, '');
+        let matchedRegion = '';
+        // Attempt direct match on district (no spaces)
+        for (const [key, reg] of Object.entries(regionMap)) {
+          const normKey = key.toLowerCase().replace(/\s+/g, '');
+          if (district === normKey) { matchedRegion = reg; break; }
+        }
+        // Assign region code
+        s.region = matchedRegion;
+      }
+    })();
+
     state.sessions = sessions;
     state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
 
@@ -1695,6 +2151,11 @@
     // Apply automatically when name or city filters change
     $$('#nameFilter')?.addEventListener('input', applyDateInputs);
     $$('#cityFilter')?.addEventListener('input', applyDateInputs);
+
+    // Apply automatically when region filter changes. This allows users to
+    // filter sessions by region code (REG) such as SKR, RYK, DGK. See
+    // index.html for the #regionFilter input.
+    $$('#regionFilter')?.addEventListener('input', applyDateInputs);
 
     // Apply automatically when district or score filters change
     $$('#districtFilter')?.addEventListener('input', applyDateInputs);
@@ -1778,6 +2239,11 @@
 
       await loadCampaign(id);
 
+      // Header sequence + highlights + compact chart carousel
+      initHeroSequence();
+      initHighlightsStrip();
+      initChartCarouselAutoScroll();
+
       // Initial tab
       syncTabFromHash();
 
@@ -1795,6 +2261,24 @@
 
       // Close buttons for lightbox
       $$('#lbClose')?.addEventListener('click', closeLightbox);
+
+      // Bind heatmap toggle button. When clicked, add or remove the heat
+      // layer from the map and update the button text accordingly. The map
+      // and heatLayer are created lazily in ensureMapReady(), so guard
+      // against them being undefined.
+      const heatBtn = document.getElementById('toggleHeat');
+      if (heatBtn) {
+        heatBtn.addEventListener('click', () => {
+          if (!state.map || !state.heatLayer) return;
+          if (state.map.hasLayer(state.heatLayer)) {
+            state.map.removeLayer(state.heatLayer);
+            heatBtn.textContent = 'Show Heatmap';
+          } else {
+            state.heatLayer.addTo(state.map);
+            heatBtn.textContent = 'Hide Heatmap';
+          }
+        });
+      }
 
       // Set map status
       setMapStatus('Ready when opened', true);

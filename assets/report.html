@@ -5,16 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buctril Super campaign analysis</title>
   <!-- Reuse existing dashboard styles -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- Use consistent dashboard styling and professional typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Use the Interact logo as the site favicon -->
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
+  <link rel="stylesheet" href="style.css?v=20260101" />
 </head>
 <body>
-  <header class="topbar" style="margin-bottom:1rem;">
+  <header class="topbar">
     <div class="brand">
-      <img src="assets/interact.gif" alt="INTERACT" style="width:32px; height:32px; margin-right:0.5rem;" />
-      <h1 style="display:inline; font-size:1.5rem;">Campaign analysis report</h1>
+      <!-- Clickable Interact logo linking back to the main dashboard -->
+      <a href="index.html" class="brandLogoLink" aria-label="Home">
+        <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+      </a>
+      <div>
+        <div class="brandTitle">Campaign analysis report</div>
+        <div class="brandSub">Summary of campaign findings</div>
+      </div>
     </div>
   </header>
-  <main class="card" style="max-width:960px; margin:0 auto; padding:1rem;">
+  <!-- Wrap report contents in a card for consistent styling and spacing -->
+  <main class="card">
     <h2>Session count discrepancy</h2>
     <p>
       The workbook <code>Buctril_Super_Activations.xlsx</code> contains <strong>50</strong>
@@ -147,7 +158,7 @@
       source Excel file and updated session data.
     </p>
   </main>
-  <footer class="footer" aria-label="Footer" style="margin-top:2rem;">
+  <footer class="footer" aria-label="Footer">
     <div class="footerBrands">
       <div class="brandPill">
         <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'" />

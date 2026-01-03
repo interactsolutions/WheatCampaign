@@ -4,12 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Session details</title>
-  <link rel="icon" href="favicon.ico" />
+  <!-- Set the Interact logo as favicon for consistent branding -->
+  <!-- Use the Interact logo as the site favicon -->
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260101" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
+      <!-- Clickable Interact logo linking back to the main dashboard -->
+      <a href="index.html" class="brandLogoLink" aria-label="Home">
+        <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+      </a>
       <div>
         <div class="brandTitle">Session details</div>
         <div class="brandSub"><a id="backLink" class="link" href="index.html">Home</a></div>
@@ -21,6 +28,10 @@
       <div class="control">
         <label>Session</label>
         <div id="hdr" class="muted">—</div>
+      </div>
+      <div class="control">
+        <label>Phones</label>
+        <button id="togglePhones" class="btnSmall" type="button">Show phones</button>
       </div>
     </div>
   </header>
@@ -77,6 +88,26 @@
     return Number.isFinite(x) ? (fmt1(x) + '%') : '—';
   };
 
+  // Mask a phone number for privacy, retaining only the last 4 digits. If the
+  // provided value has fewer than 4 digits, return it unchanged. Dashes are
+  // inserted for readability (***-***-1234). Non-string inputs are returned
+  // as-is.
+  // Phone masking toggle. When showFullPhones is true, phone numbers will be
+  // rendered in full; otherwise, only the last four digits are shown.
+  let showFullPhones = false;
+  try {
+    showFullPhones = localStorage.getItem('showFullPhones') === 'true';
+  } catch (_e) {}
+
+  function maskPhone(p) {
+    const raw = String(p || '').replace(/\s+/g, '');
+    if (!raw) return '';
+    if (showFullPhones) return raw;
+    if (raw.length < 4) return raw;
+    const tail = raw.slice(-4);
+    return '***-***-' + tail;
+  }
+
   const num = (v) => (typeof v === 'number' && Number.isFinite(v)) ? v : NaN;
   const BASE = new URL('.', location.href);
   const url = (p)=>new URL(p, BASE).toString();
@@ -86,10 +117,28 @@
 
   $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
 
-  async function fetchJson(p) {
-    const r = await fetch(url(p), {cache:'no-store'});
-    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
-    return await r.json();
+  // Robust fetch helper with retry and timeout. Similar to the version used
+  // in dashboard.js and sheets.html. Attempts to fetch the given path
+  // multiple times with a timeout. If all attempts fail, throws an error.
+  async function fetchJson(p, retries = 3, timeout = 8000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const r = await fetch(url(p), { cache:'no-store', signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) throw new Error(`Status ${r.status}`);
+        return await r.json();
+      } catch (e) {
+        clearTimeout(timer);
+        if (attempt === retries) {
+          console.error(e);
+          throw new Error(`Unable to load ${p}: ${e.message}`);
+        }
+        await new Promise(res => setTimeout(res, 500 * attempt));
+      }
+    }
+    throw new Error(`Failed to load ${p}`);
   }
 
   // --- Media path resolution (match dashboard behavior) ---
@@ -233,8 +282,8 @@
       <div><b>District:</b> ${esc(s.district||'')}</div>
       <div><b>Village/Spot:</b> ${esc(s.village||s.spot||'')}</div>
       <div><b>Dealer:</b> ${esc(s.dealer?.nearest||s.dealer?.name||'')}</div>
-      <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(s.host?.phone||'')}</div>
-      <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(s.salesRep?.phone||'')}</div>
+      <div><b>Host:</b> ${esc(s.host?.name||'')} • ${esc(maskPhone(s.host?.phone)||'')}</div>
+      <div><b>Sales:</b> ${esc(s.salesRep?.name||'')} • ${esc(maskPhone(s.salesRep?.phone)||'')}</div>
       <div><b>Score:</b> ${esc(String(s.score ?? ''))}</div>
       ${s.topReasonUse ? `<div><b>Top reason to use:</b> ${esc(s.topReasonUse)}</div>` : ''}
       ${s.topReasonNotUse ? `<div><b>Top reason not to use:</b> ${esc(s.topReasonNotUse)}</div>` : ''}
@@ -295,28 +344,72 @@ const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${e
     const media = $$('#media');
     const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
     const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
-    const items = [...imgs.map(p=>({type:'image',path:p})), ...vids.map(p=>({type:'video',path:p}))];
+    // Combine images and videos into a single array and deduplicate by path. Some session
+    // definitions include duplicate file names (e.g. '24.jpeg' and '24a.jpeg' may point
+    // to the same content). Deduplicating here prevents rendering the same media twice.
+    const rawItems = [
+      ...imgs.map(p => ({ type: 'image', path: p })),
+      ...vids.map(p => ({ type: 'video', path: p }))
+    ];
+    const seen = new Set();
+    const items = [];
+    for (const it of rawItems) {
+      const pathKey = String(it.path || '').trim();
+      if (!pathKey) continue;
+      if (!seen.has(pathKey)) {
+        seen.add(pathKey);
+        items.push(it);
+      }
+    }
     if (!items.length) {
       media.innerHTML = '<div class="muted">No media for this session.</div>';
-      return;
+    } else {
+      media.innerHTML = items.map((it, i)=> {
+        return it.type === 'image'
+          ? `<div class="mediaThumb"><img data-i="${i}" alt="image"/></div>`
+          : `<div class="mediaThumb"><video data-i="${i}" controls playsinline></video></div>`;
+      }).join('');
+      items.forEach((it, i) => {
+        const el = media.querySelector(`[data-i="${i}"]`);
+        if (!el) return;
+        if (it.type === 'image') attachSmartImage(el, it.path);
+        else attachSmartVideo(el, it.path);
+      });
     }
-    media.innerHTML = items.map((it, i)=> {
-      return it.type==='image'
-        ? `<div class="mediaThumb"><img data-i="${i}" alt="image"/></div>`
-        : `<div class="mediaThumb"><video data-i="${i}" controls playsinline></video></div>`;
-    }).join('');
-    items.forEach((it, i)=> {
-      const el = media.querySelector(`[data-i="${i}"]`);
-      if (!el) return;
-      if (it.type==='image') attachSmartImage(el, it.path);
-      else attachSmartVideo(el, it.path);
-    });
   }
 
   boot().catch(e=> {
     $$('#overview').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
     $$('#sheetSummary').textContent = '—';
   });
+
+  // Initialise the phone toggle button. Show current state (show/hide) and
+  // allow the user to flip the preference. Reloads the session view when
+  // toggled to apply the new masking.
+  const phoneBtn = document.getElementById('togglePhones');
+  if (phoneBtn) {
+    const updatePhoneBtn = () => {
+      phoneBtn.textContent = showFullPhones ? 'Hide phones' : 'Show phones';
+    };
+    updatePhoneBtn();
+    phoneBtn.addEventListener('click', () => {
+      // When phones are hidden, ask for the fixed password to reveal them. When
+      // already visible, hide without prompting. Password is "Interact".
+      if (!showFullPhones) {
+        const pw = window.prompt('Enter password to show full phone numbers:');
+        if (pw !== 'Interact') {
+          return;
+        }
+        showFullPhones = true;
+      } else {
+        showFullPhones = false;
+      }
+      try { localStorage.setItem('showFullPhones', String(showFullPhones)); } catch (_e) {}
+      updatePhoneBtn();
+      // Refresh the view to apply updated masking
+      window.location.reload();
+    });
+  }
 })();
 </script>
 <!-- Theme toggle script for details page -->

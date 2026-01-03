@@ -4,12 +4,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Raw sheet viewer</title>
-  <link rel="icon" href="favicon.ico" />
+  <!-- Use the Interact logo as the site favicon -->
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260101" />
+  <!-- Use the Interact logo as the site favicon for better branding in the browser tab -->
+  <link rel="icon" href="assets/interact-icon.png" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
+      <!-- Clickable Interact logo linking back to the main dashboard -->
+      <a href="index.html" class="brandLogoLink" aria-label="Home">
+        <img src="assets/Interact.png" alt="Interact logo" class="brandLogo" onerror="this.style.display='none'" />
+      </a>
       <div>
         <div class="brandTitle">Raw sheet viewer</div>
         <div class="brandSub">Audit underlying sheet exports. <a id="backLink" class="link" href="index.html">Back to report</a></div>
@@ -24,12 +32,17 @@
         <label>Search</label>
         <input id="sheetSearch" placeholder="D1S1, village, district…" />
       </div>
+      <div class="control">
+        <label>Phones</label>
+        <button id="togglePhones" class="btnSmall" type="button">Show phones</button>
+      </div>
     </div>
   </header>
 
-  <main class="grid2">
+  <main>
     <section class="card">
       <h2>Sheet details</h2>
+      <!-- meta holds session details and summary -->
       <div id="meta" class="muted">Loading…</div>
       <div class="smallMuted">Use this view for audits and debugging. Business insights and actions are summarized on the main dashboard.</div>
       <div class="divider"></div>
@@ -54,11 +67,6 @@
         </table>
       </div>
     </section>
-
-    <section class="card">
-      <h2>All sheets</h2>
-      <div id="sheetList" class="muted">Loading…</div>
-    </section>
   </main>
 
 <script>
@@ -72,12 +80,40 @@
   const campaign = qs.get('campaign') || 'buctril-super-2025';
   const requestedSheet = qs.get('sheet') || '';
 
+  // State flag for phone masking. When true, full phone numbers are shown;
+  // when false, they are masked for privacy. Persist the preference in
+  // localStorage so toggling persists across pages.
+  let showFullPhones = false;
+  try {
+    showFullPhones = localStorage.getItem('showFullPhones') === 'true';
+  } catch (_e) {}
+
+  // update back link to maintain campaign context
   $$('#backLink').href = `index.html?campaign=${encodeURIComponent(campaign)}#sessions`;
 
-  async function fetchJson(p) {
-    const r = await fetch(url(p), {cache:'no-store'});
-    if (!r.ok) throw new Error(`Failed ${p} (${r.status})`);
-    return await r.json();
+  // Robust fetch helper with retry and timeout. Attempts to fetch the given
+  // path up to 3 times, aborting each request after a timeout. If all
+  // attempts fail, it throws an error. A descriptive message can be
+  // surfaced to the user by the caller.
+  async function fetchJson(p, retries = 3, timeout = 8000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      try {
+        const r = await fetch(url(p), { cache:'no-store', signal: controller.signal });
+        clearTimeout(timer);
+        if (!r.ok) throw new Error(`Status ${r.status}`);
+        return await r.json();
+      } catch (e) {
+        clearTimeout(timer);
+        if (attempt === retries) {
+          console.error(e);
+          throw new Error(`Unable to load ${p}: ${e.message}`);
+        }
+        await new Promise(res => setTimeout(res, 500 * attempt));
+      }
+    }
+    throw new Error(`Failed to load ${p}`);
   }
 
   function normalizeMediaPath(p) {
@@ -99,25 +135,44 @@
 
   let sheetsIndex = null;
 
-  function renderList(filterText='') {
-    const list = $$('#sheetList');
+  // Populate the sheet dropdown based on search filter. If a filter is provided,
+  // limit the list to matching sheet codes, villages, or districts. Otherwise
+  // show all. Maintains the currently selected value when possible.
+  function updateOptions(filterText='') {
+    const sel = $$('#sheetSelect');
+    if (!sheetsIndex) return;
     const f = filterText.trim().toLowerCase();
-    const items = (sheetsIndex?.sheets || []).filter(x => {
-      if (!f) return true;
-      return String(x.sheet||'').toLowerCase().includes(f)
-        || String(x.village||'').toLowerCase().includes(f)
-        || String(x.district||'').toLowerCase().includes(f);
-    });
-    // Determine the currently selected sheet to highlight it in the list
-    const current = ($$('#sheetSelect')?.value || requestedSheet || '').toLowerCase();
-    list.innerHTML = `<div class="muted">Total: <b>${items.length}</b></div>` + 
-      `<ul class="muted">${items.slice(0,200).map(x => {
-        const href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(x.sheet)}`;
-        const isActive = String(x.sheet || '').toLowerCase() === current;
-        return `<li><a class="link${isActive ? ' active' : ''}" href="${href}">${esc(x.sheet)}</a> — ${esc(x.district||'')} — ${esc(x.village||'')}</li>`;
-      }).join('')}</ul>`;
+    let items = (sheetsIndex.sheets || []);
+    if (f) {
+      items = items.filter(x => {
+        return String(x.sheet||'').toLowerCase().includes(f)
+          || String(x.village||'').toLowerCase().includes(f)
+          || String(x.district||'').toLowerCase().includes(f);
+      });
+    }
+    // Keep track of current selection
+    const current = sel.value;
+    sel.innerHTML = items.map(x => `<option value="${esc(x.sheet)}">${esc(x.sheet)} — ${esc(x.district||'')} — ${esc(x.village||'')}</option>`).join('');
+    // Restore previous selection if still present in filtered list
+    if (items.find(x => x.sheet === current)) {
+      sel.value = current;
+    }
   }
 
+  // Helper to mask phone numbers for privacy
+  function maskPhone(p) {
+    // If user preference is to show full phones, return the raw string. For
+    // missing values, return empty. Otherwise, mask all but the last four
+    // digits with asterisks and a dash separator.
+    const raw = String(p||'').replace(/\s+/g,'');
+    if (!raw) return '';
+    if (showFullPhones) return raw;
+    if (raw.length < 4) return raw;
+    const tail = raw.slice(-4);
+    return '***-***-' + tail;
+  }
+
+  // Load a sheet by reference, render meta, feedback, signatures and farmers
   async function loadSheet(sheetRef) {
     const meta = $$('#meta');
     const fb = $$('#feedback');
@@ -129,11 +184,44 @@
     try {
       const sh = await fetchJson(`data/${campaign}/sheets/${sheetRef}.json`);
       const m = sh.meta || {};
-      meta.innerHTML = `
+      // Build meta details
+      let metaHtml = `
         <div><b>${esc(m.sheet||sheetRef)}</b> • Date: <b>${esc(m.date||'')}</b></div>
         <div class="smallMuted">District: ${esc(m.district||'')} • Village: ${esc(m.village||'')} • Farmers present: ${esc(String(m.farmers_present||''))} • Acres: ${esc(String(m.acres||''))}</div>
       `;
 
+      // Farmers table summarisation
+      let farmers = Array.isArray(sh.farmers) ? sh.farmers.slice() : [];
+      // In many sheet exports, the first entry contains column headings rather
+      // than data (e.g., { sn:'Row', name:'Name', phone:'Phone Number', ... }).
+      // Filter out any rows where one or more values clearly indicate a
+      // header (e.g., "row", "name", "phone number", or "column n"). This
+      // avoids rendering the header row as data.
+      farmers = farmers.filter(r => {
+        const vals = Object.values(r).map(v => String(v || '').trim().toLowerCase());
+        if (!vals.length) return false;
+        const isHeader = vals.some(v => v === 'row' || v === 'name' || v === 'phone number' || v.startsWith('column'));
+        return !isHeader;
+      });
+      if (farmers.length > 0) {
+        const totalFarmers = farmers.length;
+        let totalAcres = 0;
+        let yesCount = 0;
+        let maybeCount = 0;
+        let otherCount = 0;
+        farmers.forEach(r => {
+          const a = parseFloat(r.acres) || 0;
+          totalAcres += a;
+          const intent = String(r.intent||'').toLowerCase();
+          if (intent.startsWith('y')) yesCount++;
+          else if (intent.startsWith('m')) maybeCount++;
+          else otherCount++;
+        });
+        metaHtml += `<div class="smallMuted">Summary: ${totalFarmers} farmers • ${totalAcres} acres • Definite: ${yesCount} • Maybe: ${maybeCount} • Others: ${otherCount}</div>`;
+      }
+      meta.innerHTML = metaHtml;
+
+      // Feedback
       const f = sh.feedback || {};
       fb.innerHTML = `
         ${f.host_comment ? `<div><b>Host comment:</b> ${esc(f.host_comment)}</div>` : ''}
@@ -142,6 +230,7 @@
         ${(!f.host_comment && !f.sales_feedback && !f.manager_note) ? '<div class="muted">—</div>' : ''}
       `;
 
+      // Signatures
       const sig = sh.signatures || {};
       const host = document.createElement('img');
       host.className = 'thumb';
@@ -154,15 +243,12 @@
       sigs.appendChild(host);
       sigs.appendChild(sales);
 
-      // Farmers table
-      const farmers = Array.isArray(sh.farmers) ? sh.farmers : [];
+      // Render farmers table
       const head = $$('#farmersHead');
       const body = $$('#farmersTable tbody');
       head.innerHTML = '';
       body.innerHTML = '';
-      // Derive table columns from the first farmer record. Map raw keys to
-      // human‑friendly headings. Fallback to a sensible default order if no
-      // records are present.
+      // Determine columns
       const rawCols = farmers.length ? Object.keys(farmers[0]) : ['sn','name','phone','village','acres','intent','used_before','other_brands_method'];
       const colMap = {
         sn: 'S#',
@@ -176,7 +262,6 @@
         district: 'District',
         date: 'Date'
       };
-      // Build the header row with friendly names where available
       rawCols.forEach(c => {
         const th = document.createElement('th');
         th.textContent = colMap[c] || c;
@@ -184,19 +269,24 @@
       });
       for (const row of farmers) {
         const tr = document.createElement('tr');
-        cols.forEach(c => {
+        rawCols.forEach(c => {
           const td = document.createElement('td');
-          td.textContent = (row && row[c] != null) ? String(row[c]) : '';
+          let val = row && row[c] != null ? row[c] : '';
+          // mask phone numbers
+          if (c === 'phone') {
+            val = maskPhone(val);
+          }
+          td.textContent = String(val);
           tr.appendChild(td);
         });
         body.appendChild(tr);
       }
 
     } catch (e) {
-      meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the list on the right.</div>`;
+      // Show an informative message if the sheet fails to load
+      meta.innerHTML = `<div class="muted">Sheet unavailable.</div><div class="smallMuted">This sheet may not have been uploaded or is missing. Please select another sheet from the dropdown above.</div>`;
       fb.textContent = '—';
       sigs.innerHTML = '';
-      // Clear the farmers table if the sheet is missing
       const head = $$('#farmersHead');
       const body = $$('#farmersTable tbody');
       if (head) head.innerHTML = '';
@@ -213,14 +303,46 @@
     sel.onchange = () => {
       location.href = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${encodeURIComponent(sel.value)}`;
     };
-    $$('#sheetSearch').addEventListener('input', (ev) => renderList(ev.target.value));
-    renderList('');
+    // When typing in the search box, filter the options in the dropdown
+    $$('#sheetSearch').addEventListener('input', (ev) => updateOptions(ev.target.value));
+    // Initialise the phone toggle button. Use stored preference to decide
+    // whether to show or hide phone numbers. When clicked, flip the
+    // preference and reload the current sheet.
+    const phoneBtn = $$('#togglePhones');
+    if (phoneBtn) {
+      const updatePhoneBtn = () => {
+        phoneBtn.textContent = showFullPhones ? 'Hide phones' : 'Show phones';
+      };
+      updatePhoneBtn();
+      phoneBtn.addEventListener('click', () => {
+        // Require a password when switching from masked to full phone view. When
+        // phones are already visible, clicking will hide them without a
+        // password. The password is hard-coded to "Interact" as requested.
+        if (!showFullPhones) {
+          const pw = window.prompt('Enter password to show full phone numbers:');
+          if (pw !== 'Interact') {
+            // Incorrect or cancelled password: do nothing.
+            return;
+          }
+          showFullPhones = true;
+        } else {
+          // Hide phones if currently visible
+          showFullPhones = false;
+        }
+        try { localStorage.setItem('showFullPhones', String(showFullPhones)); } catch (_e) {}
+        updatePhoneBtn();
+        const currentSheet = sel.value;
+        if (currentSheet) loadSheet(currentSheet).catch(err => console.error(err));
+      });
+    }
+    // Initialise the dropdown with all sheets
+    updateOptions('');
     await loadSheet(initial);
   }
 
   boot().catch(e => {
     $$('#meta').innerHTML = `<div class="muted">Failed to load.</div><div class="smallMuted">${esc(e.message)}</div>`;
-    $$('#sheetList').textContent = '—';
+    // If boot fails, there is no sheet list element anymore. Do nothing further here.
   });
 })();
 </script>

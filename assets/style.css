@@ -1,55 +1,67 @@
 
+/* Import Inter font for a clean, professional look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root{
-  --bg:#070b14;
-  --card:#0b1220cc;
-  --cardSolid:#0b1220;
-  --stroke:#1a2947;
-  --text:#e9f0ff;
-  --muted:#a9b7d6;
-  --muted2:#7f90b8;
-  --brand:#4c6fff;
-  --brand2:#22c55e;
-  --warn:#f59e0b;
-  --danger:#ef4444;
-  --radius:18px;
-  --shadow: 0 16px 40px rgba(0,0,0,.35);
+  /* Palette for dark mode: soft navy backgrounds with high-contrast text.
+     Variables are tuned for readability and a modern aesthetic. */
+  /* Updated Bayer colour palette for the dark theme */
+  --bg: #10384f;     /* Dark blue background */
+  --card: #121a2e99;
+  --cardSolid: #121a2e;
+  --stroke: #2a3b5e;
+  --text: #f0f4ff;
+  --muted: #b0c4e6;
+  --muted2: #8a9cc2;
+  --brand: #00bcff;    /* Bright Bayer blue */
+  --brand2: #89d329;   /* Bright Bayer green */
+  --warn: #d9a420;     /* Golden wheat accent */
+  --danger: #dc2626;
+  --wheat: #f1dbb3;    /* Wheat tone for borders */
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.25);
+  --transition: 0.2s ease;
+  --pageWidth: 1440px;
 }
 
 /* Light (daytime) theme overrides. When the `data-theme` attribute on the
    <html> or <body> element is set to "light", these variables replace the
    default dark values. To switch themes dynamically, set
    `document.documentElement.dataset.theme = 'light'` or 'dark'. */
+/* Light (daytime) theme overrides: brighten backgrounds and increase contrast. */
 [data-theme="light"]{
-  --bg:#f5f8ff;
-  --card:#ffffffcc;
-  --cardSolid:#ffffff;
-  --stroke:#d7e0f7;
-  --text:#0d1d34;
-  --muted:#647599;
-  --muted2:#7f8db0;
-  --brand:#3b5bdb;
-  --brand2:#18a34e;
-  --warn:#c56a00;
-  --danger:#d32f2f;
-  --radius:18px;
-  --shadow: 0 12px 28px rgba(0,0,0,.15);
+  /* Light theme palette reflecting Bayer colours */
+  --bg: #f8fafc;
+  --card: #ffffff99;
+  --cardSolid: #ffffff;
+  --stroke: #e2e8f0;
+  --text: #10384f;  /* Dark blue text for contrast */
+  --muted: #64748b;
+  --muted2: #475569;
+  --brand: #00bcff;
+  --brand2: #89d329;
+  --warn: #d9a420;
+  --danger: #dc2626;
+  --wheat: #f1dbb3;
+  --shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  font-family:'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   overflow-x:hidden;
+  line-height:1.6;
+  font-size:16px;
 }
 
 .bg{position:fixed; inset:0; z-index:-2; background:#060a12}
-.bgVideo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(1.05) contrast(1.05); opacity:.42}
-.bgShade{position:absolute; inset:0; background: radial-gradient(1200px 500px at 20% 10%, rgba(76,111,255,.20), transparent 50%),
-  radial-gradient(900px 500px at 70% 35%, rgba(34,197,94,.12), transparent 60%),
-  linear-gradient(to bottom, rgba(7,11,20,.35), rgba(7,11,20,.85) 55%, rgba(7,11,20,1));}
+.bgVideo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(1.05) contrast(1.05); opacity:.3}
+/* Soften the shade overlay for a more professional look */
+.bgShade{position:absolute; inset:0; background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);}
 
 /* Light theme variant for the background shade. Use softer gradients and a light overlay
    when the page theme is set to light. */
@@ -59,9 +71,32 @@ body{
     linear-gradient(to bottom, rgba(245,248,255,.35), rgba(245,248,255,.75) 55%, rgba(245,248,255,.85));
 }
 
-.header{padding: max(18px, env(safe-area-inset-top)) 16px 14px; position:sticky; top:0; backdrop-filter: blur(10px); background: rgba(7,11,20,.35); border-bottom:1px solid rgba(26,41,71,.55); z-index:20}
-.headerInner{max-width:1200px; margin:0 auto; display:flex; gap:16px; align-items:flex-start; justify-content:space-between}
-.headerActions{display:flex; gap:10px; align-items:center}
+/* Header / topbar styling. Sticky for persistent navigation. */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--cardSolid);
+  padding: 16px 24px;
+  box-shadow: var(--shadow);
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap:16px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brandTitle{
+  font-size:1.25rem;
+  font-weight:600;
+}
+.brandSub{
+  font-size:0.875rem;
+  color: var(--muted);
+}
 .chip.link{cursor:pointer; text-decoration:none}
 .chip.link:hover{background:rgba(76,111,255,.18)}
 
@@ -89,6 +124,20 @@ body{
 .heroPlayer img{opacity:0; transition:opacity .25s ease}
 .heroPlayer.fallback img{opacity:1}
 .heroOverlay{position:absolute; inset:0; background: linear-gradient(to top, rgba(7,11,20,.92), rgba(7,11,20,.25) 55%, rgba(7,11,20,.15))}
+
+/* Shown only when autoplay is blocked (some browsers require a user gesture). */
+.heroTapHint{
+  position:absolute;
+  inset:auto 16px 16px 16px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(7,11,20,.55);
+  border:1px solid rgba(255,255,255,.10);
+  color:#f0f4ff;
+  font-size:12px;
+  backdrop-filter: blur(10px);
+}
+.heroTapHint.hidden{display:none;}
 [data-theme="light"] .heroOverlay{
   background: linear-gradient(to top, rgba(245,248,255,.92), rgba(245,248,255,.25) 55%, rgba(245,248,255,.15));
 }
@@ -133,12 +182,16 @@ body{
 .headerTile video, .headerTile img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
 .headerTile .badge{position:absolute; bottom:6px; left:6px; background:rgba(7,11,20,.65); border:1px solid rgba(255,255,255,.08); padding:3px 6px; border-radius:999px; font-size:10px; color:#dfe7ff}
 
-.main{max-width:1200px; margin:16px auto 60px; padding:0 16px}
+.main{max-width:var(--pageWidth); margin:16px auto 60px; padding:0 16px}
 .card{
   background: var(--card);
-  border:1px solid rgba(26,41,71,.65);
+  /* Use the wheat accent colour for card borders to evoke crop themes */
+  border: 1px solid var(--wheat);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  padding: 24px;
+  margin: 16px auto;
+  max-width: var(--pageWidth);
 }
 .controls{padding:14px}
 .controls{
@@ -275,6 +328,22 @@ body{
 }
 [data-theme="light"] .donutTitle{
   color: var(--text);
+}
+
+/* Collapsible sections styled to resemble Excel expand/collapse controls */
+details {
+  margin: 10px 0;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--brand);
+  padding: 4px 0;
+  outline: none;
+}
+details[open] > summary {
+  border-bottom: 1px solid var(--stroke);
+  margin-bottom: 6px;
 }
 .donutWrap{
   position:relative;
@@ -653,11 +722,282 @@ body{
 
 
 /* --- v4 regeneration fixes --- */
-.tabBar{display:flex; gap:10px; flex-wrap:wrap}
-.tabBtn{cursor:pointer}
+/* Navigation tabs */
+.tabBar{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.tabBtn{
+  padding:8px 16px;
+  border-radius: var(--radius);
+  text-decoration:none;
+  color: var(--muted);
+  font-weight:500;
+  transition: background var(--transition), color var(--transition);
+}
+.tabBtn:hover, .tabBtn--active{
+  background: var(--brand);
+  color:#fff;
+}
 .tableWrap{overflow:auto}
 .sessionTable tbody tr{cursor:pointer}
 .sessionTable tbody tr:hover{background:rgba(76,111,255,.06)}
+.sessionTable th, .sessionTable td{
+  /* Prevent wrapping of long values such as masked phone numbers or village names */
+  white-space: nowrap;
+  padding:6px 8px;
+  vertical-align: top;
+}
+
+/* Simple spinner utility. Use with <span class="spinner"></span> to show a
+   lightweight loading indicator when fetching data. The spinner uses the
+   muted colour for the track and the brand colour for the top segment. */
+.spinner{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  border:2px solid var(--muted);
+  border-top-color: var(--brand);
+  border-radius:50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+
+/* === Modern UI theme overrides (January 2026) ===
+   These rules adjust the colour palette, typography, layout, and interactions
+   to create a clean, professional look consistent across all pages. Because
+   they appear at the end of the stylesheet, they override earlier values. */
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0a0f1c;
+  --card: #121a2e99;
+  --cardSolid: #121a2e;
+  --stroke: #2a3b5e;
+  --text: #f0f4ff;
+  --muted: #b0c4e6;
+  --muted2: #8a9cc2;
+  --brand: #3b82f6;
+  --brand2: #10b981;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.25);
+  --transition: 0.2s ease;
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --card: #ffffff99;
+  --cardSolid: #ffffff;
+  --stroke: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --muted2: #475569;
+  --brand: #2563eb;
+  --brand2: #059669;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+html {
+  transition: background var(--transition), color var(--transition);
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Background adjustments */
+.bgVideo {
+  opacity: 0.3;
+}
+.bgShade {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
+}
+
+/* Topbar styling */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--cardSolid);
+  padding: 16px 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brandTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.brandSub {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text);
+  transition: color var(--transition);
+}
+.iconBtn:hover {
+  color: var(--brand);
+}
+
+/* Navigation tabs */
+.tabBar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.tabBtn {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
+}
+.tabBtn:hover,
+.tabBtn--active {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Card styling */
+.card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin: 16px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tables */
+.tableWrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--stroke);
+}
+th {
+  background: var(--cardSolid);
+  font-weight: 600;
+  color: var(--text);
+}
+tr:nth-child(even) {
+  background: rgba(255,255,255,0.05);
+}
+tr:hover {
+  background: rgba(255,255,255,0.1);
+  transition: background var(--transition);
+}
+
+/* Buttons */
+.btn, .btnSmall {
+  padding: 8px 16px;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background var(--transition);
+}
+.btn:hover {
+  background: #2f66d4;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  border-top: 1px solid var(--stroke);
+}
+.footerBrands {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+.brandPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--card);
+  border-radius: 999px;
+}
+
+/* Summary takeaways and priority classes */
+.summaryTakeaways {
+  margin-top: 16px;
+  padding: 16px;
+  border-left: 4px solid var(--brand);
+  background: rgba(59,130,246,0.05);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+.priority-high { background: rgba(239,68,68,0.08); }
+.priority-medium { background: rgba(245,158,11,0.08); }
+.priority-low { background: rgba(34,197,94,0.08); }
+[data-theme="light"] .priority-high { background: rgba(239,68,68,0.12); }
+[data-theme="light"] .priority-medium { background: rgba(245,158,11,0.12); }
+[data-theme="light"] .priority-low { background: rgba(34,197,94,0.12); }
+
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tabBar {
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .controls {
+    flex-direction: column;
+  }
+  .card {
+    padding: 16px;
+    margin: 8px;
+  }
+  .kpis {
+    flex-direction: column;
+  }
+  table {
+    font-size: 0.75rem;
+  }
+}
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04)}
 .badge--ok{border-color:rgba(34,197,94,.4)}
 .badge--warn{border-color:rgba(245,158,11,.5)}
@@ -685,9 +1025,63 @@ body{
 .btnGhost{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12)}
 .btnGhost:hover{background:rgba(255,255,255,.07)}
 .tabBtn--active{border-color:rgba(76,111,255,.6); background:rgba(76,111,255,.12)}
-.mediaGrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px}
-.mediaCard{display:flex; flex-direction:column; gap:10px; border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:12px; background:rgba(255,255,255,.03)}
-.mediaThumb{aspect-ratio: 16/9; border-radius:14px; overflow:hidden; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center}
+.mediaToolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:8px 0 14px}
+.mediaSeg{display:flex; gap:6px; padding:6px; border:1px solid rgba(255,255,255,.12); border-radius:14px; background:rgba(255,255,255,.03)}
+.segBtn{border:1px solid transparent; background:transparent; color:var(--text); padding:8px 10px; border-radius:10px; font-size:12px; cursor:pointer}
+.segBtn:hover{background:rgba(255,255,255,.06)}
+.segBtn--active{border-color:rgba(0,188,255,.55); background:rgba(0,188,255,.14)}
+.mediaSearch input{min-width:260px}
+.mediaSort select{min-width:160px}
+
+/* Masonry-style media grid for better visual density */
+.mediaGrid{
+  column-gap:14px;
+  column-count:3;
+}
+@media (max-width: 1100px){.mediaGrid{column-count:2}}
+@media (max-width: 640px){.mediaGrid{column-count:1}}
+
+.mediaCard{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  padding:12px;
+  background:rgba(255,255,255,.03);
+  break-inside:avoid;
+  margin:0 0 14px;
+  position:relative;
+  overflow:hidden;
+}
+.mediaCard:hover{box-shadow:0 12px 30px rgba(0,0,0,.25)}
+
+.mediaThumb{aspect-ratio: 16/9; border-radius:14px; overflow:hidden; background:rgba(255,255,255,.04); display:flex; align-items:center; justify-content:center; position:relative}
+.mediaThumb::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.55) 100%);
+  pointer-events:none;
+}
+.mediaBadge{
+  position:absolute;
+  top:10px;
+  left:10px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:600;
+  background:rgba(16,56,79,.72);
+  border:1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+}
+.mediaBadge svg{width:14px; height:14px}
+.mediaTitle{line-height:1.25}
+.mediaFooter{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px}
 .mediaThumb img, .mediaThumb video{width:100%; height:100%; object-fit:cover}
 .mediaMeta{display:flex; flex-direction:column; gap:8px}
 .mediaTitle{font-weight:600}
@@ -697,6 +1091,13 @@ body{
 .thumb{width:88px; height:88px; object-fit:cover; border-radius:12px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03)}
 .thumbVideo{position:relative}
 .mediaRow{display:flex; gap:10px; flex-wrap:wrap}
+
+/* Light theme refinements for the media tab */
+[data-theme="light"] .mediaSeg{background:rgba(255,255,255,.70); border-color:rgba(16,56,79,.18)}
+[data-theme="light"] .segBtn:hover{background:rgba(16,56,79,.06)}
+[data-theme="light"] .mediaCard{background:rgba(255,255,255,.75); border-color:rgba(16,56,79,.14)}
+[data-theme="light"] .mediaCard:hover{box-shadow:0 12px 30px rgba(16,56,79,.12)}
+[data-theme="light"] .mediaBadge{background:rgba(255,255,255,.70); border-color:rgba(16,56,79,.20)}
 
 /* KPI dot icons
    Each KPI tile is assigned a class (e.g. kpi--sessions) in the markup. The
@@ -860,9 +1261,126 @@ body{
   max-width:100%;
 }
 .brand{display:flex; align-items:center; gap:12px}
-.brandLogo{width:auto; height:36px; max-height:36px; object-fit:contain; filter: drop-shadow(0 10px 26px rgba(0,0,0,.28))}
+.brandLogo{
+  width:auto;
+  height:44px;
+  max-height:44px;
+  object-fit:contain;
+  border-radius:10px;
+  filter: drop-shadow(0 10px 26px rgba(0,0,0,.28));
+}
+.brandLogo--agency{height:40px; max-height:40px}
+.brandLogoLink{display:flex; align-items:center; gap:10px}
 .brandTitle{font-size:18px; font-weight:900; letter-spacing:.2px}
 .brandSub{font-size:12px; color:var(--muted); margin-top:2px}
+
+/* Hero carousel (header sequence) */
+.heroThumbs{gap:10px}
+.heroThumb{
+  width:78px;
+  height:52px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.18);
+  box-shadow:0 10px 26px rgba(0,0,0,.25);
+}
+.heroThumb img,
+.heroThumb video{width:100%; height:100%; object-fit:cover; display:block}
+.heroThumb .heroBadge{
+  position:absolute;
+  left:8px;
+  bottom:8px;
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.45);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.18);
+}
+
+/* Scrolling highlights strip */
+.highlights{
+  width:100%;
+  margin-top:10px;
+  overflow:hidden;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.14);
+}
+.highlightsTrack{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  align-items:center;
+  will-change:transform;
+  animation:highlightsScroll 28s linear infinite;
+}
+.highlights:hover .highlightsTrack{animation-play-state:paused}
+.highlightItem{
+  flex:0 0 auto;
+  width:140px;
+  height:78px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);
+}
+.highlightItem img{width:100%; height:100%; object-fit:cover; display:block}
+@keyframes highlightsScroll{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
+/* Chart carousel (keeps the decision pie compact and scrollable) */
+.chartCarousel{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:8px;
+}
+.chartSlide{
+  min-width:min(620px, 92vw);
+  scroll-snap-align:start;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  background:rgba(255,255,255,.04);
+}
+.attendanceWrap,
+.decisionWrap{
+  max-width:560px;
+  margin:0 auto;
+}
+.decisionWrap canvas,
+.attendanceWrap canvas{
+  width:100% !important;
+  height:240px !important;
+  max-height:240px;
+}
+
+@media (max-width: 640px){
+  .decisionWrap canvas,
+  .attendanceWrap canvas{
+    height:200px !important;
+    max-height:200px;
+  }
+}
+
+/* Footer improvements */
+.footerGrid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:18px;
+  align-items:start;
+}
+.footerTitle{font-weight:800; margin-bottom:8px}
+.footerBottom{margin-top:14px; opacity:.85}
+@media (max-width: 880px){
+  .footerGrid{grid-template-columns:1fr}
+}
 
 /* Highlight the active sheet link in the raw sheet viewer list. The link for the
    currently selected sheet is displayed in the brand colour and bolded to
@@ -883,6 +1401,23 @@ body{
    summary takeaways callout, priority row colouring). These styles are
    appended at the end of the stylesheet to override any earlier rules
    where necessary.                                                  */
+
+/* Layout for headerRow: groups the brand and navigation tabs on a single line. When
+   the window is narrow, elements wrap gracefully but remain horizontally
+   aligned. */
+.headerRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.headerRow .tabBar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-left:auto;
+}
 
 /* Score range row used within the controls area. Mirrors the existing
    rangeRow styling but for numeric inputs. */

@@ -307,12 +307,24 @@
       };
       updatePhoneBtn();
       phoneBtn.addEventListener('click', () => {
-        showFullPhones = !showFullPhones;
+        // Require a password when switching from masked to full phone view. When
+        // phones are already visible, clicking will hide them without a
+        // password. The password is hard-coded to "Interact" as requested.
+        if (!showFullPhones) {
+          const pw = window.prompt('Enter password to show full phone numbers:');
+          if (pw !== 'Interact') {
+            // Incorrect or cancelled password: do nothing.
+            return;
+          }
+          showFullPhones = true;
+        } else {
+          // Hide phones if currently visible
+          showFullPhones = false;
+        }
         try { localStorage.setItem('showFullPhones', String(showFullPhones)); } catch (_e) {}
         updatePhoneBtn();
-        // Reload current sheet to update masking
         const currentSheet = sel.value;
-        if (currentSheet) loadSheet(currentSheet).catch(e => console.error(e));
+        if (currentSheet) loadSheet(currentSheet).catch(err => console.error(err));
       });
     }
     // Initialise the dropdown with all sheets

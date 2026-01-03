@@ -386,10 +386,20 @@ const sheetUrl = `sheets.html?campaign=${encodeURIComponent(campaign)}&sheet=${e
     };
     updatePhoneBtn();
     phoneBtn.addEventListener('click', () => {
-      showFullPhones = !showFullPhones;
+      // When phones are hidden, ask for the fixed password to reveal them. When
+      // already visible, hide without prompting. Password is "Interact".
+      if (!showFullPhones) {
+        const pw = window.prompt('Enter password to show full phone numbers:');
+        if (pw !== 'Interact') {
+          return;
+        }
+        showFullPhones = true;
+      } else {
+        showFullPhones = false;
+      }
       try { localStorage.setItem('showFullPhones', String(showFullPhones)); } catch (_e) {}
       updatePhoneBtn();
-      // Reload the page to apply the updated phone masking across all parts of the view
+      // Refresh the view to apply updated masking
       window.location.reload();
     });
   }

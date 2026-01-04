@@ -496,6 +496,9 @@
   <!-- Load Chart.js before the dashboard script to enable the attendance donut chart. -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <!-- Load Leaflet heatmap plugin for density visualisation on the map -->
+  <!-- Leaflet JS (must load before leaflet-heat) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'"></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 

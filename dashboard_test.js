@@ -1693,10 +1693,6 @@
 
       (async () => {
         const items = allMediaItems(s);
-        if (!items.length) {
-          mediaEl.innerHTML = '<div class="muted">No media listed for this session.</div>';
-          return;
-        }
         const max = 10;
         let shown = 0;
         let missing = 0;

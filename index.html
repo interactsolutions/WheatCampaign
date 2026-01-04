@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260103" />
+  <link rel="stylesheet" href="style.css?v=20260101" />
   <!-- Leaflet CSS with fallback chain -->
   <link id="leafletCss" rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -56,7 +56,7 @@
         <div>
           <!-- Updated dashboard title and subtitle reflecting Bayer’s initiative -->
           <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
-          <div class="brandSub">Buctril Super – Wheat Activations 2025 <span id="buildTag" class="buildTag"></span></div>
+          <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
         <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
         <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
@@ -496,11 +496,10 @@
   <!-- Load Chart.js before the dashboard script to enable the attendance donut chart. -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <!-- Load Leaflet heatmap plugin for density visualisation on the map -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
 
-  <script src="dashboard.js?v=20260103"></script>
+  <script src="dashboard.js?v=20260101"></script>
 
   <!-- Hero slider initialization -->
   <script>

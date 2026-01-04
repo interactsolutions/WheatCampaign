@@ -16,13 +16,7 @@
 
   // ---------- URL helpers ----------
   const BASE = new URL('.', window.location.href);
-  const BUILD = '20260103';
-  const url = (p) => {
-    // Cache-bust same-origin static files (GitHub Pages can otherwise serve cached JSON)
-    const u = new URL(p, BASE);
-    if (u.origin === BASE.origin && !u.searchParams.has('v')) u.searchParams.set('v', BUILD);
-    return u.toString();
-  };
+  const url = (p) => new URL(p, BASE).toString();
 
   function qs() {
     return new URLSearchParams(window.location.search);
@@ -559,9 +553,6 @@
     try {
       const reg = await fetchJson('data/campaigns.json', 'campaign registry');
       state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
-      state.registryVersion = reg.version || '';
-      const bt = document.getElementById('buildTag');
-      if (bt) bt.textContent = `${state.registryVersion ? 'data ' + state.registryVersion + ' • ' : ''}build ${BUILD}`;
       return;
     } catch (e) {
       // Fallback to root campaigns.json (some repos place it there)
@@ -972,7 +963,11 @@
       funnelEl.innerHTML = html;
     }
 
-    // ---------- Attendance donut chart ----------
+    
+    function legendPos(){
+      return (window.innerWidth || 1024) < 720 ? 'bottom' : 'right';
+    }
+// ---------- Attendance donut chart ----------
     // Draw a doughnut chart representing the distribution of farmers across
     // sessions. We only display the chart if the canvas element is present
     // and Chart.js has been loaded. To avoid overcrowding the chart with
@@ -1034,7 +1029,7 @@
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'right',
+              position: legendPos(),
               labels: {
                 usePointStyle: true,
                 padding: 12,
@@ -1053,7 +1048,7 @@
               }
             }
           },
-          cutout: '50%'
+          cutout: '60%'
         }
       });
     }
@@ -1088,10 +1083,11 @@
         data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors }] },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'right',
-              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
+              position: legendPos(),
+              labels: { usePointStyle: true, padding: 8, boxWidth: 8, font: { size: 11 } }
             },
             tooltip: {
               callbacks: {

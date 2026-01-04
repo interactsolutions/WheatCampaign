@@ -1667,31 +1667,64 @@
     // Media
     const mediaEl = $$('#dMedia');
     if (mediaEl) {
-      mediaEl.innerHTML = '';
-      const items = allMediaItems(s).slice(0, 8);
-      for (const it of items) {
-        if (it.type === 'image') {
-          const img = document.createElement('img');
-          img.className = 'thumb';
-          img.alt = s.sheetRef || 'image';
-          img.loading = 'lazy';
-          mediaEl.appendChild(img);
-          attachSmartImage(img, it.path);
-          img.onclick = () => openLightbox(Number(s.id));
-        } else {
-          const wrap = document.createElement('div');
-          wrap.className = 'thumbVideo';
-          const v = document.createElement('video');
-          v.className = 'thumb';
-          v.muted = true;
-          v.playsInline = true;
-          v.setAttribute('playsinline','');
-          wrap.appendChild(v);
-          mediaEl.appendChild(wrap);
-          attachAutoplayVideo(v, it.path);
-          wrap.onclick = () => openLightbox(Number(s.id));
+      mediaEl.innerHTML = '<div class="muted">Loading media…</div>';
+
+      (async () => {
+        const items = allMediaItems(s);
+        const max = 10;
+        let shown = 0;
+        let missing = 0;
+
+        mediaEl.innerHTML = '';
+        for (const it of items) {
+          if (shown >= max) break;
+          const chosen = await resolveFirstExisting(it.path);
+          if (!chosen) { missing++; continue; }
+
+          if (it.type === 'image') {
+            const img = document.createElement('img');
+            img.className = 'thumb';
+            img.alt = s.sheetRef || 'image';
+            img.loading = 'lazy';
+            img.src = url(chosen);
+            img.onclick = () => openLightbox(Number(s.id));
+            mediaEl.appendChild(img);
+          } else {
+            const wrap = document.createElement('div');
+            wrap.className = 'thumbVideo';
+            const v = document.createElement('video');
+            v.className = 'thumb';
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute('playsinline','');
+            v.preload = 'metadata';
+            v.src = url(chosen);
+            wrap.appendChild(v);
+            wrap.onclick = () => openLightbox(Number(s.id));
+            mediaEl.appendChild(wrap);
+          }
+          shown++;
         }
-      }
+
+        if (shown === 0) {
+          const total = items.length;
+          mediaEl.innerHTML = `
+            <div class="mediaEmpty">
+              <div class="mediaEmptyTitle">No media found for this session</div>
+              <div class="mediaEmptyBody">
+                The dashboard expects files under <code>assets/gallery/</code> (e.g. <code>.jpeg</code>, <code>.jpg</code>, <code>.mp4</code>) referenced by the session data.
+                <br/>
+                Checked <b>${total}</b> references; none were reachable.
+              </div>
+            </div>`;
+        } else if (missing > 0) {
+          const note = document.createElement('div');
+          note.className = 'smallMuted';
+          note.textContent = `${missing} media file(s) referenced but not found in assets/gallery.`;
+          mediaEl.appendChild(note);
+        }
+      })();
+    }
       if (!items.length) {
         mediaEl.innerHTML = '<div class="muted">No media listed for this session.</div>';
       }

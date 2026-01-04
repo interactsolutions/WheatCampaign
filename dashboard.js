@@ -1,13 +1,8 @@
 (() => {
   'use strict';
 
-  // Debug mode: add ?debug=1 to URL or set localStorage.DEBUG='1'
   const DEBUG = /[?&]debug=1\b/.test(window.location.search) || localStorage.getItem('DEBUG') === '1';
-  // Helper to fetch JSON files with retry and timeout support.
-  // This version improves resilience to network issues by retrying failed requests
-  // a limited number of times and aborting long-running requests. If all attempts
-  // fail, it will call setStatus() with an error message and rethrow the error.
-
+  
   // ---------- DOM helpers ----------
   const $$ = (sel, root = document) => root.querySelector(sel);
   const $$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -28,7 +23,6 @@
   function activeTabFromHash() {
     const h = (window.location.hash || '#summary').replace('#', '').trim();
     if (!h) return 'summary';
-    // Support deep-links like #session-<id>
     if (h.startsWith('session-')) return 'sessions';
     if (['summary','map','sessions','media','feedback'].includes(h)) return h;
     return 'summary';
@@ -39,41 +33,31 @@
     campaigns: [],
     campaignId: null,
     campaign: null,
-
     sessions: [],
     sessionsById: new Map(),
     sheetsIndex: null,
-
     filteredSessions: [],
     dateMin: null,
     dateMax: null,
     dateFrom: null,
     dateTo: null,
-
     map: null,
     markerLayer: null,
     markersBySessionId: new Map(),
-    // Filters for host (farmer) name and city
     nameFilter: '',
     cityFilter: '',
-
-    // Region filter (REG). This corresponds to the RGN codes (e.g. SKR, RYK)
-    // derived from the Initial sheet mapping of territories/districts to regions.
     regionFilter: '',
-
-    // Additional filters for district and score range. These are optional
-    // inputs that refine the sessions list based on geography or
-    // performance. When null/empty they do not constrain results.
     districtFilter: '',
     scoreMin: null,
     scoreMax: null,
-
-    // Media tab controls
     mediaType: 'all',
     mediaSearch: '',
     mediaSort: 'newest',
     mediaLimit: 24,
     _mediaBound: false,
+    mediaCfg: null,
+    _hero: null,
+    _chartCarouselTimer: null
   };
 
   // ---------- Parsing / formatting ----------
@@ -81,10 +65,8 @@
     if (!v) return null;
     if (v instanceof Date) return v;
     const s = String(v).trim();
-    // Prefer YYYY-MM-DD
     const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-    // Fallback Date.parse
     const t = Date.parse(s);
     if (Number.isFinite(t)) return new Date(t);
     return null;
@@ -116,9 +98,8 @@
   }
 
   // ---------- Media path resolution ----------
-  const existsCache = new Map(); // url -> boolean
+  const existsCache = new Map();
 
-  
   function getMediaBases() {
     const cfg = state.mediaCfg || {};
     const assetsBase = String(cfg.assetsBase || 'assets').replace(/\/+$/, '');
@@ -130,23 +111,15 @@
     const raw = String(p ?? '').trim();
     if (!raw) return '';
     if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
-
-    // Trim leading ./ and leading /
+    
     let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
-
     const { assetsBase, galleryBase } = getMediaBases();
-
-    // Already rooted correctly (assetsBase or galleryBase)
+    
     if (x.startsWith(assetsBase + '/')) return x;
     if (x.startsWith(galleryBase + '/')) return x;
-
-    // Common shorthand: "gallery/..." -> galleryBase/...
     if (x.startsWith('gallery/')) return galleryBase + '/' + x.slice('gallery/'.length);
-
-    // If it's a bare filename (no slashes), assume galleryBase
     if (!x.includes('/')) return galleryBase + '/' + x;
-
-    // Otherwise keep it relative; candidatePaths() will try additional bases.
+    
     return x;
   }
 
@@ -157,93 +130,22 @@
     if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
 
     const { assetsBase, galleryBase } = getMediaBases();
-    const candidates = [];
-    const add = (v) => {
-      if (v && !candidates.includes(v)) candidates.push(v);
-    };
-
-    if (DEBUG) console.log(`Resolving media path: "${raw}" -> "${norm}"`, { assetsBase, galleryBase });
-
-    // 1) Always try normalized path first
-    add(norm);
-
-    // 2) If path is missing assetsBase prefix, try adding it
+    const candidates = [norm];
+    
     if (!norm.startsWith(assetsBase + '/') && !norm.startsWith(galleryBase + '/')) {
-      add(assetsBase + '/' + norm);
+      candidates.push(assetsBase + '/' + norm);
     }
-
-    // 3) Try under galleryBase using only filename
+    
     const fname = norm.split('/').pop();
-    if (fname) add(galleryBase + '/' + fname);
-
-    // 4) Extension & common naming variants (jpg/jpeg, suffix variants)
-    const dir = norm.includes('/') ? norm.slice(0, norm.lastIndexOf('/')) : '';
-    const extMatch = fname ? fname.match(/\.[a-z0-9]+$/i) : null;
-    const ext = (extMatch ? extMatch[0] : '').toLowerCase();
-    const base = fname ? (ext ? fname.slice(0, -ext.length) : fname) : '';
-
-    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
-    const vidExts = ['.mp4', '.webm'];
-    const extPool = (ext === '.mp4' || ext === '.webm') ? vidExts : imgExts;
-
-    function addVariantBases(b) {
-      const m1 = b.match(/^(.*?)([a-z])$/i);
-      const m2 = b.match(/^(.*?)[_-]([a-z])$/i);
-      if (m1) {
-        const root = m1[1];
-        const suf = m1[2];
-        add(b);
-        add(root + '_' + suf);
-        add(root + '-' + suf);
-        add(root);
-        return;
-      }
-      if (m2) {
-        const root = m2[1];
-        const suf = m2[2];
-        add(b);
-        add(root + suf);
-        add(root);
-        return;
-      }
-      add(b);
-    }
-
-    const bases = [];
-    const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-    addVariantBases(base);
-    // Collect from candidates we already added that share same filename (handles repeated)
-    // (bases get populated via addVariantBases calling add(), so we re-derive them cleanly)
-    // Rebuild bases explicitly:
-    addBase(base);
-    const m1 = base.match(/^(.*?)([a-z])$/i);
-    const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
-    if (m1) { addBase(m1[1]); addBase(m1[1] + '_' + m1[2]); addBase(m1[1] + '-' + m1[2]); }
-    if (m2) { addBase(m2[1]); addBase(m2[1] + m2[2]); }
-
-    const exts = [];
-    const addExt = (e) => { if (e && !exts.includes(e)) exts.push(e); };
-    if (ext) addExt(ext);
-    // Add swap extensions
-    extPool.forEach(addExt);
-
-    for (const b of bases) {
-      for (const e of exts) {
-        const file = b + e;
-        if (dir) add(dir + '/' + file);
-        add(galleryBase + '/' + file);
-        add(assetsBase + '/' + file);
-      }
-    }
-
-    if (DEBUG) console.log('Candidates:', candidates);
-    return candidates;
+    if (fname) candidates.push(galleryBase + '/' + fname);
+    
+    return candidates.filter((v, i, a) => a.indexOf(v) === i);
   }
-async function assetExists(relOrAbs) {
+
+  async function assetExists(relOrAbs) {
     const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
     if (existsCache.has(u)) return existsCache.get(u);
 
-    // HEAD often works on GitHub Pages; if blocked, fallback to Range GET.
     try {
       const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
       const ok = r.ok;
@@ -275,11 +177,10 @@ async function assetExists(relOrAbs) {
   }
 
   function attachSmartImage(imgEl, path) {
-    // No HEAD/exists checks (GitHub Pages/clients can block HEAD/Range); try candidates via onerror fallback.
     let cancelled = false;
     const placeholder = url('assets/placeholder.svg');
     const cands = candidatePaths(path).map(p => url(p));
-
+    
     let i = 0;
     const tryNext = () => {
       if (cancelled) return;
@@ -291,41 +192,12 @@ async function assetExists(relOrAbs) {
       imgEl.src = cands[i++];
     };
 
-    imgEl.onerror = () => {
-      // Try next candidate
-      tryNext();
-    };
-
+    imgEl.onerror = () => tryNext();
     tryNext();
     return () => { cancelled = true; };
   }
 
-  function attachSmartVideo(videoEl, path) {
-    // Try candidates via onerror fallback (avoid HEAD/Range checks).
-    let cancelled = false;
-    const cands = candidatePaths(path).map(p => url(p));
-    let i = 0;
-
-    const tryNext = () => {
-      if (cancelled) return;
-      if (i >= cands.length) {
-        // Leave blank; caller may show placeholder UI around the video.
-        videoEl.onerror = null;
-        return;
-      }
-      videoEl.src = cands[i++];
-      // Ensure the browser attempts a load for thumbnails
-      try { videoEl.load(); } catch(_e) {}
-    };
-
-    videoEl.onerror = () => tryNext();
-    tryNext();
-    return () => { cancelled = true; };
-  }
-
-  // Autoplaying video attachment for small thumbnail contexts (hero/drawer/lightbox).
-  // This loads the first resolvable video immediately and keeps it muted/looping.
-  async function attachAutoplayVideo(videoEl, path) {
+  function attachAutoplayVideo(videoEl, path) {
     const placeholder = url('assets/placeholder-video.mp4');
     videoEl.preload = 'metadata';
     videoEl.muted = true;
@@ -336,7 +208,7 @@ async function assetExists(relOrAbs) {
 
     let cancelled = false;
     const cands = candidatePaths(path).map(p => url(p));
-    cands.push(placeholder); // last resort
+    cands.push(placeholder);
     let i = 0;
 
     const tryNext = () => {
@@ -351,7 +223,6 @@ async function assetExists(relOrAbs) {
 
     videoEl.onerror = () => tryNext();
     videoEl.onloadeddata = () => {
-      // Autoplay may still be blocked, but muted inline videos usually succeed.
       videoEl.play().catch(() => {});
     };
 
@@ -359,13 +230,7 @@ async function assetExists(relOrAbs) {
     return () => { cancelled = true; };
   }
 
-  // ---------- Header hero sequence (auto-playing, one after another) ----------
-  // Uses media.json -> headerSequence to drive the hero player in the sticky header.
-  // Requirements:
-  // - autoplay muted videos
-  // - advance automatically (on ended, with a safety timeout)
-  // - show larger, clearer thumbnails
-  // - credit INTERACT as agency via local assets
+  // ---------- Header hero sequence ----------
   function initHeroSequence() {
     const cfg = state.mediaCfg;
     const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
@@ -381,9 +246,8 @@ async function assetExists(relOrAbs) {
     heroVideo.muted = true;
     heroVideo.playsInline = true;
     heroVideo.setAttribute('playsinline', '');
-    heroVideo.loop = false; // crucial for sequential playback
+    heroVideo.loop = false;
 
-    // Build thumbnail buttons
     thumbs.innerHTML = '';
     items.forEach((it, i) => {
       const b = document.createElement('button');
@@ -419,19 +283,17 @@ async function assetExists(relOrAbs) {
       state._hero.idx = (i + items.length) % items.length;
       clearTimers();
 
-      // active thumb state
       Array.from(thumbs.children).forEach((el, idx) => {
-        if (idx === state._hero.idx) el.classList.add('is-active'); else el.classList.remove('is-active');
+        if (idx === state._hero.idx) el.classList.add('is-active'); 
+        else el.classList.remove('is-active');
       });
 
       const it = items[state._hero.idx];
       if (heroTitle) heroTitle.textContent = it.label || '';
       if (heroSub) heroSub.textContent = '';
 
-      // Load video (with existence check). If not found, keep current and advance.
       const chosen = await resolveFirstExisting(it.video || '');
       if (!chosen) {
-        // No playable source; advance quickly
         state._hero.timer = setTimeout(() => selectHero(state._hero.idx + 1, false), 2500);
         return;
       }
@@ -439,27 +301,17 @@ async function assetExists(relOrAbs) {
       heroVideo.src = url(chosen);
       try {
         await heroVideo.play();
-      } catch (_e) {
-        // Autoplay blocked; still progress
-      }
+      } catch (_e) {}
 
-      // Advance on end + safety timeout (in case of very long videos or failure to emit ended)
       heroVideo.onended = () => selectHero(state._hero.idx + 1, false);
       state._hero.safety = setTimeout(() => {
         try { heroVideo.pause(); } catch (_e) {}
         selectHero(state._hero.idx + 1, false);
       }, 18000);
-
-      // If user manually selected, restart the scrolling strip animation (optional)
-      if (userAction) {
-        // no-op for now
-      }
     }
 
     prevBtn?.addEventListener('click', () => selectHero(state._hero.idx - 1, true));
     nextBtn?.addEventListener('click', () => selectHero(state._hero.idx + 1, true));
-
-    // Start from 0
     selectHero(0, false);
   }
 
@@ -468,11 +320,10 @@ async function assetExists(relOrAbs) {
     const track = document.getElementById('highlightsTrack');
     if (!track) return;
     const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
-    // Use posters for a lightweight, always-available strip.
     const posters = items.map(x => x.poster).filter(Boolean);
     if (!posters.length) return;
     track.innerHTML = '';
-    const seq = posters.concat(posters); // duplicate for seamless scroll
+    const seq = posters.concat(posters);
     seq.forEach(p => {
       const wrap = document.createElement('div');
       wrap.className = 'highlightItem';
@@ -485,44 +336,9 @@ async function assetExists(relOrAbs) {
     });
   }
 
-  function initChartCarouselAutoScroll() {
-    const el = document.getElementById('chartCarousel');
-    if (!el) return;
-    if (state._chartCarouselTimer) clearInterval(state._chartCarouselTimer);
-    let idx = 0;
-    const slides = Array.from(el.querySelectorAll('.chartSlide'));
-    if (slides.length < 2) return;
-
-    const scrollToIdx = (i) => {
-      const target = slides[i];
-      if (!target) return;
-      const left = target.offsetLeft;
-      el.scrollTo({ left, behavior: 'smooth' });
-    };
-
-    const tick = () => {
-      idx = (idx + 1) % slides.length;
-      scrollToIdx(idx);
-    };
-
-    // Pause on interaction
-    const pause = () => { if (state._chartCarouselTimer) { clearInterval(state._chartCarouselTimer); state._chartCarouselTimer = null; } };
-    const resume = () => { if (!state._chartCarouselTimer) state._chartCarouselTimer = setInterval(tick, 7000); };
-    el.addEventListener('mouseenter', pause);
-    el.addEventListener('mouseleave', resume);
-    el.addEventListener('touchstart', pause, { passive: true });
-    el.addEventListener('touchend', resume, { passive: true });
-
-    state._chartCarouselTimer = setInterval(tick, 7000);
-  }
-
-  // (deduplicated) use initHighlightsStrip() and initChartCarouselAutoScroll()
-
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
     const tabs = $$$('.tabBtn[data-tab]');
-    // IMPORTANT: only hide/show *panels*, not the tab buttons.
-    // (tab buttons also carry data-tab and must remain visible)
     const panels = $$$('.tabPanel[data-tab]');
 
     tabs.forEach(a => {
@@ -563,11 +379,9 @@ async function assetExists(relOrAbs) {
           setStatus(`Error loading ${why}: ${e.message}`, 'bad');
           throw e;
         }
-        // Exponential backoff: wait longer on subsequent attempts
         await new Promise(res => setTimeout(res, 500 * attempt));
       }
     }
-    // Should never reach here
     throw new Error(`Failed to fetch ${why}`);
   }
 
@@ -577,7 +391,6 @@ async function assetExists(relOrAbs) {
       state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
       return;
     } catch (e) {
-      // Fallback to root campaigns.json (some repos place it there)
       try {
         const reg = await fetchJson('campaigns.json', 'campaign registry (root)');
         state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
@@ -602,7 +415,7 @@ async function assetExists(relOrAbs) {
     el.className = 'badge' + (ok ? ' badge--ok' : '');
   }
 
-  // ---------- Leaflet loader (avoid race conditions + blocked CDNs) ----------
+  // ---------- Leaflet loader ----------
   let leafletPromise = null;
 
   function ensureLeafletCss() {
@@ -618,7 +431,6 @@ async function assetExists(relOrAbs) {
     link.href = hrefs[0];
     document.head.appendChild(link);
 
-    // Best-effort fallbacks if a CDN is blocked.
     let i = 0;
     link.onerror = () => {
       i += 1;
@@ -630,7 +442,6 @@ async function assetExists(relOrAbs) {
     return new Promise((resolve, reject) => {
       const existing = document.querySelector(`script[data-leaflet-src="${src}"]`);
       if (existing) {
-        // If it is already loaded, resolve. If not, wait for load/error.
         if (existing.dataset.loaded === '1') return resolve(true);
         existing.addEventListener('load', () => resolve(true), { once: true });
         existing.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
@@ -664,14 +475,9 @@ async function assetExists(relOrAbs) {
       for (const src of srcs) {
         try {
           await loadScriptOnce(src);
-
-          // Wait a tick for globals to attach.
           await new Promise(r => setTimeout(r, 0));
           if (window.L && window.L.map) return true;
-        } catch (_e) {
-          // try next
-        }
-
+        } catch (_e) {}
         if (Date.now() - start > timeoutMs) break;
       }
       return !!(window.L && window.L.map);
@@ -706,22 +512,17 @@ async function assetExists(relOrAbs) {
       }
     }
 
-    // Capture additional filters for farmer (host) name and city
     const nameEl = $$('#nameFilter');
     const cityEl = $$('#cityFilter');
     state.nameFilter = nameEl ? String(nameEl.value || '').trim() : '';
     state.cityFilter = cityEl ? String(cityEl.value || '').trim() : '';
 
-    // Capture district, region, and score range inputs. If the user leaves
-    // fields blank the values remain empty/null, indicating no filter.
     const districtEl = $$('#districtFilter');
     state.districtFilter = districtEl ? String(districtEl.value || '').trim() : '';
 
-    // Region filter: match sessions by region code (e.g. SKR, RYK). If the input is blank
-    // the filter is not applied. The input element is optional because not all
-    // dashboards will define a region filter. See index.html for the #regionFilter input.
     const regionEl = $$('#regionFilter');
     state.regionFilter = regionEl ? String(regionEl.value || '').trim() : '';
+    
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
     const minVal = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
@@ -740,7 +541,6 @@ async function assetExists(relOrAbs) {
     if (fromEl && state.dateMin) fromEl.value = formatDateInput(state.dateMin);
     if (toEl && state.dateMax) toEl.value = formatDateInput(state.dateMax);
 
-    // Clear any text filters
     const nameEl = $$('#nameFilter');
     const cityEl = $$('#cityFilter');
     if (nameEl) nameEl.value = '';
@@ -748,7 +548,6 @@ async function assetExists(relOrAbs) {
     state.nameFilter = '';
     state.cityFilter = '';
 
-    // Reset district and score filters
     const districtEl = $$('#districtFilter');
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
@@ -759,7 +558,6 @@ async function assetExists(relOrAbs) {
     state.scoreMin = null;
     state.scoreMax = null;
 
-    // Clear region filter
     const regionEl = $$('#regionFilter');
     if (regionEl) regionEl.value = '';
     state.regionFilter = '';
@@ -772,37 +570,25 @@ async function assetExists(relOrAbs) {
     const b = state.dateTo;
     state.filteredSessions = state.sessions.filter(s => {
       const d = parseDateSafe(s.date);
-      // If the date cannot be parsed (e.g., missing or not in YYYY-MM-DD format),
-      // treat the session as always within range. This allows sessions with
-      // malformed dates to appear in the dashboard rather than being silently
-      // excluded. Only enforce the date filter when a valid Date is available.
       if (d) {
         if (d < a || d > b) return false;
       }
-      // Host (farmer) name filter: match host.name substring if provided
       if (state.nameFilter) {
         const name = String(s.host?.name || '').toLowerCase();
         if (!name.includes(state.nameFilter.toLowerCase())) return false;
       }
-      // City filter
       if (state.cityFilter) {
         const city = String(s.city || '').toLowerCase();
         if (!city.includes(state.cityFilter.toLowerCase())) return false;
       }
-
-      // Region filter
       if (state.regionFilter) {
         const reg = String(s.region || '').toLowerCase();
         if (!reg.includes(state.regionFilter.toLowerCase())) return false;
       }
-
-      // District filter
       if (state.districtFilter) {
         const district = String(s.district || '').toLowerCase();
         if (!district.includes(state.districtFilter.toLowerCase())) return false;
       }
-
-      // Score range filter
       if (Number.isFinite(state.scoreMin) || Number.isFinite(state.scoreMax)) {
         const sc = Number(s.score);
         if (!Number.isFinite(sc)) return false;
@@ -817,9 +603,6 @@ async function assetExists(relOrAbs) {
   function renderSummary() {
     const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
 
-    // Update the last updated timestamp. Determine the most recent session
-    // date from the filtered set and display it under the KPI tiles. When
-    // there are no sessions loaded, clear the timestamp.
     (function updateLastUpdated(){
       const lastEl = $$('#lastUpdated');
       if (!lastEl) return;
@@ -829,29 +612,25 @@ async function assetExists(relOrAbs) {
         if (d && (!latest || d > latest)) latest = d;
       }
       if (latest) {
-        // Use ISO format (YYYY-MM-DD) for clarity; could be replaced with
-        // locale-specific formatting if needed.
         const iso = formatDateInput(latest);
         lastEl.textContent = `Data as of ${iso}`;
       } else {
         lastEl.textContent = '';
       }
     })();
+    
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
-    // ---------- Totals ----------
     let totalFarmers = 0;
     let totalAcres = 0;
     let totalEstAcres = 0;
 
-    // ---------- Weighted averages (per-metric denominators so missing values do NOT behave like zeros) ----------
     let sumAw = 0, denAw = 0;
     let sumUl = 0, denUl = 0;
     let sumDe = 0, denDe = 0;
     let sumMb = 0, denMb = 0;
     let sumNi = 0, denNi = 0;
-    let sumUn = 0, denUn = 0; // understanding is 0–3
-
+    let sumUn = 0, denUn = 0;
     let sumScore = 0, denScore = 0;
 
     const drivers = new Map();
@@ -862,7 +641,6 @@ async function assetExists(relOrAbs) {
 
     for (const s of fs) {
       const si = idx?.get(s.sheetRef);
-
       const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
       const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
 
@@ -892,7 +670,6 @@ async function assetExists(relOrAbs) {
       const est = num(m.estimatedBuctrilAcres);
       if (Number.isFinite(est) && est > 0) totalEstAcres += est;
 
-      // reasons (counts)
       const ru = s.reasonsUse && typeof s.reasonsUse === 'object' ? s.reasonsUse : null;
       if (ru) {
         for (const [k, v] of Object.entries(ru)) {
@@ -911,7 +688,6 @@ async function assetExists(relOrAbs) {
         }
       }
 
-      // media reference counts
       const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
       const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
       imgRefs += imgs.length;
@@ -926,10 +702,9 @@ async function assetExists(relOrAbs) {
     const definiteAvg = avg(sumDe, denDe);
     const maybeAvg = avg(sumMb, denMb);
     const notInterestedAvg = avg(sumNi, denNi);
-    const understandingAvg = avg(sumUn, denUn); // 0–3
+    const understandingAvg = avg(sumUn, denUn);
     const scoreAvg = avg(sumScore, denScore);
 
-    // ---------- KPI tiles ----------
     const elKpiSessions = $$('#kpiSessions'); if (elKpiSessions) elKpiSessions.textContent = fmtInt(fs.length);
     const elKpiFarmers = $$('#kpiFarmers'); if (elKpiFarmers) elKpiFarmers.textContent = totalFarmers ? fmtInt(totalFarmers) : '—';
     const elKpiAcres = $$('#kpiAcres'); if (elKpiAcres) elKpiAcres.textContent = totalAcres ? fmt1(totalAcres) : '—';
@@ -939,7 +714,6 @@ async function assetExists(relOrAbs) {
     const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
     const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
 
-    // ---------- Funnel (donut charts) ----------
     const funnelEl = $$('#funnel');
     if (funnelEl) {
       const items = [
@@ -950,7 +724,6 @@ async function assetExists(relOrAbs) {
         { label: 'Not interested', pct: notInterestedAvg },
         { label: 'Understanding', pct: (Number.isFinite(understandingAvg) ? (understandingAvg / 3 * 100) : NaN) },
       ];
-      // Define custom colors for each donut based on semantic meaning
       const colors = {
         'Awareness': 'var(--brand)',
         'Used last year': 'var(--brand2)',
@@ -964,7 +737,6 @@ async function assetExists(relOrAbs) {
         const raw = Number(it.pct);
         const pctVal = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
         const color = colors[it.label] || 'var(--brand)';
-        // Display value: percentages for most, understanding displays raw value / 3
         let display;
         if (it.label === 'Understanding') {
           display = Number.isFinite(understandingAvg) ? (fmt1(understandingAvg) + ' / 3') : '—';
@@ -978,37 +750,24 @@ async function assetExists(relOrAbs) {
               <span class="donutValue">${esc(display)}</span>
             </div>
           </div>
-          <div class="donutMeta"></div>
         </div>`;
       }
       html += '</div>';
       funnelEl.innerHTML = html;
     }
 
-    
     function legendPos(){
       return (window.innerWidth || 1024) < 720 ? 'bottom' : 'right';
     }
-// ---------- Attendance donut chart ----------
-    // Draw a doughnut chart representing the distribution of farmers across
-    // sessions. We only display the chart if the canvas element is present
-    // and Chart.js has been loaded. To avoid overcrowding the chart with
-    // dozens of tiny slices, we show the top 8 sessions by farmer count
-    // individually and aggregate the remainder into an "Other" slice.
+
     const attCanvas = $$('#attendanceDonut');
     if (attCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
-      // Destroy any existing attendance chart to avoid duplicating charts on
-      // re-render (e.g. after changing filters).
       if (window.attendanceChart && typeof window.attendanceChart.destroy === 'function') {
         window.attendanceChart.destroy();
       }
-      // Collect farmers per session and sort descending.
       const sessionsByFarmers = fs
         .map(s => {
           const count = Number(s.metrics?.farmers || 0);
-          // Compose a human-friendly label for the donut legend. Prefer the
-          // district name; fall back to village/spot or a generic label if
-          // unavailable. Include the session id for uniqueness.
           let loc = (s.district || '').trim();
           if (!loc) loc = (s.village || s.spot || '').trim();
           if (!loc) loc = 'Session';
@@ -1017,7 +776,6 @@ async function assetExists(relOrAbs) {
         })
         .filter(x => x.farmers > 0)
         .sort((a, b) => b.farmers - a.farmers);
-      // Choose up to eight individual slices. Aggregate the rest.
       const maxSlices = 8;
       const labels = [];
       const data = [];
@@ -1037,7 +795,6 @@ async function assetExists(relOrAbs) {
         labels.push('Other');
         data.push(otherTotal);
       }
-      // Assign colors to slices; repeat palette if necessary.
       const bgColors = data.map((_, i) => colors[i % colors.length]);
       const ctx = attCanvas.getContext('2d');
       window.attendanceChart = new Chart(ctx, {
@@ -1075,7 +832,6 @@ async function assetExists(relOrAbs) {
       });
     }
 
-    // ---------- Decision breakdown pie chart ----------
     const decisionCanvas = $$('#decisionPie');
     if (decisionCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
       if (window.decisionChart && typeof window.decisionChart.destroy === 'function') {
@@ -1083,7 +839,6 @@ async function assetExists(relOrAbs) {
       }
       let sumDef = 0, sumMaybe = 0, sumNot = 0;
       for (const s of fs) {
-        // Farmers present for weighting; prefer sheet index when available.
         const si = idx?.get(s.sheetRef);
         const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
         const m = s.metrics || {};
@@ -1127,7 +882,6 @@ async function assetExists(relOrAbs) {
       });
     }
 
-    // ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {
       const top = [...fs].sort((a,b) => Number(b.score||0) - Number(a.score||0)).slice(0, 8);
@@ -1155,7 +909,6 @@ async function assetExists(relOrAbs) {
       }).join('');
     }
 
-    // ---------- Priority districts ----------
     const pdBody = $$('#priorityDistrictsTable tbody');
     if (pdBody) {
       const byD = new Map();
@@ -1184,15 +937,12 @@ async function assetExists(relOrAbs) {
         byD.set(d, o);
       }
 
-      // Compute aggregated rows per district and derive recommended actions. The
-      // recommendations are based on weighted definite intent (de) thresholds.
       let agg = [...byD.values()].map(o => {
         const aw = avg(o.awSum, o.awDen);
         const de = avg(o.deSum, o.deDen);
         const sc = avg(o.scSum, o.scDen);
         return { ...o, aw, de, sc };
       });
-      // Sort by lowest definite intent then lowest score
       agg.sort((a,b) => {
         const ad = Number.isFinite(a.de) ? a.de : 1e9;
         const bd = Number.isFinite(b.de) ? b.de : 1e9;
@@ -1201,10 +951,8 @@ async function assetExists(relOrAbs) {
         const bs = Number.isFinite(b.sc) ? b.sc : 1e9;
         return as - bs;
       });
-      // Limit to top 8 districts
       const rows = agg.slice(0, 8);
 
-      // Determine and display summary takeaways from the top two districts
       const takeawayEl = $$('#summaryTakeaways');
       if (takeawayEl) {
         if (rows.length) {
@@ -1215,7 +963,6 @@ async function assetExists(relOrAbs) {
         }
       }
 
-      // Render table rows with recommended actions and row styling
       pdBody.innerHTML = rows.map(r => {
         let action = '—';
         let cls = '';
@@ -1246,27 +993,10 @@ async function assetExists(relOrAbs) {
       }).join('');
     }
 
-    // ---------- Drivers & barriers ----------
-    const listHtml = (mp) => {
-      const total = totalFarmers || 0;
-      const arr = [...mp.entries()].sort((a,b) => (b[1]||0) - (a[1]||0)).slice(0, 6);
-      if (!arr.length) return '<li class="muted">No entries captured.</li>';
-      return arr.map(([k, v]) => {
-        const n = Number(v) || 0;
-        const share = (total > 0) ? ` • ${fmt1(n / total * 100)}%` : '';
-        return `<li><b>${esc(k)}</b>: ${fmtInt(n)}${esc(share)}</li>`;
-      }).join('');
-    };
-
-    // Render the top drivers and barriers as horizontal bar charts instead of plain lists.
-    // Each bar's length reflects the share of farmers citing that reason. When no data is
-    // available, a muted placeholder is shown instead. The charts are drawn into
-    // #driversChart and #barriersChart containers.
     const renderBarChart = (mp, containerId) => {
       const container = document.querySelector(containerId);
       if (!container) return;
       const total = totalFarmers || 0;
-      // Sort entries descending by count and take up to 6 entries.
       const arr = [...mp.entries()].sort((a, b) => (Number(b[1] || 0) - Number(a[1] || 0))).slice(0, 6);
       if (!arr.length) {
         container.innerHTML = '<div class="muted">No entries captured.</div>';
@@ -1274,10 +1004,7 @@ async function assetExists(relOrAbs) {
       }
       container.innerHTML = arr.map(([k, v]) => {
         const n = Number(v) || 0;
-        // Compute share of total farmers; clamp between 0 and 100.
         const pct = (total > 0) ? Math.min(Math.max(n / total * 100, 0), 100) : 0;
-        // Construct a bar row using existing barRow/barTrack/barFill styles. Use
-        // the CSS variable --brand (blue) for drivers and --danger (red) for barriers.
         const colorVar = (containerId === '#driversChart') ? 'var(--brand)' : 'var(--danger)';
         return `<div class="barRow">
           <div class="barLabel">${esc(k)}</div>
@@ -1290,12 +1017,9 @@ async function assetExists(relOrAbs) {
     renderBarChart(drivers, '#driversChart');
     renderBarChart(barriers, '#barriersChart');
 
-    // ---------- Data readiness / status ----------
     setStatus(
       `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
-      `Reach: ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers • ${totalAcres ? fmt1(totalAcres) : '—'} acres • Est. Buctril acres: ${totalEstAcres ? fmt1(totalEstAcres) : '—'}.\n` +
-      `Referenced media: ${fmtInt(imgRefs)} images • ${fmtInt(vidRefs)} videos.\n` +
-      `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
+      `Referenced media: ${fmtInt(imgRefs)} images • ${fmtInt(vidRefs)} videos.`,
       'ok'
     );
   }
@@ -1338,20 +1062,14 @@ async function assetExists(relOrAbs) {
 
     tbody.innerHTML = rows.join('');
 
-    // Row click: preview
     tbody.onclick = (ev) => {
       const tr = ev.target.closest('tr[data-session-id]');
       if (!tr) return;
-
-      // If clicking a link, allow navigation
       if (ev.target.closest('a')) return;
-
-      // Only preview on button or row click
       const sid = Number(tr.dataset.sessionId);
       openDrawer(sid);
     };
 
-    // Button preview
     tbody.addEventListener('click', (ev) => {
       const btn = ev.target.closest('button[data-action="preview"]');
       if (!btn) return;
@@ -1369,7 +1087,6 @@ async function assetExists(relOrAbs) {
     return '';
   }
 
-  // Return the first video reference for a session if available.
   function firstMediaVideo(s) {
     const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
     if (vids.length) return vids[0];
@@ -1389,7 +1106,6 @@ async function assetExists(relOrAbs) {
     const grid = $$('#mediaGrid');
     if (!grid) return;
 
-    // Bind media toolbar events once
     if (!state._mediaBound) {
       state._mediaBound = true;
 
@@ -1399,7 +1115,6 @@ async function assetExists(relOrAbs) {
         if (!btn) return;
         const t = btn.getAttribute('data-media-type') || 'all';
         state.mediaType = t;
-        // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
         state.mediaLimit = 24;
         renderMedia();
@@ -1440,14 +1155,11 @@ async function assetExists(relOrAbs) {
 
     let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
 
-    // Filter to sessions that actually have media
     list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
 
-    // Type filter
     if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
     if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
 
-    // Text filter
     if (q) {
       list = list.filter(s => {
         const sheet = String(s.sheetRef || '');
@@ -1457,7 +1169,6 @@ async function assetExists(relOrAbs) {
       });
     }
 
-    // Sort by date (fallback to original order)
     list.sort((a, b) => {
       const da = parseDateSafe(a.date)?.getTime() || 0;
       const db = parseDateSafe(b.date)?.getTime() || 0;
@@ -1473,23 +1184,22 @@ async function assetExists(relOrAbs) {
       const sheet = esc(s.sheetRef || '');
       const district = esc(s.district || '');
       const village = esc(s.village || s.spot || '');
-      // Determine thumbnail: prefer first video if available; otherwise first image
       const vidPath = firstMediaVideo(s);
-      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
       const img = firstMediaImage(s);
       const title = `${sheet} • ${district} • ${village}`;
       const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
-      // Build thumb markup
-      let thumb;
-      let badge;
+      
+      let thumb, badge, dataAttr;
       if (vidPath) {
-        // Show auto-playing muted preview
-        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+        thumb = `<video autoplay loop muted playsinline></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
+        dataAttr = `data-video-path="${esc(vidPath)}"`;
       } else {
         thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
         badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
+        dataAttr = `data-thumb-path="${esc(img)}"`;
       }
+      
       return `<div class="mediaCard" data-session-id="${sid}">
         <div class="mediaThumb">
           ${badge}
@@ -1503,23 +1213,29 @@ async function assetExists(relOrAbs) {
             <button class="btn btnSmall btnGhost" data-action="open">Open</button>
           </div>
         </div>
-        <div class="hidden" data-thumb-path="${esc(img)}"></div>
+        <div class="hidden" ${dataAttr}></div>
       </div>`;
     });
 
     grid.innerHTML = cards.join('');
 
-    // Update count + load more button
     const countEl = $$('#mediaCount');
     if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
     const moreBtn = $$('#mediaLoadMore');
     if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
 
-    // attach thumbs
     $$$('[data-media-thumb="1"]', grid).forEach(img => {
       const card = img.closest('.mediaCard');
       const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
       attachSmartImage(img, p || 'assets/placeholder.svg');
+    });
+
+    $$$('video', grid).forEach(videoEl => {
+      const card = videoEl.closest('.mediaCard');
+      const p = card?.querySelector('[data-video-path]')?.getAttribute('data-video-path') || '';
+      if (p) {
+        attachAutoplayVideo(videoEl, p);
+      }
     });
 
     grid.onclick = (ev) => {
@@ -1527,8 +1243,6 @@ async function assetExists(relOrAbs) {
       if (!card) return;
       const sid = Number(card.dataset.sessionId);
       if (ev.target.closest('a')) return;
-
-      // Open lightbox with all items
       openLightbox(sid);
     };
   }
@@ -1537,7 +1251,7 @@ async function assetExists(relOrAbs) {
     renderSummary();
     renderSessionsTable();
     renderMedia();
-    updateMapData(); // markers reflect filter
+    updateMapData();
   }
 
   // ---------- Drawer ----------
@@ -1548,23 +1262,12 @@ async function assetExists(relOrAbs) {
     if (dr) dr.classList.add('hidden');
     if (ov) ov.setAttribute('aria-hidden', 'true');
     if (dr) dr.setAttribute('aria-hidden', 'true');
-    // Navigate back to the base page when a drawer is closed. When the user clicks
-    // outside the session preview (or hits Esc), return to the default summary
-    // tab by stripping any hash from the URL. Preserve existing query string
-    // parameters (e.g. campaign, date filters). Use location.pathname+search to
-    // avoid repeatedly appending hashes during navigation. If an exception
-    // occurs, silently ignore.
     try {
       const base = location.pathname + location.search;
-      // If already on index.html this will simply remove the hash and reload
-      // the summary tab. If executed from another tab (e.g. sessions hash)
-      // the anchor will be cleared.
       if (location.hash) {
         location.href = base;
       }
-    } catch (_e) {
-      /* noop */
-    }
+    } catch (_e) {}
   }
 
   async function openDrawer(sessionId) {
@@ -1581,7 +1284,6 @@ async function assetExists(relOrAbs) {
     $$('#drawerTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
     $$('#drawerSub').textContent = `${s.date || ''} • ${s.district || ''} • ${s.village || s.spot || ''}`;
 
-    // KPIs from sheets index if possible
     const si = state.sheetsIndex?.sheets?.find(x => x.sheet === s.sheetRef);
     $$('#dFarmers').textContent = si ? fmtInt(si.farmers_present) : '—';
     $$('#dAcres').textContent = si ? fmt1(si.acres) : '—';
@@ -1597,7 +1299,6 @@ async function assetExists(relOrAbs) {
     ].filter(Boolean).join(' • ');
     $$('#dMeta').innerHTML = meta || '<span class="muted">—</span>';
 
-    // Outcomes (session-level conversion / understanding)
     const outEl = $$('#dOutcomes');
     const actEl = $$('#dActions');
 
@@ -1622,7 +1323,6 @@ async function assetExists(relOrAbs) {
       `.trim();
     }
 
-    // Recommended actions (lightweight heuristic rules)
     const acts = [];
     const farmersNow = Number(si?.farmers_present ?? m.farmers ?? 0);
     const uPct = Number.isFinite(un) ? (un / 3 * 100) : NaN;
@@ -1644,19 +1344,16 @@ async function assetExists(relOrAbs) {
       actEl.innerHTML = acts.length ? acts.map(x => `<li>${esc(x)}</li>`).join('') : '<li class="muted">No critical flags for this session based on thresholds.</li>';
     }
 
-    // Links
     const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
     const detailsUrl = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
     $$('#dOpenSheet').setAttribute('href', sheetUrl);
     $$('#dOpenDetails').setAttribute('href', detailsUrl);
 
-    // Google Maps
     const lat = Number(s.geo?.lat);
     const lng = Number(s.geo?.lng);
     const g = (Number.isFinite(lat) && Number.isFinite(lng)) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
     $$('#dOpenMaps').setAttribute('href', g);
 
-    // Sheet summary fetch
     const sumEl = $$('#dSheetSummary');
     if (sumEl) sumEl.textContent = 'Loading…';
     try {
@@ -1686,7 +1383,6 @@ async function assetExists(relOrAbs) {
       if (sumEl) sumEl.innerHTML = `<div class="muted">Could not build session summary.</div><div class="smallMuted">${esc(e.message)}</div>`;
     }
 
-    // Media
     const mediaEl = $$('#dMedia');
     if (mediaEl) {
       mediaEl.innerHTML = '<div class="muted">Loading media…</div>';
@@ -1772,18 +1468,12 @@ async function assetExists(relOrAbs) {
     if (lb) lb.classList.remove('open');
     const body = $$('#lbBody');
     if (body) body.innerHTML = '';
-    // When the lightbox is closed, return to the base page so the user is not
-    // left on an orphaned hash state. This mirrors the behaviour implemented in
-    // closeDrawer(). Preserving pathname and query parameters ensures date
-    // filters and campaign selection remain intact.
     try {
       const base = location.pathname + location.search;
       if (location.hash) {
         location.href = base;
       }
-    } catch (_e) {
-      /* ignore navigation errors */
-    }
+    } catch (_e) {}
   }
 
   function bindLightbox() {
@@ -1811,7 +1501,6 @@ async function assetExists(relOrAbs) {
       return;
     }
 
-    // Show first item large; rest as thumbnails
     const main = items[0];
     if (main.type === 'image') {
       const img = document.createElement('img');
@@ -1844,7 +1533,7 @@ async function assetExists(relOrAbs) {
           t.onclick = () => {
             body.innerHTML = '';
             lb.classList.add('open');
-            openLightbox(sessionId); // simplest refresh
+            openLightbox(sessionId);
           };
         } else {
           const tv = document.createElement('video');
@@ -1870,9 +1559,8 @@ async function assetExists(relOrAbs) {
     const el = $$('#leafletMap');
     if (!el) return;
 
-    // Lazily load Leaflet when the Map tab is opened.
     setMapStatus('Loading map…', false);
-    const ok = await ensureLeafletReady({ timeoutMs: 9000 });
+    const ok = await ensureLeafletReady({ timeoutMs = 9000 } = {});
     if (!ok) {
       setMapStatus('Map library blocked', false);
       $$('#mapFallback')?.classList.remove('hidden');
@@ -1895,11 +1583,9 @@ async function assetExists(relOrAbs) {
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
-      // Create an empty heatmap layer. The data points are populated in updateMapData().
       try {
         state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
       } catch (_e) {
-        // If the heatmap plugin is not loaded, leave the layer undefined.
         state.heatLayer = null;
       }
 
@@ -1907,16 +1593,10 @@ async function assetExists(relOrAbs) {
       setMapStatus('Ready', true);
       setTimeout(() => map.invalidateSize(), 250);
 
-      // Close any open Leaflet popups when clicking on the map background. This
-      // prevents popup windows from remaining open when users click outside
-      // markers. Without this, popups would remain visible and obstruct the
-      // interface. Use a try/catch in case Leaflet has no popups open.
       map.on('click', () => {
         try {
           map.closePopup();
-        } catch (_e) {
-          /* no-op */
-        }
+        } catch (_e) {}
       });
     } catch (e) {
       setMapStatus('Failed', false);
@@ -1930,7 +1610,6 @@ async function assetExists(relOrAbs) {
     state.markerLayer.clearLayers();
     state.markersBySessionId.clear();
 
-    // Build a quick lookup of sheet metadata to obtain farmers and acreage.
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     const pts = [];
@@ -1941,8 +1620,6 @@ async function assetExists(relOrAbs) {
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
       pts.push([lat, lng]);
-      // Compute heatmap intensity based on acres engaged. Use sheet index if available,
-      // falling back to session metrics. Default to 1 when no acreage is recorded.
       let weight = 1;
       const si = idx?.get(s.sheetRef);
       const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
@@ -1985,17 +1662,12 @@ async function assetExists(relOrAbs) {
       state.map.fitBounds(bounds.pad(0.15));
     }
 
-    // Update the heatmap layer with the new intensity points. Only do this if
-    // the heatLayer exists (it may be undefined if the plugin failed to load).
     if (state.heatLayer && Array.isArray(heatPoints)) {
       try {
         state.heatLayer.setLatLngs(heatPoints);
-      } catch (_e) {
-        /* Ignore errors from the heatmap plugin */
-      }
+      } catch (_e) {}
     }
 
-    // One-time delegated click handler inside Leaflet popup for Preview button
     state.map.off('popupopen');
     state.map.on('popupopen', (e) => {
       const node = e.popup.getElement();
@@ -2011,13 +1683,6 @@ async function assetExists(relOrAbs) {
 
   // ---------- Feedback ----------
   function bindFeedback() {
-    // Bind feedback form actions. The user can provide a phone number (for WhatsApp)
-    // and/or an email address. A message is always required. When the WhatsApp
-    // button is clicked and a phone number is provided, the browser opens a
-    // wa.me link with the encoded message. When the Email button is clicked
-    // and an email address is provided, the browser opens a mailto link with
-    // subject and body prefilled. A small status label displays validation
-    // feedback to the user.
     const phoneInput = $$('#fbPhone');
     const emailInput = $$('#fbEmail');
     const msgInput = $$('#fbMessage');
@@ -2033,7 +1698,6 @@ async function assetExists(relOrAbs) {
     waBtn?.addEventListener('click', () => {
       const phoneRaw = phoneInput?.value?.trim() || '';
       const msg = msgInput?.value?.trim() || '';
-      // Remove non-digit characters; WhatsApp expects international numbers
       const phone = phoneRaw.replace(/[^0-9]/g, '');
       if (!phone) {
         displayStatus('Please enter a valid phone number.', false);
@@ -2041,7 +1705,6 @@ async function assetExists(relOrAbs) {
       }
       const encoded = encodeURIComponent(msg);
       const waUrl = `https://wa.me/${phone}?text=${encoded}`;
-      // Open in a new tab to avoid leaving the dashboard entirely
       window.open(waUrl, '_blank');
       displayStatus('Opening WhatsApp…');
     });
@@ -2055,7 +1718,6 @@ async function assetExists(relOrAbs) {
       const subject = encodeURIComponent('Feedback on Harvest Horizons Dashboard');
       const body = encodeURIComponent(msg);
       const mailto = `mailto:${email}?subject=${subject}&body=${body}`;
-      // Navigate away; mailto links open in the default mail client
       window.location.href = mailto;
       displayStatus('Opening email draft…');
     });
@@ -2090,15 +1752,11 @@ async function assetExists(relOrAbs) {
     const mediaPath = state.campaign.mediaUrl || `data/${id}/media.json`;
     const sheetsIndexPath = state.campaign.sheetsIndexUrl || `data/${id}/sheets_index.json`;
 
-    // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
     const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
-    // Assign derived region codes to each session. We map districts/territories
-    // to region codes (RGN) based on the Initial sheet. If no match is found
-    // the region remains blank. Matching ignores case and spaces for flexibility.
+    
     (function assignRegions() {
       const regionMap = {
-        // Sukkur region (SKR)
         'dadu': 'SKR',
         'daharki': 'SKR',
         'dharki': 'SKR',
@@ -2106,40 +1764,33 @@ async function assetExists(relOrAbs) {
         'jafferabad': 'SKR',
         'jaferabad': 'SKR',
         'jafarabad': 'SKR',
-        'jaferabad': 'SKR',
         'mehrabpur': 'SKR',
         'ranipur': 'SKR',
         'sukkur': 'SKR',
         'ubaro': 'SKR',
         'ubauro': 'SKR',
-        // Rahim Yar Khan region (RYK)
         'rahim yarkhan': 'RYK',
         'rahim yar khan': 'RYK',
         'rajan pur': 'RYK',
         'rajanpur': 'RYK',
-        // Dera Ghazi Khan region (DGK)
         'bhakkar': 'DGK',
         'karor lal esan': 'DGK',
         'kot adu': 'DGK',
         'mianwali': 'DGK',
         'muzaffar garh': 'DGK',
         'muzaffargarh': 'DGK',
-        // Faisalabad region (FSD)
         'chakwal': 'FSD',
         'sargodha': 'FSD',
         'toba tek singh': 'FSD',
-        // Gujranwala region (GUJ)
         'phalia': 'GUJ'
       };
       for (const s of sessions) {
         const district = String(s.district || '').toLowerCase().replace(/\s+/g, '');
         let matchedRegion = '';
-        // Attempt direct match on district (no spaces)
         for (const [key, reg] of Object.entries(regionMap)) {
           const normKey = key.toLowerCase().replace(/\s+/g, '');
           if (district === normKey) { matchedRegion = reg; break; }
         }
-        // Assign region code
         s.region = matchedRegion;
       }
     })();
@@ -2147,22 +1798,18 @@ async function assetExists(relOrAbs) {
     state.sessions = sessions;
     state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
 
-    // Optional sheets index
     try {
       state.sheetsIndex = await fetchJson(sheetsIndexPath, 'sheets index');
     } catch (_e) {
       state.sheetsIndex = null;
     }
 
-    // Optional media config
     try {
       state.mediaCfg = await fetchJson(mediaPath, 'media config');
     } catch (_e) {
       state.mediaCfg = null;
     }
 
-    // Campaign date range
-    // Prefer explicit campaign start/end if provided; otherwise derive from sessions.
     const dates = sessions.map(s => parseDateSafe(s.date)).filter(Boolean);
     if (!dates.length) throw new Error('No session dates found.');
     dates.sort((a,b) => a - b);
@@ -2173,14 +1820,12 @@ async function assetExists(relOrAbs) {
     state.dateMin = cfgStart || dates[0];
     state.dateMax = cfgEnd || dates[dates.length - 1];
 
-    // If config dates are outside actual data, clamp range to data to avoid empty view by default.
     if (state.dateMin < dates[0]) state.dateMin = dates[0];
     if (state.dateMax > dates[dates.length - 1]) state.dateMax = dates[dates.length - 1];
 
     state.dateFrom = state.dateMin;
     state.dateTo = state.dateMax;
 
-    // Setup date inputs min/max and defaults
     const fromEl = $$('#dateFrom');
     const toEl = $$('#dateTo');
     if (fromEl && toEl) {
@@ -2204,25 +1849,14 @@ async function assetExists(relOrAbs) {
     $$('#resetBtn')?.addEventListener('click', resetDateInputs);
     $$('#exportBtn')?.addEventListener('click', exportCsv);
 
-    // Apply on Enter in date inputs
     $$('#dateFrom')?.addEventListener('change', applyDateInputs);
     $$('#dateTo')?.addEventListener('change', applyDateInputs);
-
-    // Apply automatically when name or city filters change
     $$('#nameFilter')?.addEventListener('input', applyDateInputs);
     $$('#cityFilter')?.addEventListener('input', applyDateInputs);
-
-    // Apply automatically when region filter changes. This allows users to
-    // filter sessions by region code (REG) such as SKR, RYK, DGK. See
-    // index.html for the #regionFilter input.
     $$('#regionFilter')?.addEventListener('input', applyDateInputs);
-
-    // Apply automatically when district or score filters change
     $$('#districtFilter')?.addEventListener('input', applyDateInputs);
     $$('#scoreMin')?.addEventListener('input', applyDateInputs);
     $$('#scoreMax')?.addEventListener('input', applyDateInputs);
-
-    // Export button for priority table
     $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
   }
 
@@ -2248,10 +1882,6 @@ async function assetExists(relOrAbs) {
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
-  // Export the priority districts table as CSV. Collects the district rows
-  // currently rendered in the table, including the recommended action,
-  // and triggers a download via a Blob. The filename incorporates the
-  // campaign identifier for clarity.
   function exportPriorityCsv() {
     const table = document.getElementById('priorityDistrictsTable');
     if (!table) return;
@@ -2275,7 +1905,6 @@ async function assetExists(relOrAbs) {
     document.addEventListener('tabchange', (e) => {
       const tab = e.detail?.tab;
       if (tab === 'map') {
-        // Give Leaflet time to render after display
         setTimeout(ensureMapReady, 50);
         setTimeout(() => state.map?.invalidateSize(), 200);
       }
@@ -2299,33 +1928,21 @@ async function assetExists(relOrAbs) {
 
       await loadCampaign(id);
 
-      // Header sequence + highlights + compact chart carousel
       initHeroSequence();
       initHighlightsStrip();
-      initChartCarouselAutoScroll();
 
-      // Initial tab
       syncTabFromHash();
 
-      // If landing directly on #map, init map
       if (activeTabFromHash() === 'map') {
         setTimeout(ensureMapReady, 50);
       }
 
-      // Close drawer if overlay state inconsistent
       closeDrawer();
 
-      // Wire drawer overlay state
       $$('#drawerOverlay')?.classList.add('hidden');
       $$('#sessionDrawer')?.classList.add('hidden');
-
-      // Close buttons for lightbox
       $$('#lbClose')?.addEventListener('click', closeLightbox);
 
-      // Bind heatmap toggle button. When clicked, add or remove the heat
-      // layer from the map and update the button text accordingly. The map
-      // and heatLayer are created lazily in ensureMapReady(), so guard
-      // against them being undefined.
       const heatBtn = document.getElementById('toggleHeat');
       if (heatBtn) {
         heatBtn.addEventListener('click', () => {
@@ -2340,7 +1957,6 @@ async function assetExists(relOrAbs) {
         });
       }
 
-      // Set map status
       setMapStatus('Ready when opened', true);
     } catch (e) {
       console.error(e);

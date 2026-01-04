@@ -275,66 +275,88 @@
   }
 
   function attachSmartImage(imgEl, path) {
+    // No HEAD/exists checks (GitHub Pages/clients can block HEAD/Range); try candidates via onerror fallback.
     let cancelled = false;
-    const placeholder = 'assets/placeholder.svg';
+    const placeholder = url('assets/placeholder.svg');
+    const cands = candidatePaths(path).map(p => url(p));
 
-    (async () => {
-      const chosen = await resolveFirstExisting(path);
+    let i = 0;
+    const tryNext = () => {
       if (cancelled) return;
-      imgEl.src = chosen ? url(chosen) : url(placeholder);
-    })();
-
-    imgEl.onerror = () => {
-      imgEl.onerror = null;
-      imgEl.src = url(placeholder);
+      if (i >= cands.length) {
+        imgEl.onerror = null;
+        imgEl.src = placeholder;
+        return;
+      }
+      imgEl.src = cands[i++];
     };
 
+    imgEl.onerror = () => {
+      // Try next candidate
+      tryNext();
+    };
+
+    tryNext();
     return () => { cancelled = true; };
   }
 
   function attachSmartVideo(videoEl, path) {
-    const placeholder = 'assets/placeholder-video.mp4';
-    let tried = false;
+    // Try candidates via onerror fallback (avoid HEAD/Range checks).
+    let cancelled = false;
+    const cands = candidatePaths(path).map(p => url(p));
+    let i = 0;
 
-    // lazy load on click
-    videoEl.preload = 'metadata';
-    videoEl.controls = true;
-
-    videoEl.addEventListener('click', async () => {
-      if (tried) return;
-      tried = true;
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = chosen ? url(chosen) : url(placeholder);
-      videoEl.play().catch(() => { /* ignore */ });
-    });
-
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
+    const tryNext = () => {
+      if (cancelled) return;
+      if (i >= cands.length) {
+        // Leave blank; caller may show placeholder UI around the video.
+        videoEl.onerror = null;
+        return;
+      }
+      videoEl.src = cands[i++];
+      // Ensure the browser attempts a load for thumbnails
+      try { videoEl.load(); } catch(_e) {}
     };
+
+    videoEl.onerror = () => tryNext();
+    tryNext();
+    return () => { cancelled = true; };
   }
 
   // Autoplaying video attachment for small thumbnail contexts (hero/drawer/lightbox).
   // This loads the first resolvable video immediately and keeps it muted/looping.
   async function attachAutoplayVideo(videoEl, path) {
-    const placeholder = 'assets/placeholder-video.mp4';
+    const placeholder = url('assets/placeholder-video.mp4');
     videoEl.preload = 'metadata';
     videoEl.muted = true;
     videoEl.loop = true;
     videoEl.playsInline = true;
     videoEl.setAttribute('playsinline', '');
     videoEl.controls = false;
-    try {
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = url(chosen || placeholder);
-      videoEl.play().catch(() => { /* ignore autoplay blocks */ });
-    } catch (_e) {
-      videoEl.src = url(placeholder);
-    }
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
+
+    let cancelled = false;
+    const cands = candidatePaths(path).map(p => url(p));
+    cands.push(placeholder); // last resort
+    let i = 0;
+
+    const tryNext = () => {
+      if (cancelled) return;
+      if (i >= cands.length) {
+        videoEl.onerror = null;
+        return;
+      }
+      videoEl.src = cands[i++];
+      try { videoEl.load(); } catch(_e) {}
     };
+
+    videoEl.onerror = () => tryNext();
+    videoEl.onloadeddata = () => {
+      // Autoplay may still be blocked, but muted inline videos usually succeed.
+      videoEl.play().catch(() => {});
+    };
+
+    tryNext();
+    return () => { cancelled = true; };
   }
 
   // ---------- Header hero sequence (auto-playing, one after another) ----------

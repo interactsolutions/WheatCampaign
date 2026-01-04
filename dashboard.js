@@ -1,5 +1,8 @@
 (() => {
   'use strict';
+
+  // Debug mode: add ?debug=1 to URL or set localStorage.DEBUG='1'
+  const DEBUG = /[?&]debug=1\b/.test(window.location.search) || localStorage.getItem('DEBUG') === '1';
   // Helper to fetch JSON files with retry and timeout support.
   // This version improves resilience to network issues by retrying failed requests
   // a limited number of times and aborting long-running requests. If all attempts
@@ -115,131 +118,128 @@
   // ---------- Media path resolution ----------
   const existsCache = new Map(); // url -> boolean
 
+  
+  function getMediaBases() {
+    const cfg = state.mediaCfg || {};
+    const assetsBase = String(cfg.assetsBase || 'assets').replace(/\/+$/, '');
+    const galleryBase = String(cfg.galleryBase || (assetsBase + '/gallery')).replace(/\/+$/, '');
+    return { assetsBase, galleryBase };
+  }
+
   function normalizeMediaPath(p) {
     const raw = String(p ?? '').trim();
     if (!raw) return '';
     if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
 
+    // Trim leading ./ and leading /
     let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
 
-    // Already rooted correctly
-    if (x.startsWith('assets/')) return x;
+    const { assetsBase, galleryBase } = getMediaBases();
 
-    // Common patterns from sessions.json
-    if (x.startsWith('gallery/')) return 'assets/' + x;
+    // Already rooted correctly (assetsBase or galleryBase)
+    if (x.startsWith(assetsBase + '/')) return x;
+    if (x.startsWith(galleryBase + '/')) return x;
 
-    // Sometimes data stores just the filename
-    if (!x.includes('/')) return 'assets/gallery/' + x;
+    // Common shorthand: "gallery/..." -> galleryBase/...
+    if (x.startsWith('gallery/')) return galleryBase + '/' + x.slice('gallery/'.length);
 
-    // Default: relative as-is
+    // If it's a bare filename (no slashes), assume galleryBase
+    if (!x.includes('/')) return galleryBase + '/' + x;
+
+    // Otherwise keep it relative; candidatePaths() will try additional bases.
     return x;
   }
 
   function candidatePaths(p) {
-    const norm = normalizeMediaPath(p);
+    const raw = String(p ?? '').trim();
+    const norm = normalizeMediaPath(raw);
     if (!norm) return [];
     if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
 
+    const { assetsBase, galleryBase } = getMediaBases();
     const candidates = [];
     const add = (v) => {
       if (v && !candidates.includes(v)) candidates.push(v);
     };
 
-    // Always start with the normalized path.
+    if (DEBUG) console.log(`Resolving media path: "${raw}" -> "${norm}"`, { assetsBase, galleryBase });
+
+    // 1) Always try normalized path first
     add(norm);
 
-    // If request is wrong folder (root) try under assets/gallery
-    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
-      const fname = norm.split('/').pop();
-      add('assets/gallery/' + fname);
+    // 2) If path is missing assetsBase prefix, try adding it
+    if (!norm.startsWith(assetsBase + '/') && !norm.startsWith(galleryBase + '/')) {
+      add(assetsBase + '/' + norm);
     }
 
-    // Extension swaps
-    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
-    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
-    const isVid = /\.(mp4|webm)$/i.test(norm);
+    // 3) Try under galleryBase using only filename
+    const fname = norm.split('/').pop();
+    if (fname) add(galleryBase + '/' + fname);
 
-    function addVariantBases(base) {
-      // Support common variant naming:
-      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
-      //   17_a.jpg <-> 17a.jpg
-      // (applies for a-f, but will also include single-letter suffixes generally)
-      const m1 = base.match(/^(.*?)([a-z])$/i);
-      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
+    // 4) Extension & common naming variants (jpg/jpeg, suffix variants)
+    const dir = norm.includes('/') ? norm.slice(0, norm.lastIndexOf('/')) : '';
+    const extMatch = fname ? fname.match(/\.[a-z0-9]+$/i) : null;
+    const ext = (extMatch ? extMatch[0] : '').toLowerCase();
+    const base = fname ? (ext ? fname.slice(0, -ext.length) : fname) : '';
+
+    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
+    const vidExts = ['.mp4', '.webm'];
+    const extPool = (ext === '.mp4' || ext === '.webm') ? vidExts : imgExts;
+
+    function addVariantBases(b) {
+      const m1 = b.match(/^(.*?)([a-z])$/i);
+      const m2 = b.match(/^(.*?)[_-]([a-z])$/i);
       if (m1) {
         const root = m1[1];
         const suf = m1[2];
-        add(base);
+        add(b);
         add(root + '_' + suf);
         add(root + '-' + suf);
-        // also try without suffix (helps when data references 17a but file is 17)
         add(root);
         return;
       }
       if (m2) {
         const root = m2[1];
         const suf = m2[2];
-        add(base);
+        add(b);
         add(root + suf);
         add(root);
         return;
       }
-      add(base);
-      // Also try the simplest "a" variant both joined and separated
-      add(base + 'a');
-      add(base + '_a');
-      add(base + '-a');
+      add(b);
     }
 
-    if (isImg) {
-      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+    const bases = [];
+    const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+    addVariantBases(base);
+    // Collect from candidates we already added that share same filename (handles repeated)
+    // (bases get populated via addVariantBases calling add(), so we re-derive them cleanly)
+    // Rebuild bases explicitly:
+    addBase(base);
+    const m1 = base.match(/^(.*?)([a-z])$/i);
+    const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
+    if (m1) { addBase(m1[1]); addBase(m1[1] + '_' + m1[2]); addBase(m1[1] + '-' + m1[2]); }
+    if (m2) { addBase(m2[1]); addBase(m2[1] + m2[2]); }
 
-      // Collect base variants first, then add extensions.
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
+    const exts = [];
+    const addExt = (e) => { if (e && !exts.includes(e)) exts.push(e); };
+    if (ext) addExt(ext);
+    // Add swap extensions
+    extPool.forEach(addExt);
 
-      // Ensure original base is also present.
-      addBase(base);
-
-      for (const b of bases) {
-        for (const e of imgExts) add(b + e);
-      }
-    }
-
-    if (isVid) {
-      const base = norm.replace(/\.(mp4|webm)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-      addBase(base);
-
-      for (const b of bases) {
-        add(b + '.mp4');
-        add(b + '.webm');
+    for (const b of bases) {
+      for (const e of exts) {
+        const file = b + e;
+        if (dir) add(dir + '/' + file);
+        add(galleryBase + '/' + file);
+        add(assetsBase + '/' + file);
       }
     }
 
-    // Only keep candidates that look like concrete asset files (avoid hammering the network
-    // with extension-less paths).
-    return candidates.filter(c =>
-      /^(https?:|data:|blob:)/i.test(c)
-      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
-    );
+    if (DEBUG) console.log('Candidates:', candidates);
+    return candidates;
   }
-
-  async function assetExists(relOrAbs) {
+async function assetExists(relOrAbs) {
     const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
     if (existsCache.has(u)) return existsCache.get(u);
 

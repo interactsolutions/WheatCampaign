@@ -931,3 +931,57 @@ a{ color: inherit; }
 @media (max-width: 860px){
   .drawerOverlay{ width: 100vw; }
 }
+
+
+/* =========================================================
+   Chart sizing fixes (Decision breakdown + Attendance donut)
+   The huge chart issue is caused by a full-width canvas with
+   no constrained wrapper height. These wrappers enforce a
+   consistent, compact chart size.
+   ========================================================= */
+.attendanceWrap,
+.decisionWrap{
+  height: 260px;
+  max-width: 620px;
+  margin: 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.attendanceWrap canvas,
+.decisionWrap canvas{
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 620px;
+  max-height: 260px;
+}
+
+/* Generic optional small chart grid (for extra pies/donuts) */
+.chartGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.chartTile{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background: rgba(255,255,255,.03);
+  padding:12px;
+}
+
+.chartTile h4{
+  margin:0 0 8px;
+  font-size:13px;
+}
+
+.chartWrap{
+  height: 220px;
+}
+
+.chartWrap canvas{
+  width:100% !important;
+  height:100% !important;
+}

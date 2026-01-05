@@ -2,7 +2,7 @@
   "assetsBase": "assets/",
   "galleryBase": "assets/gallery/",
   "placeholder": "assets/placeholder.svg",
-  "backgroundVideo": "assets/hero-1.mp4",
+  "backgroundVideo": "assets/bg.mp4",
   "headerSequence": [
     {
       "key": "bayer",

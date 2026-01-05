@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</title>
+  <meta name="description" content="Buctril Super – Wheat Activations 2025 dashboard: reach, conversion, sessions, media, and map insights for farmer education." />
+
+  <link rel="icon" type="image/png" href="assets/Interact.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css?v=20260105-4" />
+
+  <!-- Leaflet CSS with fallback chain -->
+  <link id="leafletCss" rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
+</head>
+
+<body>
+  <!-- Background video -->
+  <div class="bg">
+    <video class="bgVideo" id="bgVideo"
+           src="assets/bg.mp4"
+           autoplay muted loop playsinline
+           preload="metadata">
+    </video>
+    <div class="bgShade"></div>
+  </div>
+
+  <script>
+  // Background video: fall back across multiple filenames (GitHub Pages is case-sensitive).
+  (function () {
+    const v = document.getElementById('bgVideo');
+    if (!v) return;
+
+    const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4'];
+    let i = 0;
+
+    function setSrc(idx) {
+      v.src = candidates[idx];
+      v.load();
+      v.play().catch(() => { /* ignore autoplay block */ });
+    }
+
+    v.addEventListener('error', () => {
+      i += 1;
+      if (i < candidates.length) setSrc(i);
+    });
+
+    // Ensure play is attempted even if the browser delays autoplay.
+    v.addEventListener('canplay', () => {
+      v.play().catch(() => { /* ignore */ });
+    });
+
+    setSrc(0);
+  })();
+  </script>
+
+  <header class="topbar">
+    <div class="headerRow">
+      <div class="brand">
+        <a href="index.html" class="brandLogoLink" aria-label="Home">
+          <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png"
+               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
+          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png"
+               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
+        </a>
+        <div>
+          <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
+          <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
+        </div>
+        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
+      </div>
+
+      <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
+        <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
+        <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
+        <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
+        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
+        <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
+      </nav>
+    </div>
+
+    <!-- Hero slider -->
+    <div class="heroWrap" id="heroWrap">
+      <div class="heroPlayer" id="heroPlayer">
+        <video id="heroVideo" autoplay muted loop playsinline preload="metadata"></video>
+        <div class="heroOverlay"></div>
+
+        <div class="heroCaption">
+          <div id="heroTitle" class="heroTitle"></div>
+          <div id="heroSub" class="heroSub"></div>
+        </div>
+
+        <div class="heroControls">
+          <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
+          <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
+        </div>
+
+        <div class="heroThumbs" id="heroThumbs" aria-label="Hero thumbnails"></div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filtersHeader" id="filtersHeader">
+      <div class="filtersMeta" id="filtersMeta">Filters</div>
+      <button class="btn btnGhost btnSmall" id="filtersToggle" type="button"
+              aria-expanded="true" aria-controls="filtersPanel">Filters ▾</button>
+    </div>
+
+    <div class="controls" id="filtersPanel">
+      <div class="control control--campaign">
+        <label for="campaignSelect">Campaign</label>
+        <select id="campaignSelect"></select>
+      </div>
+
+      <div class="control control--dates">
+        <label>Date range</label>
+        <div class="rangeRow">
+          <input id="dateFrom" type="date" />
+          <span class="muted">to</span>
+          <input id="dateTo" type="date" />
+          <button class="btn" id="applyBtn">Apply</button>
+          <button class="btn btnGhost" id="resetBtn">Reset</button>
+          <button class="btn btnGhost" id="exportBtn">Export CSV</button>
+        </div>
+        <div id="rangeHint" class="smallMuted"></div>
+      </div>
+
+      <div class="control control--search">
+        <label for="nameFilter">Farmer name</label>
+        <input id="nameFilter" type="text" placeholder="Search by host name" />
+      </div>
+
+      <div class="control control--search">
+        <label for="cityFilter">Territory</label>
+        <input id="cityFilter" type="text" placeholder="Search by territory" />
+      </div>
+
+      <div class="control control--search">
+        <label for="regionFilter">Region (REG)</label>
+        <input id="regionFilter" type="text" placeholder="Search by region" list="regionOptions" />
+        <datalist id="regionOptions">
+          <option value="SKR">SKR</option>
+          <option value="RYK">RYK</option>
+          <option value="DGK">DGK</option>
+          <option value="FSD">FSD</option>
+          <option value="GUJ">GUJ</option>
+        </datalist>
+      </div>
+
+      <div class="control control--search">
+        <label for="districtFilter">District</label>
+        <input id="districtFilter" type="text" placeholder="Search by district" />
+      </div>
+
+      <div class="control control--score">
+        <label>Score range</label>
+        <div class="scoreRangeRow">
+          <input id="scoreMin" type="number" placeholder="Min score" min="0" max="100" step="0.1" />
+          <span class="muted">to</span>
+          <input id="scoreMax" type="number" placeholder="Max score" min="0" max="100" step="0.1" />
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" class="">
+    <section class="tabPanel grid2" data-tab="summary" id="summary">
+      <section class="card">
+        <h2>Executive summary</h2>
+        <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
+
+        <div class="kpis">
+          <div class="kpi kpi--sessions"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
+          <div class="kpi kpi--farmers"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
+          <div class="kpi kpi--acres"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
+          <div class="kpi kpi--estacres"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
+          <div class="kpi kpi--awareness"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
+          <div class="kpi kpi--definite"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
+          <div class="kpi kpi--used"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
+          <div class="kpi kpi--score"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
+        </div>
+
+        <div id="lastUpdated" class="smallMuted"></div>
+        <div id="summaryTakeaways" class="summaryTakeaways"></div>
+
+        <div class="divider"></div>
+
+        <details open>
+          <summary>Top sessions by score</summary>
+          <div class="tableWrap">
+            <table class="sessionTable" id="topSessionsTable">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Open</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+
+        <div class="divider"></div>
+
+        
+<h3>Donut insights</h3>
+<div class="donutRow" id="coreDonutsRow" data-autoscroll="1" data-speed="0.22">
+  <div class="chartTile">
+    <h4>Sessions by farmers attendance</h4>
+    <div class="chartWrap attendanceWrap">
+      <canvas id="attendanceDonut"></canvas>
+    </div>
+  </div>
+
+  <div class="chartTile">
+    <h4>Decision breakdown</h4>
+    <div class="chartWrap decisionWrap">
+      <canvas id="decisionPie"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+        <h3>Additional breakdowns</h3>
+
+        <div class="chartGrid donutRow" id="breakdownsRow" data-autoscroll="1" data-speed="0.25">
+          <div class="chartTile">
+            <h4>Farmers by region</h4>
+            <div class="chartWrap">
+              <canvas id="regionPie"></canvas>
+            </div>
+          </div>
+
+          <div class="chartTile">
+            <h4>Farmers by territory</h4>
+            <div class="chartWrap">
+              <canvas id="territoryPie"></canvas>
+            </div>
+          </div>
+
+          <div class="chartTile">
+            <h4>Session score distribution</h4>
+            <div class="chartWrap">
+              <canvas id="scoreBandsDonut"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Outcome funnel and priorities</h2>
+        <div class="muted">Percentages are weighted by farmers present (or session farmers if sheet summaries are unavailable).</div>
+
+        <div id="funnel" class="funnel">
+          <div class="muted">Loading…</div>
+        </div>
+
+        <div class="divider"></div>
+        <h3>Where to focus next</h3>
+        <div class="smallMuted">Lowest definite intent first (tie-breaker: lower score). Use this list to plan follow-ups, dealer touchpoints, and demo plots.</div>
+
+        <div class="actionsRow" style="margin:8px 0">
+          <button class="btn btnGhost btnSmall" id="priorityExportBtn">Export CSV</button>
+        </div>
+
+        <details open>
+          <summary>Priority districts</summary>
+          <div class="tableWrap">
+            <table class="sessionTable" id="priorityDistrictsTable">
+              <thead>
+                <tr>
+                  <th>District</th><th>Sessions</th><th>Farmers</th><th>Acres</th><th>Awareness</th><th>Definite</th><th>Avg score</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+
+        <div class="divider"></div>
+        
+<h3>Drivers &amp; barriers (donut)</h3>
+<div class="donutRow" id="driversBarriersRow" data-autoscroll="1" data-speed="0.22">
+  <div class="chartTile donutTileWide">
+    <h4>Top adoption drivers</h4>
+    <div class="chartWrap">
+      <canvas id="driversDonut"></canvas>
+    </div>
+    <div id="driversLegend" class="donutLegend"><div class="muted">Loading…</div></div>
+  </div>
+
+  <div class="chartTile donutTileWide">
+    <h4>Top barriers</h4>
+    <div class="chartWrap">
+      <canvas id="barriersDonut"></canvas>
+    </div>
+    <div id="barriersLegend" class="donutLegend"><div class="muted">Loading…</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+        <h3>Data readiness</h3>
+        <div id="statusBox" class="status">Loading…</div>
+        <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
+      </section>
+    </section>
+
+    <section class="tabPanel card mapCard" data-tab="map" id="map">
+      <div class="mapHeader">
+        <div>
+          <h2>Map view</h2>
+          <div class="muted">Markers reflect the currently filtered date range.</div>
+        </div>
+        <div id="mapStatus" class="badge">Loading…</div>
+      </div>
+      <div id="leafletMap" class="map">Loading map…</div>
+      <div class="mapControls" style="margin:12px 0; text-align:right;">
+        <button class="btn btnGhost btnSmall" id="toggleHeat">Show Heatmap</button>
+      </div>
+      <div class="divider"></div>
+      <div id="mapFallback" class="smallMuted hidden">
+        Map library could not be loaded. Use the Sessions table and “Open in Google Maps” links in details.
+      </div>
+    </section>
+
+    <section class="tabPanel card" data-tab="sessions" id="sessions">
+      <div class="row">
+        <h2>Sessions</h2>
+        <div class="muted">Click a row to preview; use buttons to open sheet/details.</div>
+      </div>
+      <div class="tableWrap">
+        <table class="sessionTable" id="sessionsTable">
+          <thead>
+            <tr>
+              <th>Date</th><th>Sheet</th><th>District</th><th>Village</th><th>Farmers</th><th>Acres</th><th>Score</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tabPanel card" data-tab="media" id="media">
+      <div class="row">
+        <h2>Media</h2>
+        <div class="muted">Thumbnails are pulled from assets/gallery. Missing files will fall back to placeholders.</div>
+      </div>
+
+      <div class="mediaToolbar" role="region" aria-label="Media controls">
+        <div class="mediaSeg" role="group" aria-label="Media type">
+          <button class="segBtn segBtn--active" type="button" data-media-type="all">All</button>
+          <button class="segBtn" type="button" data-media-type="images">Images</button>
+          <button class="segBtn" type="button" data-media-type="videos">Videos</button>
+        </div>
+        <div class="mediaSearch">
+          <input id="mediaSearch" type="search" placeholder="Search media (sheet, district, village)" />
+        </div>
+        <div class="mediaSort">
+          <label class="srOnly" for="mediaSort">Sort</label>
+          <select id="mediaSort">
+            <option value="newest" selected>Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="mediaGrid" class="mediaGrid"></div>
+      <div class="mediaFooter">
+        <button class="btn btnGhost" id="mediaLoadMore" type="button">Load more</button>
+        <div class="smallMuted" id="mediaCount"></div>
+      </div>
+    </section>
+
+    <section class="tabPanel card" data-tab="feedback" id="feedback">
+      <h2>Feedback</h2>
+      <div class="muted">We value your feedback. Send us a message via WhatsApp or email by providing the appropriate contact information below.</div>
+      <div class="divider"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="control">
+            <label for="fbPhone">Phone (WhatsApp)</label>
+            <input type="tel" id="fbPhone" placeholder="Enter phone number" />
+          </div>
+          <div class="control">
+            <label for="fbEmail">Email</label>
+            <input type="email" id="fbEmail" placeholder="Enter email address" />
+          </div>
+          <div class="control">
+            <label for="fbMessage">Message</label>
+            <textarea id="fbMessage" rows="6" placeholder="Type your feedback here…"></textarea>
+          </div>
+          <div class="drawerActions">
+            <button class="btn" id="fbSendWhatsApp">Send via WhatsApp</button>
+            <button class="btn btnGhost" id="fbSendEmail">Send via Email</button>
+          </div>
+          <div id="fbFeedbackMsg" class="smallMuted"></div>
+        </div>
+
+        <div class="card">
+          <h3>Quick links</h3>
+          <ul class="muted">
+            <li><a href="healthcheck.html" class="link">Healthcheck</a></li>
+            <li><a href="sheets.html" class="link">Sheets browser</a></li>
+            <li><a href="report.html" class="link">Campaign analysis report</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" aria-label="Footer">
+    <div class="footerBrands">
+      <div class="brandPill">
+        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
+        <span>INTERACT Solutions</span>
+      </div>
+      <div class="brandPill">
+        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+        <span>Bayer Crop Science</span>
+      </div>
+    </div>
+    <div class="smallMuted">This dashboard is designed to be static-host friendly and offline-friendly. Use the Healthcheck to validate data and asset availability.</div>
+  </footer>
+
+  <div class="drawerOverlay hidden" id="drawerOverlay" aria-hidden="true"></div>
+  <aside class="drawer hidden" id="sessionDrawer" aria-hidden="true" aria-label="Session details">
+    <div class="drawerTop">
+      <div>
+        <div class="drawerTitle" id="drawerTitle">Session</div>
+        <div class="drawerSub" id="drawerSub">—</div>
+      </div>
+      <button class="iconBtn" id="drawerClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="drawerBody">
+      <div class="kpis kpis--compact">
+        <div class="kpi"><div class="kpiLabel">Farmers</div><div class="kpiVal" id="dFarmers">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Acres</div><div class="kpiVal" id="dAcres">—</div></div>
+        <div class="kpi"><div class="kpiLabel">Score</div><div class="kpiVal" id="dScore">—</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div id="dMeta" class="muted"></div>
+
+      <div class="divider"></div>
+      <h3>Outcomes</h3>
+      <div id="dOutcomes" class="muted">—</div>
+
+      <div class="divider"></div>
+      <h3>Recommended next actions</h3>
+      <ul id="dActions" class="bullets"><li class="muted">—</li></ul>
+
+      <div class="divider"></div>
+      <div class="drawerActions">
+        <a class="btn" id="dOpenSheet" href="#">Open sheet</a>
+        <a class="btn btnGhost" id="dOpenDetails" href="#">Open details</a>
+        <a class="btn btnGhost" id="dOpenMaps" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+
+      <div class="divider"></div>
+      <h3>Sheet summary</h3>
+      <div id="dSheetSummary" class="muted">Loading…</div>
+
+      <div class="divider"></div>
+      <h3>Media</h3>
+      <div id="dMedia" class="mediaRow"></div>
+    </div>
+  </aside>
+
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
+    <div class="lightboxInner">
+      <div class="lightboxTop">
+        <div id="lbTitle" class="muted">Media</div>
+        <button class="iconBtn" id="lbClose" aria-label="Close">✕</button>
+      </div>
+      <div class="lightboxBody" id="lbBody"></div>
+    </div>
+  </div>
+
+  <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script defer src="dashboard.js?v=20260105-4"></script>
+
+
+  <!-- Hero slider (auto-advance) -->
+  <script>
+  (function() {
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const videos = [
+      { file: 'assets/atlantis.mp4', title: 'Atlantis', caption: 'Atlantis field application' },
+      { file: 'assets/bayer.mp4', title: 'Bayer', caption: 'Bayer promotional clip' },
+      { file: 'assets/buctril.mp4', title: 'Buctril', caption: 'Buctril product demo' },
+      { file: 'assets/interact.mp4', title: 'Interact', caption: 'Interact Solutions overview' }
+    ];
+
+    let current = 0;
+    let timer = null;
+
+    const heroVideo = document.getElementById('heroVideo');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSub   = document.getElementById('heroSub');
+    const thumbs    = document.getElementById('heroThumbs');
+    const prevBtn   = document.getElementById('heroPrev');
+    const nextBtn   = document.getElementById('heroNext');
+
+    if (!heroVideo || !thumbs) return;
+
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    function start() {
+      if (prefersReduced) return;
+      stop();
+      timer = setInterval(() => setHero(current + 1), 6500);
+    }
+
+    function setHero(i) {
+      current = (i + videos.length) % videos.length;
+      const v = videos[current];
+
+      heroVideo.muted = true;
+      heroVideo.playsInline = true;
+      heroVideo.src = v.file;
+      heroVideo.load();
+
+      // Attempt autoplay; if blocked, still rotate
+      heroVideo.play().catch(() => { /* ignore */ });
+
+      if (heroTitle) heroTitle.textContent = v.title;
+      if (heroSub) heroSub.textContent = v.caption;
+
+      Array.from(thumbs.children).forEach((el, idx) => {
+        el.classList.toggle('active', idx === current);
+      });
+    }
+
+    // Build thumbs
+    videos.forEach((v, idx) => {
+      const d = document.createElement('div');
+      d.className = 'heroThumb';
+      d.innerHTML = `<video autoplay loop muted playsinline preload="metadata" src="${v.file}"></video><div class="badge">${idx+1}</div>`;
+      d.addEventListener('click', () => { setHero(idx); start(); });
+      thumbs.appendChild(d);
+    });
+
+    prevBtn?.addEventListener('click', () => { setHero(current - 1); start(); });
+    nextBtn?.addEventListener('click', () => { setHero(current + 1); start(); });
+
+    // Pause on hover/focus
+    const heroPlayer = document.getElementById('heroPlayer');
+    heroPlayer?.addEventListener('mouseenter', stop);
+    heroPlayer?.addEventListener('mouseleave', start);
+    heroPlayer?.addEventListener('focusin', stop);
+    heroPlayer?.addEventListener('focusout', start);
+
+    // Pause if tab hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else start();
+    });
+
+    setHero(0);
+    start();
+  })();
+  </script>
+
+  <!-- Theme toggle -->
+  <script>
+  (function() {
+    const htmlEl = document.documentElement;
+    const toggleBtn = document.getElementById('themeToggle');
+
+    function applyTheme(t) {
+      htmlEl.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      if (toggleBtn) toggleBtn.textContent = (t === 'light') ? '🌙' : '☀';
+    }
+
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') {
+      applyTheme(saved);
+    } else {
+      const hr = new Date().getHours();
+      applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
+    }
+
+    toggleBtn?.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme');
+      applyTheme(current === 'light' ? 'dark' : 'light');
+    });
+  })();
+  </script>
+
+  <!-- Filters collapse -->
+  <script>
+  (function () {
+    const body = document.body;
+    const btn = document.getElementById('filtersToggle');
+    const panel = document.getElementById('filtersPanel');
+    const meta = document.getElementById('filtersMeta');
+
+    if (!btn || !panel) return;
+
+    const KEY = 'filtersCollapsed';
+
+    function fmtDate(iso) {
+      // iso expected: YYYY-MM-DD
+      if (!iso || typeof iso !== 'string') return '';
+      const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return iso;
+      return `${m[3]}/${m[2]}/${m[1]}`;
+    }
+
+    function updateMeta() {
+      if (!meta) return;
+      const camp = document.getElementById('campaignSelect');
+      const from = document.getElementById('dateFrom');
+      const to = document.getElementById('dateTo');
+
+      const campText = camp && camp.selectedOptions && camp.selectedOptions[0]
+        ? camp.selectedOptions[0].textContent.trim()
+        : 'Campaign';
+
+      const fromText = from?.value ? fmtDate(from.value) : '';
+      const toText = to?.value ? fmtDate(to.value) : '';
+
+      const range = (fromText && toText) ? `${fromText} → ${toText}` : '';
+      meta.textContent = range ? `${campText} • ${range}` : campText;
+    }
+
+    function setCollapsed(collapsed, persist) {
+      body.classList.toggle('filters-collapsed', !!collapsed);
+      btn.setAttribute('aria-expanded', (!collapsed).toString());
+      btn.textContent = collapsed ? 'Filters ▸' : 'Filters ▾';
+      if (persist) localStorage.setItem(KEY, collapsed ? '1' : '0');
+      updateMeta();
+    }
+
+    // Initialize state (localStorage wins; else auto-collapse on short viewports)
+    const saved = localStorage.getItem(KEY);
+    if (saved === '1' || saved === '0') {
+      setCollapsed(saved === '1', false);
+    } else {
+      const auto = (window.innerHeight < 760) || (window.innerWidth < 980);
+      setCollapsed(auto, false);
+    }
+
+    btn.addEventListener('click', () => {
+      const isCollapsed = body.classList.contains('filters-collapsed');
+      setCollapsed(!isCollapsed, true);
+    });
+
+    // Keep the summary in sync as dashboard.js populates inputs
+    const bind = (id, ev) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(ev, () => setTimeout(updateMeta, 0));
+    };
+
+    bind('campaignSelect', 'change');
+    bind('dateFrom', 'change');
+    bind('dateTo', 'change');
+    bind('applyBtn', 'click');
+    bind('resetBtn', 'click');
+
+    // First paint after dashboard initializes
+    window.addEventListener('load', () => setTimeout(updateMeta, 50));
+  })();
+  </script>
+
+</body>
+</html>

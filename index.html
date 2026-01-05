@@ -60,7 +60,6 @@
     setSrc(0);
   })();
   </script>
-</div>
 
   <header class="topbar">
     <div class="headerRow">
@@ -108,7 +107,13 @@
     </div>
 
     <!-- Filters -->
-    <div class="controls">
+    <div class="filtersHeader" id="filtersHeader">
+      <div class="filtersMeta" id="filtersMeta">Filters</div>
+      <button class="btn btnGhost btnSmall" id="filtersToggle" type="button"
+              aria-expanded="true" aria-controls="filtersPanel">Filters ▾</button>
+    </div>
+
+    <div class="controls" id="filtersPanel">
       <div class="control control--campaign">
         <label for="campaignSelect">Campaign</label>
         <select id="campaignSelect"></select>
@@ -581,5 +586,82 @@
     });
   })();
   </script>
+
+  <!-- Filters collapse -->
+  <script>
+  (function () {
+    const body = document.body;
+    const btn = document.getElementById('filtersToggle');
+    const panel = document.getElementById('filtersPanel');
+    const meta = document.getElementById('filtersMeta');
+
+    if (!btn || !panel) return;
+
+    const KEY = 'filtersCollapsed';
+
+    function fmtDate(iso) {
+      // iso expected: YYYY-MM-DD
+      if (!iso || typeof iso !== 'string') return '';
+      const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return iso;
+      return `${m[3]}/${m[2]}/${m[1]}`;
+    }
+
+    function updateMeta() {
+      if (!meta) return;
+      const camp = document.getElementById('campaignSelect');
+      const from = document.getElementById('dateFrom');
+      const to = document.getElementById('dateTo');
+
+      const campText = camp && camp.selectedOptions && camp.selectedOptions[0]
+        ? camp.selectedOptions[0].textContent.trim()
+        : 'Campaign';
+
+      const fromText = from?.value ? fmtDate(from.value) : '';
+      const toText = to?.value ? fmtDate(to.value) : '';
+
+      const range = (fromText && toText) ? `${fromText} → ${toText}` : '';
+      meta.textContent = range ? `${campText} • ${range}` : campText;
+    }
+
+    function setCollapsed(collapsed, persist) {
+      body.classList.toggle('filters-collapsed', !!collapsed);
+      btn.setAttribute('aria-expanded', (!collapsed).toString());
+      btn.textContent = collapsed ? 'Filters ▸' : 'Filters ▾';
+      if (persist) localStorage.setItem(KEY, collapsed ? '1' : '0');
+      updateMeta();
+    }
+
+    // Initialize state (localStorage wins; else auto-collapse on short viewports)
+    const saved = localStorage.getItem(KEY);
+    if (saved === '1' || saved === '0') {
+      setCollapsed(saved === '1', false);
+    } else {
+      const auto = (window.innerHeight < 760) || (window.innerWidth < 980);
+      setCollapsed(auto, false);
+    }
+
+    btn.addEventListener('click', () => {
+      const isCollapsed = body.classList.contains('filters-collapsed');
+      setCollapsed(!isCollapsed, true);
+    });
+
+    // Keep the summary in sync as dashboard.js populates inputs
+    const bind = (id, ev) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(ev, () => setTimeout(updateMeta, 0));
+    };
+
+    bind('campaignSelect', 'change');
+    bind('dateFrom', 'change');
+    bind('dateTo', 'change');
+    bind('applyBtn', 'click');
+    bind('resetBtn', 'click');
+
+    // First paint after dashboard initializes
+    window.addEventListener('load', () => setTimeout(updateMeta, 50));
+  })();
+  </script>
+
 </body>
 </html>

@@ -1169,3 +1169,42 @@ a{ color: inherit; }
 @media (max-height: 720px){
   .heroPlayer{ height: clamp(150px, 20vh, 210px); }
 }
+
+
+/* =======================================================================
+   Patch v5 – Filters collapse button
+   ======================================================================= */
+
+.filtersHeader{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.filtersMeta{
+  font-size:12px;
+  color: var(--muted2);
+  font-weight:700;
+  letter-spacing:.2px;
+
+  /* Prevent the header row from growing taller */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+body.filters-collapsed .topbar .controls{
+  display:none !important;
+}
+
+@media (max-width: 560px){
+  .filtersHeader{
+    flex-wrap:wrap;
+    align-items:flex-start;
+  }
+  .filtersMeta{
+    flex: 1 1 100%;
+  }
+}

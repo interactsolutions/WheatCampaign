@@ -2,8 +2,13 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-05.4";
+  const WHEATCAMPAIGN_BUILD = "2026-01-05.6";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
+
+  const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
+  function chartAnimation(){
+    return REDUCE_MOTION ? false : { duration: 1500, easing: "easeOutBounce" };
+  }
 
   // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
   window.addEventListener("error", (e) => {
@@ -757,7 +762,36 @@
     const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
     const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
 
-    // ---------- Funnel (donut charts) ----------
+    
+    // Summary progress: treat awareness as the primary "education progress" proxy.
+    const progEl = $$('#summaryProgress');
+    if (progEl) {
+      const pctVal = Number.isFinite(awarenessAvg) ? Math.max(0, Math.min(100, Math.round(awarenessAvg))) : null;
+      if (pctVal == null) {
+        progEl.innerHTML = '';
+      } else {
+        progEl.innerHTML = `
+          <div class="progressContainer">
+            <div class="progressTrack"><div class="progressBar" style="width:${pctVal}%"></div></div>
+            <div class="smallMuted progressNote">${pctVal}% of target farmers educated—INTERACT on track.</div>
+          </div>`;
+      }
+    }
+
+    // Push headline KPIs into the hero captions (optional, if hero slider is present).
+    try {
+      if (window.WHEAT_HERO && typeof window.WHEAT_HERO.updateStats === 'function') {
+        window.WHEAT_HERO.updateStats({
+          sessions: fs.length,
+          farmers: Number.isFinite(totalFarmers) ? totalFarmers : null,
+          awareness: Number.isFinite(awarenessAvg) ? Math.round(awarenessAvg) : null,
+          definite: Number.isFinite(definiteAvg) ? Math.round(definiteAvg) : null,
+          score: Number.isFinite(scoreAvg) ? Number(scoreAvg.toFixed(1)) : null
+        });
+      }
+    } catch (e) { /* ignore */ }
+
+// ---------- Funnel (donut charts) ----------
     const funnelEl = $$('#funnel');
     if (funnelEl) {
       const items = [
@@ -863,6 +897,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           plugins: {
             legend: {
               position: 'right',
@@ -1062,6 +1097,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           cutout: '55%',
           plugins: {
             legend: {
@@ -1149,6 +1185,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           cutout: '55%',
           plugins: {
             legend: {
@@ -1184,13 +1221,15 @@
         const district = esc(s.district || '');
         const village = esc(s.village || s.spot || '');
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
+        const scoreNum = Number(s.score||0);
+        const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
         const si = idx?.get(s.sheetRef);
         const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number(s?.metrics?.farmers)) ? fmtInt(s.metrics.farmers) : '—');
         const a = si ? fmt1(si.acres) : (Number.isFinite(Number(s?.metrics?.wheatAcres)) ? fmt1(s.metrics.wheatAcres) : '—');
         const href = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
         return `<tr data-session-id="${sid}">
           <td>${date}</td>
-          <td><span class="badge">${sheet}</span></td>
+          <td><span class="${badgeClass}">${sheet}</span></td>
           <td>${district}</td>
           <td>${village}</td>
           <td>${f}</td>
@@ -1378,6 +1417,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           cutout: '60%',
           plugins: {
             legend: { display: false },
@@ -2389,10 +2429,17 @@
       row.addEventListener('mouseenter', () => { paused = true; });
       row.addEventListener('mouseleave', () => { paused = false; });
 
+      // Pause auto-scroll on pointer interactions (mouse/touch/pen)
+      row.addEventListener('pointerdown', () => { paused = true; });
+      row.addEventListener('pointerup', () => { paused = false; });
+      row.addEventListener('pointercancel', () => { paused = false; });
+
       row.addEventListener('focusin', () => { paused = true; });
       row.addEventListener('focusout', () => { paused = false; });
 
       row.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+      row.addEventListener('touchend', () => { paused = false; }, { passive: true });
+      row.addEventListener('touchcancel', () => { paused = false; }, { passive: true });
 
       row.addEventListener('wheel', () => {
         paused = true;

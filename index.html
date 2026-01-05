@@ -1,90 +1,84 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Set a descriptive title aligned with Bayer’s initiative -->
+
   <title>Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</title>
-  <!-- Set the Interact logo as the site favicon so the brand appears in the browser tab -->
-  <!-- Use the Interact logo as the site favicon so the brand appears in the browser tab -->
+  <meta name="description" content="Buctril Super – Wheat Activations 2025 dashboard: reach, conversion, sessions, media, and map insights for farmer education." />
+
   <link rel="icon" type="image/png" href="assets/Interact.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260101" />
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css?v=20260105" />
+
   <!-- Leaflet CSS with fallback chain -->
   <link id="leafletCss" rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
 </head>
+
 <body>
   <!-- Background video -->
   <div class="bg">
-    <!--
-      Use a full‑screen looping video for the page backdrop. A fallback source is
-      provided via the onerror attribute so that if the primary file
-      (bg.mp4) is missing or fails to load, the background will gracefully
-      switch to the Interact demo video. Both sources are muted and set to
-      autoplay/loop to provide a continuous ambient animation without
-      requiring user interaction.
-    -->
-    <video class="bgVideo" src="assets/bg.mp4" autoplay muted loop playsinline
+    <video class="bgVideo"
+           src="assets/hero-1.mp4"
+           autoplay muted loop playsinline
+           preload="metadata"
            onerror="this.onerror=null; this.src='assets/interact.mp4'">
     </video>
     <div class="bgShade"></div>
   </div>
+
   <header class="topbar">
-    <!-- Group the brand and the tab navigation into a single row. This moves the primary
-         dashboard tabs up alongside the logo and theme toggle, improving accessibility
-         and freeing vertical space. -->
     <div class="headerRow">
       <div class="brand">
-        <!-- Display the Bayer and Buctril logos side‑by‑side. Both images link back to the home page. -->
         <a href="index.html" class="brandLogoLink" aria-label="Home">
-          <!-- Bayer Crop Science logo; falls back silently if unavailable -->
-          <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png" alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
-          <!-- Buctril Super logo; falls back silently if unavailable -->
-          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png" alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
+          <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png"
+               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
+          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png"
+               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
         </a>
         <div>
-          <!-- Updated dashboard title and subtitle reflecting Bayer’s initiative -->
           <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
           <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
-        <!-- Theme toggle button; displays sun/moon icon depending on current theme -->
         <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
       </div>
+
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
         <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
         <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
         <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
         <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
         <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-        <!-- Looker Insights tab removed (report not in use) -->
       </nav>
     </div>
 
-    <!-- Hero video slider moved inside the header. Placing the hero before the controls
-         allows the media content to sit above the date and campaign filters. When
-         the page is scrolled the sticky header will keep the controls visible
-         while the hero naturally scrolls out of view. -->
+    <!-- Hero slider -->
     <div class="heroWrap" id="heroWrap">
       <div class="heroPlayer" id="heroPlayer">
-        <video id="heroVideo" autoplay muted loop playsinline></video>
+        <video id="heroVideo" autoplay muted loop playsinline preload="metadata"></video>
         <div class="heroOverlay"></div>
+
         <div class="heroCaption">
           <div id="heroTitle" class="heroTitle"></div>
           <div id="heroSub" class="heroSub"></div>
         </div>
-        <!-- Controls and thumbnail icons overlay the video. The previous/next buttons
-             remain in the top right corner, while the thumbnail icons line up along
-             the bottom edge. -->
+
         <div class="heroControls">
           <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
           <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
         </div>
-        <div class="heroThumbs" id="heroThumbs"></div>
+
+        <div class="heroThumbs" id="heroThumbs" aria-label="Hero thumbnails"></div>
       </div>
     </div>
 
+    <!-- Filters -->
     <div class="controls">
       <div class="control">
         <label for="campaignSelect">Campaign</label>
@@ -93,10 +87,6 @@
 
       <div class="control">
         <label>Date range</label>
-        <!-- The entire range (from, to) and all action buttons live inside one flex row. This
-             ensures a single-line layout on wider screens while still wrapping cleanly
-             on narrow viewports. The Export CSV button was moved into the same row as
-             Apply/Reset to avoid dropping to a separate line. -->
         <div class="rangeRow">
           <input id="dateFrom" type="date" />
           <span class="muted">to</span>
@@ -107,19 +97,17 @@
         </div>
         <div id="rangeHint" class="smallMuted"></div>
       </div>
-      <!-- Filters for farmer (host) name and city -->
+
       <div class="control">
         <label for="nameFilter">Farmer name</label>
         <input id="nameFilter" type="text" placeholder="Search by host name" />
       </div>
+
       <div class="control">
         <label for="cityFilter">Territory</label>
         <input id="cityFilter" type="text" placeholder="Search by territory" />
       </div>
 
-      <!-- New region filter based on RGN codes (column B of the Initial sheet).  Users can
-           search by region code (e.g. SKR, RYK, DGK, FSD, GUJ). A datalist offers
-           suggestions for common codes. -->
       <div class="control">
         <label for="regionFilter">Region (REG)</label>
         <input id="regionFilter" type="text" placeholder="Search by region" list="regionOptions" />
@@ -132,13 +120,11 @@
         </datalist>
       </div>
 
-      <!-- Additional filters: allow filtering by district and by score range. These help
-           campaign managers quickly narrow down sessions based on geography and
-           performance metrics. -->
       <div class="control">
         <label for="districtFilter">District</label>
         <input id="districtFilter" type="text" placeholder="Search by district" />
       </div>
+
       <div class="control">
         <label>Score range</label>
         <div class="scoreRangeRow">
@@ -150,18 +136,13 @@
     </div>
   </header>
 
-  
-
   <main id="app" class="">
     <section class="tabPanel grid2" data-tab="summary" id="summary">
       <section class="card">
         <h2>Executive summary</h2>
         <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
-        
+
         <div class="kpis">
-          <!-- Each KPI tile is given a specific class for color-coded icon dots. These
-               classes correspond to CSS rules that prepend a colored circle before
-               the label text, adding visual variety without external icon assets. -->
           <div class="kpi kpi--sessions"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
           <div class="kpi kpi--farmers"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
           <div class="kpi kpi--acres"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
@@ -172,20 +153,11 @@
           <div class="kpi kpi--score"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
 
-        <!-- Last updated timestamp and summary takeaways are inserted here. The date
-             reflects the most recent session loaded, reassuring users about data
-             freshness. The takeaways card surfaces the top two focus districts
-             based on the priority table, giving managers an at‑a‑glance view of
-             where to act next. -->
         <div id="lastUpdated" class="smallMuted"></div>
         <div id="summaryTakeaways" class="summaryTakeaways"></div>
 
         <div class="divider"></div>
-        <!-- Collapse the top sessions list into a <details> element. When open, the
-             table is visible; when closed, only the summary is shown. This
-             replicates the collapsible sections found in Excel dashboards
-             while preserving accessibility semantics. The summary text
-             indicates that the table lists the highest‑scoring sessions. -->
+
         <details open>
           <summary>Top sessions by score</summary>
           <div class="tableWrap">
@@ -200,49 +172,48 @@
           </div>
         </details>
 
-        <!-- Attendance donut chart: shows distribution of farmers present per session as a percentage
-             of the total farmers reached. The chart is rendered via Chart.js in dashboard.js.
-             The canvas element will be hidden if no data is available. -->
         <div class="divider"></div>
+
         <h3>Sessions by farmers attendance</h3>
-        <div class="attendanceWrap">
+        <!-- Use chartWrap so CSS can constrain size consistently -->
+        <div class="chartWrap attendanceWrap">
           <canvas id="attendanceDonut"></canvas>
         </div>
-        <!-- Decision breakdown pie chart: visualises farmer decisions (definite, maybe and not interested) across all sessions. -->
+
         <div class="divider"></div>
+
         <h3>Decision breakdown</h3>
-        <div class="decisionWrap">
+        <div class="chartWrap decisionWrap">
           <canvas id="decisionPie"></canvas>
         </div>
+
         <div class="divider"></div>
-<h3>Additional breakdowns</h3>
+        <h3>Additional breakdowns</h3>
 
-<div class="chartGrid">
-  <div class="chartTile">
-    <h4>Farmers by region</h4>
-    <div class="chartWrap">
-      <canvas id="regionPie"></canvas>
-    </div>
-  </div>
+        <div class="chartGrid">
+          <div class="chartTile">
+            <h4>Farmers by region</h4>
+            <div class="chartWrap">
+              <canvas id="regionPie"></canvas>
+            </div>
+          </div>
 
-  <div class="chartTile">
-    <h4>Farmers by territory</h4>
-    <div class="chartWrap">
-      <canvas id="territoryPie"></canvas>
-    </div>
-  </div>
+          <div class="chartTile">
+            <h4>Farmers by territory</h4>
+            <div class="chartWrap">
+              <canvas id="territoryPie"></canvas>
+            </div>
+          </div>
 
-  <div class="chartTile">
-    <h4>Session score distribution</h4>
-    <div class="chartWrap">
-      <canvas id="scoreBandsDonut"></canvas>
-    </div>
-  </div>
-</div>
-
+          <div class="chartTile">
+            <h4>Session score distribution</h4>
+            <div class="chartWrap">
+              <canvas id="scoreBandsDonut"></canvas>
+            </div>
+          </div>
+        </div>
       </section>
 
-      
       <section class="card">
         <h2>Outcome funnel and priorities</h2>
         <div class="muted">Percentages are weighted by farmers present (or session farmers if sheet summaries are unavailable).</div>
@@ -254,14 +225,11 @@
         <div class="divider"></div>
         <h3>Where to focus next</h3>
         <div class="smallMuted">Lowest definite intent first (tie-breaker: lower score). Use this list to plan follow-ups, dealer touchpoints, and demo plots.</div>
-        <!-- Provide a simple export button for managers who wish to take this
-             prioritization table offline. -->
+
         <div class="actionsRow" style="margin:8px 0">
           <button class="btn btnGhost btnSmall" id="priorityExportBtn">Export CSV</button>
         </div>
-        <!-- Make the priority districts table collapsible to reduce visual
-             clutter. When collapsed, users see only the summary row; expanding
-             reveals the full list of districts. -->
+
         <details open>
           <summary>Priority districts</summary>
           <div class="tableWrap">
@@ -281,12 +249,10 @@
         <div class="grid2">
           <div class="card card--flat">
             <h3>Top adoption drivers</h3>
-            <!-- Bar chart container for drivers. Bars will be drawn via JS -->
             <div id="driversChart" class="barChart"><div class="muted">Loading…</div></div>
           </div>
           <div class="card card--flat">
             <h3>Top barriers</h3>
-            <!-- Bar chart container for barriers -->
             <div id="barriersChart" class="barChart"><div class="muted">Loading…</div></div>
           </div>
         </div>
@@ -296,7 +262,6 @@
         <div id="statusBox" class="status">Loading…</div>
         <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
       </section>
-
     </section>
 
     <section class="tabPanel card mapCard" data-tab="map" id="map">
@@ -308,7 +273,6 @@
         <div id="mapStatus" class="badge">Loading…</div>
       </div>
       <div id="leafletMap" class="map">Loading map…</div>
-      <!-- Heatmap toggle button allows switching between marker and heatmap layers. -->
       <div class="mapControls" style="margin:12px 0; text-align:right;">
         <button class="btn btnGhost btnSmall" id="toggleHeat">Show Heatmap</button>
       </div>
@@ -340,7 +304,7 @@
         <h2>Media</h2>
         <div class="muted">Thumbnails are pulled from assets/gallery. Missing files will fall back to placeholders.</div>
       </div>
-      <!-- Media toolbar: type filter, search, sort and progressive loading -->
+
       <div class="mediaToolbar" role="region" aria-label="Media controls">
         <div class="mediaSeg" role="group" aria-label="Media type">
           <button class="segBtn segBtn--active" type="button" data-media-type="all">All</button>
@@ -358,6 +322,7 @@
           </select>
         </div>
       </div>
+
       <div id="mediaGrid" class="mediaGrid"></div>
       <div class="mediaFooter">
         <button class="btn btnGhost" id="mediaLoadMore" type="button">Load more</button>
@@ -369,8 +334,8 @@
       <h2>Feedback</h2>
       <div class="muted">We value your feedback. Send us a message via WhatsApp or email by providing the appropriate contact information below.</div>
       <div class="divider"></div>
+
       <div class="grid2">
-        <!-- Feedback form: collects phone or email and a message, and provides buttons to send via WhatsApp or email. -->
         <div class="card">
           <div class="control">
             <label for="fbPhone">Phone (WhatsApp)</label>
@@ -390,6 +355,7 @@
           </div>
           <div id="fbFeedbackMsg" class="smallMuted"></div>
         </div>
+
         <div class="card">
           <h3>Quick links</h3>
           <ul class="muted">
@@ -400,10 +366,8 @@
         </div>
       </div>
     </section>
-
   </main>
 
-  <!-- Unified footer: combines the static-host and offline-friendly notes into a single footer. -->
   <footer class="footer" aria-label="Footer">
     <div class="footerBrands">
       <div class="brandPill">
@@ -415,10 +379,9 @@
         <span>Bayer Crop Science</span>
       </div>
     </div>
-    <div class="smallMuted">This dashboard is designed to be static‑host friendly and offline‑friendly. Use the Healthcheck to validate data and asset availability.</div>
+    <div class="smallMuted">This dashboard is designed to be static-host friendly and offline-friendly. Use the Healthcheck to validate data and asset availability.</div>
   </footer>
 
-  <!-- Session drawer overlay -->
   <div class="drawerOverlay hidden" id="drawerOverlay" aria-hidden="true"></div>
   <aside class="drawer hidden" id="sessionDrawer" aria-hidden="true" aria-label="Session details">
     <div class="drawerTop">
@@ -464,7 +427,6 @@
     </div>
   </aside>
 
-  <!-- Lightbox for media -->
   <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
     <div class="lightboxInner">
       <div class="lightboxTop">
@@ -475,92 +437,118 @@
     </div>
   </div>
 
+  <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script defer src="dashboard.js?v=20260105"></script>
 
-  <!-- Load Chart.js before the dashboard script to enable the attendance donut chart. -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <!-- Load Leaflet heatmap plugin for density visualisation on the map -->
-  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-  <!-- Leaflet JS is loaded lazily by dashboard.js when the Map tab is opened. -->
-
-  <script src="dashboard.js?v=20260101"></script>
-
-  <!-- Hero slider initialization -->
+  <!-- Hero slider (auto-advance) -->
   <script>
   (function() {
-    // Define the videos to cycle through in the hero slider. Each entry can have
-    // a title and caption for display in the overlay.
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const videos = [
       { file: 'assets/atlantis.mp4', title: 'Atlantis', caption: 'Atlantis field application' },
       { file: 'assets/bayer.mp4', title: 'Bayer', caption: 'Bayer promotional clip' },
       { file: 'assets/buctril.mp4', title: 'Buctril', caption: 'Buctril product demo' },
       { file: 'assets/interact.mp4', title: 'Interact', caption: 'Interact Solutions overview' }
     ];
+
     let current = 0;
+    let timer = null;
+
     const heroVideo = document.getElementById('heroVideo');
     const heroTitle = document.getElementById('heroTitle');
-    const heroSub = document.getElementById('heroSub');
-    const thumbContainer = document.getElementById('heroThumbs');
-    const prevBtn = document.getElementById('heroPrev');
-    const nextBtn = document.getElementById('heroNext');
-    // Function to update the hero player to the specified index
+    const heroSub   = document.getElementById('heroSub');
+    const thumbs    = document.getElementById('heroThumbs');
+    const prevBtn   = document.getElementById('heroPrev');
+    const nextBtn   = document.getElementById('heroNext');
+
+    if (!heroVideo || !thumbs) return;
+
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    function start() {
+      if (prefersReduced) return;
+      stop();
+      timer = setInterval(() => setHero(current + 1), 6500);
+    }
+
     function setHero(i) {
       current = (i + videos.length) % videos.length;
       const v = videos[current];
-      if (heroVideo) {
-        heroVideo.src = v.file;
-        // Restart playback when source changes
-        heroVideo.load();
-      }
+
+      heroVideo.muted = true;
+      heroVideo.playsInline = true;
+      heroVideo.src = v.file;
+      heroVideo.load();
+
+      // Attempt autoplay; if blocked, still rotate
+      heroVideo.play().catch(() => { /* ignore */ });
+
       if (heroTitle) heroTitle.textContent = v.title;
       if (heroSub) heroSub.textContent = v.caption;
-      // Update active state on thumbnails
-      Array.from(thumbContainer.children).forEach((el, idx) => {
-        if (idx === current) el.classList.add('active');
-        else el.classList.remove('active');
+
+      Array.from(thumbs.children).forEach((el, idx) => {
+        el.classList.toggle('active', idx === current);
       });
     }
-    // Build thumbnail elements once DOM is ready
+
+    // Build thumbs
     videos.forEach((v, idx) => {
       const d = document.createElement('div');
       d.className = 'heroThumb';
-      // Use a small preview video for each thumb; fallback to image if missing
-      d.innerHTML = `<video autoplay loop muted playsinline src="${v.file}"></video><div class="badge">${idx+1}</div>`;
-      d.addEventListener('click', () => setHero(idx));
-      thumbContainer.appendChild(d);
+      d.innerHTML = `<video autoplay loop muted playsinline preload="metadata" src="${v.file}"></video><div class="badge">${idx+1}</div>`;
+      d.addEventListener('click', () => { setHero(idx); start(); });
+      thumbs.appendChild(d);
     });
-    // Navigation buttons
-    prevBtn?.addEventListener('click', () => setHero(current - 1));
-    nextBtn?.addEventListener('click', () => setHero(current + 1));
-    // Initialize the first video
+
+    prevBtn?.addEventListener('click', () => { setHero(current - 1); start(); });
+    nextBtn?.addEventListener('click', () => { setHero(current + 1); start(); });
+
+    // Pause on hover/focus
+    const heroPlayer = document.getElementById('heroPlayer');
+    heroPlayer?.addEventListener('mouseenter', stop);
+    heroPlayer?.addEventListener('mouseleave', start);
+    heroPlayer?.addEventListener('focusin', stop);
+    heroPlayer?.addEventListener('focusout', start);
+
+    // Pause if tab hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else start();
+    });
+
     setHero(0);
+    start();
   })();
   </script>
 
-  <!-- Theme toggle initialization -->
+  <!-- Theme toggle -->
   <script>
   (function() {
-    // Toggle between light and dark themes based on the time of day or user interaction.
     const htmlEl = document.documentElement;
     const toggleBtn = document.getElementById('themeToggle');
+
     function applyTheme(t) {
       htmlEl.setAttribute('data-theme', t);
       localStorage.setItem('theme', t);
       if (toggleBtn) toggleBtn.textContent = (t === 'light') ? '🌙' : '☀';
     }
+
     const saved = localStorage.getItem('theme');
     if (saved === 'light' || saved === 'dark') {
       applyTheme(saved);
     } else {
       const hr = new Date().getHours();
-      const defaultTheme = (hr >= 6 && hr < 18) ? 'light' : 'dark';
-      applyTheme(defaultTheme);
+      applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
     }
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        const current = htmlEl.getAttribute('data-theme');
-        applyTheme(current === 'light' ? 'dark' : 'light');
-      });
-    }
+
+    toggleBtn?.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme');
+      applyTheme(current === 'light' ? 'dark' : 'light');
+    });
   })();
   </script>
 </body>

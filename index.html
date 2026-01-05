@@ -24,14 +24,43 @@
 <body>
   <!-- Background video -->
   <div class="bg">
-    <video class="bgVideo"
-           src="assets/hero-1.mp4"
+    <video class="bgVideo" id="bgVideo"
+           src="assets/bg.mp4"
            autoplay muted loop playsinline
-           preload="metadata"
-           onerror="this.onerror=null; this.src='assets/interact.mp4'">
+           preload="metadata">
     </video>
     <div class="bgShade"></div>
   </div>
+
+  <script>
+  // Background video: fall back across multiple filenames (GitHub Pages is case-sensitive).
+  (function () {
+    const v = document.getElementById('bgVideo');
+    if (!v) return;
+
+    const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4'];
+    let i = 0;
+
+    function setSrc(idx) {
+      v.src = candidates[idx];
+      v.load();
+      v.play().catch(() => { /* ignore autoplay block */ });
+    }
+
+    v.addEventListener('error', () => {
+      i += 1;
+      if (i < candidates.length) setSrc(i);
+    });
+
+    // Ensure play is attempted even if the browser delays autoplay.
+    v.addEventListener('canplay', () => {
+      v.play().catch(() => { /* ignore */ });
+    });
+
+    setSrc(0);
+  })();
+  </script>
+</div>
 
   <header class="topbar">
     <div class="headerRow">
@@ -80,12 +109,12 @@
 
     <!-- Filters -->
     <div class="controls">
-      <div class="control">
+      <div class="control control--campaign">
         <label for="campaignSelect">Campaign</label>
         <select id="campaignSelect"></select>
       </div>
 
-      <div class="control">
+      <div class="control control--dates">
         <label>Date range</label>
         <div class="rangeRow">
           <input id="dateFrom" type="date" />
@@ -98,17 +127,17 @@
         <div id="rangeHint" class="smallMuted"></div>
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="nameFilter">Farmer name</label>
         <input id="nameFilter" type="text" placeholder="Search by host name" />
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="cityFilter">Territory</label>
         <input id="cityFilter" type="text" placeholder="Search by territory" />
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="regionFilter">Region (REG)</label>
         <input id="regionFilter" type="text" placeholder="Search by region" list="regionOptions" />
         <datalist id="regionOptions">
@@ -120,12 +149,12 @@
         </datalist>
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="districtFilter">District</label>
         <input id="districtFilter" type="text" placeholder="Search by district" />
       </div>
 
-      <div class="control">
+      <div class="control control--score">
         <label>Score range</label>
         <div class="scoreRangeRow">
           <input id="scoreMin" type="number" placeholder="Min score" min="0" max="100" step="0.1" />
@@ -439,7 +468,7 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
- <script src="dashboard.js?v=20260105-1"></script>
+  <script src="dashboard.js?v=20260105-1"></script>
 
 
   <!-- Hero slider (auto-advance) -->

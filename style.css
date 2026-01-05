@@ -1066,3 +1066,106 @@ a{ color: inherit; }
 @media (max-width: 860px){
   #sessionDrawer{ width: 100vw; }
 }
+
+
+
+/* =======================================================================
+   Patch v4 – Hero compact filter bar (single-row, responsive)
+   Goal:
+   - Reduce header height on laptops by keeping filters in a single row
+   - Auto-adjust on smaller screens (wrap) without breaking layout
+   ======================================================================= */
+
+/* Slightly tighter sticky header spacing */
+.topbar{
+  gap:12px;
+  padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+}
+
+/* Make hero height responsive to viewport height */
+.heroPlayer{
+  height: clamp(170px, 22vh, 240px);
+}
+
+/* Filters: single-row with horizontal scroll (laptop), wraps on smaller screens */
+.topbar .controls{
+  display:flex;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
+  gap:10px;
+  align-items:flex-end;
+  padding-bottom:6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.topbar .controls::-webkit-scrollbar{ height:8px; }
+.topbar .controls::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.12);
+  border-radius:999px;
+}
+
+.topbar .controls .control{
+  flex:0 0 auto;
+  min-width:170px;
+}
+
+/* Explicit widths for key controls */
+.topbar .controls .control--campaign{ min-width: 220px; }
+.topbar .controls .control--dates{ min-width: 520px; }
+.topbar .controls .control--score{ min-width: 320px; }
+
+.topbar .controls .control label{
+  margin:0 0 4px;
+  font-size:11px;
+}
+
+.topbar .controls .control input,
+.topbar .controls .control select{
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* Smaller buttons inside header filters */
+.topbar .controls .btn{
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* Score range row (was missing styling) */
+.scoreRangeRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:nowrap;
+}
+.scoreRangeRow input[type="number"]{
+  width:120px;
+  min-width:120px;
+}
+
+/* Hide campaign duration hint on desktop to save vertical space */
+#rangeHint{ display:none; }
+
+/* Small screens: allow wrapping instead of horizontal scroll */
+@media (max-width: 740px){
+  .topbar .controls{
+    flex-wrap:wrap;
+    overflow-x:visible;
+  }
+  .topbar .controls .control{
+    flex: 1 1 220px;
+    min-width: 220px;
+  }
+  .topbar .controls .control--dates{ min-width: 100%; }
+  #rangeHint{ display:block; }
+  .scoreRangeRow{ flex-wrap:wrap; }
+}
+
+/* Very short viewports (small laptop screens): shrink hero a bit more */
+@media (max-height: 720px){
+  .heroPlayer{ height: clamp(150px, 20vh, 210px); }
+}

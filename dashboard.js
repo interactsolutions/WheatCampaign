@@ -1984,6 +1984,129 @@
     $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
   }
 
+  // ---------- Hero media rotator (auto-advance) ----------
+  // Many pages include a "hero" area that shows a single featured image/video
+  // with manual next/prev controls. If the DOM contains an identifiable hero
+  // rotator, this enables automatic looping without interfering when the hero
+  // is absent or when users prefer reduced motion.
+  function initHeroRotator() {
+    const prefersReduced = (() => {
+      try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+      catch (_e) { return false; }
+    })();
+    if (prefersReduced) return;
+
+    // Try a handful of common selectors so this works across variants.
+    const container =
+      document.querySelector('[data-hero-rotator]') ||
+      document.querySelector('#heroRotator, #heroCarousel, #heroMedia, .heroRotator, .hero-rotator, .heroCarousel, .hero-carousel');
+
+    if (!container) return;
+
+    // Slides: prefer explicit markers, otherwise fall back to direct children.
+    const explicit = Array.from(container.querySelectorAll('[data-hero-item], .heroItem, .hero-item, .heroSlide, .hero-slide'));
+    const slides = explicit.length ? explicit : Array.from(container.children || []).filter(Boolean);
+    if (slides.length <= 1) return;
+
+    const btnPrev =
+      container.querySelector('[data-hero-prev], .heroPrev, .hero-prev, button[data-dir="prev"], button[aria-label*="Prev" i]') ||
+      document.querySelector('[data-hero-prev], .heroPrev, .hero-prev, button[data-dir="prev"], button[aria-label*="Prev" i]');
+    const btnNext =
+      container.querySelector('[data-hero-next], .heroNext, .hero-next, button[data-dir="next"], button[aria-label*="Next" i]') ||
+      document.querySelector('[data-hero-next], .heroNext, .hero-next, button[data-dir="next"], button[aria-label*="Next" i]');
+
+    const INTERVAL_MS = Number(container.getAttribute('data-interval-ms') || 6500);
+
+    let idx = slides.findIndex(el => el.classList.contains('active') || el.classList.contains('is-active'));
+    if (idx < 0) idx = 0;
+
+    let timer = null;
+    let paused = false;
+
+    function setActive(i) {
+      idx = (i + slides.length) % slides.length;
+
+      slides.forEach((el, k) => {
+        const on = (k === idx);
+        el.classList.toggle('active', on);
+        el.classList.toggle('is-active', on);
+        el.setAttribute('aria-hidden', on ? 'false' : 'true');
+
+        // If a slide contains a video, only the active one should play.
+        const v = el.querySelector && el.querySelector('video');
+        if (v) {
+          if (on) {
+            // Autoplay-safe defaults
+            v.muted = true;
+            v.playsInline = true;
+            v.setAttribute('playsinline', '');
+            // Try to play; if blocked, we still advance via timer.
+            const p = v.play?.();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          } else {
+            try { v.pause?.(); } catch (_e) {}
+            try { v.currentTime = 0; } catch (_e2) {}
+          }
+        }
+      });
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    function start() {
+      stop();
+      if (paused) return;
+      timer = setInterval(() => {
+        if (paused) return;
+        advance(1);
+      }, INTERVAL_MS);
+    }
+
+    function advance(step) {
+      setActive(idx + step);
+    }
+
+    // Hook manual controls if present
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => { advance(-1); start(); });
+    }
+    if (btnNext) {
+      btnNext.addEventListener('click', () => { advance(1); start(); });
+    }
+
+    // Pause when the hero is interacted with (hover/focus) and when tab is hidden.
+    const pause = () => { paused = true; stop(); };
+    const resume = () => { paused = false; start(); };
+
+    container.addEventListener('mouseenter', pause);
+    container.addEventListener('mouseleave', resume);
+    container.addEventListener('focusin', pause);
+    container.addEventListener('focusout', resume);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause();
+      else resume();
+    });
+
+    // If the active slide contains a video, advance at end (in addition to timer).
+    slides.forEach((el, k) => {
+      const v = el.querySelector && el.querySelector('video');
+      if (!v) return;
+      v.addEventListener('ended', () => {
+        // Only advance if this is still the active slide.
+        if (k === idx) { advance(1); start(); }
+      });
+    });
+
+    // Initial render + start autoplay
+    setActive(idx);
+    start();
+  }
+
+
   function exportCsv() {
     const rows = [];
     rows.push(['id','sheetRef','date','district','village','score'].join(','));
@@ -2047,6 +2170,7 @@
       bindLightbox();
       bindFeedback();
       bindTopControls();
+      initHeroRotator();
       bindTabEvents();
 
       await loadCampaignRegistry();

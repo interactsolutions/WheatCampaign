@@ -18,6 +18,23 @@
   const BASE = new URL('.', window.location.href);
   const url = (p) => new URL(p, BASE).toString();
 
+
+  // ---------- Data root ----------
+  // All JSON payloads are expected under this folder on GitHub Pages.
+  // Keeping this centralized prevents path drift (e.g., assets/data vs data).
+  const DATA_ROOT = 'data';
+
+  function normalizeDataPath(p) {
+    if (!p) return p;
+    p = String(p).replace(/^\/+/, '');
+    // Some older bundles used assets/data; normalize to data.
+    p = p.replace(/^assets\/data\//, 'data/');
+    p = p.replace(/^assets\/\/data\//, 'data/');
+    // Allow absolute-ish references like "data/..." or "./data/..."
+    p = p.replace(/^\.\//, '');
+    return p;
+  }
+
   function qs() {
     return new URLSearchParams(window.location.search);
   }
@@ -345,7 +362,7 @@
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeout);
       try {
-        const u = url(path);
+        const u = url(normalizeDataPath(path));
         const r = await fetch(u, { cache: 'no-store', signal: controller.signal });
         clearTimeout(timer);
         if (!r.ok) {
@@ -369,7 +386,7 @@
 
   async function loadCampaignRegistry() {
     try {
-      const reg = await fetchJson('data/campaigns.json', 'campaign registry');
+      const reg = await fetchJson(`${DATA_ROOT}/campaigns.json`, 'campaign registry');
       state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
       return;
     } catch (e) {
@@ -388,6 +405,14 @@
     const el = $$('#statusBox');
     if (!el) return;
     el.textContent = msg;
+    // Mirror critical load errors into the map badge so issues are visible even when users switch tabs.
+    if (kind === 'bad') {
+      const mb = document.getElementById('mapStatus');
+      if (mb) {
+        mb.textContent = 'Error';
+        mb.className = 'badge badge--bad';
+      }
+    }
     el.className = 'status' + (kind ? ' status--' + kind : '');
   }
 
@@ -395,6 +420,14 @@
     const el = $$('#mapStatus');
     if (!el) return;
     el.textContent = msg;
+    // Mirror critical load errors into the map badge so issues are visible even when users switch tabs.
+    if (kind === 'bad') {
+      const mb = document.getElementById('mapStatus');
+      if (mb) {
+        mb.textContent = 'Error';
+        mb.className = 'badge badge--bad';
+      }
+    }
     el.className = 'badge' + (ok ? ' badge--ok' : '');
   }
 
@@ -470,7 +503,26 @@
 
         if (Date.now() - start > timeoutMs) break;
       }
-      return !!(window.L && window.L.map);
+      const leafletOk = !!(window.L && window.L.map);
+      if (!leafletOk) return false;
+
+      // Best-effort load of Leaflet.heat after Leaflet is ready.
+      if (!(window.L && window.L.heatLayer)) {
+        const heatSrcs = [
+          'https://unpkg.com/leaflet.heat/dist/leaflet-heat.js',
+          'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js'
+        ];
+        for (const hsrc of heatSrcs) {
+          try {
+            await loadScriptOnce(hsrc);
+            if (window.L && window.L.heatLayer) break;
+          } catch (_e) {
+            // try next
+          }
+        }
+      }
+
+      return true;
     })();
 
     return leafletPromise;
@@ -1803,6 +1855,15 @@
         state.heatLayer = null;
       }
 
+      // If heat plugin is unavailable, disable the toggle button to reduce confusion.
+      if (!state.heatLayer) {
+        const heatBtn = document.getElementById('toggleHeat');
+        if (heatBtn) {
+          heatBtn.disabled = true;
+          heatBtn.textContent = 'Heatmap unavailable';
+        }
+      }
+
       updateMapData();
       setMapStatus('Ready', true);
       setTimeout(() => map.invalidateSize(), 250);
@@ -1986,9 +2047,9 @@
 
     setStatus('Loading sessions…');
 
-    const sessionsPath = state.campaign.sessionsUrl || `data/${id}/sessions.json`;
-    const mediaPath = state.campaign.mediaUrl || `data/${id}/media.json`;
-    const sheetsIndexPath = state.campaign.sheetsIndexUrl || `data/${id}/sheets_index.json`;
+    const sessionsPath = normalizeDataPath(state.campaign.sessionsUrl) || `${DATA_ROOT}/${id}/sessions.json`;
+    const mediaPath = normalizeDataPath(state.campaign.mediaUrl) || `${DATA_ROOT}/${id}/media.json`;
+    const sheetsIndexPath = normalizeDataPath(state.campaign.sheetsIndexUrl) || `${DATA_ROOT}/${id}/sheets_index.json`;
 
     // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');

@@ -985,3 +985,84 @@ a{ color: inherit; }
   width:100% !important;
   height:100% !important;
 }
+
+
+/* =======================================================================
+   Patch v3 – Critical alignment with index.html structure
+   - Ensure session tables (.sessionTable) get the same styling as .table
+   - Fix drawer overlay vs drawer panel class mismatch in HTML
+   ======================================================================= */
+
+/* Session tables (HTML uses .sessionTable, not .table) */
+.sessionTable{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:820px;
+  font-size:13px;
+}
+.sessionTable th,
+.sessionTable td{
+  padding:10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  vertical-align:top;
+  white-space:nowrap;
+}
+[data-theme="light"] .sessionTable th,
+[data-theme="light"] .sessionTable td{
+  border-bottom-color: rgba(16,56,79,.10);
+}
+.sessionTable th{
+  position:sticky;
+  top:0;
+  background: rgba(7,12,22,.92);
+  backdrop-filter: blur(8px);
+  z-index:2;
+  text-align:left;
+  color: var(--text);
+}
+[data-theme="light"] .sessionTable th{
+  background: rgba(255,255,255,.92);
+}
+
+/* Drawer: HTML uses #drawerOverlay as backdrop and #sessionDrawer as the panel */
+#drawerOverlay{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(2px);
+  z-index:60;
+}
+
+/* Right-side details drawer panel */
+#sessionDrawer{
+  position:fixed;
+  top:0;
+  right:0;
+  height:100vh;
+  width: min(420px, 92vw);
+  z-index:70;
+  overflow:auto;
+
+  background: rgba(10,14,22,.96);
+  border-left: 1px solid rgba(255,255,255,.08);
+  box-shadow: -18px 0 42px rgba(0,0,0,.45);
+
+  /* Make it feel like a panel, not a card */
+  border-radius:0;
+  margin:0;
+}
+
+/* Keep the drawer header pinned */
+#sessionDrawer .drawerTop{
+  position:sticky;
+  top:0;
+  background: rgba(10,14,22,.96);
+  backdrop-filter: blur(6px);
+  z-index:2;
+}
+
+/* On small devices, use full width */
+@media (max-width: 860px){
+  #sessionDrawer{ width: 100vw; }
+}

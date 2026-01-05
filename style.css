@@ -1402,3 +1402,29 @@ h2, h3{
   box-shadow: 0 0 10px rgba(241,219,179,0.35);
   border: 1px solid rgba(92,74,42,.15);
 }
+
+/* ================================
+   Wheat success KPIs (final override)
+   ================================ */
+.kpi--awareness,
+.kpi--definite{
+  background: linear-gradient(90deg,
+    rgba(137,211,41,.18) 0%,
+    rgba(241,219,179,.22) 70%,
+    rgba(0,188,255,.10) 100%);
+  border-color: rgba(241,219,179,.35);
+}
+[data-theme="light"] .kpi--awareness,
+[data-theme="light"] .kpi--definite{
+  background: linear-gradient(90deg,
+    rgba(137,211,41,.14) 0%,
+    rgba(241,219,179,.26) 75%,
+    rgba(0,188,255,.06) 100%);
+}
+.kpi--awareness .kpiLabel::before,
+.kpi--definite .kpiLabel::before{
+  background: var(--wheat);
+}
+
+/* Micro-interaction safety (GPU hint) */
+.heroThumb{ will-change: transform; }

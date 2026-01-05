@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260105-6" />
+  <link rel="stylesheet" href="style.css?v=20260105-7" />
 
   <!-- Leaflet CSS with fallback chain -->
   <link id="leafletCss" rel="stylesheet"
@@ -29,7 +29,7 @@
 
 <body>
   <!-- Inline SVG icon sprite (no external icon dependencies) -->
-  <svg id="svgSprite" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0;overflow:hidden"
+  <svg id="svgSprite" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0;overflow:hidden">
     <symbol id="i-calendar" viewBox="0 0 24 24">
       <path d="M7 2v2M17 2v2M4 7h16M6 10h4M6 14h4M14 10h4M14 14h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       <rect x="4" y="5" width="16" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -532,7 +532,7 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260105-6"></script>
+  <script defer src="dashboard.js?v=20260105-7"></script>
 
 
   <!-- Hero slider (auto-advance) -->
@@ -656,7 +656,17 @@
       applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
     }
 
-    toggleBtn?.addEventListener('click', () => {
+    // Campaign context: auto-theme per tab (Summary/Sessions = light; Media/Map/Feedback = dark),
+// but do not override a user-selected theme stored in localStorage.
+document.addEventListener('tabchange', (e) => {
+  const locked = (localStorage.getItem('theme') === 'light' || localStorage.getItem('theme') === 'dark');
+  if (locked) return;
+  const tab = e?.detail?.tab || '';
+  const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
+  applyTheme(t);
+});
+
+toggleBtn?.addEventListener('click', () => {
       const current = htmlEl.getAttribute('data-theme');
       applyTheme(current === 'light' ? 'dark' : 'light');
     });

@@ -1989,6 +1989,11 @@
   // with manual next/prev controls. If the DOM contains an identifiable hero
   // rotator, this enables automatic looping without interfering when the hero
   // is absent or when users prefer reduced motion.
+    // ---------- Hero autoplay (auto-advance) ----------
+  // The dashboard hero is driven by Next/Prev buttons (#heroNext/#heroPrev) that swap the
+  // currently displayed media. If autoplay is desired, the safest approach is to trigger
+  // the existing "Next" behavior on a timer, while respecting reduced-motion preferences,
+  // pausing on hover/focus, and pausing when the tab is hidden.
   function initHeroRotator() {
     const prefersReduced = (() => {
       try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
@@ -1996,113 +2001,60 @@
     })();
     if (prefersReduced) return;
 
-    // Try a handful of common selectors so this works across variants.
-    const container =
-      document.querySelector('[data-hero-rotator]') ||
-      document.querySelector('#heroRotator, #heroCarousel, #heroMedia, .heroRotator, .hero-rotator, .heroCarousel, .hero-carousel');
+    const heroWrap = document.querySelector('#heroWrap') || document.querySelector('.hero') || document.querySelector('[data-hero]');
+    const btnNext = document.querySelector('#heroNext') || document.querySelector('[data-hero-next]');
+    if (!btnNext) return;
 
-    if (!container) return;
+    // If the hero media is a <video>, make it as autoplay-friendly as possible.
+    const heroVideo = document.querySelector('#heroVideo') || document.querySelector('video#hero') || (heroWrap ? heroWrap.querySelector('video') : null);
+    if (heroVideo) {
+      try {
+        heroVideo.muted = true;
+        heroVideo.playsInline = true;
+        heroVideo.setAttribute('playsinline', '');
+      } catch (_e) { /* no-op */ }
+    }
 
-    // Slides: prefer explicit markers, otherwise fall back to direct children.
-    const explicit = Array.from(container.querySelectorAll('[data-hero-item], .heroItem, .hero-item, .heroSlide, .hero-slide'));
-    const slides = explicit.length ? explicit : Array.from(container.children || []).filter(Boolean);
-    if (slides.length <= 1) return;
-
-    const btnPrev =
-      container.querySelector('[data-hero-prev], .heroPrev, .hero-prev, button[data-dir="prev"], button[aria-label*="Prev" i]') ||
-      document.querySelector('[data-hero-prev], .heroPrev, .hero-prev, button[data-dir="prev"], button[aria-label*="Prev" i]');
-    const btnNext =
-      container.querySelector('[data-hero-next], .heroNext, .hero-next, button[data-dir="next"], button[aria-label*="Next" i]') ||
-      document.querySelector('[data-hero-next], .heroNext, .hero-next, button[data-dir="next"], button[aria-label*="Next" i]');
-
-    const INTERVAL_MS = Number(container.getAttribute('data-interval-ms') || 6500);
-
-    let idx = slides.findIndex(el => el.classList.contains('active') || el.classList.contains('is-active'));
-    if (idx < 0) idx = 0;
+    const INTERVAL_MS = 6500;
 
     let timer = null;
     let paused = false;
 
-    function setActive(i) {
-      idx = (i + slides.length) % slides.length;
+    const clear = () => {
+      if (timer) { clearInterval(timer); timer = null; }
+    };
 
-      slides.forEach((el, k) => {
-        const on = (k === idx);
-        el.classList.toggle('active', on);
-        el.classList.toggle('is-active', on);
-        el.setAttribute('aria-hidden', on ? 'false' : 'true');
-
-        // If a slide contains a video, only the active one should play.
-        const v = el.querySelector && el.querySelector('video');
-        if (v) {
-          if (on) {
-            // Autoplay-safe defaults
-            v.muted = true;
-            v.playsInline = true;
-            v.setAttribute('playsinline', '');
-            // Try to play; if blocked, we still advance via timer.
-            const p = v.play?.();
-            if (p && typeof p.catch === 'function') p.catch(() => {});
-          } else {
-            try { v.pause?.(); } catch (_e) {}
-            try { v.currentTime = 0; } catch (_e2) {}
-          }
-        }
-      });
-    }
-
-    function stop() {
-      if (timer) clearInterval(timer);
-      timer = null;
-    }
-
-    function start() {
-      stop();
-      if (paused) return;
+    const start = () => {
+      if (timer || paused) return;
       timer = setInterval(() => {
-        if (paused) return;
-        advance(1);
+        // If the page is hidden, don't advance.
+        if (document.hidden) return;
+        // Trigger the same behavior as manual click.
+        try { btnNext.click(); } catch (_e) { /* ignore */ }
       }, INTERVAL_MS);
-    }
+    };
 
-    function advance(step) {
-      setActive(idx + step);
-    }
+    const setPaused = (v) => {
+      paused = !!v;
+      if (paused) clear();
+      else start();
+    };
 
-    // Hook manual controls if present
-    if (btnPrev) {
-      btnPrev.addEventListener('click', () => { advance(-1); start(); });
+    // Pause when the hero is interacted with.
+    if (heroWrap) {
+      heroWrap.addEventListener('mouseenter', () => setPaused(true));
+      heroWrap.addEventListener('mouseleave', () => setPaused(false));
+      heroWrap.addEventListener('focusin', () => setPaused(true));
+      heroWrap.addEventListener('focusout', () => setPaused(false));
+      heroWrap.addEventListener('touchstart', () => setPaused(true), { passive: true });
+      heroWrap.addEventListener('touchend', () => setPaused(false));
     }
-    if (btnNext) {
-      btnNext.addEventListener('click', () => { advance(1); start(); });
-    }
-
-    // Pause when the hero is interacted with (hover/focus) and when tab is hidden.
-    const pause = () => { paused = true; stop(); };
-    const resume = () => { paused = false; start(); };
-
-    container.addEventListener('mouseenter', pause);
-    container.addEventListener('mouseleave', resume);
-    container.addEventListener('focusin', pause);
-    container.addEventListener('focusout', resume);
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) pause();
-      else resume();
+      if (document.hidden) clear();
+      else if (!paused) start();
     });
 
-    // If the active slide contains a video, advance at end (in addition to timer).
-    slides.forEach((el, k) => {
-      const v = el.querySelector && el.querySelector('video');
-      if (!v) return;
-      v.addEventListener('ended', () => {
-        // Only advance if this is still the active slide.
-        if (k === idx) { advance(1); start(); }
-      });
-    });
-
-    // Initial render + start autoplay
-    setActive(idx);
     start();
   }
 

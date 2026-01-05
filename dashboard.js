@@ -112,206 +112,154 @@
     return (typeof v === 'number' && Number.isFinite(v)) ? v : NaN;
   }
 
-  // ---------- Media path resolution ----------
-  const existsCache = new Map(); // url -> boolean
+    // ---------- Media path resolution ----------
+  // Canonical rule (GitHub Pages is case-sensitive):
+  //   Image: assets/gallery/<ID>.jpeg
+  //   Video: assets/gallery/<ID>.mp4
+  //
+  // We intentionally avoid "guessing" extensions for gallery assets because
+  // wrong guesses can get cached as missing and prevent valid assets from loading.
+
+  const existsCache = new Map(); // url -> boolean (non-gallery only)
+
+  function isAbsoluteUrl(p) {
+    return /^(https?:|data:|blob:)/i.test(String(p || ''));
+  }
+
+  function extractGalleryId(rawPath) {
+    const raw = String(rawPath ?? '').trim();
+    if (!raw || isAbsoluteUrl(raw)) return null;
+
+    // Accept: "assets/gallery/12.jpeg", "gallery/12.jpeg", "12.jpeg", "12.mp4"
+    const x = raw.replace(/^\.?\//, '').replace(/^\//, '');
+
+    // Strip leading folder if present
+    const tail = x.split('/').pop() || '';
+    // Match numeric id with optional extension
+    const m = tail.match(/^(\d+)(?:\.(jpeg|jpg|png|webp|mp4|webm))?$/i);
+    if (!m) return null;
+    return m[1]; // numeric string
+  }
+
+  function resolveGalleryMedia(id) {
+    const safe = String(id).trim();
+    return {
+      image: `assets/gallery/${safe}.jpeg`,
+      video: `assets/gallery/${safe}.mp4`,
+    };
+  }
 
   function normalizeMediaPath(p) {
     const raw = String(p ?? '').trim();
     if (!raw) return '';
-    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+    if (isAbsoluteUrl(raw)) return raw;
 
     let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
 
-    // Already rooted correctly
+    // If it is already rooted, keep as-is.
     if (x.startsWith('assets/')) return x;
 
-    // Common patterns from sessions.json
+    // Support sessions.json style: "gallery/12.jpeg" -> "assets/gallery/12.jpeg"
     if (x.startsWith('gallery/')) return 'assets/' + x;
 
-    // Sometimes data stores just the filename
+    // If a bare filename like "12.jpeg" is provided, treat it as gallery.
     if (!x.includes('/')) return 'assets/gallery/' + x;
 
-    // Default: relative as-is
     return x;
   }
 
-  function candidatePaths(p) {
+  async function assetExists(p) {
+    // Only used for non-gallery fallbacks (e.g., signatures, campaign assets).
     const norm = normalizeMediaPath(p);
-    if (!norm) return [];
-    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
+    if (!norm || isAbsoluteUrl(norm)) return !!norm;
 
-    const candidates = [];
-    const add = (v) => {
-      if (v && !candidates.includes(v)) candidates.push(v);
-    };
+    // Do not HEAD-check gallery assets; rely on canonical mapping.
+    if (norm.startsWith('assets/gallery/')) return true;
 
-    // Always start with the normalized path.
-    add(norm);
-
-    // If request is wrong folder (root) try under assets/gallery
-    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
-      const fname = norm.split('/').pop();
-      add('assets/gallery/' + fname);
-    }
-
-    // Extension swaps
-    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
-    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
-    const isVid = /\.(mp4|webm)$/i.test(norm);
-
-    function addVariantBases(base) {
-      // Support common variant naming:
-      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
-      //   17_a.jpg <-> 17a.jpg
-      // (applies for a-f, but will also include single-letter suffixes generally)
-      const m1 = base.match(/^(.*?)([a-z])$/i);
-      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
-      if (m1) {
-        const root = m1[1];
-        const suf = m1[2];
-        add(base);
-        add(root + '_' + suf);
-        add(root + '-' + suf);
-        // also try without suffix (helps when data references 17a but file is 17)
-        add(root);
-        return;
-      }
-      if (m2) {
-        const root = m2[1];
-        const suf = m2[2];
-        add(base);
-        add(root + suf);
-        add(root);
-        return;
-      }
-      add(base);
-      // Also try the simplest "a" variant both joined and separated
-      add(base + 'a');
-      add(base + '_a');
-      add(base + '-a');
-    }
-
-    if (isImg) {
-      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      // Collect base variants first, then add extensions.
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-
-      // Ensure original base is also present.
-      addBase(base);
-
-      for (const b of bases) {
-        for (const e of imgExts) add(b + e);
-      }
-    }
-
-    if (isVid) {
-      const base = norm.replace(/\.(mp4|webm)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-      addBase(base);
-
-      for (const b of bases) {
-        add(b + '.mp4');
-        add(b + '.webm');
-      }
-    }
-
-    // Only keep candidates that look like concrete asset files (avoid hammering the network
-    // with extension-less paths).
-    return candidates.filter(c =>
-      /^(https?:|data:|blob:)/i.test(c)
-      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
-    );
-  }
-
-  async function assetExists(relOrAbs) {
-    const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
+    const u = url(norm);
     if (existsCache.has(u)) return existsCache.get(u);
 
-    // HEAD often works on GitHub Pages; if blocked, fallback to Range GET.
     try {
-      const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
-      const ok = r.ok;
+      const res = await fetch(u, { method: 'HEAD', cache: 'no-store' });
+      const ok = res.ok;
       existsCache.set(u, ok);
       return ok;
     } catch (_e) {
-      try {
-        const r = await fetch(u, {
-          method: 'GET',
-          headers: { Range: 'bytes=0-0' },
-          cache: 'no-store'
-        });
-        const ok = r.ok;
-        existsCache.set(u, ok);
-        return ok;
-      } catch (_e2) {
-        existsCache.set(u, false);
-        return false;
-      }
+      existsCache.set(u, false);
+      return false;
     }
   }
 
-  async function resolveFirstExisting(p) {
-    const cands = candidatePaths(p);
-    for (const c of cands) {
-      if (await assetExists(c)) return c;
+  function resolveMediaPathStrict(inputPath, kind /* 'image' | 'video' | '' */) {
+    // For gallery items, always resolve to canonical paths.
+    const id = extractGalleryId(inputPath);
+    if (id) {
+      const g = resolveGalleryMedia(id);
+      if (kind === 'video') return g.video;
+      if (kind === 'image') return g.image;
+
+      // If kind is unknown, preserve explicit extension when provided.
+      const raw = String(inputPath ?? '').trim();
+      if (/\.mp4$/i.test(raw) || /\.webm$/i.test(raw)) return g.video;
+      return g.image;
     }
+
+    // Non-gallery: just normalize.
+    return normalizeMediaPath(inputPath);
+  }
+
+  async function resolveFirstExisting(p, kind = '') {
+    const strict = resolveMediaPathStrict(p, kind);
+    // Gallery: strict path is assumed valid (files are present).
+    if (String(strict).startsWith('assets/gallery/')) return strict;
+
+    // Non-gallery: check existence; if missing, return empty to allow placeholders.
+    if (await assetExists(strict)) return strict;
     return '';
   }
 
   function attachSmartImage(imgEl, path) {
-    let cancelled = false;
-    const placeholder = 'assets/placeholder.svg';
+    const placeholder = 'assets/placeholder-image.svg';
+    imgEl.loading = imgEl.loading || 'lazy';
 
-    (async () => {
-      const chosen = await resolveFirstExisting(path);
-      if (cancelled) return;
+    const p = resolveMediaPathStrict(path, 'image');
+    if (String(p).startsWith('assets/gallery/')) {
+      imgEl.src = url(p);
+      imgEl.onerror = () => { imgEl.src = url(placeholder); };
+      return;
+    }
+
+    // Non-gallery: async existence check
+    resolveFirstExisting(path, 'image').then(chosen => {
       imgEl.src = chosen ? url(chosen) : url(placeholder);
-    })();
-
-    imgEl.onerror = () => {
-      imgEl.onerror = null;
-      imgEl.src = url(placeholder);
-    };
-
-    return () => { cancelled = true; };
+    });
   }
 
-  function attachSmartVideo(videoEl, path) {
+  function attachSmartVideo(videoEl, path, opts = {}) {
     const placeholder = 'assets/placeholder-video.mp4';
-    let tried = false;
+    const autoplay = !!opts.autoplay;
 
-    // lazy load on click
-    videoEl.preload = 'metadata';
-    videoEl.controls = true;
+    videoEl.preload = videoEl.preload || 'metadata';
+    videoEl.controls = (opts.controls !== false);
+    videoEl.playsInline = true;
+    videoEl.setAttribute('playsinline', '');
 
-    videoEl.addEventListener('click', async () => {
-      if (tried) return;
-      tried = true;
-      const chosen = await resolveFirstExisting(path);
+    // Always set these to satisfy mobile/browser autoplay restrictions if used in hero.
+    videoEl.muted = !!opts.muted;
+    if (opts.loop) videoEl.loop = true;
+
+    const p = resolveMediaPathStrict(path, 'video');
+    if (String(p).startsWith('assets/gallery/')) {
+      videoEl.src = url(p);
+      if (autoplay) videoEl.play().catch(() => {});
+      videoEl.onerror = () => { videoEl.src = url(placeholder); };
+      return;
+    }
+
+    resolveFirstExisting(path, 'video').then(chosen => {
       videoEl.src = chosen ? url(chosen) : url(placeholder);
-      videoEl.play().catch(() => { /* ignore */ });
+      if (autoplay) videoEl.play().catch(() => {});
     });
-
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
   }
 
   // ---------- Tab controller ----------
@@ -1551,76 +1499,145 @@
     });
   }
 
-  async function openLightbox(sessionId) {
+  async   function openLightbox(sessionId, startIndex = 0) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
+
     const lb = $$('#lightbox');
     const body = $$('#lbBody');
+    const titleEl = $$('#lbTitle');
     if (!lb || !body) return;
-
-    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
-
-    lb.classList.add('open');
-    body.innerHTML = '';
 
     const items = allMediaItems(s);
     if (!items.length) {
+      lb.classList.add('open');
       body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+      if (titleEl) titleEl.textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
       return;
     }
 
-    // Show first item large; rest as thumbnails
-    const main = items[0];
-    if (main.type === 'image') {
-      const img = document.createElement('img');
-      img.className = 'lightboxMedia';
-      img.alt = 'image';
-      body.appendChild(img);
-      attachSmartImage(img, main.path);
-    } else {
-      const v = document.createElement('video');
-      v.className = 'lightboxMedia';
-      v.controls = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline','');
-      body.appendChild(v);
-      const chosen = await resolveFirstExisting(main.path);
-      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
-    }
+    let idx = Math.max(0, Math.min(Number(startIndex) || 0, items.length - 1));
 
-    if (items.length > 1) {
-      const row = document.createElement('div');
-      row.className = 'mediaRow';
-      for (const it of items.slice(1, 12)) {
-        if (it.type === 'image') {
-          const t = document.createElement('img');
-          t.className = 'thumb';
-          t.alt = 'thumb';
-          t.loading = 'lazy';
-          row.appendChild(t);
-          attachSmartImage(t, it.path);
-          t.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId); // simplest refresh
-          };
+    const setTitle = () => {
+      if (!titleEl) return;
+      const sheet = (s.sheetRef || '').trim();
+      const tag = sheet ? ` • ${sheet}` : '';
+      titleEl.textContent = `Session ${s.id}${tag}`;
+    };
+
+    const render = () => {
+      body.innerHTML = '';
+      setTitle();
+
+      // Main media
+      const main = items[idx];
+      if (main.type === 'image') {
+        const img = document.createElement('img');
+        img.className = 'lightboxMedia';
+        img.alt = 'session media';
+        body.appendChild(img);
+        attachSmartImage(img, main.path);
+      } else {
+        const v = document.createElement('video');
+        v.className = 'lightboxMedia';
+        v.controls = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        body.appendChild(v);
+        attachSmartVideo(v, main.path, { controls: true, autoplay: false, muted: false });
+      }
+
+      // Nav (only if > 1 item)
+      if (items.length > 1) {
+        const nav = document.createElement('div');
+        nav.className = 'lbNav';
+
+        const btnPrev = document.createElement('button');
+        btnPrev.className = 'btn btnSmall';
+        btnPrev.type = 'button';
+        btnPrev.textContent = 'Prev';
+        btnPrev.onclick = () => { idx = (idx - 1 + items.length) % items.length; render(); };
+
+        const btnNext = document.createElement('button');
+        btnNext.className = 'btn btnSmall';
+        btnNext.type = 'button';
+        btnNext.textContent = 'Next';
+        btnNext.onclick = () => { idx = (idx + 1) % items.length; render(); };
+
+        const counter = document.createElement('div');
+        counter.className = 'lbCounter muted';
+        counter.textContent = `${idx + 1} / ${items.length}`;
+
+        nav.appendChild(btnPrev);
+        nav.appendChild(counter);
+        nav.appendChild(btnNext);
+        body.appendChild(nav);
+      }
+
+      // Thumbnails
+      if (items.length > 1) {
+        const row = document.createElement('div');
+        row.className = 'mediaRow';
+
+        // Keep thumbnails reasonable; if you want more, increase the limit.
+        const maxThumbs = 24;
+        const slice = items.slice(0, maxThumbs);
+
+        slice.forEach((it, i) => {
+          const wrap = document.createElement('button');
+          wrap.type = 'button';
+          wrap.className = 'thumbWrap' + (i === idx ? ' isActive' : '');
+          wrap.title = `${i + 1}`;
+          wrap.onclick = () => { idx = i; render(); };
+
+          if (it.type === 'image') {
+            const t = document.createElement('img');
+            t.className = 'thumb';
+            t.alt = 'thumb';
+            t.loading = 'lazy';
+            wrap.appendChild(t);
+            attachSmartImage(t, it.path);
+          } else {
+            const t = document.createElement('video');
+            t.className = 'thumb';
+            t.muted = true;
+            t.playsInline = true;
+            t.setAttribute('playsinline', '');
+            t.preload = 'metadata';
+            wrap.appendChild(t);
+            attachSmartVideo(t, it.path, { controls: false, autoplay: false, muted: true });
+          }
+
+          row.appendChild(wrap);
+        });
+
+        if (items.length > maxThumbs) {
+          const more = document.createElement('div');
+          more.className = 'muted';
+          more.style.marginTop = '6px';
+          more.textContent = `Showing first ${maxThumbs} items.`;
+          body.appendChild(row);
+          body.appendChild(more);
         } else {
-          const tv = document.createElement('video');
-          tv.className = 'thumb';
-          tv.muted = true;
-          tv.playsInline = true;
-          tv.setAttribute('playsinline','');
-          row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
-          tv.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId);
-          };
+          body.appendChild(row);
         }
       }
-      body.appendChild(row);
-    }
+    };
+
+    lb.classList.add('open');
+    render();
+
+    // Keyboard navigation while open
+    lb.onkeydown = (ev) => {
+      if (!lb.classList.contains('open')) return;
+      if (ev.key === 'ArrowLeft') { ev.preventDefault(); idx = (idx - 1 + items.length) % items.length; render(); }
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); idx = (idx + 1) % items.length; render(); }
+      if (ev.key === 'Escape') { ev.preventDefault(); closeLightbox(); }
+    };
+
+    // Ensure focus is inside the lightbox for keyboard navigation.
+    lb.setAttribute('tabindex', '-1');
+    lb.focus({ preventScroll: true });
   }
 
   // ---------- Map ----------

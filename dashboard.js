@@ -2,7 +2,7 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-05.2";
+  const WHEATCAMPAIGN_BUILD = "2026-01-05.3";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
   // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)

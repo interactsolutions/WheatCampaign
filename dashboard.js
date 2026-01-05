@@ -1,5 +1,26 @@
 (() => {
   'use strict';
+
+  // Build marker (for cache-busting verification)
+  const WHEATCAMPAIGN_BUILD = "2026-01-05.1";
+  console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
+
+  // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
+  window.addEventListener("error", (e) => {
+    try {
+      const box = document.getElementById("statusBox");
+      if (box) box.textContent = `Runtime error: ${e.message || e.error || "Unknown error"}`;
+    } catch (_) {}
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    try {
+      const box = document.getElementById("statusBox");
+      const reason = (e && e.reason) ? (e.reason.message || String(e.reason)) : "Unknown rejection";
+      if (box) box.textContent = `Promise rejection: ${reason}`;
+    } catch (_) {}
+  });
+
   // Helper to fetch JSON files with retry and timeout support.
   // This version improves resilience to network issues by retrying failed requests
   // a limited number of times and aborting long-running requests. If all attempts
@@ -16,19 +37,7 @@
 
   // ---------- URL helpers ----------
   const BASE = new URL('.', window.location.href);
-  const DATA_ROOT = 'data';
-  const normalizeDataPath = (p) => {
-    let s = String(p || '').trim();
-    if (!s) return s;
-    // Strip leading slashes so URL(base) resolution is consistent on GitHub Pages.
-    s = s.replace(/^\/+/, '');
-    // Backward-compat: some older builds referenced assets/data/...
-    s = s.replace(/^assets\/data\//i, `${DATA_ROOT}/`);
-    // If a caller passes just 'campaigns.json', prefer data/campaigns.json
-    if (s === 'campaigns.json') s = `${DATA_ROOT}/campaigns.json`;
-    return s;
-  };
-  const url = (p) => new URL(normalizeDataPath(p), BASE).toString();
+  const url = (p) => new URL(p, BASE).toString();
 
   function qs() {
     return new URLSearchParams(window.location.search);
@@ -475,46 +484,14 @@
 
           // Wait a tick for globals to attach.
           await new Promise(r => setTimeout(r, 0));
-          if (window.L && window.L.map) {
-            // Leaflet heat plugin may be loaded before Leaflet on some pages; ensure it is present.
-            if (!window.L.heatLayer) {
-              const heatSrcs = [
-                'https://unpkg.com/leaflet.heat/dist/leaflet-heat.js',
-                'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js'
-              ];
-              for (const h of heatSrcs) {
-                try {
-                  await loadScriptOnce(h);
-                  await new Promise(r => setTimeout(r, 0));
-                  if (window.L.heatLayer) break;
-                } catch (_e2) {}
-              }
-            }
-            return true;
-          }
+          if (window.L && window.L.map) return true;
         } catch (_e) {
           // try next
         }
 
         if (Date.now() - start > timeoutMs) break;
       }
-      if (window.L && window.L.map) {
-        if (!window.L.heatLayer) {
-          const heatSrcs = [
-            'https://unpkg.com/leaflet.heat/dist/leaflet-heat.js',
-            'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js'
-          ];
-          for (const h of heatSrcs) {
-            try {
-              await loadScriptOnce(h);
-              await new Promise(r => setTimeout(r, 0));
-              if (window.L.heatLayer) break;
-            } catch (_e2) {}
-          }
-        }
-        return true;
-      }
-      return false;
+      return !!(window.L && window.L.map);
     })();
 
     return leafletPromise;

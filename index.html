@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260105-3" />
+  <link rel="stylesheet" href="style.css?v=20260105-4" />
 
   <!-- Leaflet CSS with fallback chain -->
   <link id="leafletCss" rel="stylesheet"
@@ -208,23 +208,29 @@
 
         <div class="divider"></div>
 
-        <h3>Sessions by farmers attendance</h3>
-        <!-- Use chartWrap so CSS can constrain size consistently -->
-        <div class="chartWrap attendanceWrap">
-          <canvas id="attendanceDonut"></canvas>
-        </div>
+        
+<h3>Donut insights</h3>
+<div class="donutRow" id="coreDonutsRow" data-autoscroll="1" data-speed="0.22">
+  <div class="chartTile">
+    <h4>Sessions by farmers attendance</h4>
+    <div class="chartWrap attendanceWrap">
+      <canvas id="attendanceDonut"></canvas>
+    </div>
+  </div>
 
-        <div class="divider"></div>
+  <div class="chartTile">
+    <h4>Decision breakdown</h4>
+    <div class="chartWrap decisionWrap">
+      <canvas id="decisionPie"></canvas>
+    </div>
+  </div>
+</div>
 
-        <h3>Decision breakdown</h3>
-        <div class="chartWrap decisionWrap">
-          <canvas id="decisionPie"></canvas>
-        </div>
+<div class="divider"></div>
 
-        <div class="divider"></div>
         <h3>Additional breakdowns</h3>
 
-        <div class="chartGrid">
+        <div class="chartGrid donutRow" id="breakdownsRow" data-autoscroll="1" data-speed="0.25">
           <div class="chartTile">
             <h4>Farmers by region</h4>
             <div class="chartWrap">
@@ -280,18 +286,28 @@
         </details>
 
         <div class="divider"></div>
-        <div class="grid2">
-          <div class="card card--flat">
-            <h3>Top adoption drivers</h3>
-            <div id="driversChart" class="barChart"><div class="muted">Loading…</div></div>
-          </div>
-          <div class="card card--flat">
-            <h3>Top barriers</h3>
-            <div id="barriersChart" class="barChart"><div class="muted">Loading…</div></div>
-          </div>
-        </div>
+        
+<h3>Drivers &amp; barriers (donut)</h3>
+<div class="donutRow" id="driversBarriersRow" data-autoscroll="1" data-speed="0.22">
+  <div class="chartTile donutTileWide">
+    <h4>Top adoption drivers</h4>
+    <div class="chartWrap">
+      <canvas id="driversDonut"></canvas>
+    </div>
+    <div id="driversLegend" class="donutLegend"><div class="muted">Loading…</div></div>
+  </div>
 
-        <div class="divider"></div>
+  <div class="chartTile donutTileWide">
+    <h4>Top barriers</h4>
+    <div class="chartWrap">
+      <canvas id="barriersDonut"></canvas>
+    </div>
+    <div id="barriersLegend" class="donutLegend"><div class="muted">Loading…</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
         <h3>Data readiness</h3>
         <div id="statusBox" class="status">Loading…</div>
         <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
@@ -473,7 +489,7 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260105-3"></script>
+  <script defer src="dashboard.js?v=20260105-4"></script>
 
 
   <!-- Hero slider (auto-advance) -->

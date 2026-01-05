@@ -2,7 +2,7 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-05.3";
+  const WHEATCAMPAIGN_BUILD = "2026-01-05.4";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
   // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
@@ -1303,39 +1303,104 @@
         return `<li><b>${esc(k)}</b>: ${fmtInt(n)}${esc(share)}</li>`;
       }).join('');
     };
+    // Render the top drivers and barriers as donut charts (with a compact legend).
+    // Note: reason counts are multi-select; percentages shown are "share of farmers", not "share of reasons".
+    const renderReasonsDonut = (mp, canvasSel, legendSel, winKey, emptyMsg, hueBase) => {
+      const canvas = $$(canvasSel);
+      const legend = $$(legendSel);
 
-    // Render the top drivers and barriers as horizontal bar charts instead of plain lists.
-    // Each bar's length reflects the share of farmers citing that reason. When no data is
-    // available, a muted placeholder is shown instead. The charts are drawn into
-    // #driversChart and #barriersChart containers.
-    const renderBarChart = (mp, containerId) => {
-      const container = document.querySelector(containerId);
-      if (!container) return;
-      const total = totalFarmers || 0;
-      // Sort entries descending by count and take up to 6 entries.
-      const arr = [...mp.entries()].sort((a, b) => (Number(b[1] || 0) - Number(a[1] || 0))).slice(0, 6);
-      if (!arr.length) {
-        container.innerHTML = '<div class="muted">No entries captured.</div>';
+      if (!canvas) return;
+
+      // If Chart.js isn't available, fall back to a readable legend/list.
+      if (typeof Chart === 'undefined') {
+        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'Chart library not loaded.')}</div>`;
         return;
       }
-      container.innerHTML = arr.map(([k, v]) => {
-        const n = Number(v) || 0;
-        // Compute share of total farmers; clamp between 0 and 100.
-        const pct = (total > 0) ? Math.min(Math.max(n / total * 100, 0), 100) : 0;
-        // Construct a bar row using existing barRow/barTrack/barFill styles. Use
-        // the CSS variable --brand (blue) for drivers and --danger (red) for barriers.
-        const colorVar = (containerId === '#driversChart') ? 'var(--brand)' : 'var(--danger)';
-        return `<div class="barRow">
-          <div class="barLabel">${esc(k)}</div>
-          <div class="barTrack"><div class="barFill" style="width:${pct.toFixed(1)}%; background:${colorVar};"></div></div>
-          <div class="barVal">${fmtInt(n)}${total > 0 ? ` (${fmt1(pct)}%)` : ''}</div>
-        </div>`;
-      }).join('');
+
+      // Destroy prior chart instance (re-render safe)
+      const prior = window[winKey];
+      if (prior && typeof prior.destroy === 'function') prior.destroy();
+
+      const total = totalFarmers || 0;
+
+      const entries = [...mp.entries()]
+        .map(([k, v]) => [String(k || '').trim(), Number(v) || 0])
+        .filter(([k, v]) => k && v > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (!entries.length) {
+        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'No entries captured.')}</div>`;
+        try {
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } catch (_) {}
+        return;
+      }
+
+      // Top reasons + aggregate remainder
+      const top = entries.slice(0, 6);
+      const rest = entries.slice(6);
+      if (rest.length) {
+        const other = rest.reduce((acc, [, v]) => acc + (Number(v) || 0), 0);
+        if (other > 0) top.push(['Other', other]);
+      }
+
+      const labels = top.map(([k]) => k);
+      const values = top.map(([, v]) => Number(v) || 0);
+
+      const n = Math.max(values.length, 1);
+      const colors = values.map((_, i) => `hsl(${(hueBase + (i * 360) / n) % 360} 65% 55%)`);
+
+      // Render compact legend (keeps row alignment stable)
+      if (legend) {
+        legend.innerHTML = top.map(([k, v], i) => {
+          const cnt = Number(v) || 0;
+          const pctFarmers = total ? (cnt / total) * 100 : null;
+          return `<div class="legendItem">
+            <span class="legendDot" style="background:${colors[i]};"></span>
+            <span class="legendText">${esc(k)}</span>
+            <span class="legendVal">${fmtInt(cnt)}${pctFarmers != null ? ` (${fmt1(pctFarmers)}%)` : ''}</span>
+          </div>`;
+        }).join('');
+      }
+
+      // Build chart
+      window[winKey] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '60%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = Number(ctx.parsed) || 0;
+                  const sum = (ctx.dataset.data || []).reduce((acc, v) => acc + (Number(v) || 0), 0);
+                  const pctReasons = sum ? ((val / sum) * 100).toFixed(1) : '0.0';
+                  const pctFarmers = total ? ((val / total) * 100).toFixed(1) : null;
+                  return `${lab}: ${fmtInt(val)}${pctFarmers != null ? ` (${pctFarmers}% of farmers)` : ''} • ${pctReasons}% of reasons`;
+                }
+              }
+            }
+          }
+        }
+      });
     };
 
-    renderBarChart(drivers, '#driversChart');
-    renderBarChart(barriers, '#barriersChart');
-
+    renderReasonsDonut(drivers, '#driversDonut', '#driversLegend', 'driversDonutChart', 'No driver entries yet.', 200);
+    renderReasonsDonut(barriers, '#barriersDonut', '#barriersLegend', 'barriersDonutChart', 'No barrier entries yet.', 12);
     // ---------- Data readiness / status ----------
     setStatus(
       `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
@@ -2297,13 +2362,57 @@
     });
   }
 
-  // ---------- Boot ----------
+  
+  // ---------- Donut row auto-scroll ----------
+  // Creates a subtle horizontal auto-scroll for donut rows, and pauses on mouse-over / interaction.
+  function initDonutRows() {
+    const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
+    rows.forEach((row) => {
+      if (row.dataset._autoBound === '1') return;
+      row.dataset._autoBound = '1';
+
+      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
+      let paused = false;
+      let wheelTimer = null;
+
+      const step = () => {
+        if (!paused && !document.hidden && speed > 0) {
+          const max = row.scrollWidth - row.clientWidth;
+          if (max > 4) {
+            row.scrollLeft += speed;
+            if (row.scrollLeft >= max - 1) row.scrollLeft = 0;
+          }
+        }
+        requestAnimationFrame(step);
+      };
+
+      row.addEventListener('mouseenter', () => { paused = true; });
+      row.addEventListener('mouseleave', () => { paused = false; });
+
+      row.addEventListener('focusin', () => { paused = true; });
+      row.addEventListener('focusout', () => { paused = false; });
+
+      row.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+
+      row.addEventListener('wheel', () => {
+        paused = true;
+        if (wheelTimer) clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => { paused = false; }, 800);
+      }, { passive: true });
+
+      // Start loop
+      requestAnimationFrame(step);
+    });
+  }
+
+// ---------- Boot ----------
   async function boot() {
     try {
       bindDrawer();
       bindLightbox();
       bindFeedback();
       bindTopControls();
+      initDonutRows();
       bindTabEvents();
 
       await loadCampaignRegistry();

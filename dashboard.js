@@ -16,19 +16,24 @@
 
   // ---------- URL helpers ----------
   const BASE = new URL('.', window.location.href);
+  const url = (p) => new URL(p, BASE).toString();
+
+
+  // ---------- Data root ----------
+  // All JSON payloads are expected under this folder on GitHub Pages.
+  // Keeping this centralized prevents path drift (e.g., assets/data vs data).
   const DATA_ROOT = 'data';
-  const normalizeDataPath = (p) => {
-    let s = String(p || '').trim();
-    if (!s) return s;
-    // Strip leading slashes so URL(base) resolution is consistent on GitHub Pages.
-    s = s.replace(/^\/+/, '');
-    // Backward-compat: some older builds referenced assets/data/...
-    s = s.replace(/^assets\/data\//i, `${DATA_ROOT}/`);
-    // If a caller passes just 'campaigns.json', prefer data/campaigns.json
-    if (s === 'campaigns.json') s = `${DATA_ROOT}/campaigns.json`;
-    return s;
-  };
-  const url = (p) => new URL(normalizeDataPath(p), BASE).toString();
+
+  function normalizeDataPath(p) {
+    if (!p) return p;
+    p = String(p).replace(/^\/+/, '');
+    // Some older bundles used assets/data; normalize to data.
+    p = p.replace(/^assets\/data\//, 'data/');
+    p = p.replace(/^assets\/\/data\//, 'data/');
+    // Allow absolute-ish references like "data/..." or "./data/..."
+    p = p.replace(/^\.\//, '');
+    return p;
+  }
 
   function qs() {
     return new URLSearchParams(window.location.search);
@@ -357,7 +362,7 @@
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeout);
       try {
-        const u = url(path);
+        const u = url(normalizeDataPath(path));
         const r = await fetch(u, { cache: 'no-store', signal: controller.signal });
         clearTimeout(timer);
         if (!r.ok) {
@@ -381,7 +386,7 @@
 
   async function loadCampaignRegistry() {
     try {
-      const reg = await fetchJson('data/campaigns.json', 'campaign registry');
+      const reg = await fetchJson(`${DATA_ROOT}/campaigns.json`, 'campaign registry');
       state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
       return;
     } catch (e) {
@@ -400,6 +405,14 @@
     const el = $$('#statusBox');
     if (!el) return;
     el.textContent = msg;
+    // Mirror critical load errors into the map badge so issues are visible even when users switch tabs.
+    if (kind === 'bad') {
+      const mb = document.getElementById('mapStatus');
+      if (mb) {
+        mb.textContent = 'Error';
+        mb.className = 'badge badge--bad';
+      }
+    }
     el.className = 'status' + (kind ? ' status--' + kind : '');
   }
 
@@ -407,6 +420,14 @@
     const el = $$('#mapStatus');
     if (!el) return;
     el.textContent = msg;
+    // Mirror critical load errors into the map badge so issues are visible even when users switch tabs.
+    if (kind === 'bad') {
+      const mb = document.getElementById('mapStatus');
+      if (mb) {
+        mb.textContent = 'Error';
+        mb.className = 'badge badge--bad';
+      }
+    }
     el.className = 'badge' + (ok ? ' badge--ok' : '');
   }
 
@@ -475,46 +496,33 @@
 
           // Wait a tick for globals to attach.
           await new Promise(r => setTimeout(r, 0));
-          if (window.L && window.L.map) {
-            // Leaflet heat plugin may be loaded before Leaflet on some pages; ensure it is present.
-            if (!window.L.heatLayer) {
-              const heatSrcs = [
-                'https://unpkg.com/leaflet.heat/dist/leaflet-heat.js',
-                'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js'
-              ];
-              for (const h of heatSrcs) {
-                try {
-                  await loadScriptOnce(h);
-                  await new Promise(r => setTimeout(r, 0));
-                  if (window.L.heatLayer) break;
-                } catch (_e2) {}
-              }
-            }
-            return true;
-          }
+          if (window.L && window.L.map) return true;
         } catch (_e) {
           // try next
         }
 
         if (Date.now() - start > timeoutMs) break;
       }
-      if (window.L && window.L.map) {
-        if (!window.L.heatLayer) {
-          const heatSrcs = [
-            'https://unpkg.com/leaflet.heat/dist/leaflet-heat.js',
-            'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js'
-          ];
-          for (const h of heatSrcs) {
-            try {
-              await loadScriptOnce(h);
-              await new Promise(r => setTimeout(r, 0));
-              if (window.L.heatLayer) break;
-            } catch (_e2) {}
+      const leafletOk = !!(window.L && window.L.map);
+      if (!leafletOk) return false;
+
+      // Best-effort load of Leaflet.heat after Leaflet is ready.
+      if (!(window.L && window.L.heatLayer)) {
+        const heatSrcs = [
+          'https://unpkg.com/leaflet.heat/dist/leaflet-heat.js',
+          'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js'
+        ];
+        for (const hsrc of heatSrcs) {
+          try {
+            await loadScriptOnce(hsrc);
+            if (window.L && window.L.heatLayer) break;
+          } catch (_e) {
+            // try next
           }
         }
-        return true;
       }
-      return false;
+
+      return true;
     })();
 
     return leafletPromise;
@@ -937,14 +945,24 @@
       const bgColors = ['#89d329','#d9a420','#dc2626'];
       const ctxPie = decisionCanvas.getContext('2d');
       window.decisionChart = new Chart(ctxPie, {
-        type: 'pie',
-        data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors }] },
+        type: 'doughnut',
+        data: { 
+          labels: labels, 
+          datasets: [{ 
+            data: data, 
+            backgroundColor: bgColors,
+            borderColor: 'rgba(255,255,255,0.85)',
+            borderWidth: 2
+          }] 
+        },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
           plugins: {
             legend: {
-              position: 'right',
-              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
+              position: 'bottom',
+              labels: { usePointStyle: true, padding: 10, boxWidth: 10 }
             },
             tooltip: {
               callbacks: {
@@ -959,7 +977,139 @@
             }
           }
         }
+
+    // ---------- Additional breakdown charts (optional canvases) ----------
+    // These charts render ONLY if the corresponding <canvas> exists in the DOM.
+    // Add canvases in index.html with these ids to enable them:
+    //   - regionPie      (pie)     : share of farmers by region
+    //   - territoryPie   (pie)     : share of farmers by territory
+    //   - scoreBandsDonut (doughnut): session score distribution
+    function renderExtraBreakdowns(fs, idx) {
+      if (typeof Chart === 'undefined' || !Array.isArray(fs)) return;
+
+      const getFarmers = (s) => {
+        const si = idx?.get(s.sheetRef);
+        const v = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        return Number.isFinite(v) ? v : 0;
+      };
+
+      const byKey = (keyFn) => {
+        const map = new Map();
+        for (const s of fs) {
+          const key = keyFn(s) || 'Unknown';
+          const w = getFarmers(s) || 0;
+          if (!w) continue;
+          map.set(key, (map.get(key) || 0) + w);
+        }
+        // Sort desc
+        return [...map.entries()].sort((a,b) => b[1]-a[1]);
+      };
+
+      const makePie = (canvasId, rows, colors) => {
+        const el = $$('#' + canvasId);
+        if (!el) return;
+        if (el._chart && typeof el._chart.destroy === 'function') el._chart.destroy();
+
+        const labels = rows.map(r => r[0]);
+        const data = rows.map(r => r[1]);
+
+        const ctx = el.getContext('2d');
+        el._chart = new Chart(ctx, {
+          type: 'pie',
+          data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'rgba(255,255,255,0.85)', borderWidth: 2 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, padding: 10 } },
+              tooltip: {
+                callbacks: {
+                  label: function(c) {
+                    const total = c.dataset.data.reduce((a,v)=>a+v,0);
+                    const pct = total ? ((c.parsed/total)*100).toFixed(1) : 0;
+                    return `${c.label}: ${fmtInt(c.parsed)} farmers (${pct}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      };
+
+      const makeDonut = (canvasId, rows, colors) => {
+        const el = $$('#' + canvasId);
+        if (!el) return;
+        if (el._chart && typeof el._chart.destroy === 'function') el._chart.destroy();
+
+        const labels = rows.map(r => r[0]);
+        const data = rows.map(r => r[1]);
+
+        const ctx = el.getContext('2d');
+        el._chart = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'rgba(255,255,255,0.85)', borderWidth: 2 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, padding: 10 } },
+              tooltip: {
+                callbacks: {
+                  label: function(c) {
+                    const total = c.dataset.data.reduce((a,v)=>a+v,0);
+                    const pct = total ? ((c.parsed/total)*100).toFixed(1) : 0;
+                    return `${c.label}: ${fmtInt(c.parsed)} (${pct}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      };
+
+      // Region pie (top 6, rest grouped)
+      const reg = byKey(s => (s.region || s.reg || '').toString().trim().toUpperCase());
+      if (reg.length) {
+        const top = reg.slice(0, 6);
+        const rest = reg.slice(6);
+        if (rest.length) top.push(['Other', rest.reduce((a,r)=>a+r[1],0)]);
+        makePie('regionPie', top, ['#4c6fff','#22c55e','#f59e0b','#a855f7','#14b8a6','#f97316','#64748b']);
+      }
+
+      // Territory pie (top 6, rest grouped)
+      const terr = byKey(s => (s.territory || '').toString().trim());
+      if (terr.length) {
+        const top = terr.slice(0, 6);
+        const rest = terr.slice(6);
+        if (rest.length) top.push(['Other', rest.reduce((a,r)=>a+r[1],0)]);
+        makePie('territoryPie', top, ['#89d329','#00bcff','#f59e0b','#ef4444','#a855f7','#14b8a6','#64748b']);
+      }
+
+      // Score band donut (session count, not farmer-weighted)
+      const bands = [
+        ['90–100', 0],
+        ['80–89', 0],
+        ['70–79', 0],
+        ['60–69', 0],
+        ['<60', 0],
+        ['No score', 0],
+      ];
+      for (const s of fs) {
+        const sc = Number(s.score);
+        if (!Number.isFinite(sc)) { bands[5][1]++; continue; }
+        if (sc >= 90) bands[0][1]++;
+        else if (sc >= 80) bands[1][1]++;
+        else if (sc >= 70) bands[2][1]++;
+        else if (sc >= 60) bands[3][1]++;
+        else bands[4][1]++;
+      }
+      makeDonut('scoreBandsDonut', bands.filter(b=>b[1]>0), ['#22c55e','#84cc16','#f59e0b','#fb7185','#ef4444','#94a3b8']);
+    }
       });
+
+      // Render optional additional breakdown charts if canvases exist
+      renderExtraBreakdowns(fs, idx);
     }
 
     // ---------- Top sessions table (by score) ----------
@@ -1705,6 +1855,15 @@
         state.heatLayer = null;
       }
 
+      // If heat plugin is unavailable, disable the toggle button to reduce confusion.
+      if (!state.heatLayer) {
+        const heatBtn = document.getElementById('toggleHeat');
+        if (heatBtn) {
+          heatBtn.disabled = true;
+          heatBtn.textContent = 'Heatmap unavailable';
+        }
+      }
+
       updateMapData();
       setMapStatus('Ready', true);
       setTimeout(() => map.invalidateSize(), 250);
@@ -1888,9 +2047,9 @@
 
     setStatus('Loading sessions…');
 
-    const sessionsPath = state.campaign.sessionsUrl || `data/${id}/sessions.json`;
-    const mediaPath = state.campaign.mediaUrl || `data/${id}/media.json`;
-    const sheetsIndexPath = state.campaign.sheetsIndexUrl || `data/${id}/sheets_index.json`;
+    const sessionsPath = normalizeDataPath(state.campaign.sessionsUrl) || `${DATA_ROOT}/${id}/sessions.json`;
+    const mediaPath = normalizeDataPath(state.campaign.mediaUrl) || `${DATA_ROOT}/${id}/media.json`;
+    const sheetsIndexPath = normalizeDataPath(state.campaign.sheetsIndexUrl) || `${DATA_ROOT}/${id}/sheets_index.json`;
 
     // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
@@ -2028,6 +2187,81 @@
     $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
   }
 
+  // ---------- Hero media rotator (auto-advance) ----------
+  // Many pages include a "hero" area that shows a single featured image/video
+  // with manual next/prev controls. If the DOM contains an identifiable hero
+  // rotator, this enables automatic looping without interfering when the hero
+  // is absent or when users prefer reduced motion.
+    // ---------- Hero autoplay (auto-advance) ----------
+  // The dashboard hero is driven by Next/Prev buttons (#heroNext/#heroPrev) that swap the
+  // currently displayed media. If autoplay is desired, the safest approach is to trigger
+  // the existing "Next" behavior on a timer, while respecting reduced-motion preferences,
+  // pausing on hover/focus, and pausing when the tab is hidden.
+  function initHeroRotator() {
+    const prefersReduced = (() => {
+      try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+      catch (_e) { return false; }
+    })();
+    if (prefersReduced) return;
+
+    const heroWrap = document.querySelector('#heroWrap') || document.querySelector('.hero') || document.querySelector('[data-hero]');
+    const btnNext = document.querySelector('#heroNext') || document.querySelector('[data-hero-next]');
+    if (!btnNext) return;
+
+    // If the hero media is a <video>, make it as autoplay-friendly as possible.
+    const heroVideo = document.querySelector('#heroVideo') || document.querySelector('video#hero') || (heroWrap ? heroWrap.querySelector('video') : null);
+    if (heroVideo) {
+      try {
+        heroVideo.muted = true;
+        heroVideo.playsInline = true;
+        heroVideo.setAttribute('playsinline', '');
+      } catch (_e) { /* no-op */ }
+    }
+
+    const INTERVAL_MS = 6500;
+
+    let timer = null;
+    let paused = false;
+
+    const clear = () => {
+      if (timer) { clearInterval(timer); timer = null; }
+    };
+
+    const start = () => {
+      if (timer || paused) return;
+      timer = setInterval(() => {
+        // If the page is hidden, don't advance.
+        if (document.hidden) return;
+        // Trigger the same behavior as manual click.
+        try { btnNext.click(); } catch (_e) { /* ignore */ }
+      }, INTERVAL_MS);
+    };
+
+    const setPaused = (v) => {
+      paused = !!v;
+      if (paused) clear();
+      else start();
+    };
+
+    // Pause when the hero is interacted with.
+    if (heroWrap) {
+      heroWrap.addEventListener('mouseenter', () => setPaused(true));
+      heroWrap.addEventListener('mouseleave', () => setPaused(false));
+      heroWrap.addEventListener('focusin', () => setPaused(true));
+      heroWrap.addEventListener('focusout', () => setPaused(false));
+      heroWrap.addEventListener('touchstart', () => setPaused(true), { passive: true });
+      heroWrap.addEventListener('touchend', () => setPaused(false));
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clear();
+      else if (!paused) start();
+    });
+
+    start();
+  }
+
+
   function exportCsv() {
     const rows = [];
     rows.push(['id','sheetRef','date','district','village','score'].join(','));
@@ -2091,6 +2325,7 @@
       bindLightbox();
       bindFeedback();
       bindTopControls();
+      initHeroRotator();
       bindTabEvents();
 
       await loadCampaignRegistry();

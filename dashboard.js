@@ -186,10 +186,6 @@
     const isVid = /\.(mp4|webm)$/i.test(norm);
 
     function addVariantBases(base) {
-      // Support common variant naming:
-      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
-      //   17_a.jpg <-> 17a.jpg
-      // (applies for a-f, but will also include single-letter suffixes generally)
       const m1 = base.match(/^(.*?)([a-z])$/i);
       const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
       if (m1) {
@@ -211,12 +207,13 @@
         return;
       }
       add(base);
-      // Also try the simplest "a" variant both joined and separated
-      add(base + 'a');
-      add(base + '_a');
-      add(base + '-a');
+      // Support a-f variants explicitly for grouping
+      'abcdef'.split('').forEach((suf) => {
+        add(base + suf);
+        add(base + '_' + suf);
+        add(base + '-' + suf);
+      });
     }
-
     if (isImg) {
       const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
       const bases = [];
@@ -300,6 +297,14 @@
     return '';
   }
 
+
+  async function resolveAllExisting(p) {
+    const cands = candidatePaths(p);
+    // Parallelize existence checks for speed; keep only those that exist.
+    const results = await Promise.all(cands.map(async (c) => (await assetExists(c)) ? c : null));
+    return results.filter(Boolean);
+  }
+
   function attachSmartImage(imgEl, path) {
     let cancelled = false;
     const placeholder = 'assets/placeholder.svg';
@@ -316,6 +321,31 @@
     };
 
     return () => { cancelled = true; };
+  }
+
+  function attachVideoThumb(videoEl, path, opts = {}) {
+    const {
+      autoplay = false,
+      loop = autoplay,
+      muted = true,
+      controls = false,
+      preload = 'metadata',
+    } = opts;
+
+    videoEl.muted = muted;
+    videoEl.loop = loop;
+    videoEl.autoplay = autoplay;
+    videoEl.controls = controls;
+    videoEl.playsInline = true;
+    videoEl.preload = preload;
+
+    // We typically pass in an already-resolved path; set it directly.
+    videoEl.src = url(path);
+
+    if (autoplay) {
+      // Muted autoplay is usually allowed; ignore failures gracefully.
+      try { videoEl.play().catch(() => {}); } catch (_) {}
+    }
   }
 
   function attachSmartVideo(videoEl, path) {
@@ -1537,9 +1567,13 @@
     ];
   }
 
-  function renderMedia() {
+  async function renderMedia() {
     const grid = $$('#mediaGrid');
     if (!grid) return;
+
+    const schedule = () => {
+      renderMedia().catch((e) => console.warn('[WheatCampaign] renderMedia failed', e));
+    };
 
     // Bind media toolbar events once
     if (!state._mediaBound) {
@@ -1554,7 +1588,7 @@
         // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
         state.mediaLimit = 24;
-        renderMedia();
+        schedule();
       });
 
       const search = $$('#mediaSearch');
@@ -1562,7 +1596,7 @@
         search.addEventListener('input', () => {
           state.mediaSearch = String(search.value || '').trim().toLowerCase();
           state.mediaLimit = 24;
-          renderMedia();
+          schedule();
         });
       }
 
@@ -1570,7 +1604,7 @@
       if (sort) {
         sort.addEventListener('change', () => {
           state.mediaSort = String(sort.value || 'newest');
-          renderMedia();
+          schedule();
         });
       }
 
@@ -1578,13 +1612,10 @@
       if (more) {
         more.addEventListener('click', () => {
           state.mediaLimit = Number(state.mediaLimit || 24) + 24;
-          renderMedia();
+          schedule();
         });
       }
     }
-
-    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
-    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
 
     const q = String(state.mediaSearch || '').trim().toLowerCase();
     const type = String(state.mediaType || 'all');
@@ -1592,12 +1623,12 @@
 
     let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
 
-    // Filter to sessions that actually have media
-    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+    // Filter to sessions that have *any* media references (variants resolved later)
+    list = list.filter(s => allMediaItems(s).length > 0);
 
-    // Type filter
-    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
-    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+    // Type filter (raw metadata)
+    if (type === 'videos') list = list.filter(s => (s.media && Array.isArray(s.media.videos) && s.media.videos.length));
+    if (type === 'images') list = list.filter(s => (s.media && Array.isArray(s.media.images) && s.media.images.length));
 
     // Text filter
     if (q) {
@@ -1605,7 +1636,8 @@
         const sheet = String(s.sheetRef || '');
         const district = String(s.district || '');
         const village = String(s.village || s.spot || '');
-        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+        const name = `${sheet} ${district} ${village}`.toLowerCase();
+        return name.includes(q);
       });
     }
 
@@ -1620,67 +1652,127 @@
     const limit = Math.max(0, Number(state.mediaLimit || 24));
     const shown = list.slice(0, limit);
 
-    const cards = shown.map(s => {
+    // Early UI feedback while we resolve variants
+    grid.innerHTML = total ? `<div class="muted" style="padding:10px;">Loading media…</div>` : '';
+
+    const cards = [];
+    for (const s of shown) {
+      const sidNum = Number(s.id);
       const sid = esc(s.id);
       const sheet = esc(s.sheetRef || '');
       const district = esc(s.district || '');
       const village = esc(s.village || s.spot || '');
-      // Determine thumbnail: prefer first video if available; otherwise first image
-      const vidPath = firstMediaVideo(s);
-      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
-      const img = firstMediaImage(s);
       const title = `${sheet} • ${district} • ${village}`;
+
       const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
-      // Build thumb markup
-      let thumb;
-      let badge;
-      if (vidPath) {
-        // Show auto-playing muted preview
-        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
-        badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
-      } else {
-        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
-        badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
+
+      // Resolve all existing variants across all referenced media for this session
+      const raw = allMediaItems(s);
+      const expanded = [];
+      const seen = new Set();
+      if (raw.length) {
+        const batches = await Promise.all(raw.map(async (it) => {
+          const p = normalizeMediaPath(it.path);
+          const found = await resolveAllExisting(p);
+          return found;
+        }));
+        for (const found of batches) {
+          for (const p of (found || [])) {
+            if (!p) continue;
+            const key = String(p);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            expanded.push(p);
+          }
+        }
       }
-      return `<div class="mediaCard" data-session-id="${sid}">
-        <div class="mediaThumb">
+
+      // Decide thumb rendering
+      let badge;
+      let thumbInner = '';
+      const thumbClass = expanded.length > 1 ? 'mediaThumb mediaThumb--group' : 'mediaThumb';
+
+      if (expanded.length === 0) {
+        badge = `<div class="mediaBadge" title="Missing">${photoIcon}<span>Missing</span></div>`;
+        thumbInner = `<img class="mediaThumbEl mediaThumbEl--single" data-thumb-path="assets/placeholder.svg" alt="${esc(title)}" loading="lazy" />`;
+      } else if (expanded.length === 1) {
+        const p = expanded[0];
+        const isVideo = /\.(mp4|webm)$/i.test(p);
+        if (isVideo) {
+          badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
+          thumbInner = `<video class="mediaThumbEl mediaThumbEl--single" data-thumb-path="${esc(p)}" autoplay loop muted playsinline preload="metadata"></video>`;
+        } else {
+          badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
+          thumbInner = `<img class="mediaThumbEl mediaThumbEl--single" data-thumb-path="${esc(p)}" alt="${esc(title)}" loading="lazy" />`;
+        }
+      } else {
+        const maxThumbs = 9;
+        const slice = expanded.slice(0, maxThumbs);
+        const rest = Math.max(0, expanded.length - slice.length);
+        badge = `<div class="mediaBadge" title="Group">${photoIcon}<span>${expanded.length} items</span></div>`;
+        const thumbs = slice.map(p => {
+          const isVideo = /\.(mp4|webm)$/i.test(p);
+          if (isVideo) {
+            return `<video class="mediaThumbEl" data-thumb-path="${esc(p)}" muted playsinline preload="metadata"></video>`;
+          }
+          return `<img class="mediaThumbEl" data-thumb-path="${esc(p)}" alt="thumb" loading="lazy" />`;
+        }).join('');
+        thumbInner = `<div class="mediaThumbs">${thumbs}${rest ? `<div class="mediaMore">+${rest}</div>` : ''}</div>`;
+      }
+
+      cards.push(`<div class="mediaCard" data-session-id="${sid}" data-session-id-num="${esc(String(sidNum))}">
+        <div class="${thumbClass}">
           ${badge}
-          ${thumb}
+          ${thumbInner}
         </div>
         <div class="mediaMeta">
           <div class="mediaTitle">${esc(title)}</div>
           <div class="mediaActions">
-            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
+            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(String(s.sheetRef || ''))}">Sheet</a>
             <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
             <button class="btn btnSmall btnGhost" data-action="open">Open</button>
           </div>
         </div>
-        <div class="hidden" data-thumb-path="${esc(img)}"></div>
-      </div>`;
-    });
+      </div>`);
+    }
 
     grid.innerHTML = cards.join('');
 
     // Update count + load more button
     const countEl = $$('#mediaCount');
-    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
+    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total} sessions` : 'No media for current filters';
     const moreBtn = $$('#mediaLoadMore');
     if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
 
-    // attach thumbs
-    $$$('[data-media-thumb="1"]', grid).forEach(img => {
-      const card = img.closest('.mediaCard');
-      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
-      attachSmartImage(img, p || 'assets/placeholder.svg');
+    // Attach thumbnails (smart loaders)
+    $$$('[data-thumb-path]', grid).forEach(el => {
+      const p = el.getAttribute('data-thumb-path') || '';
+      if (!p) return;
+      if (el.tagName === 'IMG') {
+        attachSmartImage(el, p);
+      } else if (el.tagName === 'VIDEO') {
+        const isSingle = el.classList.contains('mediaThumbEl--single');
+        attachVideoThumb(el, p, { autoplay: isSingle, loop: isSingle, controls: false });
+      }
     });
 
+    // Click handling: thumb -> open lightbox starting at that item; card -> open full lightbox
     grid.onclick = (ev) => {
+      const thumb = ev.target.closest('.mediaThumbEl[data-thumb-path]');
       const card = ev.target.closest('.mediaCard[data-session-id]');
       if (!card) return;
-      const sid = Number(card.dataset.sessionId);
+
+      const sid = Number(card.dataset.sessionIdNum || card.dataset.sessionId);
       if (ev.target.closest('a')) return;
 
-      // Open lightbox with all items
+      if (thumb) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const p = thumb.getAttribute('data-thumb-path') || '';
+        openLightbox(sid, p);
+        return;
+      }
+
       openLightbox(sid);
     };
   }
@@ -1688,7 +1780,7 @@
   function renderAll() {
     renderSummary();
     renderSessionsTable();
-    renderMedia();
+    renderMedia().catch((e)=>console.warn('[WheatCampaign] renderMedia failed', e));
     updateMapData(); // markers reflect filter
   }
 
@@ -1912,7 +2004,7 @@
     });
   }
 
-  async function openLightbox(sessionId) {
+  async function openLightbox(sessionId, startPath = '') {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
     const lb = $$('#lightbox');
@@ -1924,10 +2016,44 @@
     lb.classList.add('open');
     body.innerHTML = '';
 
-    const items = allMediaItems(s);
-    if (!items.length) {
+    const rawItems = allMediaItems(s);
+    if (!rawItems.length) {
       body.innerHTML = '<div class="muted">No media listed for this session.</div>';
       return;
+    }
+
+    // Expand variants to actual existing assets (handles 17 -> 17a/17b/... etc)
+    const expanded = [];
+    const seen = new Set();
+    const expansions = await Promise.all(rawItems.map(async (it) => {
+      const found = await resolveAllExisting(it.path);
+      return { it, found };
+    }));
+    for (const { found } of expansions) {
+      for (const p of found) {
+        if (!p) continue;
+        const key = String(p);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const isVid = /\.(mp4|webm)$/i.test(p);
+        expanded.push({ type: isVid ? 'video' : 'image', path: p });
+      }
+    }
+
+    const items = expanded;
+    if (!items.length) {
+      body.innerHTML = '<div class="muted">No media files found for this session.</div>';
+      return;
+    }
+
+    // If a specific file was clicked, show it first
+    const sp = startPath ? String(startPath) : '';
+    if (sp) {
+      const idx = items.findIndex(it => it.path === sp);
+      if (idx > 0) {
+        const sel = items.splice(idx, 1)[0];
+        items.unshift(sel);
+      }
     }
 
     // Show first item large; rest as thumbnails
@@ -1945,9 +2071,12 @@
       v.playsInline = true;
       v.setAttribute('playsinline','');
       body.appendChild(v);
-      const chosen = await resolveFirstExisting(main.path);
-      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
-    }
+      v.controls = true;
+      v.preload = 'metadata';
+      v.muted = true;
+      v.playsInline = true;
+      v.src = url(main.path);
+}
 
     if (items.length > 1) {
       const row = document.createElement('div');
@@ -1972,7 +2101,7 @@
           tv.playsInline = true;
           tv.setAttribute('playsinline','');
           row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
+          attachVideoThumb(tv, it.path, { autoplay: false, loop: false, controls: false });
           tv.onclick = () => {
             body.innerHTML = '';
             lb.classList.add('open');
@@ -2392,12 +2521,16 @@
 
   function bindTabEvents() {
     window.addEventListener('hashchange', syncTabFromHash);
-    document.addEventListener('tabchange', (e) => {
+    document.addEventListener('tabchange', async (e) => {
       const tab = e.detail?.tab;
       if (tab === 'map') {
         // Give Leaflet time to render after display
         setTimeout(ensureMapReady, 50);
         setTimeout(() => state.map?.invalidateSize(), 200);
+        return;
+      }
+      if (tab === 'media') {
+        await renderMedia();
       }
     });
   }

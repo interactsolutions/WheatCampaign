@@ -1403,28 +1403,78 @@ h2, h3{
   border: 1px solid rgba(92,74,42,.15);
 }
 
-/* ================================
-   Wheat success KPIs (final override)
-   ================================ */
-.kpi--awareness,
-.kpi--definite{
-  background: linear-gradient(90deg,
-    rgba(137,211,41,.18) 0%,
-    rgba(241,219,179,.22) 70%,
-    rgba(0,188,255,.10) 100%);
-  border-color: rgba(241,219,179,.35);
-}
-[data-theme="light"] .kpi--awareness,
-[data-theme="light"] .kpi--definite{
-  background: linear-gradient(90deg,
-    rgba(137,211,41,.14) 0%,
-    rgba(241,219,179,.26) 75%,
-    rgba(0,188,255,.06) 100%);
-}
-.kpi--awareness .kpiLabel::before,
-.kpi--definite .kpiLabel::before{
-  background: var(--wheat);
+
+/* ===========================
+   Media tab refinements (compact grid + grouping)
+   =========================== */
+.mediaGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  /* Disable masonry columns for a consistent icon grid */
+  column-count: initial;
+  column-gap: initial;
 }
 
-/* Micro-interaction safety (GPU hint) */
-.heroThumb{ will-change: transform; }
+.mediaCard{ margin: 0; }
+
+.mediaThumb{
+  aspect-ratio: auto;
+  height: 120px;
+}
+
+.mediaThumb > img,
+.mediaThumb > video{
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.mediaThumb--group{
+  height: auto;
+  padding: 8px;
+}
+
+.mediaThumb--group .mediaThumbs{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 4px;
+}
+
+.mediaThumbEl{
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.mediaThumbEl--single{
+  height: 120px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mediaThumbEl:hover{
+  transform: scale(1.05);
+  transition: var(--t);
+}
+
+.mediaMore{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px dashed var(--stroke);
+  color: var(--muted);
+  background: rgba(0,0,0,.08);
+  height: 60px;
+}
+
+[data-theme="dark"] .mediaMore{
+  background: rgba(0,0,0,.25);
+}
+

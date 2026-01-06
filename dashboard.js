@@ -2,13 +2,8 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-05.6";
+  const WHEATCAMPAIGN_BUILD = "2026-01-06.mediafix14";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
-
-  const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
-  function chartAnimation(){
-    return REDUCE_MOTION ? false : { duration: 1500, easing: "easeOutBounce" };
-  }
 
   // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
   window.addEventListener("error", (e) => {
@@ -36,7 +31,7 @@
   const $$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const esc = (s) => {
     const d = document.createElement('div');
-    d.textContent = String((s === null || s === undefined) ? '' : s);
+    d.textContent = String(s ?? '');
     return d.innerHTML;
   };
 
@@ -141,124 +136,201 @@
   // ---------- Media path resolution ----------
   const existsCache = new Map(); // url -> boolean
 
-
-function coalesce() {
-  for (let i = 0; i < arguments.length; i++) {
-    const v = arguments[i];
-    if (v !== null && v !== undefined) return v;
-  }
-  return undefined;
-}
-
   function normalizeMediaPath(p) {
-  const raw = String((p === null || p === undefined) ? '' : p).trim();
-  if (!raw) return '';
-  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+    const raw = String(p ?? '').trim();
+    if (!raw) return '';
+    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
 
-  let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
+    let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
 
-  // Already rooted correctly
-  if (x.startsWith('assets/')) return x;
+    // Already rooted correctly
+    if (x.startsWith('assets/')) return x;
 
-  // Common patterns from sessions.json
-  if (x.startsWith('gallery/')) return 'assets/' + x;
+    // Common patterns from sessions.json
+    if (x.startsWith('gallery/')) return 'assets/' + x;
 
-  // Sometimes data stores just the filename
-  if (!x.includes('/')) return 'assets/gallery/' + x;
+    // Sometimes data stores just the filename
+    if (!x.includes('/')) return 'assets/gallery/' + x;
 
-  // Default: relative as-is
-  return x;
-}
+    // Default: relative as-is
+    return x;
+  }
 
-  // --- IMPROVED MEDIA LOGIC (low-noise candidate generation) ---
-function candidatePaths(p) {
-  const norm = normalizeMediaPath(p);
-  if (!norm || /^(https?:|data:|blob:)/i.test(norm)) return norm ? [norm] : [];
+    // --- IMPROVED MEDIA LOGIC (low-noise candidates, gesture-safe video playback) ---
+  // Narrow down candidates to reduce 404 noise and speed up resolution.
+  function candidatePaths(p) {
+    const norm = normalizeMediaPath(p);
+    if (!norm) return [''];
+    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
 
-  const cands = [];
-  const add = (v) => {
-    if (v && cands.indexOf(v) === -1) cands.push(v);
+    const extMatch = norm.match(/\.([a-z0-9]+)$/i);
+    const ext = extMatch ? extMatch[1].toLowerCase() : '';
+    const base = norm.replace(/\.(jpeg|jpg|png|webp|mp4|webm)$/i, '');
+    const file = norm.split('/').pop() || norm;
+
+    const cands = [];
+    function add(x){ if (x) cands.push(x); }
+
+    // Original
+    add(norm);
+
+    // Root-level gallery fallback for common patterns
+    if (!/\/assets\/gallery\//i.test(norm)) {
+      add('assets/gallery/' + file);
+    }
+
+    // Simple suffix variants (common: a / _a / -a)
+    if (ext) {
+      add(base + 'a.' + ext);
+      add(base + '_a.' + ext);
+      add(base + '-a.' + ext);
+    }
+
+    // Minimal extension swaps (jpg<->jpeg, mp4<->webm)
+    if (ext === 'jpg') add(base + '.jpeg');
+    if (ext === 'jpeg') add(base + '.jpg');
+    if (ext === 'mp4') add(base + '.webm');
+    if (ext === 'webm') add(base + '.mp4');
+
+    // De-dup
+    return Array.from(new Set(cands));
   };
 
-  // Original
-  add(norm);
+    // Always start with the normalized path.
+    add(norm);
 
-  // Root-level gallery fallback (common GitHub Pages layout)
-  if (!norm.includes('assets/gallery/')) {
-    const fname = norm.split('/').pop();
-    add('assets/gallery/' + fname);
+    // If request is wrong folder (root) try under assets/gallery
+    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
+      const fname = norm.split('/').pop();
+      add('assets/gallery/' + fname);
+    }
+
+    // Extension swaps
+    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
+    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
+    const isVid = /\.(mp4|webm)$/i.test(norm);
+
+    function addVariantBases(base) {
+      // Support common variant naming:
+      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
+      //   17_a.jpg <-> 17a.jpg
+      // (applies for a-f, but will also include single-letter suffixes generally)
+      const m1 = base.match(/^(.*?)([a-z])$/i);
+      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
+      if (m1) {
+        const root = m1[1];
+        const suf = m1[2];
+        add(base);
+        add(root + '_' + suf);
+        add(root + '-' + suf);
+        // also try without suffix (helps when data references 17a but file is 17)
+        add(root);
+        return;
+      }
+      if (m2) {
+        const root = m2[1];
+        const suf = m2[2];
+        add(base);
+        add(root + suf);
+        add(root);
+        return;
+      }
+      add(base);
+      // Also try the simplest "a" variant both joined and separated
+      add(base + 'a');
+      add(base + '_a');
+      add(base + '-a');
+    }
+
+    if (isImg) {
+      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
+      const bases = [];
+      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+
+      // Collect base variants first, then add extensions.
+      const before = candidates.length;
+      addVariantBases(base);
+      for (let i = before; i < candidates.length; i++) {
+        const c = candidates[i];
+        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
+      }
+
+      // Ensure original base is also present.
+      addBase(base);
+
+      for (const b of bases) {
+        for (const e of imgExts) add(b + e);
+      }
+    }
+
+    if (isVid) {
+      const base = norm.replace(/\.(mp4|webm)$/i, '');
+      const bases = [];
+      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+
+      const before = candidates.length;
+      addVariantBases(base);
+      for (let i = before; i < candidates.length; i++) {
+        const c = candidates[i];
+        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
+      }
+      addBase(base);
+
+      for (const b of bases) {
+        add(b + '.mp4');
+        add(b + '.webm');
+      }
+    }
+
+    // Only keep candidates that look like concrete asset files (avoid hammering the network
+    // with extension-less paths).
+    return candidates.filter(c =>
+      /^(https?:|data:|blob:)/i.test(c)
+      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
+    );
   }
 
-  // Extension swap (jpeg<->jpg, mp4<->webm)
-  const mExt = norm.match(/\.(jpeg|jpg|png|webp|mp4|webm)$/i);
-  const ext = mExt ? mExt[1].toLowerCase() : '';
-  const base = mExt ? norm.slice(0, -1 * (ext.length + 1)) : norm;
+    // Fast existence check with caching (HEAD). Keeps console noise low (no <img src> until confirmed).
+  const missingCache = new Map();  // url -> true
 
-  if (ext === 'jpeg') add(base + '.jpg');
-  if (ext === 'jpg') add(base + '.jpeg');
-  if (ext === 'mp4') add(base + '.webm');
-  if (ext === 'webm') add(base + '.mp4');
-
-  // Simple 'a' suffix variants (common convention)
-  if (ext) {
-    add(base + 'a.' + ext);
-    add(base + '_a.' + ext);
-    add(base + '-a.' + ext);
-
-    // Also try suffix variants with swapped jpeg/jpg and mp4/webm
-    if (ext === 'jpeg') {
-      add(base + 'a.jpg'); add(base + '_a.jpg'); add(base + '-a.jpg');
-    }
-    if (ext === 'jpg') {
-      add(base + 'a.jpeg'); add(base + '_a.jpeg'); add(base + '-a.jpeg');
-    }
-    if (ext === 'mp4') {
-      add(base + 'a.webm'); add(base + '_a.webm'); add(base + '-a.webm');
-    }
-    if (ext === 'webm') {
-      add(base + 'a.mp4'); add(base + '_a.mp4'); add(base + '-a.mp4');
-    }
-  }
-
-  return cands;
-}
-
-  // Fast existence check. We intentionally avoid generating <img>/<video src> until we have a valid candidate,
-// which dramatically reduces console 404 noise and improves responsiveness.
-async function assetExists(relOrAbs) {
-  const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
-  if (existsCache.has(u)) return existsCache.get(u);
-
-  try {
-    const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
-    const ok = !!r && r.ok;
-    existsCache.set(u, ok);
-    return ok;
-  } catch (_e) {
-    existsCache.set(u, false);
-    return false;
-  }
-}
-
-  async function resolveFirstExisting(p) {
-  const cands = candidatePaths(p);
-  for (let i = 0; i < cands.length; i++) {
-    const c = cands[i];
-    // Prefer cached ok results without any network call.
-    const u = /^(https?:|data:|blob:)/i.test(c) ? c : url(c);
-    if (existsCache.has(u) && existsCache.get(u)) return c;
+  async function assetExists(p) {
+    const u = url(p);
+    if (!u) return false;
+    if (existsCache.get(u)) return true;
+    if (missingCache.get(u)) return false;
 
     try {
       const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
-      const ok = !!r && r.ok;
-      existsCache.set(u, ok);
-      if (ok) return c;
-    } catch (_e) {
-      // ignore
-    }
+      if (r && r.ok) {
+        existsCache.set(u, true);
+        return true;
+      }
+    } catch (e) { /* silent */ }
+    missingCache.set(u, true);
+    return false;
   }
-  return '';
-}
+
+  async function resolveFirstExisting(p) {
+    const cands = candidatePaths(p);
+    for (const c of cands) {
+      if (!c) continue;
+      const u = url(c);
+      if (!u) continue;
+      if (existsCache.get(u)) return c;
+      if (missingCache.get(u)) continue;
+      try {
+        const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
+        if (r && r.ok) {
+          existsCache.set(u, true);
+          return c;
+        }
+      } catch (e) { /* silent */ }
+      missingCache.set(u, true);
+    }
+    return '';
+  }
+    return '';
+  }
 
   function attachSmartImage(imgEl, path) {
     let cancelled = false;
@@ -278,74 +350,57 @@ async function assetExists(relOrAbs) {
     return () => { cancelled = true; };
   }
 
-  // Pre-resolve video sources so user-gesture clicks can call play() synchronously without an async gap.
-const resolvedSrcCache = new Map(); // normPath -> absolute URL
+    function attachSmartVideo(videoEl, path) {
+    const placeholder = 'assets/placeholder-video.mp4';
 
-function attachSmartVideo(videoEl, path, opts) {
-  opts = opts || {};
-  const placeholder = 'assets/placeholder-video.mp4';
+    // Pre-resolve source so it is ready before user gesture.
+    (async () => {
+      try {
+        const chosen = await resolveFirstExisting(path);
+        videoEl.src = chosen ? url(chosen) : url(placeholder);
+        // Warm up for faster start (metadata is usually enough)
+        try { videoEl.load(); } catch (e) {}
+      } catch (e) {
+        videoEl.src = url(placeholder);
+      }
+    })();
 
-  const norm = normalizeMediaPath(path);
-  const cacheKey = norm || String(path || '');
-  const wantsMuted = !!opts.muted;
-  const wantsLoop = !!opts.loop;
-
-  videoEl.preload = opts.preload || 'metadata';
-  videoEl.controls = !!opts.controls;
-  videoEl.playsInline = true;
-  videoEl.setAttribute('playsinline', '');
-
-  if (wantsLoop) videoEl.loop = true;
-  if (wantsMuted) {
-    videoEl.muted = true;
-    videoEl.setAttribute('muted', '');
+    videoEl.preload = 'metadata';
+    videoEl.controls = true;
+    videoEl.playsInline = true;
   }
 
-  // Start resolving immediately (no user gesture required).
-  (async () => {
-    if (!norm) {
-      videoEl.src = url(placeholder);
-      try { videoEl.load(); } catch (_e) {}
-      return;
-    }
+  // Muted looping thumbnail preview; click toggles play/pause without opening lightbox.
+  function attachSmartVideoThumb(videoEl, path) {
+    const placeholder = 'assets/placeholder-video.mp4';
 
-    const cached = resolvedSrcCache.get(cacheKey);
-    if (cached) {
-      videoEl.src = cached;
-      try { videoEl.load(); } catch (_e) {}
-      return;
-    }
+    videoEl.muted = true;
+    videoEl.loop = true;
+    videoEl.playsInline = true;
+    videoEl.preload = 'metadata';
+    videoEl.controls = false;
 
-    const chosen = await resolveFirstExisting(norm);
-    const finalSrc = chosen ? url(chosen) : url(placeholder);
-    resolvedSrcCache.set(cacheKey, finalSrc);
+    (async () => {
+      try {
+        const chosen = await resolveFirstExisting(path);
+        videoEl.src = chosen ? url(chosen) : url(placeholder);
+        try { videoEl.load(); } catch (e) {}
+      } catch (e) {
+        videoEl.src = url(placeholder);
+      }
+    })();
 
-    // Only set if element is still connected.
-    if (videoEl && videoEl.isConnected) {
-      videoEl.src = finalSrc;
-      try { videoEl.load(); } catch (_e) {}
-    }
-  })();
-
-  // Optional click-to-toggle (must be synchronous to preserve user gesture)
-  if (opts.togglePlayOnClick) {
     videoEl.addEventListener('click', (e) => {
-      if (opts.stopPropagation) e.stopPropagation();
+      // Option A: clicking the thumb toggles play/pause, card click still opens lightbox.
+      e.stopPropagation();
       if (videoEl.paused) {
-        const pp = videoEl.play();
-        if (pp && pp.catch) pp.catch(() => { /* ignore */ });
+        const p = videoEl.play();
+        if (p && p.catch) p.catch(() => {});
       } else {
         videoEl.pause();
       }
     });
   }
-
-  videoEl.addEventListener('error', () => {
-    try {
-      videoEl.src = url(placeholder);
-    } catch (_e) { /* ignore */ }
-  });
-}
 
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
@@ -519,8 +574,8 @@ function attachSmartVideo(videoEl, path, opts) {
     const fromEl = $$('#dateFrom');
     const toEl = $$('#dateTo');
 
-    const from = parseDateSafe(fromEl ? fromEl.value : '');
-    const to = parseDateSafe(toEl ? toEl.value : '');
+    const from = parseDateSafe(fromEl?.value);
+    const to = parseDateSafe(toEl?.value);
 
     if (!from || !to) {
       state.dateFrom = state.dateMin;
@@ -610,7 +665,7 @@ function attachSmartVideo(videoEl, path, opts) {
       }
       // Host (farmer) name filter: match host.name substring if provided
       if (state.nameFilter) {
-        const name = String((s.host && s.host.name) ? s.host.name : '').toLowerCase();
+        const name = String(s.host?.name || '').toLowerCase();
         if (!name.includes(state.nameFilter.toLowerCase())) return false;
       }
       // City filter
@@ -666,8 +721,7 @@ function attachSmartVideo(videoEl, path, opts) {
         lastEl.textContent = '';
       }
     })();
-    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
-    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     // ---------- Totals ----------
     let totalFarmers = 0;
@@ -691,10 +745,10 @@ function attachSmartVideo(videoEl, path, opts) {
     let vidRefs = 0;
 
     for (const s of fs) {
-      const si = idx ? idx.get(s.sheetRef) : null;
+      const si = idx?.get(s.sheetRef);
 
-      const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
-      const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
+      const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
 
       if (Number.isFinite(farmers) && farmers > 0) totalFarmers += farmers;
       if (Number.isFinite(acres) && acres > 0) totalAcres += acres;
@@ -769,36 +823,7 @@ function attachSmartVideo(videoEl, path, opts) {
     const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
     const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
 
-    
-    // Summary progress: treat awareness as the primary "education progress" proxy.
-    const progEl = $$('#summaryProgress');
-    if (progEl) {
-      const pctVal = Number.isFinite(awarenessAvg) ? Math.max(0, Math.min(100, Math.round(awarenessAvg))) : null;
-      if (pctVal == null) {
-        progEl.innerHTML = '';
-      } else {
-        progEl.innerHTML = `
-          <div class="progressContainer">
-            <div class="progressTrack"><div class="progressBar" style="width:${pctVal}%"></div></div>
-            <div class="smallMuted progressNote">${pctVal}% of target farmers educated—INTERACT on track.</div>
-          </div>`;
-      }
-    }
-
-    // Push headline KPIs into the hero captions (optional, if hero slider is present).
-    try {
-      if (window.WHEAT_HERO && typeof window.WHEAT_HERO.updateStats === 'function') {
-        window.WHEAT_HERO.updateStats({
-          sessions: fs.length,
-          farmers: Number.isFinite(totalFarmers) ? totalFarmers : null,
-          awareness: Number.isFinite(awarenessAvg) ? Math.round(awarenessAvg) : null,
-          definite: Number.isFinite(definiteAvg) ? Math.round(definiteAvg) : null,
-          score: Number.isFinite(scoreAvg) ? Number(scoreAvg.toFixed(1)) : null
-        });
-      }
-    } catch (e) { /* ignore */ }
-
-// ---------- Funnel (donut charts) ----------
+    // ---------- Funnel (donut charts) ----------
     const funnelEl = $$('#funnel');
     if (funnelEl) {
       const items = [
@@ -860,7 +885,7 @@ function attachSmartVideo(videoEl, path, opts) {
       // Collect farmers per session and sort descending.
       const sessionsByFarmers = fs
         .map(s => {
-          const count = Number((s.metrics && s.metrics.farmers) || 0);
+          const count = Number(s.metrics?.farmers || 0);
           // Compose a human-friendly label for the donut legend. Prefer the
           // district name; fall back to village/spot or a generic label if
           // unavailable. Include the session id for uniqueness.
@@ -904,7 +929,6 @@ function attachSmartVideo(videoEl, path, opts) {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          animation: chartAnimation(),
           plugins: {
             legend: {
               position: 'right',
@@ -940,8 +964,8 @@ function attachSmartVideo(videoEl, path, opts) {
       let sumDef = 0, sumMaybe = 0, sumNot = 0;
       for (const s of fs) {
         // Farmers present for weighting; prefer sheet index when available.
-        const si = idx ? idx.get(s.sheetRef) : null;
-        const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
+        const si = idx?.get(s.sheetRef);
+        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
         const m = s.metrics || {};
         const def = num(m.definitePct);
         const mb = num(m.maybePct);
@@ -964,7 +988,7 @@ function attachSmartVideo(videoEl, path, opts) {
           plugins: {
             legend: {
               position: 'right',
-              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
+              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
             },
             tooltip: {
               callbacks: {
@@ -982,242 +1006,7 @@ function attachSmartVideo(videoEl, path, opts) {
       });
     }
 
-    
-    // ---------- Additional breakdowns (Region / Territory / Score distribution) ----------
-    // These charts were intentionally kept lightweight: computed from the current filtered set,
-    // weighted by refined (sheet-index) farmers when available.
-    const palette = ['#44b8ff','#6be675','#ffce56','#ff6384','#9966ff','#ff9f40','#4bc0c0','#c9cbcf','#36a2eb','#8dd1ff'];
-
-    const farmersFor = (s) => {
-      const si = idx ? idx.get(s.sheetRef) : null;
-      const f = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), s.farmers, 0));
-      return (Number.isFinite(f) && f > 0) ? f : 0;
-    };
-
-    const normKey = (v, fallback = 'Unknown') => {
-      const x = String((v === null || v === undefined) ? '' : v).trim();
-      if (!x) return fallback;
-      return x.toUpperCase();
-    };
-
-    const setPlaceholder = (canvas, msg, show) => {
-      const wrap = canvas ? canvas.parentElement : null;
-      if (!wrap) return;
-      let ph = wrap.querySelector('.chartPlaceholder');
-      if (!ph) {
-        ph = document.createElement('div');
-        ph.className = 'muted chartPlaceholder';
-        ph.style.padding = '12px';
-        ph.style.display = 'none';
-        wrap.appendChild(ph);
-      }
-      if (show) {
-        canvas.style.display = 'none';
-        ph.textContent = msg || 'No data.';
-        ph.style.display = 'block';
-      } else {
-        canvas.style.display = '';
-        ph.style.display = 'none';
-      }
-    };
-
-    const renderGroupDonut = (canvasSel, winKey, keyGetter, emptyMsg) => {
-      const canvas = $$(canvasSel);
-      if (!canvas || typeof Chart === 'undefined') return;
-
-      // Destroy prior chart instance (re-render safe)
-      const prior = window[winKey];
-      if (prior && typeof prior.destroy === 'function') prior.destroy();
-
-      const mp = new Map(); // key -> {farmers, sessions}
-      let anyFarmers = false;
-
-      for (const s of fs) {
-        const key = normKey(keyGetter(s));
-        const f = farmersFor(s);
-        if (f > 0) anyFarmers = true;
-        const rec = mp.get(key) || { farmers: 0, sessions: 0 };
-        rec.farmers += f;
-        rec.sessions += 1;
-        mp.set(key, rec);
-      }
-
-      const arr = [...mp.entries()].map(([k, v]) => ({
-        key: k,
-        farmers: Number(v.farmers) || 0,
-        sessions: Number(v.sessions) || 0
-      }));
-
-      // Nothing to show
-      const hasAny = arr.some(x => (x.sessions > 0));
-      if (!hasAny) { setPlaceholder(canvas, emptyMsg || 'No data.', true); return; }
-      setPlaceholder(canvas, '', false);
-
-      const metric = anyFarmers ? 'farmers' : 'sessions';
-      arr.sort((a, b) => (Number(b[metric]) - Number(a[metric])));
-
-      const topN = 6;
-      const labels = [];
-      const data = [];
-      const metaFarmers = [];
-      const metaSessions = [];
-
-      let otherMetric = 0;
-      let otherFarmers = 0;
-      let otherSessions = 0;
-
-      arr.forEach((it, i) => {
-        const mval = Number(it[metric]) || 0;
-        if (i < topN) {
-          labels.push(it.key);
-          data.push(mval);
-          metaFarmers.push(it.farmers);
-          metaSessions.push(it.sessions);
-        } else {
-          otherMetric += mval;
-          otherFarmers += it.farmers;
-          otherSessions += it.sessions;
-        }
-      });
-
-      if (otherMetric > 0) {
-        labels.push('Other');
-        data.push(otherMetric);
-        metaFarmers.push(otherFarmers);
-        metaSessions.push(otherSessions);
-      }
-
-      const ctx = canvas.getContext('2d');
-      const bgColors = data.map((_, i) => palette[i % palette.length]);
-
-      window[winKey] = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{
-            data,
-            backgroundColor: bgColors,
-            borderColor: '#ffffff10',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          cutout: '55%',
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const i = ctx.dataIndex;
-                  const lab = ctx.label || '';
-                  const val = ctx.dataset.data[i];
-                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
-                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
-                  const sessions = ((metaSessions[i] === null || metaSessions[i] === undefined) ? 0 : metaSessions[i]);
-                  const farmers = ((metaFarmers[i] === null || metaFarmers[i] === undefined) ? 0 : metaFarmers[i]);
-
-                  if (anyFarmers) {
-                    return `${lab}: ${Math.round(val)} farmers (${pct}%) • ${sessions} session${sessions === 1 ? '' : 's'}`;
-                  }
-                  return `${lab}: ${Math.round(val)} session${Math.round(val) === 1 ? '' : 's'} (${pct}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-
-    // Farmers by region (REG)
-    renderGroupDonut('#regionPie', 'regionChart', (s) => s.region, 'No region entries yet.');
-
-    // Farmers by territory (uses s.city in this dataset)
-    renderGroupDonut('#territoryPie', 'territoryChart', (s) => s.city, 'No territory entries yet.');
-
-    // Session score distribution (banded)
-    (function renderScoreBands(){
-      const canvas = $$('#scoreBandsDonut');
-      if (!canvas || typeof Chart === 'undefined') return;
-
-      if (window.scoreBandsChart && typeof window.scoreBandsChart.destroy === 'function') {
-        window.scoreBandsChart.destroy();
-      }
-
-      const bands = [
-        { label: '<60', min: -Infinity, max: 59.9999 },
-        { label: '60–69', min: 60, max: 69.9999 },
-        { label: '70–79', min: 70, max: 79.9999 },
-        { label: '80–89', min: 80, max: 89.9999 },
-        { label: '90+', min: 90, max: Infinity },
-      ];
-
-      const counts = new Array(bands.length).fill(0);
-      const farmersByBand = new Array(bands.length).fill(0);
-
-      for (const s of fs) {
-        const sc = Number(s.score);
-        if (!Number.isFinite(sc)) continue;
-        const f = farmersFor(s);
-        let bi = bands.findIndex(b => sc >= b.min && sc <= b.max);
-        if (bi < 0) bi = 0;
-        counts[bi] += 1;
-        farmersByBand[bi] += f;
-      }
-
-      const total = counts.reduce((a, v) => a + v, 0);
-      if (!total) { setPlaceholder(canvas, 'No scored sessions in the current filter.', true); return; }
-      setPlaceholder(canvas, '', false);
-
-      const labels = bands.map(b => b.label);
-      const ctx = canvas.getContext('2d');
-      const bgColors = counts.map((_, i) => palette[i % palette.length]);
-
-      window.scoreBandsChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{
-            data: counts,
-            backgroundColor: bgColors,
-            borderColor: '#ffffff10',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          cutout: '55%',
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const i = ctx.dataIndex;
-                  const lab = ctx.label || '';
-                  const val = ctx.dataset.data[i];
-                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
-                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
-                  const f = farmersByBand[i] || 0;
-                  return `${lab}: ${val} session${val === 1 ? '' : 's'} (${pct}%)${f ? ` • ${Math.round(f)} farmers` : ''}`;
-                }
-              }
-            }
-          }
-        }
-      });
-    })();
-
-// ---------- Top sessions table (by score) ----------
+    // ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {
       const top = [...fs].sort((a,b) => Number(b.score||0) - Number(a.score||0)).slice(0, 8);
@@ -1228,15 +1017,13 @@ function attachSmartVideo(videoEl, path, opts) {
         const district = esc(s.district || '');
         const village = esc(s.village || s.spot || '');
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
-        const scoreNum = Number(s.score||0);
-        const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
-        const si = idx ? idx.get(s.sheetRef) : null;
-        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number((s.metrics && s.metrics.farmers))) ? fmtInt(s.metrics.farmers) : '—');
-        const a = si ? fmt1(si.acres) : (Number.isFinite(Number((s.metrics && s.metrics.wheatAcres))) ? fmt1(s.metrics.wheatAcres) : '—');
+        const si = idx?.get(s.sheetRef);
+        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number(s?.metrics?.farmers)) ? fmtInt(s.metrics.farmers) : '—');
+        const a = si ? fmt1(si.acres) : (Number.isFinite(Number(s?.metrics?.wheatAcres)) ? fmt1(s.metrics.wheatAcres) : '—');
         const href = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
         return `<tr data-session-id="${sid}">
           <td>${date}</td>
-          <td><span class="${badgeClass}">${sheet}</span></td>
+          <td><span class="badge">${sheet}</span></td>
           <td>${district}</td>
           <td>${village}</td>
           <td>${f}</td>
@@ -1254,9 +1041,9 @@ function attachSmartVideo(videoEl, path, opts) {
 
       for (const s of fs) {
         const d = (s.district || '—').trim() || '—';
-        const si = idx ? idx.get(s.sheetRef) : null;
-        const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
-        const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
+        const si = idx?.get(s.sheetRef);
+        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
         const wt = (Number.isFinite(farmers) && farmers > 0) ? farmers : 1;
 
         const m = s.metrics || {};
@@ -1349,108 +1136,42 @@ function attachSmartVideo(videoEl, path, opts) {
         return `<li><b>${esc(k)}</b>: ${fmtInt(n)}${esc(share)}</li>`;
       }).join('');
     };
-    // Render the top drivers and barriers as donut charts (with a compact legend).
-    // Note: reason counts are multi-select; percentages shown are "share of farmers", not "share of reasons".
-    const renderReasonsDonut = (mp, canvasSel, legendSel, winKey, emptyMsg, hueBase) => {
-      const canvas = $$(canvasSel);
-      const legend = $$(legendSel);
 
-      if (!canvas) return;
-
-      // If Chart.js isn't available, fall back to a readable legend/list.
-      if (typeof Chart === 'undefined') {
-        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'Chart library not loaded.')}</div>`;
-        return;
-      }
-
-      // Destroy prior chart instance (re-render safe)
-      const prior = window[winKey];
-      if (prior && typeof prior.destroy === 'function') prior.destroy();
-
+    // Render the top drivers and barriers as horizontal bar charts instead of plain lists.
+    // Each bar's length reflects the share of farmers citing that reason. When no data is
+    // available, a muted placeholder is shown instead. The charts are drawn into
+    // #driversChart and #barriersChart containers.
+    const renderBarChart = (mp, containerId) => {
+      const container = document.querySelector(containerId);
+      if (!container) return;
       const total = totalFarmers || 0;
-
-      const entries = [...mp.entries()]
-        .map(([k, v]) => [String(k || '').trim(), Number(v) || 0])
-        .filter(([k, v]) => k && v > 0)
-        .sort((a, b) => b[1] - a[1]);
-
-      if (!entries.length) {
-        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'No entries captured.')}</div>`;
-        try {
-          const ctx = canvas.getContext('2d');
-          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-        } catch (_) {}
+      // Sort entries descending by count and take up to 6 entries.
+      const arr = [...mp.entries()].sort((a, b) => (Number(b[1] || 0) - Number(a[1] || 0))).slice(0, 6);
+      if (!arr.length) {
+        container.innerHTML = '<div class="muted">No entries captured.</div>';
         return;
       }
-
-      // Top reasons + aggregate remainder
-      const top = entries.slice(0, 6);
-      const rest = entries.slice(6);
-      if (rest.length) {
-        const other = rest.reduce((acc, [, v]) => acc + (Number(v) || 0), 0);
-        if (other > 0) top.push(['Other', other]);
-      }
-
-      const labels = top.map(([k]) => k);
-      const values = top.map(([, v]) => Number(v) || 0);
-
-      const n = Math.max(values.length, 1);
-      const colors = values.map((_, i) => `hsl(${(hueBase + (i * 360) / n) % 360} 65% 55%)`);
-
-      // Render compact legend (keeps row alignment stable)
-      if (legend) {
-        legend.innerHTML = top.map(([k, v], i) => {
-          const cnt = Number(v) || 0;
-          const pctFarmers = total ? (cnt / total) * 100 : null;
-          return `<div class="legendItem">
-            <span class="legendDot" style="background:${colors[i]};"></span>
-            <span class="legendText">${esc(k)}</span>
-            <span class="legendVal">${fmtInt(cnt)}${pctFarmers != null ? ` (${fmt1(pctFarmers)}%)` : ''}</span>
-          </div>`;
-        }).join('');
-      }
-
-      // Build chart
-      window[winKey] = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{
-            data: values,
-            backgroundColor: colors,
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: chartAnimation(),
-          cutout: '60%',
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const i = ctx.dataIndex;
-                  const lab = ctx.label || '';
-                  const val = Number(ctx.parsed) || 0;
-                  const sum = (ctx.dataset.data || []).reduce((acc, v) => acc + (Number(v) || 0), 0);
-                  const pctReasons = sum ? ((val / sum) * 100).toFixed(1) : '0.0';
-                  const pctFarmers = total ? ((val / total) * 100).toFixed(1) : null;
-                  return `${lab}: ${fmtInt(val)}${pctFarmers != null ? ` (${pctFarmers}% of farmers)` : ''} • ${pctReasons}% of reasons`;
-                }
-              }
-            }
-          }
-        }
-      });
+      container.innerHTML = arr.map(([k, v]) => {
+        const n = Number(v) || 0;
+        // Compute share of total farmers; clamp between 0 and 100.
+        const pct = (total > 0) ? Math.min(Math.max(n / total * 100, 0), 100) : 0;
+        // Construct a bar row using existing barRow/barTrack/barFill styles. Use
+        // the CSS variable --brand (blue) for drivers and --danger (red) for barriers.
+        const colorVar = (containerId === '#driversChart') ? 'var(--brand)' : 'var(--danger)';
+        return `<div class="barRow">
+          <div class="barLabel">${esc(k)}</div>
+          <div class="barTrack"><div class="barFill" style="width:${pct.toFixed(1)}%; background:${colorVar};"></div></div>
+          <div class="barVal">${fmtInt(n)}${total > 0 ? ` (${fmt1(pct)}%)` : ''}</div>
+        </div>`;
+      }).join('');
     };
 
-    renderReasonsDonut(drivers, '#driversDonut', '#driversLegend', 'driversDonutChart', 'No driver entries yet.', 200);
-    renderReasonsDonut(barriers, '#barriersDonut', '#barriersLegend', 'barriersDonutChart', 'No barrier entries yet.', 12);
+    renderBarChart(drivers, '#driversChart');
+    renderBarChart(barriers, '#barriersChart');
+
     // ---------- Data readiness / status ----------
     setStatus(
-      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(((state.sheetsIndex && state.sheetsIndex.sheets) ? state.sheetsIndex.sheets.length : 0) || 0)} sheet summaries.\n` +
+      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
       `Reach: ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers • ${totalAcres ? fmt1(totalAcres) : '—'} acres • Est. Buctril acres: ${totalEstAcres ? fmt1(totalEstAcres) : '—'}.\n` +
       `Referenced media: ${fmtInt(imgRefs)} images • ${fmtInt(vidRefs)} videos.\n` +
       `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
@@ -1462,8 +1183,7 @@ function attachSmartVideo(videoEl, path, opts) {
     const tbody = $$('#sessionsTable tbody');
     if (!tbody) return;
 
-    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
-    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     const rows = state.filteredSessions.map(s => {
       const sid = esc(s.id);
@@ -1472,7 +1192,7 @@ function attachSmartVideo(videoEl, path, opts) {
       const district = esc(s.district || '');
       const village = esc(s.village || s.spot || '');
       const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
-      const si = idx ? idx.get(s.sheetRef) : null;
+      const si = idx?.get(s.sheetRef);
       const f = si ? fmtInt(si.farmers_present) : '—';
       const a = si ? fmt1(si.acres) : '—';
 
@@ -1545,204 +1265,152 @@ function attachSmartVideo(videoEl, path, opts) {
   }
 
   function renderMedia() {
-  const grid = $$('#mediaGrid');
-  if (!grid) return;
+    const grid = $$('#mediaGrid');
+    if (!grid) return;
 
-  // Bind media toolbar events once
-  if (!state._mediaBound) {
-    state._mediaBound = true;
+    // Bind media toolbar events once
+    if (!state._mediaBound) {
+      state._mediaBound = true;
 
-    const seg = $$('.mediaSeg');
-    if (seg) {
-      seg.addEventListener('click', (e) => {
+      const seg = $$('.mediaSeg');
+      seg?.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-media-type]');
         if (!btn) return;
         const t = btn.getAttribute('data-media-type') || 'all';
         state.mediaType = t;
-
         // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
-
-        // Reset limit when changing type for better UX
         state.mediaLimit = 24;
         renderMedia();
       });
+
+      const search = $$('#mediaSearch');
+      if (search) {
+        search.addEventListener('input', () => {
+          state.mediaSearch = String(search.value || '').trim().toLowerCase();
+          state.mediaLimit = 24;
+          renderMedia();
+        });
+      }
+
+      const sort = $$('#mediaSort');
+      if (sort) {
+        sort.addEventListener('change', () => {
+          state.mediaSort = String(sort.value || 'newest');
+          renderMedia();
+        });
+      }
+
+      const more = $$('#mediaLoadMore');
+      if (more) {
+        more.addEventListener('click', () => {
+          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
+          renderMedia();
+        });
+      }
     }
 
-    const search = $$('#mediaSearch');
-    if (search) {
-      search.addEventListener('input', () => {
-        state.mediaSearch = String(search.value || '');
-        state.mediaLimit = 24;
-        renderMedia();
+    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
+    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+
+    const q = String(state.mediaSearch || '').trim().toLowerCase();
+    const type = String(state.mediaType || 'all');
+    const sortMode = String(state.mediaSort || 'newest');
+
+    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
+
+    // Filter to sessions that actually have media
+    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+
+    // Type filter
+    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
+    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+
+    // Text filter
+    if (q) {
+      list = list.filter(s => {
+        const sheet = String(s.sheetRef || '');
+        const district = String(s.district || '');
+        const village = String(s.village || s.spot || '');
+        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
       });
     }
 
-    const sort = $$('#mediaSort');
-    if (sort) {
-      sort.addEventListener('change', () => {
-        state.mediaSort = String(sort.value || 'newest');
-        renderMedia();
-      });
-    }
-
-    const more = $$('#mediaLoadMore');
-    if (more) {
-      more.addEventListener('click', () => {
-        state.mediaLimit = Number(state.mediaLimit || 24) + 24;
-        renderMedia();
-      });
-    }
-  }
-
-  const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
-  const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 19H3V5h4l2-2h6l2 2h4v14Z" stroke="currentColor" stroke-width="1.5"/><path d="M8 14l2.5-3 2 2 3.5-4 4 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
-
-  const q = String(state.mediaSearch || '').trim().toLowerCase();
-  const type = String(state.mediaType || 'all');
-  const sortMode = String(state.mediaSort || 'newest');
-
-  let list = Array.isArray(state.filteredSessions) ? state.filteredSessions.slice() : [];
-
-  // Only sessions with media
-  list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
-
-  // Type filter
-  if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
-  if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
-
-  // Text filter
-  if (q) {
-    list = list.filter(s => {
-      const sheet = String(s.sheetRef || '');
-      const district = String(s.district || '');
-      const village = String(s.village || s.spot || '');
-      return (sheet + ' ' + district + ' ' + village).toLowerCase().indexOf(q) >= 0;
+    // Sort by date (fallback to original order)
+    list.sort((a, b) => {
+      const da = parseDateSafe(a.date)?.getTime() || 0;
+      const db = parseDateSafe(b.date)?.getTime() || 0;
+      return sortMode === 'oldest' ? (da - db) : (db - da);
     });
+
+    const total = list.length;
+    const limit = Math.max(0, Number(state.mediaLimit || 24));
+    const shown = list.slice(0, limit);
+
+    const cards = shown.map(s => {
+      const sid = esc(s.id);
+      const sheet = esc(s.sheetRef || '');
+      const district = esc(s.district || '');
+      const village = esc(s.village || s.spot || '');
+      // Determine thumbnail: prefer first video if available; otherwise first image
+      const vidPath = firstMediaVideo(s);
+      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
+      const img = firstMediaImage(s);
+      const title = `${sheet} • ${district} • ${village}`;
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+      // Build thumb markup
+      let thumb;
+      let badge;
+      if (vidPath) {
+        // Show auto-playing muted preview
+        thumb = `<video data-media-thumb-video="1" data-video-path="${esc(videoSrc)}" muted playsinline></video>`;
+        badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
+      } else {
+        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
+        badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
+      }
+      return `<div class="mediaCard" data-session-id="${sid}">
+        <div class="mediaThumb">
+          ${badge}
+          ${thumb}
+        </div>
+        <div class="mediaMeta">
+          <div class="mediaTitle">${esc(title)}</div>
+          <div class="mediaActions">
+            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
+            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+            <button class="btn btnSmall btnGhost" data-action="open">Open</button>
+          </div>
+        </div>
+        <div class="hidden" data-thumb-path="${esc(img)}"></div>
+      </div>`;
+    });
+
+    grid.innerHTML = cards.join('');
+
+    // Update count + load more button
+    const countEl = $$('#mediaCount');
+    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
+    const moreBtn = $$('#mediaLoadMore');
+    if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
+
+    // attach thumbs
+    $$$('[data-media-thumb="1"]', grid).forEach(img => {
+      const card = img.closest('.mediaCard');
+      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
+      attachSmartImage(img, p || 'assets/placeholder.svg');
+    });
+
+    grid.onclick = (ev) => {
+      const card = ev.target.closest('.mediaCard[data-session-id]');
+      if (!card) return;
+      const sid = Number(card.dataset.sessionId);
+      if (ev.target.closest('a')) return;
+
+      // Open lightbox with all items
+      openLightbox(sid);
+    };
   }
-
-  // Sort by date
-  list.sort((a, b) => {
-    const daObj = parseDateSafe(a.date);
-    const dbObj = parseDateSafe(b.date);
-    const da = daObj ? daObj.getTime() : 0;
-    const db = dbObj ? dbObj.getTime() : 0;
-    return sortMode === 'oldest' ? (da - db) : (db - da);
-  });
-
-  const limit = Number(state.mediaLimit || 24);
-  const shown = list.slice(0, limit);
-
-  // Clear + render DOM nodes (avoid embedding src before resolving to reduce 404 spam)
-  grid.innerHTML = '';
-
-  for (let i = 0; i < shown.length; i++) {
-    const s = shown[i];
-    const sid = String(s.id);
-    const sheet = String(s.sheetRef || '');
-    const district = String(s.district || '');
-    const village = String(s.village || s.spot || '');
-
-    const vidPath = firstMediaVideo(s);
-    const imgPath = firstMediaImage(s);
-    const title = sheet + ' • ' + district + ' • ' + village;
-    const hrefDetails = 'details.html?campaign=' + encodeURIComponent(String(state.campaignId)) + '&session=' + encodeURIComponent(String(s.id));
-
-    const card = document.createElement('div');
-    card.className = 'mediaCard';
-    card.setAttribute('data-session-id', sid);
-
-    const thumbWrap = document.createElement('div');
-    thumbWrap.className = 'mediaThumb';
-
-    const badge = document.createElement('div');
-    badge.className = 'mediaBadge';
-    if (vidPath) {
-      badge.title = 'Video';
-      badge.innerHTML = playIcon + '<span>Video</span>';
-    } else {
-      badge.title = 'Image';
-      badge.innerHTML = photoIcon + '<span>Image</span>';
-    }
-
-    thumbWrap.appendChild(badge);
-
-    if (vidPath) {
-      const v = document.createElement('video');
-      v.autoplay = true;
-      v.loop = true;
-      v.muted = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline', '');
-      v.className = 'mediaThumbVideo';
-
-      // Option A: clicking the video toggles play/pause (and does NOT open lightbox)
-      attachSmartVideo(v, vidPath, { muted: true, loop: true, controls: false, togglePlayOnClick: true, stopPropagation: true });
-
-      thumbWrap.appendChild(v);
-    } else {
-      const img = document.createElement('img');
-      img.setAttribute('data-media-thumb', '1');
-      img.alt = title;
-      attachSmartImage(img, imgPath || 'assets/placeholder.svg');
-      thumbWrap.appendChild(img);
-    }
-
-    const meta = document.createElement('div');
-    meta.className = 'mediaMeta';
-
-    const t = document.createElement('div');
-    t.className = 'mediaTitle';
-    t.textContent = title;
-
-    const actions = document.createElement('div');
-    actions.className = 'mediaActions';
-
-    const aSheet = document.createElement('a');
-    aSheet.className = 'btn btnSmall';
-    aSheet.href = 'sheets.html?campaign=' + encodeURIComponent(String(state.campaignId)) + '&sheet=' + encodeURIComponent(String(s.sheetRef || ''));
-    aSheet.textContent = 'Sheet';
-
-    const aDetails = document.createElement('a');
-    aDetails.className = 'btn btnSmall btnGhost';
-    aDetails.href = hrefDetails;
-    aDetails.textContent = 'Details';
-
-    const btnOpen = document.createElement('button');
-    btnOpen.className = 'btn btnSmall btnGhost';
-    btnOpen.setAttribute('data-action', 'open');
-    btnOpen.textContent = 'Open';
-
-    actions.appendChild(aSheet);
-    actions.appendChild(aDetails);
-    actions.appendChild(btnOpen);
-
-    meta.appendChild(t);
-    meta.appendChild(actions);
-
-    card.appendChild(thumbWrap);
-    card.appendChild(meta);
-
-    grid.appendChild(card);
-  }
-
-  const countEl = $$('#mediaCount');
-  if (countEl) countEl.textContent = shown.length + ' shown of ' + list.length;
-
-  const moreBtn = $$('#mediaLoadMore');
-  if (moreBtn) moreBtn.style.display = (limit < list.length) ? '' : 'none';
-
-  // Card click opens lightbox (Option A). Video click is stopped by attachSmartVideo.
-  grid.onclick = (ev) => {
-    const card = ev.target.closest('.mediaCard[data-session-id]');
-    if (!card) return;
-    if (ev.target.closest('a')) return;
-
-    // Open lightbox for the session
-    const sidNum = Number(card.getAttribute('data-session-id'));
-    openLightbox(sidNum);
-  };
-}
 
   function renderAll() {
     renderSummary();
@@ -1793,7 +1461,7 @@ function attachSmartVideo(videoEl, path, opts) {
     $$('#drawerSub').textContent = `${s.date || ''} • ${s.district || ''} • ${s.village || s.spot || ''}`;
 
     // KPIs from sheets index if possible
-    const si = (state.sheetsIndex && state.sheetsIndex.sheets) ? state.sheetsIndex.sheets.find(x => x.sheet === s.sheetRef) : null;
+    const si = state.sheetsIndex?.sheets?.find(x => x.sheet === s.sheetRef);
     $$('#dFarmers').textContent = si ? fmtInt(si.farmers_present) : '—';
     $$('#dAcres').textContent = si ? fmt1(si.acres) : '—';
     $$('#dScore').textContent = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
@@ -1802,9 +1470,9 @@ function attachSmartVideo(videoEl, path, opts) {
       s.city ? `City: ${esc(s.city)}` : '',
       s.district ? `District: ${esc(s.district)}` : '',
       s.spot ? `Spot: ${esc(s.spot)}` : '',
-      (s.dealer && s.dealer.name) ? `Dealer: ${esc(s.dealer.name)}` : '',
-      (s.salesRep && s.salesRep.name) ? `Sales: ${esc(s.salesRep.name)}` : '',
-      (s.host && s.host.name) ? `Host: ${esc(s.host.name)}` : '',
+      s.dealer?.name ? `Dealer: ${esc(s.dealer.name)}` : '',
+      s.salesRep?.name ? `Sales: ${esc(s.salesRep.name)}` : '',
+      s.host?.name ? `Host: ${esc(s.host.name)}` : '',
     ].filter(Boolean).join(' • ');
     $$('#dMeta').innerHTML = meta || '<span class="muted">—</span>';
 
@@ -1835,7 +1503,7 @@ function attachSmartVideo(videoEl, path, opts) {
 
     // Recommended actions (lightweight heuristic rules)
     const acts = [];
-    const farmersNow = Number(coalesce(si && si.farmers_present, m.farmers, 0));
+    const farmersNow = Number(si?.farmers_present ?? m.farmers ?? 0);
     const uPct = Number.isFinite(un) ? (un / 3 * 100) : NaN;
 
     if (Number.isFinite(aw) && aw < 60) acts.push('Increase awareness: start with weed-pressure framing + product positioning; add a pre-activation dealer touchpoint and 1–2 local influencer farmers.');
@@ -1862,8 +1530,8 @@ function attachSmartVideo(videoEl, path, opts) {
     $$('#dOpenDetails').setAttribute('href', detailsUrl);
 
     // Google Maps
-    const lat = Number((s.geo && s.geo.lat));
-    const lng = Number((s.geo && s.geo.lng));
+    const lat = Number(s.geo?.lat);
+    const lng = Number(s.geo?.lng);
     const g = (Number.isFinite(lat) && Number.isFinite(lng)) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
     $$('#dOpenMaps').setAttribute('href', g);
 
@@ -1877,7 +1545,7 @@ function attachSmartVideo(videoEl, path, opts) {
       const top = [...farmers].sort((a,b) => Number(b.acres||0)-Number(a.acres||0)).slice(0,5);
 
       const topHtml = top.length
-        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(((x.acres === null || x.acres === undefined) ? '' : x.acres)))} acres</li>`).join('')}</ul>`
+        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(x.acres ?? ''))} acres</li>`).join('')}</ul>`
         : '<div class="muted">No farmer rows found in sheet.</div>';
 
       const hostComment = fb.host_comment ? `<div><b>Host comment:</b> ${esc(fb.host_comment)}</div>` : '';
@@ -1885,7 +1553,7 @@ function attachSmartVideo(videoEl, path, opts) {
       const sales = fb.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(fb.sales_feedback)}</div>` : '';
 
       sumEl.innerHTML = `
-        <div class="muted">Sheet: <b>${esc((sheet.meta && sheet.meta.sheet) || s.sheetRef)}</b> • Date: <b>${esc((sheet.meta && sheet.meta.date) || s.date || '')}</b></div>
+        <div class="muted">Sheet: <b>${esc(sheet.meta?.sheet || s.sheetRef)}</b> • Date: <b>${esc(sheet.meta?.date || s.date || '')}</b></div>
         ${hostComment}
         ${mgr}
         ${sales}
@@ -1934,8 +1602,8 @@ function attachSmartVideo(videoEl, path, opts) {
   function bindDrawer() {
     const closeBtn = $$('#drawerClose');
     const ov = $$('#drawerOverlay');
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-    if (ov) ov.addEventListener('click', closeDrawer);
+    closeBtn?.addEventListener('click', closeDrawer);
+    ov?.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         closeDrawer();
@@ -1965,104 +1633,83 @@ function attachSmartVideo(videoEl, path, opts) {
   }
 
   function bindLightbox() {
-  const c = $$('#lbClose');
-  if (c) c.addEventListener('click', closeLightbox);
-
-  const lb = $$('#lightbox');
-  if (lb) {
-    lb.addEventListener('click', (ev) => {
+    $$('#lbClose')?.addEventListener('click', closeLightbox);
+    $$('#lightbox')?.addEventListener('click', (ev) => {
       if (ev.target && ev.target.id === 'lightbox') closeLightbox();
     });
   }
-}
 
-  function openLightbox(sessionId) {
-  const s = state.sessionsById.get(Number(sessionId));
-  if (!s) return;
+  async function openLightbox(sessionId) {
+    const s = state.sessionsById.get(Number(sessionId));
+    if (!s) return;
+    const lb = $$('#lightbox');
+    const body = $$('#lbBody');
+    if (!lb || !body) return;
 
-  const lb = $$('#lightbox');
-  const body = $$('#lbBody');
-  if (!lb || !body) return;
+    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
 
-  const titleEl = $$('#lbTitle');
-  if (titleEl) titleEl.textContent = 'Session ' + String(s.id) + ' • ' + String(s.sheetRef || '');
+    lb.classList.add('open');
+    body.innerHTML = '';
 
-  lb.classList.add('open');
-  body.innerHTML = '';
+    const items = allMediaItems(s);
+    if (!items.length) {
+      body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+      return;
+    }
 
-  const items = allMediaItems(s);
-  if (!items || !items.length) {
-    body.innerHTML = '<div class="muted">No media listed for this session.</div>';
-    return;
-  }
-
-  let active = 0;
-
-  const main = document.createElement('div');
-  main.className = 'lbMain';
-  const strip = document.createElement('div');
-  strip.className = 'drawerMedia';
-
-  body.appendChild(main);
-  body.appendChild(strip);
-
-  function renderMain() {
-    main.innerHTML = '';
-    const it = items[active];
-    if (!it) return;
-
-    if (it.type === 'video') {
+    // Show first item large; rest as thumbnails
+    const main = items[0];
+    if (main.type === 'image') {
+      const img = document.createElement('img');
+      img.className = 'lightboxMedia';
+      img.alt = 'image';
+      body.appendChild(img);
+      attachSmartImage(img, main.path);
+    } else {
       const v = document.createElement('video');
       v.className = 'lightboxMedia';
       v.controls = true;
       v.playsInline = true;
       v.setAttribute('playsinline','');
-
-      // Resolve src eagerly, but do NOT await inside a click path.
-      // User will press play using native controls (gesture-safe).
-      attachSmartVideo(v, it.path, { controls: true, muted: false, loop: false, togglePlayOnClick: false });
-
-      main.appendChild(v);
-    } else {
-      const img = document.createElement('img');
-      img.className = 'lightboxMedia';
-      attachSmartImage(img, it.path);
-      main.appendChild(img);
+      body.appendChild(v);
+      const chosen = await resolveFirstExisting(main.path);
+      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
     }
-  }
 
-  function renderStrip() {
-    strip.innerHTML = '';
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i];
-      const t = document.createElement(it.type === 'video' ? 'video' : 'img');
-      t.className = 'thumb' + (i === active ? ' thumb--active' : '');
-
-      if (it.type === 'video') {
-        t.muted = true;
-        t.loop = true;
-        t.autoplay = true;
-        t.playsInline = true;
-        t.setAttribute('playsinline','');
-        attachSmartVideo(t, it.path, { muted: true, loop: true, controls: false, togglePlayOnClick: false });
-      } else {
-        attachSmartImage(t, it.path);
+    if (items.length > 1) {
+      const row = document.createElement('div');
+      row.className = 'mediaRow';
+      for (const it of items.slice(1, 12)) {
+        if (it.type === 'image') {
+          const t = document.createElement('img');
+          t.className = 'thumb';
+          t.alt = 'thumb';
+          t.loading = 'lazy';
+          row.appendChild(t);
+          attachSmartImage(t, it.path);
+          t.onclick = () => {
+            body.innerHTML = '';
+            lb.classList.add('open');
+            openLightbox(sessionId); // simplest refresh
+          };
+        } else {
+          const tv = document.createElement('video');
+          tv.className = 'thumb';
+          tv.muted = true;
+          tv.playsInline = true;
+          tv.setAttribute('playsinline','');
+          row.appendChild(tv);
+          attachSmartVideo(tv, it.path);
+          tv.onclick = () => {
+            body.innerHTML = '';
+            lb.classList.add('open');
+            openLightbox(sessionId);
+          };
+        }
       }
-
-      t.addEventListener('click', (e) => {
-        e.stopPropagation();
-        active = i;
-        renderMain();
-        renderStrip();
-      });
-
-      strip.appendChild(t);
+      body.appendChild(row);
     }
   }
-
-  renderMain();
-  renderStrip();
-}
 
   // ---------- Map ----------
   async function ensureMapReady() {
@@ -2074,7 +1721,7 @@ function attachSmartVideo(videoEl, path, opts) {
     const ok = await ensureLeafletReady({ timeoutMs: 9000 });
     if (!ok) {
       setMapStatus('Map library blocked', false);
-      var mf = $$('#mapFallback'); if (mf) mf.classList.remove('hidden');
+      $$('#mapFallback')?.classList.remove('hidden');
       return;
     }
 
@@ -2119,7 +1766,7 @@ function attachSmartVideo(videoEl, path, opts) {
       });
     } catch (e) {
       setMapStatus('Failed', false);
-      var mf = $$('#mapFallback'); if (mf) mf.classList.remove('hidden');
+      $$('#mapFallback')?.classList.remove('hidden');
     }
   }
 
@@ -2130,22 +1777,21 @@ function attachSmartVideo(videoEl, path, opts) {
     state.markersBySessionId.clear();
 
     // Build a quick lookup of sheet metadata to obtain farmers and acreage.
-    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
-    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
+    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     const pts = [];
     const heatPoints = [];
     for (const s of state.filteredSessions) {
-      const lat = Number((s.geo && s.geo.lat));
-      const lng = Number((s.geo && s.geo.lng));
+      const lat = Number(s.geo?.lat);
+      const lng = Number(s.geo?.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
       pts.push([lat, lng]);
       // Compute heatmap intensity based on acres engaged. Use sheet index if available,
       // falling back to session metrics. Default to 1 when no acreage is recorded.
       let weight = 1;
-      const si = idx ? idx.get(s.sheetRef) : null;
-      const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
+      const si = idx?.get(s.sheetRef);
+      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
       if (Number.isFinite(acres) && acres > 0) weight = acres;
       heatPoints.push([lat, lng, weight]);
 
@@ -2230,9 +1876,9 @@ function attachSmartVideo(videoEl, path, opts) {
       statusLabel.textContent = t;
       statusLabel.style.color = ok ? '' : 'var(--danger)';
     }
-    if (waBtn) waBtn.addEventListener('click', () => {
-      const phoneRaw = ((phoneInput && phoneInput.value) ? String(phoneInput.value).trim() : '');
-      const msg = ((msgInput && msgInput.value) ? String(msgInput.value).trim() : '');
+    waBtn?.addEventListener('click', () => {
+      const phoneRaw = phoneInput?.value?.trim() || '';
+      const msg = msgInput?.value?.trim() || '';
       // Remove non-digit characters; WhatsApp expects international numbers
       const phone = phoneRaw.replace(/[^0-9]/g, '');
       if (!phone) {
@@ -2245,9 +1891,9 @@ function attachSmartVideo(videoEl, path, opts) {
       window.open(waUrl, '_blank');
       displayStatus('Opening WhatsApp…');
     });
-    if (mailBtn) mailBtn.addEventListener('click', () => {
-      const email = ((emailInput && emailInput.value) ? String(emailInput.value).trim() : '');
-      const msg = ((msgInput && msgInput.value) ? String(msgInput.value).trim() : '');
+    mailBtn?.addEventListener('click', () => {
+      const email = emailInput?.value?.trim() || '';
+      const msg = msgInput?.value?.trim() || '';
       if (!email) {
         displayStatus('Please enter a valid email address.', false);
         return;
@@ -2272,7 +1918,7 @@ function attachSmartVideo(videoEl, path, opts) {
       return `<option value="${id}">${name}</option>`;
     }).join('');
 
-    sel.value = state.campaignId || ((state.campaigns[0] && state.campaigns[0].id) ? state.campaigns[0].id : '');
+    sel.value = state.campaignId || (state.campaigns[0]?.id ?? '');
     sel.onchange = () => {
       const id = sel.value;
       window.location.href = `index.html?campaign=${encodeURIComponent(id)}#summary`;
@@ -2400,30 +2046,30 @@ function attachSmartVideo(videoEl, path, opts) {
 
   // ---------- Events ----------
   function bindTopControls() {
-    var el_applyBtn = $$('#applyBtn'); if (el_applyBtn) el_applyBtn.addEventListener('click', applyDateInputs);
-    var el_resetBtn = $$('#resetBtn'); if (el_resetBtn) el_resetBtn.addEventListener('click', resetDateInputs);
-    var el_exportBtn = $$('#exportBtn'); if (el_exportBtn) el_exportBtn.addEventListener('click', exportCsv);
+    $$('#applyBtn')?.addEventListener('click', applyDateInputs);
+    $$('#resetBtn')?.addEventListener('click', resetDateInputs);
+    $$('#exportBtn')?.addEventListener('click', exportCsv);
 
     // Apply on Enter in date inputs
-    var el_dateFrom = $$('#dateFrom'); if (el_dateFrom) el_dateFrom.addEventListener('change', applyDateInputs);
-    var el_dateTo = $$('#dateTo'); if (el_dateTo) el_dateTo.addEventListener('change', applyDateInputs);
+    $$('#dateFrom')?.addEventListener('change', applyDateInputs);
+    $$('#dateTo')?.addEventListener('change', applyDateInputs);
 
     // Apply automatically when name or city filters change
-    var el_nameFilter = $$('#nameFilter'); if (el_nameFilter) el_nameFilter.addEventListener('input', applyDateInputs);
-    var el_cityFilter = $$('#cityFilter'); if (el_cityFilter) el_cityFilter.addEventListener('input', applyDateInputs);
+    $$('#nameFilter')?.addEventListener('input', applyDateInputs);
+    $$('#cityFilter')?.addEventListener('input', applyDateInputs);
 
     // Apply automatically when region filter changes. This allows users to
     // filter sessions by region code (REG) such as SKR, RYK, DGK. See
     // index.html for the #regionFilter input.
-    var el_regionFilter = $$('#regionFilter'); if (el_regionFilter) el_regionFilter.addEventListener('input', applyDateInputs);
+    $$('#regionFilter')?.addEventListener('input', applyDateInputs);
 
     // Apply automatically when district or score filters change
-    var el_districtFilter = $$('#districtFilter'); if (el_districtFilter) el_districtFilter.addEventListener('input', applyDateInputs);
-    var el_scoreMin = $$('#scoreMin'); if (el_scoreMin) el_scoreMin.addEventListener('input', applyDateInputs);
-    var el_scoreMax = $$('#scoreMax'); if (el_scoreMax) el_scoreMax.addEventListener('input', applyDateInputs);
+    $$('#districtFilter')?.addEventListener('input', applyDateInputs);
+    $$('#scoreMin')?.addEventListener('input', applyDateInputs);
+    $$('#scoreMax')?.addEventListener('input', applyDateInputs);
 
     // Export button for priority table
-    var el_priorityExportBtn = $$('#priorityExportBtn'); if (el_priorityExportBtn) el_priorityExportBtn.addEventListener('click', exportPriorityCsv);
+    $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
   }
 
   function exportCsv() {
@@ -2434,11 +2080,11 @@ function attachSmartVideo(videoEl, path, opts) {
         s.id,
         s.sheetRef,
         s.date,
-        (s.district || '').split(',').join(' '),
-        (s.village || s.spot || '').split(',').join(' '),
-        ((s.score === null || s.score === undefined) ? '' : s.score)
+        (s.district || '').replaceAll(',', ' '),
+        (s.village || s.spot || '').replaceAll(',', ' '),
+        s.score ?? ''
       ];
-      rows.push(row.map(x => String((x === null || x === undefined) ? '' : x).split('\n').join(' ').split('\r').join(' ')).join(','));
+      rows.push(row.map(x => String(x ?? '').replaceAll('\n',' ').replaceAll('\r',' ')).join(','));
     }
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
@@ -2473,79 +2119,28 @@ function attachSmartVideo(videoEl, path, opts) {
   function bindTabEvents() {
     window.addEventListener('hashchange', syncTabFromHash);
     document.addEventListener('tabchange', (e) => {
-      const tab = (e.detail && e.detail.tab) ? e.detail.tab : '';
+      const tab = e.detail?.tab;
       if (tab === 'map') {
         // Give Leaflet time to render after display
         setTimeout(ensureMapReady, 50);
-        setTimeout(() => (state.map && state.map.invalidateSize ? state.map.invalidateSize() : void 0), 200);
+        setTimeout(() => state.map?.invalidateSize(), 200);
       }
     });
   }
 
-  
-  // ---------- Donut row auto-scroll ----------
-  // Creates a subtle horizontal auto-scroll for donut rows, and pauses on mouse-over / interaction.
-  function initDonutRows() {
-    const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
-    rows.forEach((row) => {
-      if (row.dataset._autoBound === '1') return;
-      row.dataset._autoBound = '1';
-
-      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
-      let paused = false;
-      let wheelTimer = null;
-
-      const step = () => {
-        if (!paused && !document.hidden && speed > 0) {
-          const max = row.scrollWidth - row.clientWidth;
-          if (max > 4) {
-            row.scrollLeft += speed;
-            if (row.scrollLeft >= max - 1) row.scrollLeft = 0;
-          }
-        }
-        requestAnimationFrame(step);
-      };
-
-      row.addEventListener('mouseenter', () => { paused = true; });
-      row.addEventListener('mouseleave', () => { paused = false; });
-
-      // Pause auto-scroll on pointer interactions (mouse/touch/pen)
-      row.addEventListener('pointerdown', () => { paused = true; });
-      row.addEventListener('pointerup', () => { paused = false; });
-      row.addEventListener('pointercancel', () => { paused = false; });
-
-      row.addEventListener('focusin', () => { paused = true; });
-      row.addEventListener('focusout', () => { paused = false; });
-
-      row.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-      row.addEventListener('touchend', () => { paused = false; }, { passive: true });
-      row.addEventListener('touchcancel', () => { paused = false; }, { passive: true });
-
-      row.addEventListener('wheel', () => {
-        paused = true;
-        if (wheelTimer) clearTimeout(wheelTimer);
-        wheelTimer = setTimeout(() => { paused = false; }, 800);
-      }, { passive: true });
-
-      // Start loop
-      requestAnimationFrame(step);
-    });
-  }
-
-// ---------- Boot ----------
+  // ---------- Boot ----------
   async function boot() {
     try {
       bindDrawer();
       bindLightbox();
       bindFeedback();
       bindTopControls();
-      initDonutRows();
       bindTabEvents();
 
       await loadCampaignRegistry();
 
       const req = qs();
-      const id = req.get('campaign') || ((state.campaigns[0] && state.campaigns[0].id) ? state.campaigns[0].id : '');
+      const id = req.get('campaign') || state.campaigns[0]?.id;
       renderCampaignSelect();
 
       await loadCampaign(id);
@@ -2562,11 +2157,11 @@ function attachSmartVideo(videoEl, path, opts) {
       closeDrawer();
 
       // Wire drawer overlay state
-      var dO = $$('#drawerOverlay'); if (dO) dO.classList.add('hidden');
-      var sD = $$('#sessionDrawer'); if (sD) sD.classList.add('hidden');
+      $$('#drawerOverlay')?.classList.add('hidden');
+      $$('#sessionDrawer')?.classList.add('hidden');
 
       // Close buttons for lightbox
-      var el_lbClose = $$('#lbClose'); if (el_lbClose) el_lbClose.addEventListener('click', closeLightbox);
+      $$('#lbClose')?.addEventListener('click', closeLightbox);
 
       // Bind heatmap toggle button. When clicked, add or remove the heat
       // layer from the map and update the button text accordingly. The map

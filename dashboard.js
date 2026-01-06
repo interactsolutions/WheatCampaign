@@ -202,7 +202,7 @@
         return;
       }
       add(base);
-      // Support a-f variants explicitly for grouping
+      // Support a-f variants explicitly for grouping and discovery
       'abcdef'.split('').forEach(suf => {
         add(base + suf);
         add(base + '_' + suf);
@@ -291,12 +291,74 @@
       if (await assetExists(c)) return c;
     }
 
-  // Finds all existing variants (not just the first). Checks in parallel for efficiency.
-  async function resolveAllExisting(p) {
-    const cands = candidatePaths(p);
+  function variantCandidatePaths(p, kind) {
+    const norm = normalizeMediaPath(p);
+    if (!norm) return [];
+    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
+
+    // Prefer keeping the same folder & extension to avoid excessive 404 probes.
+    const extMatch = norm.match(/\.(jpeg|jpg|png|webp|mp4|webm)$/i);
+    const ext = extMatch ? ('.' + extMatch[1].toLowerCase()) : '';
+
+    const base = ext ? norm.slice(0, -ext.length) : norm;
+    const slash = base.lastIndexOf('/');
+    const dir = slash >= 0 ? base.slice(0, slash + 1) : '';
+    const name = slash >= 0 ? base.slice(slash + 1) : base;
+
+    const exts = (() => {
+      if (ext) return [ext];
+      if (kind === 'video') return ['.mp4', '.webm'];
+      // Images: keep compact (still covers common formats)
+      return ['.jpg', '.jpeg', '.png', '.webp'];
+    })();
+
+    // Derive root (remove a single-letter suffix, or _a / -a)
+    let root = name;
+    const m1 = root.match(/^(.*?)([a-z])$/i);
+    const m2 = root.match(/^(.*?)[_-]([a-z])$/i);
+    if (m2) root = m2[1];
+    else if (m1) root = m1[1];
+
+    const bases = [];
+    const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
+
+    // Always try original name first (might already include suffix)
+    addBase(name);
+
+    // Always try unsuffixed root
+    addBase(root);
+
+    // And a-f grouped variants from the root
+    'abcdef'.split('').forEach(suf => {
+      addBase(root + suf);
+      addBase(root + '_' + suf);
+      addBase(root + '-' + suf);
+    });
+
+    // Build full paths
+    const out = [];
+    const add = (v) => { if (v && !out.includes(v)) out.push(v); };
+    for (const b of bases) {
+      for (const e of exts) add(dir + b + e);
+    }
+
+    // Minimal fallback: if data path was bare filename, also try under assets/gallery/
+    if (!dir && !/^(https?:|data:|blob:)/i.test(norm)) {
+      const base2 = 'assets/gallery/' + name;
+      const ext2 = base2.match(/\.(jpeg|jpg|png|webp|mp4|webm)$/i);
+      if (ext2) add(base2);
+    }
+
+    return out;
+  }
+
+  async function resolveAllExisting(p, kind) {
+    const cands = variantCandidatePaths(p, kind);
+    if (!cands.length) return [];
     const results = await Promise.all(cands.map(async (c) => (await assetExists(c)) ? c : null));
     return results.filter(Boolean);
   }
+
     return '';
   }
 
@@ -1206,9 +1268,6 @@
     const grid = $$('#mediaGrid');
     if (!grid) return;
 
-    // Concurrency guard: if filters change rapidly, avoid stale renders overwriting the latest UI.
-    const seq = (state._mediaRenderSeq = (state._mediaRenderSeq || 0) + 1);
-
     // Bind media toolbar events once
     if (!state._mediaBound) {
       state._mediaBound = true;
@@ -1219,7 +1278,6 @@
         if (!btn) return;
         const t = btn.getAttribute('data-media-type') || 'all';
         state.mediaType = t;
-        // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
         state.mediaLimit = 24;
         void renderMedia();
@@ -1234,57 +1292,41 @@
         });
       }
 
-      const sort = $$('#mediaSort');
-      if (sort) {
-        sort.addEventListener('change', () => {
-          state.mediaSort = String(sort.value || 'newest');
+      const sortSel = $$('#mediaSort');
+      if (sortSel) {
+        sortSel.addEventListener('change', () => {
+          state.mediaSort = String(sortSel.value || 'newest');
           state.mediaLimit = 24;
           void renderMedia();
         });
       }
 
-      $$('#mediaLoadMore')?.addEventListener('click', () => {
-        state.mediaLimit = Number(state.mediaLimit || 24) + 24;
-        void renderMedia();
-      });
-
-      // Delegated click: thumbnail opens that exact asset, card opens the session lightbox
-      grid.addEventListener('click', (ev) => {
-        const thumb = ev.target.closest('.mediaThumbEl');
-        if (thumb) {
-          ev.preventDefault();
-          ev.stopPropagation();
-          const src = thumb.getAttribute('data-src') || '';
-          const kind = thumb.getAttribute('data-kind') || 'image';
-          if (src) openLightboxUrl(src, kind);
-          return;
-        }
-
-        const card = ev.target.closest('.mediaCard[data-session-id]');
-        if (!card) return;
-        if (ev.target.closest('a')) return; // ignore action buttons
-
-        const sid = Number(card.dataset.sessionId);
-        if (!Number.isFinite(sid)) return;
-        openLightbox(sid);
-      });
+      const more = $$('#mediaMore');
+      if (more) {
+        more.addEventListener('click', () => {
+          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
+          void renderMedia();
+        });
+      }
     }
+
+    // Avoid stale async renders overriding newer results
+    const token = (state._mediaRenderToken = (Number(state._mediaRenderToken || 0) + 1));
+    const safeSet = (fn) => { if (state._mediaRenderToken === token) fn(); };
+
+    // Ensure cache map exists
+    if (!state._resolvedMediaBySession) state._resolvedMediaBySession = new Map();
 
     const q = String(state.mediaSearch || '').trim().toLowerCase();
     const type = String(state.mediaType || 'all');
     const sortMode = String(state.mediaSort || 'newest');
-    const limit = Number(state.mediaLimit || 24);
 
-    // Build session list
     let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
-
-    // Fast pre-filter: sessions that *declare* media
+    // Filter to sessions that have any media listed
     list = list.filter(s => {
-      const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
-      const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
-      if (type === 'images') return imgs.length > 0;
-      if (type === 'videos') return vids.length > 0;
-      return imgs.length > 0 || vids.length > 0;
+      const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images.length : 0;
+      const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos.length : 0;
+      return (imgs + vids) > 0;
     });
 
     // Text filter
@@ -1297,159 +1339,208 @@
       });
     }
 
-    // Sort
-    list.sort((a, b) => {
-      const da = parseDateSafe(a.date)?.getTime?.() || 0;
-      const db = parseDateSafe(b.date)?.getTime?.() || 0;
-      return sortMode === 'oldest' ? (da - db) : (db - da);
-    });
+    // Sorting
+    const getDate = (s) => {
+      const d = s.date || s.sessionDate || s.startDate || s.timestamp || '';
+      const t = Date.parse(d);
+      return Number.isFinite(t) ? t : 0;
+    };
+    if (sortMode === 'oldest') list.sort((a,b) => getDate(a) - getDate(b));
+    else list.sort((a,b) => getDate(b) - getDate(a));
 
+    const total = list.length;
+    const limit = Math.max(0, Number(state.mediaLimit || 24));
     const shown = list.slice(0, limit);
 
-    // Clear + render
-    grid.innerHTML = '';
+    safeSet(() => {
+      grid.innerHTML = '';
+      // lightweight loading hint
+      const hint = document.createElement('div');
+      hint.className = 'muted';
+      hint.style.margin = '6px 0 14px';
+      hint.textContent = shown.length ? 'Loading media…' : 'No media matches your filters.';
+      grid.appendChild(hint);
+    });
 
-    let groupsRendered = 0;
-    let imgCount = 0;
-    let vidCount = 0;
+    const frag = document.createDocumentFragment();
 
-    // Resolve and render sequentially to preserve order; each session does parallel checks internally.
     for (const s of shown) {
-      if (seq !== state._mediaRenderSeq) return; // stale render
+      if (state._mediaRenderToken !== token) return;
 
       const sid = Number(s.id);
-      const imgs = (s.media && Array.isArray(s.media.images)) ? s.media.images : [];
-      const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
+      const sheet = esc(s.sheetRef || '');
+      const district = esc(s.district || '');
+      const village = esc(s.village || s.spot || '');
+      const title = `${sheet} • ${district} • ${village}`;
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(String(state.campaignId))}&session=${encodeURIComponent(String(s.id))}`;
 
-      const wanted = [];
-      if (type !== 'videos') wanted.push(...imgs.map(p => ({ kind: 'image', path: p })));
-      if (type !== 'images') wanted.push(...vids.map(p => ({ kind: 'video', path: p })));
-
-      if (!wanted.length) continue;
-
-      // Resolve all variants for each referenced path
-      const resolvedLists = await Promise.all(wanted.map(async (it) => {
-        const paths = await resolveAllExisting(it.path);
-        return paths.map(p => ({ kind: /\.(mp4|webm)$/i.test(p) ? 'video' : 'image', path: p }));
-      }));
-
+      // Resolve all existing media (incl. a-f variants) for this session, but only within the selected type filter.
+      const cached = state._resolvedMediaBySession?.get(Number(sessionId));
+    const items = (cached && cached.length) ? cached : allMediaItems(s);
       const resolved = [];
-      for (const arr of resolvedLists) {
-        for (const it of arr) {
-          if (!resolved.some(x => x.path === it.path)) resolved.push(it);
-        }
+      for (const it of items) {
+        if (type === 'videos' && it.type !== 'video') continue;
+        if (type === 'images' && it.type !== 'image') continue;
+
+        const paths = await resolveAllExisting(it.path, it.type);
+        for (const p of paths) resolved.push({ type: it.type, path: p, src: url(p) });
       }
 
       if (!resolved.length) continue;
 
-      // Counters
-      for (const it of resolved) {
-        if (it.kind === 'video') vidCount += 1;
-        else imgCount += 1;
-      }
-
-      const title = `${s.district || ''} • ${s.village || s.spot || ''}`.trim().replace(/^•\s*/, '') || (s.sheetRef || `Session ${sid}`);
-      const dateStr = s.date ? formatDateInput(s.date) : '';
-
-      const hrefDetails = `#sessions?open=${encodeURIComponent(String(sid))}`;
-      const sheetHref = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef || '')}`;
+      // cache resolved list for lightbox
+      state._resolvedMediaBySession.set(sid, resolved);
 
       const card = document.createElement('div');
       card.className = 'mediaCard';
       card.dataset.sessionId = String(sid);
 
-      const thumbWrap = document.createElement('div');
-      thumbWrap.className = 'mediaThumb';
+      // thumb
+      const thumb = document.createElement('div');
+      thumb.className = 'mediaThumb';
 
-      const maxThumbs = 9;
+      const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
+      const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3l2-2h4l2 2h3a2 2 0 0 1 2 2v12Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 14l2.2 2.2L15.5 11 21 16.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1l3-4Z" fill="currentColor" opacity=".25"/></svg>';
+      // Back-compat for any older typo in deployed code
+      const photIcon = photoIcon;
+
       if (resolved.length === 1) {
-        const one = resolved[0];
-        if (one.kind === 'video') {
+        const it = resolved[0];
+        const badge = document.createElement('div');
+        badge.className = 'mediaBadge';
+        badge.innerHTML = (it.type === 'video') ? `${playIcon}<span>Video</span>` : `${photIcon}<span>Image</span>`;
+        thumb.appendChild(badge);
+
+        if (it.type === 'video') {
           const v = document.createElement('video');
-          v.className = 'mediaMain';
           v.muted = true;
-          v.loop = true;
           v.playsInline = true;
           v.setAttribute('playsinline','');
-          v.autoplay = true;
-          attachSmartVideo(v, one.path);
-          thumbWrap.appendChild(v);
+          v.preload = 'metadata';
+          v.src = it.src;
+          v.className = 'mediaThumbEl';
+          thumb.appendChild(v);
         } else {
           const img = document.createElement('img');
-          img.className = 'mediaMain';
+          img.loading = 'lazy';
           img.alt = title;
-          attachSmartImage(img, one.path);
-          thumbWrap.appendChild(img);
+          img.src = it.src;
+          img.className = 'mediaThumbEl';
+          thumb.appendChild(img);
         }
       } else {
-        card.classList.add('mediaGroup');
+        card.classList.add('mediaGroupCard');
+
+        const badge = document.createElement('div');
+        badge.className = 'mediaBadge';
+        const vCount = resolved.filter(x => x.type === 'video').length;
+        const iCount = resolved.length - vCount;
+        badge.innerHTML = `${(vCount ? playIcon : photIcon)}<span>${resolved.length} items</span>`;
+        thumb.appendChild(badge);
 
         const thumbs = document.createElement('div');
         thumbs.className = 'mediaThumbs';
 
-        const show = resolved.slice(0, maxThumbs);
-        for (const it of show) {
-          if (it.kind === 'video') {
+        const maxShow = 9;
+        resolved.slice(0, maxShow).forEach((it, idx) => {
+          if (it.type === 'video') {
             const v = document.createElement('video');
-            v.className = 'mediaThumbEl';
             v.muted = true;
-            v.loop = true;
             v.playsInline = true;
             v.setAttribute('playsinline','');
-            v.autoplay = true;
-            v.setAttribute('data-src', it.path);
-            v.setAttribute('data-kind', 'video');
-            attachSmartVideo(v, it.path);
+            v.preload = 'metadata';
+            v.src = it.src;
+            v.className = 'mediaThumbEl mediaThumbMini';
+            v.dataset.idx = String(idx);
             thumbs.appendChild(v);
           } else {
             const img = document.createElement('img');
-            img.className = 'mediaThumbEl';
+            img.loading = 'lazy';
             img.alt = title;
-            img.setAttribute('data-src', it.path);
-            img.setAttribute('data-kind', 'image');
-            attachSmartImage(img, it.path);
+            img.src = it.src;
+            img.className = 'mediaThumbEl mediaThumbMini';
+            img.dataset.idx = String(idx);
             thumbs.appendChild(img);
           }
-        }
+        });
 
-        if (resolved.length > maxThumbs) {
+        if (resolved.length > maxShow) {
           const more = document.createElement('div');
-          more.className = 'mediaMore';
-          more.textContent = `+${resolved.length - maxThumbs}`;
+          more.className = 'mediaMoreBadge';
+          more.textContent = `+${resolved.length - maxShow}`;
           thumbs.appendChild(more);
         }
 
-        thumbWrap.appendChild(thumbs);
+        thumb.appendChild(thumbs);
       }
 
       const meta = document.createElement('div');
       meta.className = 'mediaMeta';
       meta.innerHTML = `
         <div class="mediaTitle">${esc(title)}</div>
-        <div class="smallMuted">${esc(dateStr)}</div>
         <div class="mediaActions">
-          <a class="btn btnSmall" href="${esc(sheetHref)}">Sheet</a>
-          <a class="btn btnSmall btnGhost" href="${esc(hrefDetails)}">Details</a>
+          <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(String(state.campaignId))}&sheet=${encodeURIComponent(String(s.sheetRef || ''))}">Sheet</a>
+          <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+          <button class="btn btnSmall btnGhost" type="button" data-action="open">Open</button>
         </div>
       `;
 
-      card.appendChild(thumbWrap);
+      card.appendChild(thumb);
       card.appendChild(meta);
-      grid.appendChild(card);
-      groupsRendered += 1;
+      frag.appendChild(card);
     }
 
-    // Count: sessions shown vs groups actually rendered
-    const countEl = $$('#mediaCount');
-    if (countEl) {
-      countEl.textContent = `${shown.length} sessions shown (${groupsRendered} media groups) • ${imgCount} images • ${vidCount} videos`;
+    safeSet(() => {
+      grid.innerHTML = '';
+      grid.appendChild(frag);
+
+      const countEl = $$('#mediaCount');
+      if (countEl) {
+        const cards = grid.querySelectorAll('.mediaCard').length;
+        countEl.textContent = `${Math.min(limit, total)} of ${total} sessions shown (${cards} cards)`;
+      }
+
+      const moreBtn = $$('#mediaMore');
+      if (moreBtn) moreBtn.classList.toggle('hidden', limit >= total);
+    });
+
+    // Delegate clicks: open lightbox on card/thumbnail/button
+    if (!grid.dataset._clickBound) {
+      grid.dataset._clickBound = '1';
+      grid.addEventListener('click', (ev) => {
+        const card = ev.target.closest('.mediaCard[data-session-id]');
+        if (!card) return;
+        const sid = Number(card.dataset.sessionId);
+
+        // allow anchor navigation
+        if (ev.target.closest('a')) return;
+
+        const openBtn = ev.target.closest('button[data-action="open"]');
+        if (openBtn) {
+          ev.preventDefault();
+          void openLightbox(sid, 0);
+          return;
+        }
+
+        const thumbEl = ev.target.closest('.mediaThumbEl');
+        if (thumbEl && thumbEl.dataset && typeof thumbEl.dataset.idx !== 'undefined') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const idx = Number(thumbEl.dataset.idx || 0);
+          void openLightbox(sid, idx);
+          return;
+        }
+
+        // default: open at first
+        void openLightbox(sid, 0);
+      });
     }
   }
 
   function renderAll() {
     renderSummary();
     renderSessionsTable();
-    renderMedia();
+    void renderMedia();
     updateMapData(); // markers reflect filter
   }
 
@@ -1673,74 +1764,100 @@
     });
   }
 
-  async function openLightbox(sessionId) {
+  async function openLightbox(sessionId, startIndex = 0) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
     const lb = $$('#lightbox');
     const body = $$('#lbBody');
     if (!lb || !body) return;
 
-    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+    const cached = state._resolvedMediaBySession?.get(Number(sessionId));
+    const items = (cached && cached.length) ? cached : allMediaItems(s);
 
+    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
     lb.classList.add('open');
     body.innerHTML = '';
 
-    const items = allMediaItems(s);
     if (!items.length) {
       body.innerHTML = '<div class="muted">No media listed for this session.</div>';
       return;
     }
 
-    // Show first item large; rest as thumbnails
-    const main = items[0];
+    const idx0 = Math.max(0, Math.min(items.length - 1, Number(startIndex || 0)));
+    const main = items[idx0];
+
+    // Main media
     if (main.type === 'image') {
       const img = document.createElement('img');
       img.className = 'lightboxMedia';
       img.alt = 'image';
       body.appendChild(img);
-      attachSmartImage(img, main.path);
+      if (cached && cached.length) {
+        img.src = main.src || url(main.path);
+      } else {
+        attachSmartImage(img, main.path);
+      }
     } else {
       const v = document.createElement('video');
       v.className = 'lightboxMedia';
       v.controls = true;
       v.playsInline = true;
       v.setAttribute('playsinline','');
+      v.preload = 'metadata';
       body.appendChild(v);
-      const chosen = await resolveFirstExisting(main.path);
-      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
+
+      try {
+        if (cached && cached.length) {
+          v.src = main.src || url(main.path);
+        } else {
+          const chosen = await resolveFirstExisting(main.path);
+          v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
+        }
+        // Attempt to play (should succeed because lightbox open is user-initiated)
+        v.play().catch(() => { /* ignore */ });
+      } catch (_e) {
+        v.src = url('assets/placeholder-video.mp4');
+      }
     }
 
+    // Thumbnails row
     if (items.length > 1) {
       const row = document.createElement('div');
-      row.className = 'mediaRow';
-      for (const it of items.slice(1, 12)) {
+      row.className = 'lbThumbRow';
+
+      items.forEach((it, idx) => {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'lbThumbBtn' + (idx === idx0 ? ' lbThumbBtn--active' : '');
+        cell.setAttribute('aria-label', `Open item ${idx + 1}`);
+        cell.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          void openLightbox(sessionId, idx);
+        });
+
         if (it.type === 'image') {
-          const t = document.createElement('img');
-          t.className = 'thumb';
-          t.alt = 'thumb';
-          t.loading = 'lazy';
-          row.appendChild(t);
-          attachSmartImage(t, it.path);
-          t.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId); // simplest refresh
-          };
+          const im = document.createElement('img');
+          im.alt = 'thumb';
+          im.loading = 'lazy';
+          if (cached && cached.length) im.src = it.src || url(it.path);
+          else attachSmartImage(im, it.path);
+          cell.appendChild(im);
         } else {
           const tv = document.createElement('video');
-          tv.className = 'thumb';
           tv.muted = true;
           tv.playsInline = true;
           tv.setAttribute('playsinline','');
-          row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
-          tv.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId);
-          };
+          tv.preload = 'metadata';
+          tv.controls = false;
+          if (cached && cached.length) tv.src = it.src || url(it.path);
+          else attachSmartVideo(tv, it.path);
+          cell.appendChild(tv);
         }
-      }
+
+        row.appendChild(cell);
+      });
+
       body.appendChild(row);
     }
   }
@@ -2155,13 +2272,14 @@
     document.addEventListener('tabchange', async (e) => {
       const tab = e.detail?.tab;
       if (tab === 'map') {
-        // Give Leaflet time to render after display
         setTimeout(ensureMapReady, 50);
         setTimeout(() => state.map?.invalidateSize(), 200);
       } else if (tab === 'media') {
-        // Ensure Media reflects the latest filters when opened
-        await renderMedia();
+        // Render media on demand; safe even if already rendered.
+        try { await renderMedia(); } catch (err) { console.error(err); }
       }
+    });
+  }
     });
   }
 

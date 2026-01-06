@@ -1069,71 +1069,72 @@ a{ color: inherit; }
 
 
 
-/* =========================
-   Media variants + grouping
-   ========================= */
-.mediaGrid{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
-  column-count: initial;
-  column-gap: initial;
-}
-
-@media (max-width: 640px){
-  .mediaGrid{ grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-}
-
-.mediaCard{
-  margin: 0;
-}
-
-.mediaMain{
-  width:100%;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.mediaGroup{
-  border: 1px solid var(--stroke);
-}
-
+/* --- Media grouping + mini thumbs (variant groups) --- */
+.mediaGroupCard .mediaThumb{ padding:8px; }
 .mediaThumbs{
   display:grid;
   grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 4px;
+  gap:6px;
 }
-
 .mediaThumbEl{
   width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:12px;
+  display:block;
+}
+.mediaThumbMini{
   height:60px;
-  object-fit: cover;
-  border-radius: 8px;
+  border-radius:10px;
   cursor:pointer;
 }
-
-.mediaThumbEl:hover{
-  transform: scale(1.05);
-  transition: var(--t);
-}
-
-.mediaMore{
+.mediaMoreBadge{
+  height:60px;
+  border-radius:10px;
   display:flex;
   align-items:center;
   justify-content:center;
-  height:60px;
-  border-radius: 8px;
-  background: rgba(255,255,255,.06);
-  border:1px dashed rgba(255,255,255,.20);
-  font-weight: 800;
+  font-weight:800;
+  background: rgba(0,0,0,.30);
+  border:1px solid var(--stroke);
   color: var(--text);
 }
+.mediaThumbMini:hover{
+  transform: scale(1.04);
+  transition: var(--t);
+}
 
-.lbSingle img,
-.lbSingle video{
+/* Lightbox thumbs row */
+.lbThumbRow{
+  margin-top:12px;
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  padding:6px 2px 2px;
+}
+.lbThumbBtn{
+  flex: 0 0 auto;
+  width:86px;
+  height:64px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  padding:0;
+  overflow:hidden;
+  cursor:pointer;
+}
+.lbThumbBtn img,
+.lbThumbBtn video{
   width:100%;
-  max-height:70vh;
-  object-fit: contain;
-  border-radius: 14px;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.lbThumbBtn--active{
+  border-color: rgba(241,219,179,.55);
+  box-shadow: 0 0 0 2px rgba(241,219,179,.15);
+}
+[data-theme="light"] .lbThumbBtn{
+  background: rgba(255,255,255,.75);
+  border-color: rgba(16,56,79,.14);
 }

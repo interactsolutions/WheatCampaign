@@ -13,98 +13,125 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260106-15" />
-  <!-- Leaflet CSS (robust fallback chain) -->
+  <link rel="stylesheet" href="style.css?v=20260106-1" />
+
+  <!-- Leaflet CSS with robust fallback -->
   <link id="leafletCss" rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossorigin="anonymous"
         onerror="this.onerror=null;
                  this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
-                 this.onerror=function(){
+                 this.onerror=()=>{
                    this.href='assets/leaflet.css';
-                   if(!window.leafletRetry) window.leafletRetry=true;
+                   console.warn('Using local Leaflet CSS');
                  }" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  
+  <script>
+    window.__REDUCE_MOTION__ = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  </script>
 </head>
 
 <body>
+  <!-- Inline SVG icon sprite -->
+  <svg id="svgSprite" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="i-calendar" viewBox="0 0 24 24">
+      <path d="M7 2v2M17 2v2M4 7h16M6 10h4M6 14h4M14 10h4M14 14h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <rect x="4" y="5" width="16" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24">
+      <path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0Z" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24">
+      <path d="M20 4c-8 0-14 6-14 14 8 0 14-6 14-14Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M6 18c4-4 7-6 12-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-target" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24">
+      <path d="M9 18h6M10 22h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M12 2a7 7 0 0 0-4 12c1 1 1 2 1 3h6c0-1 0-2 1-3A7 7 0 0 0 12 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24">
+      <path d="M12 2 20 6v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="m9 12 2 2 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 7v6l4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-star" viewBox="0 0 24 24">
+      <path d="m12 3 2.6 5.6 6.1.9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.5l6.1-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+  </svg>
+
   <!-- Background video -->
   <div class="bg">
     <video class="bgVideo" id="bgVideo"
-           src="assets/hero-1.mp4"
+           src="assets/bg.mp4"
            autoplay muted loop playsinline
-           preload="metadata"
-           onerror="this.onerror=null; this.src='assets/interact.mp4'">
+           preload="metadata">
     </video>
     <div class="bgShade"></div>
+    <div class="bgFallback hidden"></div>
   </div>
 
-<script>
-  // Background video: muted autoplay-safe with graceful fallback
-  (function() {
-    var v = document.getElementById('bgVideo');
+  <script>
+  // Robust Background Video Fallback with interaction fallback
+  (function () {
+    const v = document.getElementById('bgVideo');
     if (!v) return;
 
-    var autoplayAttempted = false;
-    var fallbackEl = null;
-    var candidates = ['assets/hero-1.mp4', 'assets/interact.mp4', 'assets/bg.mp4'];
-    var idx = 0;
-
-    function ensureFallback() {
-      if (fallbackEl) return;
-      fallbackEl = document.createElement('div');
-      fallbackEl.className = 'bgFallback';
-      if (v.parentElement) v.parentElement.appendChild(fallbackEl);
-      v.classList.add('fallback');
-    }
-
-    function tryNextSource() {
-      if (idx >= candidates.length) return;
-      v.src = candidates[idx++];
-      // attempt autoplay for this source
-      autoplayAttempted = false;
-      attemptAutoplay();
-    }
-
+    let autoplayAttempted = false;
+    const fallbackEl = document.querySelector('.bgFallback');
+    
     function attemptAutoplay() {
       if (autoplayAttempted) return;
       autoplayAttempted = true;
-
-      try { v.muted = true; } catch (e) {}
-      try { v.setAttribute('muted', ''); } catch (e) {}
-      try { v.playsInline = true; v.setAttribute('playsinline', ''); } catch (e) {}
-
-      var p = null;
-      try { p = v.play(); } catch (e) { p = null; }
-
-      if (p && p.catch) {
-        p.catch(function() {
-          // Autoplay blocked → show fallback (user interaction will retry)
-          ensureFallback();
+      
+      v.muted = true;
+      v.setAttribute('muted', '');
+      v.playsInline = true;
+      v.preload = 'auto';
+      
+      const playPromise = v.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('Autoplay blocked:', err);
+          if (fallbackEl) {
+            fallbackEl.classList.remove('hidden');
+            v.classList.add('hidden');
+          }
         });
       }
     }
-
-    v.addEventListener('error', function() {
-      // missing/corrupt asset → try next
-      tryNextSource();
+    
+    // Try autoplay immediately
+    setTimeout(attemptAutoplay, 300);
+    
+    // Also try on user interaction
+    const interactionEvents = ['click', 'touchstart', 'keydown', 'scroll'];
+    interactionEvents.forEach(evt => {
+      document.addEventListener(evt, attemptAutoplay, { once: true, passive: true });
     });
-
-    // Start with first candidate if current src missing
-    if (!v.getAttribute('src')) tryNextSource();
-
-    // Attempt autoplay now
-    attemptAutoplay();
-
-    // Retry on first user interaction
-    function onUser() {
-      autoplayAttempted = false;
-      if (fallbackEl) { try { fallbackEl.remove(); } catch(e){} fallbackEl = null; }
-      v.classList.remove('fallback');
-      attemptAutoplay();
-    }
-    document.addEventListener('click', onUser, { once: true });
-    document.addEventListener('touchstart', onUser, { once: true });
+    
+    // Fallback if video errors
+    v.addEventListener('error', () => {
+      console.warn('Video error, using fallback background');
+      if (fallbackEl) {
+        fallbackEl.classList.remove('hidden');
+        v.classList.add('hidden');
+      }
+    });
   })();
   </script>
 
@@ -126,9 +153,9 @@
 
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
         <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
+        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
         <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
         <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
-        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
         <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
       </nav>
     </div>
@@ -154,13 +181,19 @@
     </div>
 
     <!-- Filters -->
-    <div class="controls">
-      <div class="control">
+    <div class="filtersHeader" id="filtersHeader">
+      <div class="filtersMeta" id="filtersMeta">Filters</div>
+      <button class="btn btnGhost btnSmall" id="filtersToggle" type="button"
+              aria-expanded="true" aria-controls="filtersPanel">Filters ▾</button>
+    </div>
+
+    <div class="controls" id="filtersPanel">
+      <div class="control control--campaign">
         <label for="campaignSelect">Campaign</label>
         <select id="campaignSelect"></select>
       </div>
 
-      <div class="control">
+      <div class="control control--dates">
         <label>Date range</label>
         <div class="rangeRow">
           <input id="dateFrom" type="date" />
@@ -173,17 +206,17 @@
         <div id="rangeHint" class="smallMuted"></div>
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="nameFilter">Farmer name</label>
         <input id="nameFilter" type="text" placeholder="Search by host name" />
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="cityFilter">Territory</label>
         <input id="cityFilter" type="text" placeholder="Search by territory" />
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="regionFilter">Region (REG)</label>
         <input id="regionFilter" type="text" placeholder="Search by region" list="regionOptions" />
         <datalist id="regionOptions">
@@ -195,12 +228,12 @@
         </datalist>
       </div>
 
-      <div class="control">
+      <div class="control control--search">
         <label for="districtFilter">District</label>
         <input id="districtFilter" type="text" placeholder="Search by district" />
       </div>
 
-      <div class="control">
+      <div class="control control--score">
         <label>Score range</label>
         <div class="scoreRangeRow">
           <input id="scoreMin" type="number" placeholder="Min score" min="0" max="100" step="0.1" />
@@ -218,18 +251,19 @@
         <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
 
         <div class="kpis">
-          <div class="kpi kpi--sessions"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
-          <div class="kpi kpi--farmers"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
-          <div class="kpi kpi--acres"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
-          <div class="kpi kpi--estacres"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
-          <div class="kpi kpi--awareness"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
-          <div class="kpi kpi--definite"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
-          <div class="kpi kpi--used"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
-          <div class="kpi kpi--score"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
+          <div class="kpi kpi--sessions"><div class="kpiLabel"><span data-tooltip="Total number of INTERACT field sessions executed."><svg class="ico" aria-hidden="true"><use href="#i-calendar" xlink:href="#i-calendar"></use></svg>Sessions</span></div><div class="kpiVal" id="kpiSessions">—</div></div>
+          <div class="kpi kpi--farmers"><div class="kpiLabel"><span data-tooltip="Total farmers reached (refined where attendance index is available)."><svg class="ico" aria-hidden="true"><use href="#i-users" xlink:href="#i-users"></use></svg>Farmers reached</span></div><div class="kpiVal" id="kpiFarmers">—</div></div>
+          <div class="kpi kpi--acres"><div class="kpiLabel"><span data-tooltip="Sum of reported wheat acres engaged during sessions."><svg class="ico" aria-hidden="true"><use href="#i-leaf" xlink:href="#i-leaf"></use></svg>Acres engaged</span></div><div class="kpiVal" id="kpiAcres">—</div></div>
+          <div class="kpi kpi--estacres"><div class="kpiLabel"><span data-tooltip="Estimated Buctril acres influenced (refined where available)."><svg class="ico" aria-hidden="true"><use href="#i-target" xlink:href="#i-target"></use></svg>Estimated Buctril acres</span></div><div class="kpiVal" id="kpiEstAcres">—</div></div>
+          <div class="kpi kpi--awareness"><div class="kpiLabel"><span data-tooltip="Average awareness after INTERACT education (higher is better)."><svg class="ico" aria-hidden="true"><use href="#i-bulb" xlink:href="#i-bulb"></use></svg>Awareness (avg)</span></div><div class="kpiVal" id="kpiAwareness">—</div></div>
+          <div class="kpi kpi--definite"><div class="kpiLabel"><span data-tooltip="Average definite intent to use after education."><svg class="ico" aria-hidden="true"><use href="#i-shield" xlink:href="#i-shield"></use></svg>Definite intent (avg)</span></div><div class="kpiVal" id="kpiDefinite">—</div></div>
+          <div class="kpi kpi--used"><div class="kpiLabel"><span data-tooltip="Average % who used last year (baseline familiarity)."><svg class="ico" aria-hidden="true"><use href="#i-clock" xlink:href="#i-clock"></use></svg>Used last year (avg)</span></div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
+          <div class="kpi kpi--score"><div class="kpiLabel"><span data-tooltip="Overall session score (composite indicator)."><svg class="ico" aria-hidden="true"><use href="#i-star" xlink:href="#i-star"></use></svg>Avg session score</span></div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
 
         <div id="lastUpdated" class="smallMuted"></div>
         <div id="summaryTakeaways" class="summaryTakeaways"></div>
+        <div id="summaryProgress"></div>
 
         <div class="divider"></div>
 
@@ -249,23 +283,28 @@
 
         <div class="divider"></div>
 
-        <h3>Sessions by farmers attendance</h3>
-        <!-- Use chartWrap so CSS can constrain size consistently -->
-        <div class="chartWrap attendanceWrap">
-          <canvas id="attendanceDonut"></canvas>
+        <h3>Donut insights</h3>
+        <div class="donutRow" id="coreDonutsRow" data-autoscroll="1" data-speed="0.22">
+          <div class="chartTile">
+            <h4>Sessions by farmers attendance</h4>
+            <div class="chartWrap attendanceWrap">
+              <canvas id="attendanceDonut"></canvas>
+            </div>
+          </div>
+
+          <div class="chartTile">
+            <h4>Decision breakdown</h4>
+            <div class="chartWrap decisionWrap">
+              <canvas id="decisionPie"></canvas>
+            </div>
+          </div>
         </div>
 
         <div class="divider"></div>
 
-        <h3>Decision breakdown</h3>
-        <div class="chartWrap decisionWrap">
-          <canvas id="decisionPie"></canvas>
-        </div>
-
-        <div class="divider"></div>
         <h3>Additional breakdowns</h3>
 
-        <div class="chartGrid">
+        <div class="chartGrid donutRow" id="breakdownsRow" data-autoscroll="1" data-speed="0.25">
           <div class="chartTile">
             <h4>Farmers by region</h4>
             <div class="chartWrap">
@@ -321,18 +360,28 @@
         </details>
 
         <div class="divider"></div>
-        <div class="grid2">
-          <div class="card card--flat">
-            <h3>Top adoption drivers</h3>
-            <div id="driversChart" class="barChart"><div class="muted">Loading…</div></div>
+        
+        <h3>Drivers &amp; barriers (donut)</h3>
+        <div class="donutRow" id="driversBarriersRow" data-autoscroll="1" data-speed="0.22">
+          <div class="chartTile donutTileWide">
+            <h4>Top adoption drivers</h4>
+            <div class="chartWrap">
+              <canvas id="driversDonut"></canvas>
+            </div>
+            <div id="driversLegend" class="donutLegend"><div class="muted">Loading…</div></div>
           </div>
-          <div class="card card--flat">
-            <h3>Top barriers</h3>
-            <div id="barriersChart" class="barChart"><div class="muted">Loading…</div></div>
+
+          <div class="chartTile donutTileWide">
+            <h4>Top barriers</h4>
+            <div class="chartWrap">
+              <canvas id="barriersDonut"></canvas>
+            </div>
+            <div id="barriersLegend" class="donutLegend"><div class="muted">Loading…</div></div>
           </div>
         </div>
 
         <div class="divider"></div>
+
         <h3>Data readiness</h3>
         <div id="statusBox" class="status">Loading…</div>
         <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
@@ -350,10 +399,11 @@
       <div id="leafletMap" class="map">Loading map…</div>
       <div class="mapControls" style="margin:12px 0; text-align:right;">
         <button class="btn btnGhost btnSmall" id="toggleHeat">Show Heatmap</button>
+        <button class="btn btnGhost btnSmall" id="reloadMap">Reload Map</button>
       </div>
       <div class="divider"></div>
       <div id="mapFallback" class="smallMuted hidden">
-        Map library could not be loaded. Use the Sessions table and “Open in Google Maps” links in details.
+        Map library could not be loaded. Use the Sessions table and "Open in Google Maps" links in details.
       </div>
     </section>
 
@@ -512,70 +562,79 @@
     </div>
   </div>
 
-  <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-
+  <!-- Robust Leaflet loader -->
   <script>
-  // Robust Leaflet loader with local fallback (unpkg → jsdelivr → /assets)
-  window.loadLeaflet = function() {
-    return new Promise(function(resolve, reject) {
-      try { if (window.L && window.L.map) return resolve(true); } catch(e) {}
-
-      function loadLocalLeaflet() {
-        return new Promise(function(resolve2, reject2) {
-          var s = document.createElement('script');
-          s.src = 'assets/leaflet.js';
-          s.onload = function() {
-            try { if (window.L && window.L.map) return resolve2(true); } catch(e) {}
-            reject2(new Error('Local Leaflet failed'));
+  (function() {
+    window.loadLeaflet = function() {
+      return new Promise((resolve, reject) => {
+        if (window.L && window.L.map) return resolve(true);
+        
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        function attemptLoad() {
+          attempts++;
+          
+          const script = document.createElement('script');
+          script.src = attempts === 1 
+            ? 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+            : attempts === 2
+            ? 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
+            : 'assets/leaflet.js';
+          
+          script.integrity = attempts === 1 
+            ? 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='
+            : '';
+          
+          script.crossOrigin = 'anonymous';
+          
+          script.onload = () => {
+            if (window.L && window.L.map) {
+              console.log(`Leaflet loaded from ${attempts === 3 ? 'local' : 'CDN'}`);
+              resolve(true);
+            } else if (attempts < maxAttempts) {
+              setTimeout(attemptLoad, 500);
+            } else {
+              reject(new Error('Leaflet failed to load'));
+            }
           };
-          s.onerror = reject2;
-          document.head.appendChild(s);
-        });
-      }
-
-      var s1 = document.createElement('script');
-      s1.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      s1.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-      s1.crossOrigin = 'anonymous';
-      s1.onload = function() {
-        try { if (window.L && window.L.map) return resolve(true); } catch(e) {}
-        loadLocalLeaflet().then(resolve).catch(reject);
-      };
-      s1.onerror = function() {
-        var s2 = document.createElement('script');
-        s2.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
-        s2.onload = function() {
-          try { if (window.L && window.L.map) return resolve(true); } catch(e) {}
-          loadLocalLeaflet().then(resolve).catch(reject);
-        };
-        s2.onerror = function() {
-          loadLocalLeaflet().then(resolve).catch(reject);
-        };
-        document.head.appendChild(s2);
-      };
-      document.head.appendChild(s1);
-    });
-  };
+          
+          script.onerror = () => {
+            if (attempts < maxAttempts) {
+              setTimeout(attemptLoad, 500);
+            } else {
+              reject(new Error('All Leaflet sources failed'));
+            }
+          };
+          
+          document.head.appendChild(script);
+        }
+        
+        attemptLoad();
+      });
+    };
+  })();
   </script>
 
-  <script defer src="dashboard.js?v=20260106-15"></script>
-
+  <!-- Scripts -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script defer src="dashboard.js?v=20260106-1"></script>
 
   <!-- Hero slider (auto-advance) -->
   <script>
   (function() {
-    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReduced = window.__REDUCE_MOTION__;
 
     const videos = [
-      { file: 'assets/atlantis.mp4', title: 'Atlantis', caption: 'Atlantis field application' },
-      { file: 'assets/bayer.mp4', title: 'Bayer', caption: 'Bayer promotional clip' },
-      { file: 'assets/buctril.mp4', title: 'Buctril', caption: 'Buctril product demo' },
-      { file: 'assets/interact.mp4', title: 'Interact', caption: 'Interact Solutions overview' }
+      { file: 'assets/atlantis.mp4', title: 'Field Activation', caption: 'Wheat weed-control activations across districts.' },
+      { file: 'assets/bayer.mp4', title: 'Trust & Safety', caption: 'Bayer Crop Science—trusted crop protection.' },
+      { file: 'assets/buctril.mp4', title: 'Buctril Super Protection', caption: 'Safeguarding wheat fields under protection.' },
+      { file: 'assets/interact.mp4', title: 'INTERACT in Action', caption: 'Educating farmers on effective weed-control strategies.' }
     ];
 
     let current = 0;
     let timer = null;
+    let heroStats = null;
 
     const heroVideo = document.getElementById('heroVideo');
     const heroTitle = document.getElementById('heroTitle');
@@ -605,11 +664,25 @@
       heroVideo.src = v.file;
       heroVideo.load();
 
-      // Attempt autoplay; if blocked, still rotate
-      heroVideo.play().catch(() => { /* ignore */ });
+      // Attempt autoplay with fallback
+      const playPromise = heroVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          console.warn('Hero video autoplay blocked');
+        });
+      }
 
       if (heroTitle) heroTitle.textContent = v.title;
-      if (heroSub) heroSub.textContent = v.caption;
+      if (heroSub) heroSub.textContent = (function(){
+        const base = v.caption || '';
+        if (!heroStats) return base;
+        const parts = [];
+        if (heroStats.farmers) parts.push(`${heroStats.farmers.toLocaleString()} farmers reached`);
+        if (Number.isFinite(heroStats.awareness)) parts.push(`Awareness ${heroStats.awareness}%`);
+        if (Number.isFinite(heroStats.definite)) parts.push(`Definite ${heroStats.definite}%`);
+        if (Number.isFinite(heroStats.score)) parts.push(`Score ${heroStats.score}`);
+        return parts.length ? `${base} • ${parts.slice(0,3).join(' · ')}` : base;
+      })();
 
       Array.from(thumbs.children).forEach((el, idx) => {
         el.classList.toggle('active', idx === current);
@@ -622,18 +695,27 @@
       d.className = 'heroThumb';
       d.innerHTML = `<video autoplay loop muted playsinline preload="metadata" src="${v.file}"></video><div class="badge">${idx+1}</div>`;
       d.addEventListener('click', () => { setHero(idx); start(); });
+      d.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        setHero(idx);
+        start();
+      }, { passive: false });
       thumbs.appendChild(d);
     });
 
-    prevBtn?.addEventListener('click', () => { setHero(current - 1); start(); });
-    nextBtn?.addEventListener('click', () => { setHero(current + 1); start(); });
+    if (prevBtn) prevBtn.addEventListener('click', () => { setHero(current - 1); start(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { setHero(current + 1); start(); });
 
     // Pause on hover/focus
     const heroPlayer = document.getElementById('heroPlayer');
-    heroPlayer?.addEventListener('mouseenter', stop);
-    heroPlayer?.addEventListener('mouseleave', start);
-    heroPlayer?.addEventListener('focusin', stop);
-    heroPlayer?.addEventListener('focusout', start);
+    if (heroPlayer) {
+      heroPlayer.addEventListener('mouseenter', stop);
+      heroPlayer.addEventListener('mouseleave', start);
+      heroPlayer.addEventListener('focusin', stop);
+      heroPlayer.addEventListener('focusout', start);
+      heroPlayer.addEventListener('touchstart', stop, { passive: true });
+      heroPlayer.addEventListener('touchend', start, { passive: true });
+    }
 
     // Pause if tab hidden
     document.addEventListener('visibilitychange', () => {
@@ -642,7 +724,28 @@
     });
 
     setHero(0);
-    start();
+    window.WHEAT_HERO = window.WHEAT_HERO || {};
+    window.WHEAT_HERO.updateStats = function(stats){
+      heroStats = stats || null;
+      // Update current hero caption
+      if (heroTitle && heroSub) {
+        const v = videos[current];
+        if (v) {
+          heroSub.textContent = (function(){
+            const base = v.caption || '';
+            if (!heroStats) return base;
+            const parts = [];
+            if (heroStats.farmers) parts.push(`${heroStats.farmers.toLocaleString()} farmers reached`);
+            if (Number.isFinite(heroStats.awareness)) parts.push(`Awareness ${heroStats.awareness}%`);
+            if (Number.isFinite(heroStats.definite)) parts.push(`Definite ${heroStats.definite}%`);
+            if (Number.isFinite(heroStats.score)) parts.push(`Score ${heroStats.score}`);
+            return parts.length ? `${base} • ${parts.slice(0,3).join(' · ')}` : base;
+          })();
+        }
+      }
+    };
+
+    if (!prefersReduced) start();
   })();
   </script>
 
@@ -666,11 +769,86 @@
       applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
     }
 
-    toggleBtn?.addEventListener('click', () => {
+    if (toggleBtn) toggleBtn.addEventListener('click', () => {
       const current = htmlEl.getAttribute('data-theme');
       applyTheme(current === 'light' ? 'dark' : 'light');
     });
   })();
   </script>
+
+  <!-- Filters collapse -->
+  <script>
+  (function () {
+    const body = document.body;
+    const btn = document.getElementById('filtersToggle');
+    const panel = document.getElementById('filtersPanel');
+    const meta = document.getElementById('filtersMeta');
+
+    if (!btn || !panel) return;
+
+    const KEY = 'filtersCollapsed';
+
+    function fmtDate(iso) {
+      if (!iso || typeof iso !== 'string') return '';
+      const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return iso;
+      return `${m[3]}/${m[2]}/${m[1]}`;
+    }
+
+    function updateMeta() {
+      if (!meta) return;
+      const camp = document.getElementById('campaignSelect');
+      const from = document.getElementById('dateFrom');
+      const to = document.getElementById('dateTo');
+
+      const campText = camp && camp.selectedOptions && camp.selectedOptions[0]
+        ? camp.selectedOptions[0].textContent.trim()
+        : 'Campaign';
+
+      const fromText = (from && from.value) ? fmtDate(from.value) : '';
+      const toText = (to && to.value) ? fmtDate(to.value) : '';
+
+      const range = (fromText && toText) ? `${fromText} → ${toText}` : '';
+      meta.textContent = range ? `${campText} • ${range}` : campText;
+    }
+
+    function setCollapsed(collapsed, persist) {
+      body.classList.toggle('filters-collapsed', !!collapsed);
+      btn.setAttribute('aria-expanded', (!collapsed).toString());
+      btn.textContent = collapsed ? 'Filters ▸' : 'Filters ▾';
+      if (persist) localStorage.setItem(KEY, collapsed ? '1' : '0');
+      updateMeta();
+    }
+
+    // Initialize state
+    const saved = localStorage.getItem(KEY);
+    if (saved === '1' || saved === '0') {
+      setCollapsed(saved === '1', false);
+    } else {
+      const auto = (window.innerHeight < 760) || (window.innerWidth < 980);
+      setCollapsed(auto, false);
+    }
+
+    btn.addEventListener('click', () => {
+      const isCollapsed = body.classList.contains('filters-collapsed');
+      setCollapsed(!isCollapsed, true);
+    });
+
+    // Keep the summary in sync
+    const bind = (id, ev) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(ev, () => setTimeout(updateMeta, 0));
+    };
+
+    bind('campaignSelect', 'change');
+    bind('dateFrom', 'change');
+    bind('dateTo', 'change');
+    bind('applyBtn', 'click');
+    bind('resetBtn', 'click');
+
+    window.addEventListener('load', () => setTimeout(updateMeta, 50));
+  })();
+  </script>
+
 </body>
 </html>

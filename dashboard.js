@@ -2,10 +2,15 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-05.1";
+  const WHEATCAMPAIGN_BUILD = "2026-01-06.1";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
-  // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
+  const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
+  function chartAnimation(){
+    return REDUCE_MOTION ? false : { duration: 1500, easing: "easeOutBounce" };
+  }
+
+  // Surface runtime errors in the UI
   window.addEventListener("error", (e) => {
     try {
       const box = document.getElementById("statusBox");
@@ -21,17 +26,12 @@
     } catch (_) {}
   });
 
-  // Helper to fetch JSON files with retry and timeout support.
-  // This version improves resilience to network issues by retrying failed requests
-  // a limited number of times and aborting long-running requests. If all attempts
-  // fail, it will call setStatus() with an error message and rethrow the error.
-
   // ---------- DOM helpers ----------
   const $$ = (sel, root = document) => root.querySelector(sel);
   const $$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const esc = (s) => {
     const d = document.createElement('div');
-    d.textContent = String(s ?? '');
+    d.textContent = String((s === null || s === undefined) ? '' : s);
     return d.innerHTML;
   };
 
@@ -46,7 +46,6 @@
   function activeTabFromHash() {
     const h = (window.location.hash || '#summary').replace('#', '').trim();
     if (!h) return 'summary';
-    // Support deep-links like #session-<id>
     if (h.startsWith('session-')) return 'sessions';
     if (['summary','map','sessions','media','feedback'].includes(h)) return h;
     return 'summary';
@@ -71,22 +70,13 @@
     map: null,
     markerLayer: null,
     markersBySessionId: new Map(),
-    // Filters for host (farmer) name and city
     nameFilter: '',
     cityFilter: '',
-
-    // Region filter (REG). This corresponds to the RGN codes (e.g. SKR, RYK)
-    // derived from the Initial sheet mapping of territories/districts to regions.
     regionFilter: '',
-
-    // Additional filters for district and score range. These are optional
-    // inputs that refine the sessions list based on geography or
-    // performance. When null/empty they do not constrain results.
     districtFilter: '',
     scoreMin: null,
     scoreMax: null,
 
-    // Media tab controls
     mediaType: 'all',
     mediaSearch: '',
     mediaSort: 'newest',
@@ -99,10 +89,8 @@
     if (!v) return null;
     if (v instanceof Date) return v;
     const s = String(v).trim();
-    // Prefer YYYY-MM-DD
     const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-    // Fallback Date.parse
     const t = Date.parse(s);
     if (Number.isFinite(t)) return new Date(t);
     return null;
@@ -134,163 +122,107 @@
   }
 
   // ---------- Media path resolution ----------
-  const existsCache = new Map(); // url -> boolean
+  const existsCache = new Map();
+
+  function coalesce() {
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      if (v !== null && v !== undefined) return v;
+    }
+    return undefined;
+  }
 
   function normalizeMediaPath(p) {
-    const raw = String(p ?? '').trim();
+    const raw = String((p === null || p === undefined) ? '' : p).trim();
     if (!raw) return '';
     if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
 
     let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
 
-    // Already rooted correctly
     if (x.startsWith('assets/')) return x;
-
-    // Common patterns from sessions.json
     if (x.startsWith('gallery/')) return 'assets/' + x;
-
-    // Sometimes data stores just the filename
     if (!x.includes('/')) return 'assets/gallery/' + x;
 
-    // Default: relative as-is
     return x;
   }
 
   function candidatePaths(p) {
     const norm = normalizeMediaPath(p);
-    if (!norm) return [];
-    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
+    if (!norm || /^(https?:|data:|blob:)/i.test(norm)) return norm ? [norm] : [];
 
-    const candidates = [];
+    const cands = [];
     const add = (v) => {
-      if (v && !candidates.includes(v)) candidates.push(v);
+      if (v && cands.indexOf(v) === -1) cands.push(v);
     };
 
-    // Always start with the normalized path.
     add(norm);
 
-    // If request is wrong folder (root) try under assets/gallery
-    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
+    if (!norm.includes('assets/gallery/')) {
       const fname = norm.split('/').pop();
       add('assets/gallery/' + fname);
     }
 
-    // Extension swaps
-    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
-    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
-    const isVid = /\.(mp4|webm)$/i.test(norm);
+    const mExt = norm.match(/\.(jpeg|jpg|png|webp|mp4|webm)$/i);
+    const ext = mExt ? mExt[1].toLowerCase() : '';
+    const base = mExt ? norm.slice(0, -1 * (ext.length + 1)) : norm;
 
-    function addVariantBases(base) {
-      // Support common variant naming:
-      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
-      //   17_a.jpg <-> 17a.jpg
-      // (applies for a-f, but will also include single-letter suffixes generally)
-      const m1 = base.match(/^(.*?)([a-z])$/i);
-      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
-      if (m1) {
-        const root = m1[1];
-        const suf = m1[2];
-        add(base);
-        add(root + '_' + suf);
-        add(root + '-' + suf);
-        // also try without suffix (helps when data references 17a but file is 17)
-        add(root);
-        return;
+    if (ext === 'jpeg') add(base + '.jpg');
+    if (ext === 'jpg') add(base + '.jpeg');
+    if (ext === 'mp4') add(base + '.webm');
+    if (ext === 'webm') add(base + '.mp4');
+
+    if (ext) {
+      add(base + 'a.' + ext);
+      add(base + '_a.' + ext);
+      add(base + '-a.' + ext);
+
+      if (ext === 'jpeg') {
+        add(base + 'a.jpg'); add(base + '_a.jpg'); add(base + '-a.jpg');
       }
-      if (m2) {
-        const root = m2[1];
-        const suf = m2[2];
-        add(base);
-        add(root + suf);
-        add(root);
-        return;
+      if (ext === 'jpg') {
+        add(base + 'a.jpeg'); add(base + '_a.jpeg'); add(base + '-a.jpeg');
       }
-      add(base);
-      // Also try the simplest "a" variant both joined and separated
-      add(base + 'a');
-      add(base + '_a');
-      add(base + '-a');
-    }
-
-    if (isImg) {
-      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      // Collect base variants first, then add extensions.
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
+      if (ext === 'mp4') {
+        add(base + 'a.webm'); add(base + '_a.webm'); add(base + '-a.webm');
       }
-
-      // Ensure original base is also present.
-      addBase(base);
-
-      for (const b of bases) {
-        for (const e of imgExts) add(b + e);
+      if (ext === 'webm') {
+        add(base + 'a.mp4'); add(base + '_a.mp4'); add(base + '-a.mp4');
       }
     }
 
-    if (isVid) {
-      const base = norm.replace(/\.(mp4|webm)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-      addBase(base);
-
-      for (const b of bases) {
-        add(b + '.mp4');
-        add(b + '.webm');
-      }
-    }
-
-    // Only keep candidates that look like concrete asset files (avoid hammering the network
-    // with extension-less paths).
-    return candidates.filter(c =>
-      /^(https?:|data:|blob:)/i.test(c)
-      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
-    );
+    return cands;
   }
 
   async function assetExists(relOrAbs) {
     const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
     if (existsCache.has(u)) return existsCache.get(u);
 
-    // HEAD often works on GitHub Pages; if blocked, fallback to Range GET.
     try {
-      const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
-      const ok = r.ok;
+      const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
+      const ok = !!r && r.ok;
       existsCache.set(u, ok);
       return ok;
     } catch (_e) {
-      try {
-        const r = await fetch(u, {
-          method: 'GET',
-          headers: { Range: 'bytes=0-0' },
-          cache: 'no-store'
-        });
-        const ok = r.ok;
-        existsCache.set(u, ok);
-        return ok;
-      } catch (_e2) {
-        existsCache.set(u, false);
-        return false;
-      }
+      existsCache.set(u, false);
+      return false;
     }
   }
 
   async function resolveFirstExisting(p) {
     const cands = candidatePaths(p);
-    for (const c of cands) {
-      if (await assetExists(c)) return c;
+    for (let i = 0; i < cands.length; i++) {
+      const c = cands[i];
+      const u = /^(https?:|data:|blob:)/i.test(c) ? c : url(c);
+      if (existsCache.has(u) && existsCache.get(u)) return c;
+
+      try {
+        const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
+        const ok = !!r && r.ok;
+        existsCache.set(u, ok);
+        if (ok) return c;
+      } catch (_e) {
+        // ignore
+      }
     }
     return '';
   }
@@ -313,33 +245,74 @@
     return () => { cancelled = true; };
   }
 
-  function attachSmartVideo(videoEl, path) {
+  const resolvedSrcCache = new Map();
+
+  function attachSmartVideo(videoEl, path, opts) {
+    opts = opts || {};
     const placeholder = 'assets/placeholder-video.mp4';
-    let tried = false;
 
-    // lazy load on click
-    videoEl.preload = 'metadata';
-    videoEl.controls = true;
+    const norm = normalizeMediaPath(path);
+    const cacheKey = norm || String(path || '');
+    const wantsMuted = !!opts.muted;
+    const wantsLoop = !!opts.loop;
 
-    videoEl.addEventListener('click', async () => {
-      if (tried) return;
-      tried = true;
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = chosen ? url(chosen) : url(placeholder);
-      videoEl.play().catch(() => { /* ignore */ });
+    videoEl.preload = opts.preload || 'metadata';
+    videoEl.controls = !!opts.controls;
+    videoEl.playsInline = true;
+    videoEl.setAttribute('playsinline', '');
+
+    if (wantsLoop) videoEl.loop = true;
+    if (wantsMuted) {
+      videoEl.muted = true;
+      videoEl.setAttribute('muted', '');
+    }
+
+    (async () => {
+      if (!norm) {
+        videoEl.src = url(placeholder);
+        try { videoEl.load(); } catch (_e) {}
+        return;
+      }
+
+      const cached = resolvedSrcCache.get(cacheKey);
+      if (cached) {
+        videoEl.src = cached;
+        try { videoEl.load(); } catch (_e) {}
+        return;
+      }
+
+      const chosen = await resolveFirstExisting(norm);
+      const finalSrc = chosen ? url(chosen) : url(placeholder);
+      resolvedSrcCache.set(cacheKey, finalSrc);
+
+      if (videoEl && videoEl.isConnected) {
+        videoEl.src = finalSrc;
+        try { videoEl.load(); } catch (_e) {}
+      }
+    })();
+
+    if (opts.togglePlayOnClick) {
+      videoEl.addEventListener('click', (e) => {
+        if (opts.stopPropagation) e.stopPropagation();
+        if (videoEl.paused) {
+          const pp = videoEl.play();
+          if (pp && pp.catch) pp.catch(() => { /* ignore */ });
+        } else {
+          videoEl.pause();
+        }
+      });
+    }
+
+    videoEl.addEventListener('error', () => {
+      try {
+        videoEl.src = url(placeholder);
+      } catch (_e) { /* ignore */ }
     });
-
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
   }
 
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
     const tabs = $$$('.tabBtn[data-tab]');
-    // IMPORTANT: only hide/show *panels*, not the tab buttons.
-    // (tab buttons also carry data-tab and must remain visible)
     const panels = $$$('.tabPanel[data-tab]');
 
     tabs.forEach(a => {
@@ -380,11 +353,9 @@
           setStatus(`Error loading ${why}: ${e.message}`, 'bad');
           throw e;
         }
-        // Exponential backoff: wait longer on subsequent attempts
         await new Promise(res => setTimeout(res, 500 * attempt));
       }
     }
-    // Should never reach here
     throw new Error(`Failed to fetch ${why}`);
   }
 
@@ -394,7 +365,6 @@
       state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
       return;
     } catch (e) {
-      // Fallback to root campaigns.json (some repos place it there)
       try {
         const reg = await fetchJson('campaigns.json', 'campaign registry (root)');
         state.campaigns = Array.isArray(reg.campaigns) ? reg.campaigns : [];
@@ -419,82 +389,75 @@
     el.className = 'badge' + (ok ? ' badge--ok' : '');
   }
 
-  // ---------- Leaflet loader (avoid race conditions + blocked CDNs) ----------
-  let leafletPromise = null;
+  // ---------- Map loader ----------
+  async function ensureMapReady() {
+    const el = $$('#leafletMap');
+    if (!el) return;
 
-  function ensureLeafletCss() {
-    if (document.querySelector('link[data-leaflet-css="1"], link#leafletCss')) return;
-    const hrefs = [
-      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-      'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
-      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
-    ];
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.dataset.leafletCss = '1';
-    link.href = hrefs[0];
-    document.head.appendChild(link);
-
-    // Best-effort fallbacks if a CDN is blocked.
-    let i = 0;
-    link.onerror = () => {
-      i += 1;
-      if (i < hrefs.length) link.href = hrefs[i];
-    };
-  }
-
-  function loadScriptOnce(src) {
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[data-leaflet-src="${src}"]`);
-      if (existing) {
-        // If it is already loaded, resolve. If not, wait for load/error.
-        if (existing.dataset.loaded === '1') return resolve(true);
-        existing.addEventListener('load', () => resolve(true), { once: true });
-        existing.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
+    setMapStatus('Loading map…', false);
+    
+    try {
+      // Use the global loader defined in index.html
+      const ok = await window.loadLeaflet();
+      if (!ok) throw new Error('Leaflet failed to load');
+      
+      if (state.map) {
+        state.map.invalidateSize();
+        updateMapData();
+        setMapStatus('Ready', true);
         return;
       }
 
-      const s = document.createElement('script');
-      s.src = src;
-      s.async = true;
-      s.dataset.leafletSrc = src;
-      s.addEventListener('load', () => { s.dataset.loaded = '1'; resolve(true); }, { once: true });
-      s.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
-      document.head.appendChild(s);
-    });
-  }
+      const map = window.L.map(el, { 
+        zoomControl: true,
+        preferCanvas: true
+      });
+      state.map = map;
+      state.markerLayer = window.L.layerGroup().addTo(map);
 
-  async function ensureLeafletReady({ timeoutMs = 8000 } = {}) {
-    if (window.L && window.L.map) return true;
-    if (leafletPromise) return leafletPromise;
+      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
 
-    leafletPromise = (async () => {
-      ensureLeafletCss();
-
-      const srcs = [
-        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
-      ];
-
-      const start = Date.now();
-      for (const src of srcs) {
-        try {
-          await loadScriptOnce(src);
-
-          // Wait a tick for globals to attach.
-          await new Promise(r => setTimeout(r, 0));
-          if (window.L && window.L.map) return true;
-        } catch (_e) {
-          // try next
-        }
-
-        if (Date.now() - start > timeoutMs) break;
+      // Initialize heat layer if available
+      if (typeof window.L.heatLayer === 'function') {
+        state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
       }
-      return !!(window.L && window.L.map);
-    })();
 
-    return leafletPromise;
+      updateMapData();
+      setMapStatus('Ready', true);
+      
+      // Force resize for proper rendering
+      setTimeout(() => {
+        if (state.map && state.map.invalidateSize) {
+          state.map.invalidateSize(true);
+        }
+      }, 100);
+      
+      map.on('click', () => {
+        try {
+          map.closePopup();
+        } catch (_e) { /* no-op */ }
+      });
+      
+    } catch (e) {
+      console.error('Map initialization failed:', e);
+      setMapStatus('Failed to load map', false);
+      const mf = $$('#mapFallback');
+      if (mf) {
+        mf.classList.remove('hidden');
+        mf.innerHTML = `
+          <div style="padding: 20px; text-align: center;">
+            <div style="color: var(--warn); margin-bottom: 10px; font-weight: bold;">⚠️ Map Unavailable</div>
+            <div class="muted" style="margin-bottom: 15px;">The map library failed to load. This may be due to network restrictions.</div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+              <button class="btn btnSmall" onclick="location.reload()">Retry</button>
+              <button class="btn btnGhost btnSmall" onclick="document.getElementById('mapFallback').classList.add('hidden');">Dismiss</button>
+            </div>
+          </div>`;
+      }
+    }
   }
 
   function setRangeHint() {
@@ -507,8 +470,8 @@
     const fromEl = $$('#dateFrom');
     const toEl = $$('#dateTo');
 
-    const from = parseDateSafe(fromEl?.value);
-    const to = parseDateSafe(toEl?.value);
+    const from = parseDateSafe(fromEl ? fromEl.value : '');
+    const to = parseDateSafe(toEl ? toEl.value : '');
 
     if (!from || !to) {
       state.dateFrom = state.dateMin;
@@ -523,22 +486,17 @@
       }
     }
 
-    // Capture additional filters for farmer (host) name and city
     const nameEl = $$('#nameFilter');
     const cityEl = $$('#cityFilter');
     state.nameFilter = nameEl ? String(nameEl.value || '').trim() : '';
     state.cityFilter = cityEl ? String(cityEl.value || '').trim() : '';
 
-    // Capture district, region, and score range inputs. If the user leaves
-    // fields blank the values remain empty/null, indicating no filter.
     const districtEl = $$('#districtFilter');
     state.districtFilter = districtEl ? String(districtEl.value || '').trim() : '';
 
-    // Region filter: match sessions by region code (e.g. SKR, RYK). If the input is blank
-    // the filter is not applied. The input element is optional because not all
-    // dashboards will define a region filter. See index.html for the #regionFilter input.
     const regionEl = $$('#regionFilter');
     state.regionFilter = regionEl ? String(regionEl.value || '').trim() : '';
+    
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
     const minVal = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
@@ -557,7 +515,6 @@
     if (fromEl && state.dateMin) fromEl.value = formatDateInput(state.dateMin);
     if (toEl && state.dateMax) toEl.value = formatDateInput(state.dateMax);
 
-    // Clear any text filters
     const nameEl = $$('#nameFilter');
     const cityEl = $$('#cityFilter');
     if (nameEl) nameEl.value = '';
@@ -565,7 +522,6 @@
     state.nameFilter = '';
     state.cityFilter = '';
 
-    // Reset district and score filters
     const districtEl = $$('#districtFilter');
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
@@ -576,7 +532,6 @@
     state.scoreMin = null;
     state.scoreMax = null;
 
-    // Clear region filter
     const regionEl = $$('#regionFilter');
     if (regionEl) regionEl.value = '';
     state.regionFilter = '';
@@ -589,37 +544,30 @@
     const b = state.dateTo;
     state.filteredSessions = state.sessions.filter(s => {
       const d = parseDateSafe(s.date);
-      // If the date cannot be parsed (e.g., missing or not in YYYY-MM-DD format),
-      // treat the session as always within range. This allows sessions with
-      // malformed dates to appear in the dashboard rather than being silently
-      // excluded. Only enforce the date filter when a valid Date is available.
       if (d) {
         if (d < a || d > b) return false;
       }
-      // Host (farmer) name filter: match host.name substring if provided
+      
       if (state.nameFilter) {
-        const name = String(s.host?.name || '').toLowerCase();
+        const name = String((s.host && s.host.name) ? s.host.name : '').toLowerCase();
         if (!name.includes(state.nameFilter.toLowerCase())) return false;
       }
-      // City filter
+      
       if (state.cityFilter) {
         const city = String(s.city || '').toLowerCase();
         if (!city.includes(state.cityFilter.toLowerCase())) return false;
       }
 
-      // Region filter
       if (state.regionFilter) {
         const reg = String(s.region || '').toLowerCase();
         if (!reg.includes(state.regionFilter.toLowerCase())) return false;
       }
 
-      // District filter
       if (state.districtFilter) {
         const district = String(s.district || '').toLowerCase();
         if (!district.includes(state.districtFilter.toLowerCase())) return false;
       }
 
-      // Score range filter
       if (Number.isFinite(state.scoreMin) || Number.isFinite(state.scoreMax)) {
         const sc = Number(s.score);
         if (!Number.isFinite(sc)) return false;
@@ -634,9 +582,7 @@
   function renderSummary() {
     const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
 
-    // Update the last updated timestamp. Determine the most recent session
-    // date from the filtered set and display it under the KPI tiles. When
-    // there are no sessions loaded, clear the timestamp.
+    // Update last updated timestamp
     (function updateLastUpdated(){
       const lastEl = $$('#lastUpdated');
       if (!lastEl) return;
@@ -646,28 +592,28 @@
         if (d && (!latest || d > latest)) latest = d;
       }
       if (latest) {
-        // Use ISO format (YYYY-MM-DD) for clarity; could be replaced with
-        // locale-specific formatting if needed.
         const iso = formatDateInput(latest);
         lastEl.textContent = `Data as of ${iso}`;
       } else {
         lastEl.textContent = '';
       }
     })();
-    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    
+    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     // ---------- Totals ----------
     let totalFarmers = 0;
     let totalAcres = 0;
     let totalEstAcres = 0;
 
-    // ---------- Weighted averages (per-metric denominators so missing values do NOT behave like zeros) ----------
+    // ---------- Weighted averages ----------
     let sumAw = 0, denAw = 0;
     let sumUl = 0, denUl = 0;
     let sumDe = 0, denDe = 0;
     let sumMb = 0, denMb = 0;
     let sumNi = 0, denNi = 0;
-    let sumUn = 0, denUn = 0; // understanding is 0–3
+    let sumUn = 0, denUn = 0;
 
     let sumScore = 0, denScore = 0;
 
@@ -678,10 +624,10 @@
     let vidRefs = 0;
 
     for (const s of fs) {
-      const si = idx?.get(s.sheetRef);
+      const si = idx ? idx.get(s.sheetRef) : null;
 
-      const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
-      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+      const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
+      const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
 
       if (Number.isFinite(farmers) && farmers > 0) totalFarmers += farmers;
       if (Number.isFinite(acres) && acres > 0) totalAcres += acres;
@@ -743,7 +689,7 @@
     const definiteAvg = avg(sumDe, denDe);
     const maybeAvg = avg(sumMb, denMb);
     const notInterestedAvg = avg(sumNi, denNi);
-    const understandingAvg = avg(sumUn, denUn); // 0–3
+    const understandingAvg = avg(sumUn, denUn);
     const scoreAvg = avg(sumScore, denScore);
 
     // ---------- KPI tiles ----------
@@ -756,6 +702,34 @@
     const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
     const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
 
+    // Summary progress
+    const progEl = $$('#summaryProgress');
+    if (progEl) {
+      const pctVal = Number.isFinite(awarenessAvg) ? Math.max(0, Math.min(100, Math.round(awarenessAvg))) : null;
+      if (pctVal == null) {
+        progEl.innerHTML = '';
+      } else {
+        progEl.innerHTML = `
+          <div class="progressContainer">
+            <div class="progressTrack"><div class="progressBar" style="width:${pctVal}%"></div></div>
+            <div class="smallMuted progressNote">${pctVal}% of target farmers educated—INTERACT on track.</div>
+          </div>`;
+      }
+    }
+
+    // Push headline KPIs into hero
+    try {
+      if (window.WHEAT_HERO && typeof window.WHEAT_HERO.updateStats === 'function') {
+        window.WHEAT_HERO.updateStats({
+          sessions: fs.length,
+          farmers: Number.isFinite(totalFarmers) ? totalFarmers : null,
+          awareness: Number.isFinite(awarenessAvg) ? Math.round(awarenessAvg) : null,
+          definite: Number.isFinite(definiteAvg) ? Math.round(definiteAvg) : null,
+          score: Number.isFinite(scoreAvg) ? Number(scoreAvg.toFixed(1)) : null
+        });
+      }
+    } catch (e) { /* ignore */ }
+
     // ---------- Funnel (donut charts) ----------
     const funnelEl = $$('#funnel');
     if (funnelEl) {
@@ -767,7 +741,6 @@
         { label: 'Not interested', pct: notInterestedAvg },
         { label: 'Understanding', pct: (Number.isFinite(understandingAvg) ? (understandingAvg / 3 * 100) : NaN) },
       ];
-      // Define custom colors for each donut based on semantic meaning
       const colors = {
         'Awareness': 'var(--brand)',
         'Used last year': 'var(--brand2)',
@@ -781,7 +754,6 @@
         const raw = Number(it.pct);
         const pctVal = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
         const color = colors[it.label] || 'var(--brand)';
-        // Display value: percentages for most, understanding displays raw value / 3
         let display;
         if (it.label === 'Understanding') {
           display = Number.isFinite(understandingAvg) ? (fmt1(understandingAvg) + ' / 3') : '—';
@@ -803,25 +775,15 @@
     }
 
     // ---------- Attendance donut chart ----------
-    // Draw a doughnut chart representing the distribution of farmers across
-    // sessions. We only display the chart if the canvas element is present
-    // and Chart.js has been loaded. To avoid overcrowding the chart with
-    // dozens of tiny slices, we show the top 8 sessions by farmer count
-    // individually and aggregate the remainder into an "Other" slice.
     const attCanvas = $$('#attendanceDonut');
     if (attCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
-      // Destroy any existing attendance chart to avoid duplicating charts on
-      // re-render (e.g. after changing filters).
       if (window.attendanceChart && typeof window.attendanceChart.destroy === 'function') {
         window.attendanceChart.destroy();
       }
-      // Collect farmers per session and sort descending.
+      
       const sessionsByFarmers = fs
         .map(s => {
-          const count = Number(s.metrics?.farmers || 0);
-          // Compose a human-friendly label for the donut legend. Prefer the
-          // district name; fall back to village/spot or a generic label if
-          // unavailable. Include the session id for uniqueness.
+          const count = Number((s.metrics && s.metrics.farmers) || 0);
           let loc = (s.district || '').trim();
           if (!loc) loc = (s.village || s.spot || '').trim();
           if (!loc) loc = 'Session';
@@ -830,7 +792,7 @@
         })
         .filter(x => x.farmers > 0)
         .sort((a, b) => b.farmers - a.farmers);
-      // Choose up to eight individual slices. Aggregate the rest.
+      
       const maxSlices = 8;
       const labels = [];
       const data = [];
@@ -850,7 +812,7 @@
         labels.push('Other');
         data.push(otherTotal);
       }
-      // Assign colors to slices; repeat palette if necessary.
+      
       const bgColors = data.map((_, i) => colors[i % colors.length]);
       const ctx = attCanvas.getContext('2d');
       window.attendanceChart = new Chart(ctx, {
@@ -862,6 +824,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           plugins: {
             legend: {
               position: 'right',
@@ -896,9 +859,8 @@
       }
       let sumDef = 0, sumMaybe = 0, sumNot = 0;
       for (const s of fs) {
-        // Farmers present for weighting; prefer sheet index when available.
-        const si = idx?.get(s.sheetRef);
-        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const si = idx ? idx.get(s.sheetRef) : null;
+        const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
         const m = s.metrics || {};
         const def = num(m.definitePct);
         const mb = num(m.maybePct);
@@ -921,7 +883,7 @@
           plugins: {
             legend: {
               position: 'right',
-              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
+              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
             },
             tooltip: {
               callbacks: {
@@ -939,6 +901,236 @@
       });
     }
 
+    // ---------- Additional breakdowns ----------
+    const palette = ['#44b8ff','#6be675','#ffce56','#ff6384','#9966ff','#ff9f40','#4bc0c0','#c9cbcf','#36a2eb','#8dd1ff'];
+
+    const farmersFor = (s) => {
+      const si = idx ? idx.get(s.sheetRef) : null;
+      const f = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), s.farmers, 0));
+      return (Number.isFinite(f) && f > 0) ? f : 0;
+    };
+
+    const normKey = (v, fallback = 'Unknown') => {
+      const x = String((v === null || v === undefined) ? '' : v).trim();
+      if (!x) return fallback;
+      return x.toUpperCase();
+    };
+
+    const setPlaceholder = (canvas, msg, show) => {
+      const wrap = canvas ? canvas.parentElement : null;
+      if (!wrap) return;
+      let ph = wrap.querySelector('.chartPlaceholder');
+      if (!ph) {
+        ph = document.createElement('div');
+        ph.className = 'muted chartPlaceholder';
+        ph.style.padding = '12px';
+        ph.style.display = 'none';
+        wrap.appendChild(ph);
+      }
+      if (show) {
+        canvas.style.display = 'none';
+        ph.textContent = msg || 'No data.';
+        ph.style.display = 'block';
+      } else {
+        canvas.style.display = '';
+        ph.style.display = 'none';
+      }
+    };
+
+    const renderGroupDonut = (canvasSel, winKey, keyGetter, emptyMsg) => {
+      const canvas = $$(canvasSel);
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const prior = window[winKey];
+      if (prior && typeof prior.destroy === 'function') prior.destroy();
+
+      const mp = new Map();
+      let anyFarmers = false;
+
+      for (const s of fs) {
+        const key = normKey(keyGetter(s));
+        const f = farmersFor(s);
+        if (f > 0) anyFarmers = true;
+        const rec = mp.get(key) || { farmers: 0, sessions: 0 };
+        rec.farmers += f;
+        rec.sessions += 1;
+        mp.set(key, rec);
+      }
+
+      const arr = [...mp.entries()].map(([k, v]) => ({
+        key: k,
+        farmers: Number(v.farmers) || 0,
+        sessions: Number(v.sessions) || 0
+      }));
+
+      const hasAny = arr.some(x => (x.sessions > 0));
+      if (!hasAny) { setPlaceholder(canvas, emptyMsg || 'No data.', true); return; }
+      setPlaceholder(canvas, '', false);
+
+      const metric = anyFarmers ? 'farmers' : 'sessions';
+      arr.sort((a, b) => (Number(b[metric]) - Number(a[metric])));
+
+      const topN = 6;
+      const labels = [];
+      const data = [];
+      const metaFarmers = [];
+      const metaSessions = [];
+
+      let otherMetric = 0;
+      let otherFarmers = 0;
+      let otherSessions = 0;
+
+      arr.forEach((it, i) => {
+        const mval = Number(it[metric]) || 0;
+        if (i < topN) {
+          labels.push(it.key);
+          data.push(mval);
+          metaFarmers.push(it.farmers);
+          metaSessions.push(it.sessions);
+        } else {
+          otherMetric += mval;
+          otherFarmers += it.farmers;
+          otherSessions += it.sessions;
+        }
+      });
+
+      if (otherMetric > 0) {
+        labels.push('Other');
+        data.push(otherMetric);
+        metaFarmers.push(otherFarmers);
+        metaSessions.push(otherSessions);
+      }
+
+      const ctx = canvas.getContext('2d');
+      const bgColors = data.map((_, i) => palette[i % palette.length]);
+
+      window[winKey] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: bgColors,
+            borderColor: '#ffffff10',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation(),
+          cutout: '55%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[i];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
+                  const sessions = ((metaSessions[i] === null || metaSessions[i] === undefined) ? 0 : metaSessions[i]);
+                  const farmers = ((metaFarmers[i] === null || metaFarmers[i] === undefined) ? 0 : metaFarmers[i]);
+
+                  if (anyFarmers) {
+                    return `${lab}: ${Math.round(val)} farmers (${pct}%) • ${sessions} session${sessions === 1 ? '' : 's'}`;
+                  }
+                  return `${lab}: ${Math.round(val)} session${Math.round(val) === 1 ? '' : 's'} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    };
+
+    // Farmers by region (REG)
+    renderGroupDonut('#regionPie', 'regionChart', (s) => s.region, 'No region entries yet.');
+
+    // Farmers by territory
+    renderGroupDonut('#territoryPie', 'territoryChart', (s) => s.city, 'No territory entries yet.');
+
+    // Session score distribution
+    (function renderScoreBands(){
+      const canvas = $$('#scoreBandsDonut');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      if (window.scoreBandsChart && typeof window.scoreBandsChart.destroy === 'function') {
+        window.scoreBandsChart.destroy();
+      }
+
+      const bands = [
+        { label: '<60', min: -Infinity, max: 59.9999 },
+        { label: '60–69', min: 60, max: 69.9999 },
+        { label: '70–79', min: 70, max: 79.9999 },
+        { label: '80–89', min: 80, max: 89.9999 },
+        { label: '90+', min: 90, max: Infinity },
+      ];
+
+      const counts = new Array(bands.length).fill(0);
+      const farmersByBand = new Array(bands.length).fill(0);
+
+      for (const s of fs) {
+        const sc = Number(s.score);
+        if (!Number.isFinite(sc)) continue;
+        const f = farmersFor(s);
+        let bi = bands.findIndex(b => sc >= b.min && sc <= b.max);
+        if (bi < 0) bi = 0;
+        counts[bi] += 1;
+        farmersByBand[bi] += f;
+      }
+
+      const total = counts.reduce((a, v) => a + v, 0);
+      if (!total) { setPlaceholder(canvas, 'No scored sessions in the current filter.', true); return; }
+      setPlaceholder(canvas, '', false);
+
+      const labels = bands.map(b => b.label);
+      const ctx = canvas.getContext('2d');
+      const bgColors = counts.map((_, i) => palette[i % palette.length]);
+
+      window.scoreBandsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: counts,
+            backgroundColor: bgColors,
+            borderColor: '#ffffff10',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation(),
+          cutout: '55%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[i];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
+                  const f = farmersByBand[i] || 0;
+                  return `${lab}: ${val} session${val === 1 ? '' : 's'} (${pct}%)${f ? ` • ${Math.round(f)} farmers` : ''}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    })();
+
     // ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {
@@ -950,13 +1142,15 @@
         const district = esc(s.district || '');
         const village = esc(s.village || s.spot || '');
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
-        const si = idx?.get(s.sheetRef);
-        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number(s?.metrics?.farmers)) ? fmtInt(s.metrics.farmers) : '—');
-        const a = si ? fmt1(si.acres) : (Number.isFinite(Number(s?.metrics?.wheatAcres)) ? fmt1(s.metrics.wheatAcres) : '—');
+        const scoreNum = Number(s.score||0);
+        const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
+        const si = idx ? idx.get(s.sheetRef) : null;
+        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number((s.metrics && s.metrics.farmers))) ? fmtInt(s.metrics.farmers) : '—');
+        const a = si ? fmt1(si.acres) : (Number.isFinite(Number((s.metrics && s.metrics.wheatAcres))) ? fmt1(s.metrics.wheatAcres) : '—');
         const href = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
         return `<tr data-session-id="${sid}">
           <td>${date}</td>
-          <td><span class="badge">${sheet}</span></td>
+          <td><span class="${badgeClass}">${sheet}</span></td>
           <td>${district}</td>
           <td>${village}</td>
           <td>${f}</td>
@@ -974,9 +1168,9 @@
 
       for (const s of fs) {
         const d = (s.district || '—').trim() || '—';
-        const si = idx?.get(s.sheetRef);
-        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
-        const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+        const si = idx ? idx.get(s.sheetRef) : null;
+        const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
+        const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
         const wt = (Number.isFinite(farmers) && farmers > 0) ? farmers : 1;
 
         const m = s.metrics || {};
@@ -996,15 +1190,13 @@
         byD.set(d, o);
       }
 
-      // Compute aggregated rows per district and derive recommended actions. The
-      // recommendations are based on weighted definite intent (de) thresholds.
       let agg = [...byD.values()].map(o => {
         const aw = avg(o.awSum, o.awDen);
         const de = avg(o.deSum, o.deDen);
         const sc = avg(o.scSum, o.scDen);
         return { ...o, aw, de, sc };
       });
-      // Sort by lowest definite intent then lowest score
+      
       agg.sort((a,b) => {
         const ad = Number.isFinite(a.de) ? a.de : 1e9;
         const bd = Number.isFinite(b.de) ? b.de : 1e9;
@@ -1013,10 +1205,9 @@
         const bs = Number.isFinite(b.sc) ? b.sc : 1e9;
         return as - bs;
       });
-      // Limit to top 8 districts
+      
       const rows = agg.slice(0, 8);
 
-      // Determine and display summary takeaways from the top two districts
       const takeawayEl = $$('#summaryTakeaways');
       if (takeawayEl) {
         if (rows.length) {
@@ -1027,7 +1218,6 @@
         }
       }
 
-      // Render table rows with recommended actions and row styling
       pdBody.innerHTML = rows.map(r => {
         let action = '—';
         let cls = '';
@@ -1059,52 +1249,102 @@
     }
 
     // ---------- Drivers & barriers ----------
-    const listHtml = (mp) => {
-      const total = totalFarmers || 0;
-      const arr = [...mp.entries()].sort((a,b) => (b[1]||0) - (a[1]||0)).slice(0, 6);
-      if (!arr.length) return '<li class="muted">No entries captured.</li>';
-      return arr.map(([k, v]) => {
-        const n = Number(v) || 0;
-        const share = (total > 0) ? ` • ${fmt1(n / total * 100)}%` : '';
-        return `<li><b>${esc(k)}</b>: ${fmtInt(n)}${esc(share)}</li>`;
-      }).join('');
-    };
+    const renderReasonsDonut = (mp, canvasSel, legendSel, winKey, emptyMsg, hueBase) => {
+      const canvas = $$(canvasSel);
+      const legend = $$(legendSel);
 
-    // Render the top drivers and barriers as horizontal bar charts instead of plain lists.
-    // Each bar's length reflects the share of farmers citing that reason. When no data is
-    // available, a muted placeholder is shown instead. The charts are drawn into
-    // #driversChart and #barriersChart containers.
-    const renderBarChart = (mp, containerId) => {
-      const container = document.querySelector(containerId);
-      if (!container) return;
-      const total = totalFarmers || 0;
-      // Sort entries descending by count and take up to 6 entries.
-      const arr = [...mp.entries()].sort((a, b) => (Number(b[1] || 0) - Number(a[1] || 0))).slice(0, 6);
-      if (!arr.length) {
-        container.innerHTML = '<div class="muted">No entries captured.</div>';
+      if (!canvas) return;
+
+      if (typeof Chart === 'undefined') {
+        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'Chart library not loaded.')}</div>`;
         return;
       }
-      container.innerHTML = arr.map(([k, v]) => {
-        const n = Number(v) || 0;
-        // Compute share of total farmers; clamp between 0 and 100.
-        const pct = (total > 0) ? Math.min(Math.max(n / total * 100, 0), 100) : 0;
-        // Construct a bar row using existing barRow/barTrack/barFill styles. Use
-        // the CSS variable --brand (blue) for drivers and --danger (red) for barriers.
-        const colorVar = (containerId === '#driversChart') ? 'var(--brand)' : 'var(--danger)';
-        return `<div class="barRow">
-          <div class="barLabel">${esc(k)}</div>
-          <div class="barTrack"><div class="barFill" style="width:${pct.toFixed(1)}%; background:${colorVar};"></div></div>
-          <div class="barVal">${fmtInt(n)}${total > 0 ? ` (${fmt1(pct)}%)` : ''}</div>
-        </div>`;
-      }).join('');
+
+      const prior = window[winKey];
+      if (prior && typeof prior.destroy === 'function') prior.destroy();
+
+      const total = totalFarmers || 0;
+
+      const entries = [...mp.entries()]
+        .map(([k, v]) => [String(k || '').trim(), Number(v) || 0])
+        .filter(([k, v]) => k && v > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (!entries.length) {
+        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'No entries captured.')}</div>`;
+        try {
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } catch (_) {}
+        return;
+      }
+
+      const top = entries.slice(0, 6);
+      const rest = entries.slice(6);
+      if (rest.length) {
+        const other = rest.reduce((acc, [, v]) => acc + (Number(v) || 0), 0);
+        if (other > 0) top.push(['Other', other]);
+      }
+
+      const labels = top.map(([k]) => k);
+      const values = top.map(([, v]) => Number(v) || 0);
+
+      const n = Math.max(values.length, 1);
+      const colors = values.map((_, i) => `hsl(${(hueBase + (i * 360) / n) % 360} 65% 55%)`);
+
+      if (legend) {
+        legend.innerHTML = top.map(([k, v], i) => {
+          const cnt = Number(v) || 0;
+          const pctFarmers = total ? (cnt / total) * 100 : null;
+          return `<div class="legendItem">
+            <span class="legendDot" style="background:${colors[i]};"></span>
+            <span class="legendText">${esc(k)}</span>
+            <span class="legendVal">${fmtInt(cnt)}${pctFarmers != null ? ` (${fmt1(pctFarmers)}%)` : ''}</span>
+          </div>`;
+        }).join('');
+      }
+
+      window[winKey] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation(),
+          cutout: '60%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = Number(ctx.parsed) || 0;
+                  const sum = (ctx.dataset.data || []).reduce((acc, v) => acc + (Number(v) || 0), 0);
+                  const pctReasons = sum ? ((val / sum) * 100).toFixed(1) : '0.0';
+                  const pctFarmers = total ? ((val / total) * 100).toFixed(1) : null;
+                  return `${lab}: ${fmtInt(val)}${pctFarmers != null ? ` (${pctFarmers}% of farmers)` : ''} • ${pctReasons}% of reasons`;
+                }
+              }
+            }
+          }
+        }
+      });
     };
 
-    renderBarChart(drivers, '#driversChart');
-    renderBarChart(barriers, '#barriersChart');
-
+    renderReasonsDonut(drivers, '#driversDonut', '#driversLegend', 'driversDonutChart', 'No driver entries yet.', 200);
+    renderReasonsDonut(barriers, '#barriersDonut', '#barriersLegend', 'barriersDonutChart', 'No barrier entries yet.', 12);
+    
     // ---------- Data readiness / status ----------
     setStatus(
-      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
+      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(((state.sheetsIndex && state.sheetsIndex.sheets) ? state.sheetsIndex.sheets.length : 0) || 0)} sheet summaries.\n` +
       `Reach: ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers • ${totalAcres ? fmt1(totalAcres) : '—'} acres • Est. Buctril acres: ${totalEstAcres ? fmt1(totalEstAcres) : '—'}.\n` +
       `Referenced media: ${fmtInt(imgRefs)} images • ${fmtInt(vidRefs)} videos.\n` +
       `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
@@ -1116,7 +1356,7 @@
     const tbody = $$('#sessionsTable tbody');
     if (!tbody) return;
 
-    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     const rows = state.filteredSessions.map(s => {
       const sid = esc(s.id);
@@ -1125,7 +1365,7 @@
       const district = esc(s.district || '');
       const village = esc(s.village || s.spot || '');
       const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
-      const si = idx?.get(s.sheetRef);
+      const si = idx ? idx.get(s.sheetRef) : null;
       const f = si ? fmtInt(si.farmers_present) : '—';
       const a = si ? fmt1(si.acres) : '—';
 
@@ -1150,20 +1390,14 @@
 
     tbody.innerHTML = rows.join('');
 
-    // Row click: preview
     tbody.onclick = (ev) => {
       const tr = ev.target.closest('tr[data-session-id]');
       if (!tr) return;
-
-      // If clicking a link, allow navigation
       if (ev.target.closest('a')) return;
-
-      // Only preview on button or row click
       const sid = Number(tr.dataset.sessionId);
       openDrawer(sid);
     };
 
-    // Button preview
     tbody.addEventListener('click', (ev) => {
       const btn = ev.target.closest('button[data-action="preview"]');
       if (!btn) return;
@@ -1181,7 +1415,6 @@
     return '';
   }
 
-  // Return the first video reference for a session if available.
   function firstMediaVideo(s) {
     const vids = (s.media && Array.isArray(s.media.videos)) ? s.media.videos : [];
     if (vids.length) return vids[0];
@@ -1201,26 +1434,26 @@
     const grid = $$('#mediaGrid');
     if (!grid) return;
 
-    // Bind media toolbar events once
     if (!state._mediaBound) {
       state._mediaBound = true;
 
       const seg = $$('.mediaSeg');
-      seg?.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-media-type]');
-        if (!btn) return;
-        const t = btn.getAttribute('data-media-type') || 'all';
-        state.mediaType = t;
-        // Update active styling
-        $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
-        state.mediaLimit = 24;
-        renderMedia();
-      });
+      if (seg) {
+        seg.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-media-type]');
+          if (!btn) return;
+          const t = btn.getAttribute('data-media-type') || 'all';
+          state.mediaType = t;
+          $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
+          state.mediaLimit = 24;
+          renderMedia();
+        });
+      }
 
       const search = $$('#mediaSearch');
       if (search) {
         search.addEventListener('input', () => {
-          state.mediaSearch = String(search.value || '').trim().toLowerCase();
+          state.mediaSearch = String(search.value || '');
           state.mediaLimit = 24;
           renderMedia();
         });
@@ -1244,178 +1477,150 @@
     }
 
     const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
-    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 19H3V5h4l2-2h6l2 2h4v14Z" stroke="currentColor" stroke-width="1.5"/><path d="M8 14l2.5-3 2 2 3.5-4 4 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
 
     const q = String(state.mediaSearch || '').trim().toLowerCase();
     const type = String(state.mediaType || 'all');
     const sortMode = String(state.mediaSort || 'newest');
 
-    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
+    let list = Array.isArray(state.filteredSessions) ? state.filteredSessions.slice() : [];
 
-    // Filter to sessions that actually have media
     list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
 
-    // Type filter
     if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
     if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
 
-    // Text filter
     if (q) {
       list = list.filter(s => {
         const sheet = String(s.sheetRef || '');
         const district = String(s.district || '');
         const village = String(s.village || s.spot || '');
-        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+        return (sheet + ' ' + district + ' ' + village).toLowerCase().indexOf(q) >= 0;
       });
     }
 
-    // Sort by date (fallback to original order)
     list.sort((a, b) => {
-      const da = parseDateSafe(a.date)?.getTime() || 0;
-      const db = parseDateSafe(b.date)?.getTime() || 0;
+      const daObj = parseDateSafe(a.date);
+      const dbObj = parseDateSafe(b.date);
+      const da = daObj ? daObj.getTime() : 0;
+      const db = dbObj ? dbObj.getTime() : 0;
       return sortMode === 'oldest' ? (da - db) : (db - da);
     });
 
-    const total = list.length;
-    const limit = Math.max(0, Number(state.mediaLimit || 24));
+    const limit = Number(state.mediaLimit || 24);
     const shown = list.slice(0, limit);
 
-    const cards = shown.map(s => {
-      const sid = esc(s.id);
-      const sheet = esc(s.sheetRef || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
-      // Determine thumbnail: prefer first video if available; otherwise first image
+    grid.innerHTML = '';
+
+    for (let i = 0; i < shown.length; i++) {
+      const s = shown[i];
+      const sid = String(s.id);
+      const sheet = String(s.sheetRef || '');
+      const district = String(s.district || '');
+      const village = String(s.village || s.spot || '');
+
       const vidPath = firstMediaVideo(s);
-      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
-      const img = firstMediaImage(s);
-      const title = `${sheet} • ${district} • ${village}`;
-      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
-      // Build thumb markup
-      let thumb;
-      let badge;
+      const imgPath = firstMediaImage(s);
+      const title = sheet + ' • ' + district + ' • ' + village;
+      const hrefDetails = 'details.html?campaign=' + encodeURIComponent(String(state.campaignId)) + '&session=' + encodeURIComponent(String(s.id));
+
+      const card = document.createElement('div');
+      card.className = 'mediaCard';
+      card.setAttribute('data-session-id', sid);
+
+      const thumbWrap = document.createElement('div');
+      thumbWrap.className = 'mediaThumb';
+
+      const badge = document.createElement('div');
+      badge.className = 'mediaBadge';
       if (vidPath) {
-        // Show auto-playing muted preview
-        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
-        badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
+        badge.title = 'Video';
+        badge.innerHTML = playIcon + '<span>Video</span>';
       } else {
-        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
-        badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
+        badge.title = 'Image';
+        badge.innerHTML = photoIcon + '<span>Image</span>';
       }
-      return `<div class="mediaCard" data-session-id="${sid}">
-        <div class="mediaThumb">
-          ${badge}
-          ${thumb}
-        </div>
-        <div class="mediaMeta">
-          <div class="mediaTitle">${esc(title)}</div>
-          <div class="mediaActions">
-            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
-            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
-            <button class="btn btnSmall btnGhost" data-action="open">Open</button>
-          </div>
-        </div>
-        <div class="hidden" data-thumb-path="${esc(img)}"></div>
-      </div>`;
-    });
 
-    grid.innerHTML = cards.join('');
+      thumbWrap.appendChild(badge);
 
-    // Update count + load more button
+      if (vidPath) {
+        const v = document.createElement('video');
+        v.autoplay = true;
+        v.loop = true;
+        v.muted = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.className = 'mediaThumbVideo';
+
+        attachSmartVideo(v, vidPath, { muted: true, loop: true, controls: false, togglePlayOnClick: true, stopPropagation: true });
+
+        thumbWrap.appendChild(v);
+      } else {
+        const img = document.createElement('img');
+        img.setAttribute('data-media-thumb', '1');
+        img.alt = title;
+        attachSmartImage(img, imgPath || 'assets/placeholder.svg');
+        thumbWrap.appendChild(img);
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'mediaMeta';
+
+      const t = document.createElement('div');
+      t.className = 'mediaTitle';
+      t.textContent = title;
+
+      const actions = document.createElement('div');
+      actions.className = 'mediaActions';
+
+      const aSheet = document.createElement('a');
+      aSheet.className = 'btn btnSmall';
+      aSheet.href = 'sheets.html?campaign=' + encodeURIComponent(String(state.campaignId)) + '&sheet=' + encodeURIComponent(String(s.sheetRef || ''));
+      aSheet.textContent = 'Sheet';
+
+      const aDetails = document.createElement('a');
+      aDetails.className = 'btn btnSmall btnGhost';
+      aDetails.href = hrefDetails;
+      aDetails.textContent = 'Details';
+
+      const btnOpen = document.createElement('button');
+      btnOpen.className = 'btn btnSmall btnGhost';
+      btnOpen.setAttribute('data-action', 'open');
+      btnOpen.textContent = 'Open';
+
+      actions.appendChild(aSheet);
+      actions.appendChild(aDetails);
+      actions.appendChild(btnOpen);
+
+      meta.appendChild(t);
+      meta.appendChild(actions);
+
+      card.appendChild(thumbWrap);
+      card.appendChild(meta);
+
+      grid.appendChild(card);
+    }
+
     const countEl = $$('#mediaCount');
-    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
-    const moreBtn = $$('#mediaLoadMore');
-    if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
+    if (countEl) countEl.textContent = shown.length + ' shown of ' + list.length;
 
-    // attach thumbs
-    $$$('[data-media-thumb="1"]', grid).forEach(img => {
-      const card = img.closest('.mediaCard');
-      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
-      attachSmartImage(img, p || 'assets/placeholder.svg');
-    });
+    const moreBtn = $$('#mediaLoadMore');
+    if (moreBtn) moreBtn.style.display = (limit < list.length) ? '' : 'none';
 
     grid.onclick = (ev) => {
       const card = ev.target.closest('.mediaCard[data-session-id]');
       if (!card) return;
-      const sid = Number(card.dataset.sessionId);
       if (ev.target.closest('a')) return;
-
-      // Open lightbox with all items
-      openLightbox(sid);
+      const sidNum = Number(card.getAttribute('data-session-id'));
+      openLightbox(sidNum);
     };
-  }
-
-  // ---------- Donut auto-scroll ----------
-  function initDonutRows() {
-    if (window.__REDUCE_MOTION__) return;
-
-    const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
-    rows.forEach((row) => {
-      if (row.dataset._autoBound === '1') return;
-      row.dataset._autoBound = '1';
-
-      // Disable if not scrollable
-      if (row.scrollWidth <= row.clientWidth + 5) {
-        row.style.overflowX = 'hidden';
-        return;
-      }
-
-      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
-      let paused = false;
-      let wheelTimer = null;
-      let scrollDirection = 1;
-
-      const step = () => {
-        if (paused || document.hidden || speed <= 0) {
-          requestAnimationFrame(step);
-          return;
-        }
-
-        const maxScroll = row.scrollWidth - row.clientWidth;
-        if (maxScroll <= 0) {
-          row.style.overflowX = 'hidden';
-          return;
-        }
-
-        row.scrollLeft += speed * scrollDirection;
-
-        if (row.scrollLeft >= maxScroll - 2) {
-          scrollDirection = -1;
-          paused = true;
-          setTimeout(() => { paused = false; }, 800);
-        } else if (row.scrollLeft <= 2) {
-          scrollDirection = 1;
-          paused = true;
-          setTimeout(() => { paused = false; }, 800);
-        }
-
-        requestAnimationFrame(step);
-      };
-
-      const pauseEvents = ['mouseenter', 'touchstart', 'pointerdown', 'focusin'];
-      const resumeEvents = ['mouseleave', 'touchend', 'pointerup', 'focusout'];
-
-      pauseEvents.forEach((evt) => row.addEventListener(evt, () => { paused = true; }, { passive: true }));
-      resumeEvents.forEach((evt) => row.addEventListener(evt, () => {
-        setTimeout(() => { paused = false; }, 100);
-      }, { passive: true }));
-
-      row.addEventListener('wheel', () => {
-        paused = true;
-        if (wheelTimer) clearTimeout(wheelTimer);
-        wheelTimer = setTimeout(() => { paused = false; }, 2000);
-      }, { passive: true });
-
-      requestAnimationFrame(step);
-    });
   }
 
   function renderAll() {
     renderSummary();
-    initDonutRows();
-renderSessionsTable();
+    renderSessionsTable();
     renderMedia();
-    updateMapData(); // markers reflect filter
+    updateMapData();
   }
 
   // ---------- Drawer ----------
@@ -1426,23 +1631,12 @@ renderSessionsTable();
     if (dr) dr.classList.add('hidden');
     if (ov) ov.setAttribute('aria-hidden', 'true');
     if (dr) dr.setAttribute('aria-hidden', 'true');
-    // Navigate back to the base page when a drawer is closed. When the user clicks
-    // outside the session preview (or hits Esc), return to the default summary
-    // tab by stripping any hash from the URL. Preserve existing query string
-    // parameters (e.g. campaign, date filters). Use location.pathname+search to
-    // avoid repeatedly appending hashes during navigation. If an exception
-    // occurs, silently ignore.
     try {
       const base = location.pathname + location.search;
-      // If already on index.html this will simply remove the hash and reload
-      // the summary tab. If executed from another tab (e.g. sessions hash)
-      // the anchor will be cleared.
       if (location.hash) {
         location.href = base;
       }
-    } catch (_e) {
-      /* noop */
-    }
+    } catch (_e) { /* noop */ }
   }
 
   async function openDrawer(sessionId) {
@@ -1459,8 +1653,7 @@ renderSessionsTable();
     $$('#drawerTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
     $$('#drawerSub').textContent = `${s.date || ''} • ${s.district || ''} • ${s.village || s.spot || ''}`;
 
-    // KPIs from sheets index if possible
-    const si = state.sheetsIndex?.sheets?.find(x => x.sheet === s.sheetRef);
+    const si = (state.sheetsIndex && state.sheetsIndex.sheets) ? state.sheetsIndex.sheets.find(x => x.sheet === s.sheetRef) : null;
     $$('#dFarmers').textContent = si ? fmtInt(si.farmers_present) : '—';
     $$('#dAcres').textContent = si ? fmt1(si.acres) : '—';
     $$('#dScore').textContent = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
@@ -1469,13 +1662,12 @@ renderSessionsTable();
       s.city ? `City: ${esc(s.city)}` : '',
       s.district ? `District: ${esc(s.district)}` : '',
       s.spot ? `Spot: ${esc(s.spot)}` : '',
-      s.dealer?.name ? `Dealer: ${esc(s.dealer.name)}` : '',
-      s.salesRep?.name ? `Sales: ${esc(s.salesRep.name)}` : '',
-      s.host?.name ? `Host: ${esc(s.host.name)}` : '',
+      (s.dealer && s.dealer.name) ? `Dealer: ${esc(s.dealer.name)}` : '',
+      (s.salesRep && s.salesRep.name) ? `Sales: ${esc(s.salesRep.name)}` : '',
+      (s.host && s.host.name) ? `Host: ${esc(s.host.name)}` : '',
     ].filter(Boolean).join(' • ');
     $$('#dMeta').innerHTML = meta || '<span class="muted">—</span>';
 
-    // Outcomes (session-level conversion / understanding)
     const outEl = $$('#dOutcomes');
     const actEl = $$('#dActions');
 
@@ -1500,9 +1692,8 @@ renderSessionsTable();
       `.trim();
     }
 
-    // Recommended actions (lightweight heuristic rules)
     const acts = [];
-    const farmersNow = Number(si?.farmers_present ?? m.farmers ?? 0);
+    const farmersNow = Number(coalesce(si && si.farmers_present, m.farmers, 0));
     const uPct = Number.isFinite(un) ? (un / 3 * 100) : NaN;
 
     if (Number.isFinite(aw) && aw < 60) acts.push('Increase awareness: start with weed-pressure framing + product positioning; add a pre-activation dealer touchpoint and 1–2 local influencer farmers.');
@@ -1522,19 +1713,16 @@ renderSessionsTable();
       actEl.innerHTML = acts.length ? acts.map(x => `<li>${esc(x)}</li>`).join('') : '<li class="muted">No critical flags for this session based on thresholds.</li>';
     }
 
-    // Links
     const sheetUrl = `sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}`;
     const detailsUrl = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
     $$('#dOpenSheet').setAttribute('href', sheetUrl);
     $$('#dOpenDetails').setAttribute('href', detailsUrl);
 
-    // Google Maps
-    const lat = Number(s.geo?.lat);
-    const lng = Number(s.geo?.lng);
+    const lat = Number((s.geo && s.geo.lat));
+    const lng = Number((s.geo && s.geo.lng));
     const g = (Number.isFinite(lat) && Number.isFinite(lng)) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
     $$('#dOpenMaps').setAttribute('href', g);
 
-    // Sheet summary fetch
     const sumEl = $$('#dSheetSummary');
     if (sumEl) sumEl.textContent = 'Loading…';
     try {
@@ -1544,7 +1732,7 @@ renderSessionsTable();
       const top = [...farmers].sort((a,b) => Number(b.acres||0)-Number(a.acres||0)).slice(0,5);
 
       const topHtml = top.length
-        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(x.acres ?? ''))} acres</li>`).join('')}</ul>`
+        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(((x.acres === null || x.acres === undefined) ? '' : x.acres)))} acres</li>`).join('')}</ul>`
         : '<div class="muted">No farmer rows found in sheet.</div>';
 
       const hostComment = fb.host_comment ? `<div><b>Host comment:</b> ${esc(fb.host_comment)}</div>` : '';
@@ -1552,7 +1740,7 @@ renderSessionsTable();
       const sales = fb.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(fb.sales_feedback)}</div>` : '';
 
       sumEl.innerHTML = `
-        <div class="muted">Sheet: <b>${esc(sheet.meta?.sheet || s.sheetRef)}</b> • Date: <b>${esc(sheet.meta?.date || s.date || '')}</b></div>
+        <div class="muted">Sheet: <b>${esc((sheet.meta && sheet.meta.sheet) || s.sheetRef)}</b> • Date: <b>${esc((sheet.meta && sheet.meta.date) || s.date || '')}</b></div>
         ${hostComment}
         ${mgr}
         ${sales}
@@ -1564,7 +1752,6 @@ renderSessionsTable();
       if (sumEl) sumEl.innerHTML = `<div class="muted">Could not load sheet summary.</div><div class="smallMuted">${esc(e.message)}</div>`;
     }
 
-    // Media
     const mediaEl = $$('#dMedia');
     if (mediaEl) {
       mediaEl.innerHTML = '';
@@ -1601,8 +1788,8 @@ renderSessionsTable();
   function bindDrawer() {
     const closeBtn = $$('#drawerClose');
     const ov = $$('#drawerOverlay');
-    closeBtn?.addEventListener('click', closeDrawer);
-    ov?.addEventListener('click', closeDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (ov) ov.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         closeDrawer();
@@ -1617,26 +1804,26 @@ renderSessionsTable();
     if (lb) lb.classList.remove('open');
     const body = $$('#lbBody');
     if (body) body.innerHTML = '';
-    // When the lightbox is closed, return to the base page so the user is not
-    // left on an orphaned hash state. This mirrors the behaviour implemented in
-    // closeDrawer(). Preserving pathname and query parameters ensures date
-    // filters and campaign selection remain intact.
     try {
       const base = location.pathname + location.search;
       if (location.hash) {
         location.href = base;
       }
-    } catch (_e) {
-      /* ignore navigation errors */
-    }
+    } catch (_e) { /* ignore */ }
   }
 
   function bindLightbox() {
-    $$('#lbClose')?.addEventListener('click', closeLightbox);
-    $$('#lightbox')?.addEventListener('click', (ev) => {
-      if (ev.target && ev.target.id === 'lightbox') closeLightbox();
-    });
+    const c = $$('#lbClose');
+    if (c) c.addEventListener('click', closeLightbox);
+
+    const lb = $$('#lightbox');
+    if (lb) {
+      lb.addEventListener('click', (ev) => {
+        if (ev.target && ev.target.id === 'lightbox') closeLightbox();
+      });
+    }
   }
+
   function openLightbox(sessionId) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
@@ -1661,16 +1848,15 @@ renderSessionsTable();
 
     const main = document.createElement('div');
     main.className = 'lbMain';
-
+    const strip = document.createElement('div');
+    strip.className = 'drawerMedia';
+    
     const nav = document.createElement('div');
     nav.className = 'lbNav';
     nav.innerHTML = `
       <button class="lbNavBtn" data-direction="prev" aria-label="Previous">‹</button>
       <button class="lbNavBtn" data-direction="next" aria-label="Next">›</button>
     `;
-
-    const strip = document.createElement('div');
-    strip.className = 'drawerMedia';
 
     body.appendChild(main);
     body.appendChild(nav);
@@ -1687,9 +1873,9 @@ renderSessionsTable();
       const it = items[active];
       if (!it) return;
 
-      const wrap = document.createElement('div');
-      wrap.className = 'lbMediaWrapper';
-
+      const mediaWrapper = document.createElement('div');
+      mediaWrapper.className = 'lbMediaWrapper';
+      
       if (it.type === 'video') {
         const v = document.createElement('video');
         v.className = 'lightboxMedia';
@@ -1697,31 +1883,58 @@ renderSessionsTable();
         v.playsInline = true;
         v.setAttribute('playsinline', '');
         v.setAttribute('preload', 'metadata');
-        attachSmartVideo(v, it.path);
-        wrap.appendChild(v);
+        
+        // Add loading state
+        const loading = document.createElement('div');
+        loading.className = 'lbLoading';
+        loading.textContent = 'Loading video...';
+        v.appendChild(loading);
+        
+        attachSmartVideo(v, it.path, { 
+          controls: true, 
+          muted: false, 
+          loop: false
+        });
+        
+        v.onloadeddata = () => {
+          loading.remove();
+        };
+        
+        mediaWrapper.appendChild(v);
       } else {
         const img = document.createElement('img');
         img.className = 'lightboxMedia';
-        img.alt = 'Session ' + String(s.id) + ' media ' + String(active + 1);
+        img.alt = `Session ${s.id} media ${active + 1}`;
         img.loading = 'eager';
+        img.style.background = 'var(--card)';
+        img.style.minHeight = '200px';
+        
         attachSmartImage(img, it.path);
-        wrap.appendChild(img);
+        img.onload = () => {
+          img.style.background = 'none';
+        };
+        
+        mediaWrapper.appendChild(img);
       }
-
-      main.appendChild(wrap);
-
+      
+      main.appendChild(mediaWrapper);
+      
+      // Add counter
       const counter = document.createElement('div');
       counter.className = 'lbCounter';
-      counter.textContent = String(active + 1) + ' / ' + String(items.length);
+      counter.textContent = `${active + 1} / ${items.length}`;
       main.appendChild(counter);
     }
 
     function renderStrip() {
       strip.innerHTML = '';
       items.forEach((it, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'lbThumbWrapper';
+        
         const t = document.createElement(it.type === 'video' ? 'video' : 'img');
         t.className = 'thumb' + (i === active ? ' thumb--active' : '');
-        t.dataset.index = String(i);
+        t.dataset.index = i;
 
         if (it.type === 'video') {
           t.muted = true;
@@ -1729,8 +1942,12 @@ renderSessionsTable();
           t.autoplay = true;
           t.playsInline = true;
           t.setAttribute('playsinline', '');
-          t.setAttribute('preload', 'metadata');
-          attachSmartVideo(t, it.path);
+          attachSmartVideo(t, it.path, { 
+            muted: true, 
+            loop: true, 
+            controls: false,
+            preload: 'metadata'
+          });
         } else {
           attachSmartImage(t, it.path);
         }
@@ -1740,122 +1957,73 @@ renderSessionsTable();
           updateActive(i);
         });
 
-        strip.appendChild(t);
+        wrapper.appendChild(t);
+        strip.appendChild(wrapper);
       });
     }
 
+    // Navigation
     nav.addEventListener('click', (e) => {
       const btn = e.target.closest('.lbNavBtn');
       if (!btn) return;
-      const dir = btn.getAttribute('data-direction');
-      updateActive(dir === 'next' ? active + 1 : active - 1);
+      
+      const direction = btn.dataset.direction;
+      updateActive(direction === 'next' ? active + 1 : active - 1);
     });
 
-    // Keyboard navigation bound per-open (removed on close by checking open state)
+    // Keyboard navigation
     function lbKeyHandler(e) {
       if (!lb.classList.contains('open')) {
         document.removeEventListener('keydown', lbKeyHandler);
         return;
       }
-      if (e.key === 'ArrowLeft') { updateActive(active - 1); e.preventDefault(); }
-      else if (e.key === 'ArrowRight') { updateActive(active + 1); e.preventDefault(); }
-      else if (e.key === 'Escape') { closeLightbox(); document.removeEventListener('keydown', lbKeyHandler); }
+      
+      if (e.key === 'ArrowLeft') {
+        updateActive(active - 1);
+        e.preventDefault();
+      } else if (e.key === 'ArrowRight') {
+        updateActive(active + 1);
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        closeLightbox();
+        document.removeEventListener('keydown', lbKeyHandler);
+      }
     }
+
     document.addEventListener('keydown', lbKeyHandler);
+
+    // Clean up event listener when lightbox closes
+    const originalClose = closeLightbox;
+    closeLightbox = function() {
+      document.removeEventListener('keydown', lbKeyHandler);
+      originalClose();
+    };
 
     renderMain();
     renderStrip();
   }
 
-
-  // ---------- Map ----------  // ---------- Map ----------
-  async function ensureMapReady() {
-    const el = $$('#leafletMap');
-    if (!el) return;
-
-    setMapStatus('Loading map…', false);
-
-    try {
-      // Prefer the robust loader from index.html if present
-      let ok = false;
-      if (typeof window.loadLeaflet === 'function') {
-        ok = await window.loadLeaflet();
-      } else {
-        ok = await ensureLeafletReady({ timeoutMs: 8000 });
-      }
-      if (!ok) throw new Error('Leaflet failed to load');
-
-      if (state.map) {
-        try { state.map.invalidateSize(true); } catch (e) {}
-        updateMapData();
-        setMapStatus('Ready', true);
-        return;
-      }
-
-      const map = window.L.map(el, {
-        zoomControl: true,
-        preferCanvas: true
-      });
-      state.map = map;
-      state.markerLayer = window.L.layerGroup().addTo(map);
-
-      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
-
-      // Heat layer if plugin available
-      if (window.L.heatLayer) {
-        state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
-      }
-
-      updateMapData();
-      setMapStatus('Ready', true);
-
-      setTimeout(() => { try { map.invalidateSize(true); } catch (e) {} }, 100);
-      setTimeout(() => { try { map.invalidateSize(true); } catch (e) {} }, 500);
-    } catch (e) {
-      console.error('Map failed:', e);
-      setMapStatus('Map unavailable - check network', false);
-
-      const mf = $$('#mapFallback');
-      if (mf) {
-        mf.classList.remove('hidden');
-        mf.innerHTML = `
-          <div style="padding: 20px; text-align: center;">
-            <div style="color: var(--warn); margin-bottom: 10px;">⚠️ Map cannot load</div>
-            <div class="smallMuted">
-              Use the Sessions table below for navigation.<br>
-              <button class="btn btnSmall" onclick="location.reload()">Retry</button>
-            </div>
-          </div>`;
-      }
-    }
-  }
-
-
+  // ---------- Map ----------
   function updateMapData() {
     if (!state.map || !state.markerLayer || !window.L) return;
 
     state.markerLayer.clearLayers();
     state.markersBySessionId.clear();
 
-    // Build a quick lookup of sheet metadata to obtain farmers and acreage.
-    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
 
     const pts = [];
     const heatPoints = [];
     for (const s of state.filteredSessions) {
-      const lat = Number(s.geo?.lat);
-      const lng = Number(s.geo?.lng);
+      const lat = Number((s.geo && s.geo.lat));
+      const lng = Number((s.geo && s.geo.lng));
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
       pts.push([lat, lng]);
-      // Compute heatmap intensity based on acres engaged. Use sheet index if available,
-      // falling back to session metrics. Default to 1 when no acreage is recorded.
+      
       let weight = 1;
-      const si = idx?.get(s.sheetRef);
-      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+      const si = idx ? idx.get(s.sheetRef) : null;
+      const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
       if (Number.isFinite(acres) && acres > 0) weight = acres;
       heatPoints.push([lat, lng, weight]);
 
@@ -1895,17 +2063,14 @@ renderSessionsTable();
       state.map.fitBounds(bounds.pad(0.15));
     }
 
-    // Update the heatmap layer with the new intensity points. Only do this if
-    // the heatLayer exists (it may be undefined if the plugin failed to load).
     if (state.heatLayer && Array.isArray(heatPoints)) {
       try {
         state.heatLayer.setLatLngs(heatPoints);
       } catch (_e) {
-        /* Ignore errors from the heatmap plugin */
+        /* Ignore errors */
       }
     }
 
-    // One-time delegated click handler inside Leaflet popup for Preview button
     state.map.off('popupopen');
     state.map.on('popupopen', (e) => {
       const node = e.popup.getElement();
@@ -1921,13 +2086,6 @@ renderSessionsTable();
 
   // ---------- Feedback ----------
   function bindFeedback() {
-    // Bind feedback form actions. The user can provide a phone number (for WhatsApp)
-    // and/or an email address. A message is always required. When the WhatsApp
-    // button is clicked and a phone number is provided, the browser opens a
-    // wa.me link with the encoded message. When the Email button is clicked
-    // and an email address is provided, the browser opens a mailto link with
-    // subject and body prefilled. A small status label displays validation
-    // feedback to the user.
     const phoneInput = $$('#fbPhone');
     const emailInput = $$('#fbEmail');
     const msgInput = $$('#fbMessage');
@@ -1940,10 +2098,10 @@ renderSessionsTable();
       statusLabel.textContent = t;
       statusLabel.style.color = ok ? '' : 'var(--danger)';
     }
-    waBtn?.addEventListener('click', () => {
-      const phoneRaw = phoneInput?.value?.trim() || '';
-      const msg = msgInput?.value?.trim() || '';
-      // Remove non-digit characters; WhatsApp expects international numbers
+    
+    if (waBtn) waBtn.addEventListener('click', () => {
+      const phoneRaw = ((phoneInput && phoneInput.value) ? String(phoneInput.value).trim() : '');
+      const msg = ((msgInput && msgInput.value) ? String(msgInput.value).trim() : '');
       const phone = phoneRaw.replace(/[^0-9]/g, '');
       if (!phone) {
         displayStatus('Please enter a valid phone number.', false);
@@ -1951,13 +2109,13 @@ renderSessionsTable();
       }
       const encoded = encodeURIComponent(msg);
       const waUrl = `https://wa.me/${phone}?text=${encoded}`;
-      // Open in a new tab to avoid leaving the dashboard entirely
       window.open(waUrl, '_blank');
       displayStatus('Opening WhatsApp…');
     });
-    mailBtn?.addEventListener('click', () => {
-      const email = emailInput?.value?.trim() || '';
-      const msg = msgInput?.value?.trim() || '';
+    
+    if (mailBtn) mailBtn.addEventListener('click', () => {
+      const email = ((emailInput && emailInput.value) ? String(emailInput.value).trim() : '');
+      const msg = ((msgInput && msgInput.value) ? String(msgInput.value).trim() : '');
       if (!email) {
         displayStatus('Please enter a valid email address.', false);
         return;
@@ -1965,7 +2123,6 @@ renderSessionsTable();
       const subject = encodeURIComponent('Feedback on Harvest Horizons Dashboard');
       const body = encodeURIComponent(msg);
       const mailto = `mailto:${email}?subject=${subject}&body=${body}`;
-      // Navigate away; mailto links open in the default mail client
       window.location.href = mailto;
       displayStatus('Opening email draft…');
     });
@@ -1982,7 +2139,7 @@ renderSessionsTable();
       return `<option value="${id}">${name}</option>`;
     }).join('');
 
-    sel.value = state.campaignId || (state.campaigns[0]?.id ?? '');
+    sel.value = state.campaignId || ((state.campaigns[0] && state.campaigns[0].id) ? state.campaigns[0].id : '');
     sel.onchange = () => {
       const id = sel.value;
       window.location.href = `index.html?campaign=${encodeURIComponent(id)}#summary`;
@@ -2000,15 +2157,11 @@ renderSessionsTable();
     const mediaPath = state.campaign.mediaUrl || `data/${id}/media.json`;
     const sheetsIndexPath = state.campaign.sheetsIndexUrl || `data/${id}/sheets_index.json`;
 
-    // Sessions
     const sj = await fetchJson(sessionsPath, 'sessions');
     const sessions = Array.isArray(sj.sessions) ? sj.sessions : Array.isArray(sj) ? sj : [];
-    // Assign derived region codes to each session. We map districts/territories
-    // to region codes (RGN) based on the Initial sheet. If no match is found
-    // the region remains blank. Matching ignores case and spaces for flexibility.
+    
     (function assignRegions() {
       const regionMap = {
-        // Sukkur region (SKR)
         'dadu': 'SKR',
         'daharki': 'SKR',
         'dharki': 'SKR',
@@ -2016,40 +2169,34 @@ renderSessionsTable();
         'jafferabad': 'SKR',
         'jaferabad': 'SKR',
         'jafarabad': 'SKR',
-        'jaferabad': 'SKR',
         'mehrabpur': 'SKR',
         'ranipur': 'SKR',
         'sukkur': 'SKR',
         'ubaro': 'SKR',
         'ubauro': 'SKR',
-        // Rahim Yar Khan region (RYK)
         'rahim yarkhan': 'RYK',
         'rahim yar khan': 'RYK',
         'rajan pur': 'RYK',
         'rajanpur': 'RYK',
-        // Dera Ghazi Khan region (DGK)
         'bhakkar': 'DGK',
         'karor lal esan': 'DGK',
         'kot adu': 'DGK',
         'mianwali': 'DGK',
         'muzaffar garh': 'DGK',
         'muzaffargarh': 'DGK',
-        // Faisalabad region (FSD)
         'chakwal': 'FSD',
         'sargodha': 'FSD',
         'toba tek singh': 'FSD',
-        // Gujranwala region (GUJ)
         'phalia': 'GUJ'
       };
+      
       for (const s of sessions) {
         const district = String(s.district || '').toLowerCase().replace(/\s+/g, '');
         let matchedRegion = '';
-        // Attempt direct match on district (no spaces)
         for (const [key, reg] of Object.entries(regionMap)) {
           const normKey = key.toLowerCase().replace(/\s+/g, '');
           if (district === normKey) { matchedRegion = reg; break; }
         }
-        // Assign region code
         s.region = matchedRegion;
       }
     })();
@@ -2057,22 +2204,18 @@ renderSessionsTable();
     state.sessions = sessions;
     state.sessionsById = new Map(sessions.map(s => [Number(s.id), s]));
 
-    // Optional sheets index
     try {
       state.sheetsIndex = await fetchJson(sheetsIndexPath, 'sheets index');
     } catch (_e) {
       state.sheetsIndex = null;
     }
 
-    // Optional media config
     try {
       state.mediaCfg = await fetchJson(mediaPath, 'media config');
     } catch (_e) {
       state.mediaCfg = null;
     }
 
-    // Campaign date range
-    // Prefer explicit campaign start/end if provided; otherwise derive from sessions.
     const dates = sessions.map(s => parseDateSafe(s.date)).filter(Boolean);
     if (!dates.length) throw new Error('No session dates found.');
     dates.sort((a,b) => a - b);
@@ -2083,14 +2226,12 @@ renderSessionsTable();
     state.dateMin = cfgStart || dates[0];
     state.dateMax = cfgEnd || dates[dates.length - 1];
 
-    // If config dates are outside actual data, clamp range to data to avoid empty view by default.
     if (state.dateMin < dates[0]) state.dateMin = dates[0];
     if (state.dateMax > dates[dates.length - 1]) state.dateMax = dates[dates.length - 1];
 
     state.dateFrom = state.dateMin;
     state.dateTo = state.dateMax;
 
-    // Setup date inputs min/max and defaults
     const fromEl = $$('#dateFrom');
     const toEl = $$('#dateTo');
     if (fromEl && toEl) {
@@ -2110,30 +2251,19 @@ renderSessionsTable();
 
   // ---------- Events ----------
   function bindTopControls() {
-    $$('#applyBtn')?.addEventListener('click', applyDateInputs);
-    $$('#resetBtn')?.addEventListener('click', resetDateInputs);
-    $$('#exportBtn')?.addEventListener('click', exportCsv);
+    var el_applyBtn = $$('#applyBtn'); if (el_applyBtn) el_applyBtn.addEventListener('click', applyDateInputs);
+    var el_resetBtn = $$('#resetBtn'); if (el_resetBtn) el_resetBtn.addEventListener('click', resetDateInputs);
+    var el_exportBtn = $$('#exportBtn'); if (el_exportBtn) el_exportBtn.addEventListener('click', exportCsv);
 
-    // Apply on Enter in date inputs
-    $$('#dateFrom')?.addEventListener('change', applyDateInputs);
-    $$('#dateTo')?.addEventListener('change', applyDateInputs);
+    var el_dateFrom = $$('#dateFrom'); if (el_dateFrom) el_dateFrom.addEventListener('change', applyDateInputs);
+    var el_dateTo = $$('#dateTo'); if (el_dateTo) el_dateTo.addEventListener('change', applyDateInputs);
 
-    // Apply automatically when name or city filters change
-    $$('#nameFilter')?.addEventListener('input', applyDateInputs);
-    $$('#cityFilter')?.addEventListener('input', applyDateInputs);
-
-    // Apply automatically when region filter changes. This allows users to
-    // filter sessions by region code (REG) such as SKR, RYK, DGK. See
-    // index.html for the #regionFilter input.
-    $$('#regionFilter')?.addEventListener('input', applyDateInputs);
-
-    // Apply automatically when district or score filters change
-    $$('#districtFilter')?.addEventListener('input', applyDateInputs);
-    $$('#scoreMin')?.addEventListener('input', applyDateInputs);
-    $$('#scoreMax')?.addEventListener('input', applyDateInputs);
-
-    // Export button for priority table
-    $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
+    var el_nameFilter = $$('#nameFilter'); if (el_nameFilter) el_nameFilter.addEventListener('input', applyDateInputs);
+    var el_cityFilter = $$('#cityFilter'); if (el_cityFilter) el_cityFilter.addEventListener('input', applyDateInputs);
+    var el_regionFilter = $$('#regionFilter'); if (el_regionFilter) el_regionFilter.addEventListener('input', applyDateInputs);
+    var el_districtFilter = $$('#districtFilter'); if (el_districtFilter) el_districtFilter.addEventListener('input', applyDateInputs);
+    var el_scoreMin = $$('#scoreMin'); if (el_scoreMin) el_scoreMin.addEventListener('input', applyDateInputs);
+    var el_scoreMax = $$('#scoreMax'); if (el_scoreMax) el_scoreMax.addEventListener('input', applyDateInputs);
   }
 
   function exportCsv() {
@@ -2144,11 +2274,11 @@ renderSessionsTable();
         s.id,
         s.sheetRef,
         s.date,
-        (s.district || '').replaceAll(',', ' '),
-        (s.village || s.spot || '').replaceAll(',', ' '),
-        s.score ?? ''
+        (s.district || '').split(',').join(' '),
+        (s.village || s.spot || '').split(',').join(' '),
+        ((s.score === null || s.score === undefined) ? '' : s.score)
       ];
-      rows.push(row.map(x => String(x ?? '').replaceAll('\n',' ').replaceAll('\r',' ')).join(','));
+      rows.push(row.map(x => String((x === null || x === undefined) ? '' : x).split('\n').join(' ').split('\r').join(' ')).join(','));
     }
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
@@ -2158,10 +2288,6 @@ renderSessionsTable();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
-  // Export the priority districts table as CSV. Collects the district rows
-  // currently rendered in the table, including the recommended action,
-  // and triggers a download via a Blob. The filename incorporates the
-  // campaign identifier for clarity.
   function exportPriorityCsv() {
     const table = document.getElementById('priorityDistrictsTable');
     if (!table) return;
@@ -2183,12 +2309,75 @@ renderSessionsTable();
   function bindTabEvents() {
     window.addEventListener('hashchange', syncTabFromHash);
     document.addEventListener('tabchange', (e) => {
-      const tab = e.detail?.tab;
+      const tab = (e.detail && e.detail.tab) ? e.detail.tab : '';
       if (tab === 'map') {
-        // Give Leaflet time to render after display
         setTimeout(ensureMapReady, 50);
-        setTimeout(() => state.map?.invalidateSize(), 200);
+        setTimeout(() => (state.map && state.map.invalidateSize ? state.map.invalidateSize() : void 0), 200);
       }
+    });
+  }
+
+  // ---------- Donut row auto-scroll ----------
+  function initDonutRows() {
+    if (window.__REDUCE_MOTION__) return;
+
+    const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
+    rows.forEach((row) => {
+      if (row.dataset._autoBound === '1') return;
+      row.dataset._autoBound = '1';
+
+      if (row.scrollWidth <= row.clientWidth + 5) {
+        row.style.overflowX = 'hidden';
+        return;
+      }
+
+      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
+      let paused = false;
+      let wheelTimer = null;
+      let scrollDirection = 1;
+
+      const step = () => {
+        if (paused || document.hidden || speed <= 0) {
+          requestAnimationFrame(step);
+          return;
+        }
+
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (maxScroll <= 0) {
+          row.style.overflowX = 'hidden';
+          return;
+        }
+
+        row.scrollLeft += speed * scrollDirection;
+        
+        if (row.scrollLeft >= maxScroll - 2) {
+          scrollDirection = -1;
+          paused = true;
+          setTimeout(() => { paused = false; }, 800);
+        } else if (row.scrollLeft <= 2) {
+          scrollDirection = 1;
+          paused = true;
+          setTimeout(() => { paused = false; }, 800);
+        }
+        
+        requestAnimationFrame(step);
+      };
+
+      const pauseEvents = ['mouseenter', 'touchstart', 'pointerdown', 'focusin'];
+      const resumeEvents = ['mouseleave', 'touchend', 'pointerup', 'focusout'];
+      
+      pauseEvents.forEach(evt => row.addEventListener(evt, () => { paused = true; }));
+      resumeEvents.forEach(evt => row.addEventListener(evt, () => { 
+        setTimeout(() => { paused = false; }, 100);
+      }));
+
+      row.addEventListener('wheel', (e) => {
+        paused = true;
+        if (wheelTimer) clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => { paused = false; }, 2000);
+      }, { passive: true });
+
+      requestAnimationFrame(step);
     });
   }
 
@@ -2199,38 +2388,40 @@ renderSessionsTable();
       bindLightbox();
       bindFeedback();
       bindTopControls();
+      initDonutRows();
       bindTabEvents();
 
       await loadCampaignRegistry();
 
       const req = qs();
-      const id = req.get('campaign') || state.campaigns[0]?.id;
+      const id = req.get('campaign') || ((state.campaigns[0] && state.campaigns[0].id) ? state.campaigns[0].id : '');
       renderCampaignSelect();
 
       await loadCampaign(id);
 
-      // Initial tab
       syncTabFromHash();
 
-      // If landing directly on #map, init map
       if (activeTabFromHash() === 'map') {
         setTimeout(ensureMapReady, 50);
       }
 
-      // Close drawer if overlay state inconsistent
       closeDrawer();
 
-      // Wire drawer overlay state
-      $$('#drawerOverlay')?.classList.add('hidden');
-      $$('#sessionDrawer')?.classList.add('hidden');
+      var dO = $$('#drawerOverlay'); if (dO) dO.classList.add('hidden');
+      var sD = $$('#sessionDrawer'); if (sD) sD.classList.add('hidden');
 
-      // Close buttons for lightbox
-      $$('#lbClose')?.addEventListener('click', closeLightbox);
+      var el_lbClose = $$('#lbClose'); if (el_lbClose) el_lbClose.addEventListener('click', closeLightbox);
 
-      // Bind heatmap toggle button. When clicked, add or remove the heat
-      // layer from the map and update the button text accordingly. The map
-      // and heatLayer are created lazily in ensureMapReady(), so guard
-      // against them being undefined.
+      // Bind map reload button
+      const reloadMapBtn = document.getElementById('reloadMap');
+      if (reloadMapBtn) {
+        reloadMapBtn.addEventListener('click', () => {
+          setMapStatus('Reloading map...', false);
+          ensureMapReady();
+        });
+      }
+
+      // Bind heatmap toggle
       const heatBtn = document.getElementById('toggleHeat');
       if (heatBtn) {
         heatBtn.addEventListener('click', () => {
@@ -2245,47 +2436,34 @@ renderSessionsTable();
         });
       }
 
-      // Set map status
       setMapStatus('Ready when opened', true);
+
+      // Performance monitoring
+      window.addEventListener('load', () => {
+        if ('performance' in window) {
+          const perf = performance.getEntriesByType('navigation')[0];
+          if (perf) {
+            console.info(`[WheatCampaign] Load: ${Math.round(perf.loadEventEnd)}ms`);
+          }
+        }
+        
+        // Check if animations are supported
+        const animationTest = document.createElement('div');
+        document.body.appendChild(animationTest);
+        const supportsAnimations = window.getComputedStyle(animationTest).animationName !== 'none';
+        document.body.removeChild(animationTest);
+        
+        if (!supportsAnimations) {
+          console.warn('[WheatCampaign] CSS animations not fully supported');
+          document.documentElement.classList.add('no-animations');
+        }
+      });
+
     } catch (e) {
       console.error(e);
       setStatus(e.message || 'Failed to load.', 'bad');
     }
   }
-
-
-  // ---------- Diagnostics / Performance ----------
-  window.addEventListener('load', () => {
-    try {
-      if ('performance' in window && performance.getEntriesByType) {
-        const nav = performance.getEntriesByType('navigation')[0];
-        if (nav) console.info('[WheatCampaign] Load:', Math.round(nav.loadEventEnd) + 'ms');
-      }
-    } catch (e) {}
-
-    // Animation capability probe
-    try {
-      const test = document.createElement('div');
-      document.body.appendChild(test);
-      const animName = window.getComputedStyle(test).animationName;
-      document.body.removeChild(test);
-      if (animName === 'none') {
-        console.warn('[WheatCampaign] CSS animations not fully supported');
-        document.documentElement.classList.add('no-animations');
-      }
-    } catch (e) {}
-  });
-
-  // Passive event support check
-  let supportsPassive = false;
-  try {
-    const opts = Object.defineProperty({}, 'passive', {
-      get: function () { supportsPassive = true; }
-    });
-    window.addEventListener('test-passive', null, opts);
-    window.removeEventListener('test-passive', null, opts);
-  } catch (e) {}
-
 
   boot();
 })();

@@ -13,31 +13,95 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260106-1" />
+  <link rel="stylesheet" href="style.css?v=20260106-16" />
 
-  <!-- Leaflet CSS with robust fallback -->
-<link id="leafletCss" rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin="anonymous"
-      onerror="this.onerror=null;
-               this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
-               this.onerror=()=>{
-                 this.href='assets/leaflets/dist/leaflet.css';
-                 console.warn('Using local Leaflet CSS from dist folder');
-               }" />
-  
+  <!-- Leaflet CSS with fallback chain -->
+  <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" data-leaflet-css="1"/>
+  <script>
+    // Leaflet (local-first, CDN fallback). Exposes window.loadLeaflet() used by dashboard.js.
+    (function () {
+      // CSS fallback for browsers / environments where local assets are missing.
+      const cssLink = document.getElementById('leafletCss');
+      if (cssLink && !cssLink.dataset.fallbackBound) {
+        cssLink.dataset.fallbackBound = '1';
+        const cssHrefs = [
+          'assets/leaflets/dist/leaflet.css',
+          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+          'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
+        ];
+        let i = 0;
+        cssLink.addEventListener('error', () => {
+          i += 1;
+          if (i < cssHrefs.length) cssLink.href = cssHrefs[i];
+        });
+      }
+
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          // Avoid duplicates
+          const existing = document.querySelector(`script[data-leaflet-src="${src}"]`);
+          if (existing) {
+            if (existing.dataset.loaded === '1') return resolve(true);
+            existing.addEventListener('load', () => resolve(true), { once: true });
+            existing.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
+            return;
+          }
+
+          const s = document.createElement('script');
+          s.src = src;
+          s.async = true;
+          s.dataset.leafletSrc = src;
+          s.addEventListener('load', () => { s.dataset.loaded = '1'; resolve(true); }, { once: true });
+          s.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
+          document.head.appendChild(s);
+        });
+      }
+
+      // Do not overwrite if another page already defines it.
+      if (typeof window.loadLeaflet === 'function') return;
+
+      let leafletPromise = null;
+      window.loadLeaflet = async function ({ timeoutMs = 12000 } = {}) {
+        if (window.L && window.L.map) return true;
+        if (leafletPromise) return leafletPromise;
+
+        const srcs = [
+          'assets/leaflets/dist/leaflet.js',
+          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+        ];
+
+        leafletPromise = (async () => {
+          const start = Date.now();
+          for (const src of srcs) {
+            try {
+              await loadScript(src);
+              break;
+            } catch (e) {
+              // try next
+            }
+            if (Date.now() - start > timeoutMs) break;
+          }
+          return !!(window.L && window.L.map);
+        })();
+
+        return leafletPromise;
+      };
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
-  
   <script>
     window.__REDUCE_MOTION__ = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   </script>
 </head>
 
 <body>
-  <!-- Inline SVG icon sprite -->
+  <!-- Inline SVG icon sprite (no external icon dependencies) -->
   <svg id="svgSprite" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0;overflow:hidden">
     <symbol id="i-calendar" viewBox="0 0 24 24">
       <path d="M7 2v2M17 2v2M4 7h16M6 10h4M6 14h4M14 10h4M14 14h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -75,63 +139,37 @@
 
   <!-- Background video -->
   <div class="bg">
-    <video class="bgVideo" id="bgVideo"
-           src="assets/bg.mp4"
-           autoplay muted loop playsinline
-           preload="metadata">
+    <video id="bgVideo" class="bgVideo" autoplay loop muted playsinline preload="auto" src="assets/bg.mp4">
     </video>
     <div class="bgShade"></div>
-    <div class="bgFallback hidden"></div>
   </div>
 
   <script>
-  // Robust Background Video Fallback with interaction fallback
+  // Background video: fall back across multiple filenames (GitHub Pages is case-sensitive).
   (function () {
     const v = document.getElementById('bgVideo');
     if (!v) return;
 
-    let autoplayAttempted = false;
-    const fallbackEl = document.querySelector('.bgFallback');
-    
-    function attemptAutoplay() {
-      if (autoplayAttempted) return;
-      autoplayAttempted = true;
-      
-      v.muted = true;
-      v.setAttribute('muted', '');
-      v.playsInline = true;
-      v.preload = 'auto';
-      
-      const playPromise = v.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn('Autoplay blocked:', err);
-          if (fallbackEl) {
-            fallbackEl.classList.remove('hidden');
-            v.classList.add('hidden');
-          }
-        });
-      }
+    const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4'];
+    let i = 0;
+
+    function setSrc(idx) {
+      v.src = candidates[idx];
+      v.load();
+      v.play().catch(() => { /* ignore autoplay block */ });
     }
-    
-    // Try autoplay immediately
-    setTimeout(attemptAutoplay, 300);
-    
-    // Also try on user interaction
-    const interactionEvents = ['click', 'touchstart', 'keydown', 'scroll'];
-    interactionEvents.forEach(evt => {
-      document.addEventListener(evt, attemptAutoplay, { once: true, passive: true });
-    });
-    
-    // Fallback if video errors
+
     v.addEventListener('error', () => {
-      console.warn('Video error, using fallback background');
-      if (fallbackEl) {
-        fallbackEl.classList.remove('hidden');
-        v.classList.add('hidden');
-      }
+      i += 1;
+      if (i < candidates.length) setSrc(i);
     });
+
+    // Ensure play is attempted even if the browser delays autoplay.
+    v.addEventListener('canplay', () => {
+      v.play().catch(() => { /* ignore */ });
+    });
+
+    setSrc(0);
   })();
   </script>
 
@@ -140,9 +178,9 @@
       <div class="brand">
         <a href="index.html" class="brandLogoLink" aria-label="Home">
           <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png"
-               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
+               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" />
           <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png"
-               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
+               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" />
         </a>
         <div>
           <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
@@ -152,12 +190,12 @@
       </div>
 
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
-        <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
-        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
-        <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
-        <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
-        <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-      </nav>
+      <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" href="#summary">Summary</a>
+      <a class="tabBtn" data-tab="media" role="tab" href="#media">Media</a>
+      <a class="tabBtn" data-tab="map" role="tab" href="#map">Map</a>
+      <a class="tabBtn" data-tab="sessions" role="tab" href="#sessions">Sessions</a>
+      <a class="tabBtn" data-tab="feedback" role="tab" href="#feedback">Feedback</a>
+    </nav>
     </div>
 
     <!-- Hero slider -->
@@ -283,24 +321,25 @@
 
         <div class="divider"></div>
 
-        <h3>Donut insights</h3>
-        <div class="donutRow" id="coreDonutsRow" data-autoscroll="1" data-speed="0.22">
-          <div class="chartTile">
-            <h4>Sessions by farmers attendance</h4>
-            <div class="chartWrap attendanceWrap">
-              <canvas id="attendanceDonut"></canvas>
-            </div>
-          </div>
+        
+<h3>Donut insights</h3>
+<div class="donutRow" id="coreDonutsRow" data-autoscroll="1" data-speed="0.22">
+  <div class="chartTile">
+    <h4>Sessions by farmers attendance</h4>
+    <div class="chartWrap attendanceWrap">
+      <canvas id="attendanceDonut"></canvas>
+    </div>
+  </div>
 
-          <div class="chartTile">
-            <h4>Decision breakdown</h4>
-            <div class="chartWrap decisionWrap">
-              <canvas id="decisionPie"></canvas>
-            </div>
-          </div>
-        </div>
+  <div class="chartTile">
+    <h4>Decision breakdown</h4>
+    <div class="chartWrap decisionWrap">
+      <canvas id="decisionPie"></canvas>
+    </div>
+  </div>
+</div>
 
-        <div class="divider"></div>
+<div class="divider"></div>
 
         <h3>Additional breakdowns</h3>
 
@@ -361,26 +400,26 @@
 
         <div class="divider"></div>
         
-        <h3>Drivers &amp; barriers (donut)</h3>
-        <div class="donutRow" id="driversBarriersRow" data-autoscroll="1" data-speed="0.22">
-          <div class="chartTile donutTileWide">
-            <h4>Top adoption drivers</h4>
-            <div class="chartWrap">
-              <canvas id="driversDonut"></canvas>
-            </div>
-            <div id="driversLegend" class="donutLegend"><div class="muted">Loading…</div></div>
-          </div>
+<h3>Drivers &amp; barriers (donut)</h3>
+<div class="donutRow" id="driversBarriersRow" data-autoscroll="1" data-speed="0.22">
+  <div class="chartTile donutTileWide">
+    <h4>Top adoption drivers</h4>
+    <div class="chartWrap">
+      <canvas id="driversDonut"></canvas>
+    </div>
+    <div id="driversLegend" class="donutLegend"><div class="muted">Loading…</div></div>
+  </div>
 
-          <div class="chartTile donutTileWide">
-            <h4>Top barriers</h4>
-            <div class="chartWrap">
-              <canvas id="barriersDonut"></canvas>
-            </div>
-            <div id="barriersLegend" class="donutLegend"><div class="muted">Loading…</div></div>
-          </div>
-        </div>
+  <div class="chartTile donutTileWide">
+    <h4>Top barriers</h4>
+    <div class="chartWrap">
+      <canvas id="barriersDonut"></canvas>
+    </div>
+    <div id="barriersLegend" class="donutLegend"><div class="muted">Loading…</div></div>
+  </div>
+</div>
 
-        <div class="divider"></div>
+<div class="divider"></div>
 
         <h3>Data readiness</h3>
         <div id="statusBox" class="status">Loading…</div>
@@ -399,11 +438,10 @@
       <div id="leafletMap" class="map">Loading map…</div>
       <div class="mapControls" style="margin:12px 0; text-align:right;">
         <button class="btn btnGhost btnSmall" id="toggleHeat">Show Heatmap</button>
-        <button class="btn btnGhost btnSmall" id="reloadMap">Reload Map</button>
       </div>
       <div class="divider"></div>
       <div id="mapFallback" class="smallMuted hidden">
-        Map library could not be loaded. Use the Sessions table and "Open in Google Maps" links in details.
+        Map library could not be loaded. Use the Sessions table and “Open in Google Maps” links in details.
       </div>
     </section>
 
@@ -496,11 +534,11 @@
   <footer class="footer" aria-label="Footer">
     <div class="footerBrands">
       <div class="brandPill">
-        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
+        <img src="assets/interact.gif" alt="INTERACT"/>
         <span>INTERACT Solutions</span>
       </div>
       <div class="brandPill">
-        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+        <img src="assets/bayer.svg" alt="Bayer"/>
         <span>Bayer Crop Science</span>
       </div>
     </div>
@@ -562,68 +600,15 @@
     </div>
   </div>
 
-  <!-- Robust Leaflet loader -->
-  <script>
-  (function() {
-    window.loadLeaflet = function() {
-      return new Promise((resolve, reject) => {
-        if (window.L && window.L.map) return resolve(true);
-        
-        let attempts = 0;
-        const maxAttempts = 3;
-        
-        function attemptLoad() {
-          attempts++;
-          
-          const script = document.createElement('script');
-          script.src = attempts === 1 
-            ? 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-            : attempts === 2
-            ? 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
-            : 'assets/leaflets/dist/leaflet.js';
-          
-          script.integrity = attempts === 1 
-            ? 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='
-            : '';
-          
-          script.crossOrigin = 'anonymous';
-          
-          script.onload = () => {
-            if (window.L && window.L.map) {
-              console.log(`Leaflet loaded from ${attempts === 3 ? 'local' : 'CDN'}`);
-              resolve(true);
-            } else if (attempts < maxAttempts) {
-              setTimeout(attemptLoad, 500);
-            } else {
-              reject(new Error('Leaflet failed to load'));
-            }
-          };
-          
-          script.onerror = () => {
-            if (attempts < maxAttempts) {
-              setTimeout(attemptLoad, 500);
-            } else {
-              reject(new Error('All Leaflet sources failed'));
-            }
-          };
-          
-          document.head.appendChild(script);
-        }
-        
-        attemptLoad();
-      });
-    };
-  })();
-  </script>
-
-  <!-- Scripts -->
+  <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260106-1"></script>
+  <script defer src="dashboard.js?v=20260106-16"></script>
+
 
   <!-- Hero slider (auto-advance) -->
   <script>
   (function() {
-    const prefersReduced = window.__REDUCE_MOTION__;
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const videos = [
       { file: 'assets/atlantis.mp4', title: 'Field Activation', caption: 'Wheat weed-control activations across districts.' },
@@ -664,13 +649,8 @@
       heroVideo.src = v.file;
       heroVideo.load();
 
-      // Attempt autoplay with fallback
-      const playPromise = heroVideo.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          console.warn('Hero video autoplay blocked');
-        });
-      }
+      // Attempt autoplay; if blocked, still rotate
+      heroVideo.play().catch(() => { /* ignore */ });
 
       if (heroTitle) heroTitle.textContent = v.title;
       if (heroSub) heroSub.textContent = (function(){
@@ -695,27 +675,18 @@
       d.className = 'heroThumb';
       d.innerHTML = `<video autoplay loop muted playsinline preload="metadata" src="${v.file}"></video><div class="badge">${idx+1}</div>`;
       d.addEventListener('click', () => { setHero(idx); start(); });
-      d.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        setHero(idx);
-        start();
-      }, { passive: false });
       thumbs.appendChild(d);
     });
 
-    if (prevBtn) prevBtn.addEventListener('click', () => { setHero(current - 1); start(); });
-    if (nextBtn) nextBtn.addEventListener('click', () => { setHero(current + 1); start(); });
+    prevBtn?.addEventListener('click', () => { setHero(current - 1); start(); });
+    nextBtn?.addEventListener('click', () => { setHero(current + 1); start(); });
 
     // Pause on hover/focus
     const heroPlayer = document.getElementById('heroPlayer');
-    if (heroPlayer) {
-      heroPlayer.addEventListener('mouseenter', stop);
-      heroPlayer.addEventListener('mouseleave', start);
-      heroPlayer.addEventListener('focusin', stop);
-      heroPlayer.addEventListener('focusout', start);
-      heroPlayer.addEventListener('touchstart', stop, { passive: true });
-      heroPlayer.addEventListener('touchend', start, { passive: true });
-    }
+    heroPlayer?.addEventListener('mouseenter', stop);
+    heroPlayer?.addEventListener('mouseleave', start);
+    heroPlayer?.addEventListener('focusin', stop);
+    heroPlayer?.addEventListener('focusout', start);
 
     // Pause if tab hidden
     document.addEventListener('visibilitychange', () => {
@@ -724,28 +695,51 @@
     });
 
     setHero(0);
+    // Allow dashboard.js to push computed KPI stats into hero captions.
     window.WHEAT_HERO = window.WHEAT_HERO || {};
     window.WHEAT_HERO.updateStats = function(stats){
       heroStats = stats || null;
-      // Update current hero caption
-      if (heroTitle && heroSub) {
-        const v = videos[current];
-        if (v) {
-          heroSub.textContent = (function(){
-            const base = v.caption || '';
-            if (!heroStats) return base;
-            const parts = [];
-            if (heroStats.farmers) parts.push(`${heroStats.farmers.toLocaleString()} farmers reached`);
-            if (Number.isFinite(heroStats.awareness)) parts.push(`Awareness ${heroStats.awareness}%`);
-            if (Number.isFinite(heroStats.definite)) parts.push(`Definite ${heroStats.definite}%`);
-            if (Number.isFinite(heroStats.score)) parts.push(`Score ${heroStats.score}`);
-            return parts.length ? `${base} • ${parts.slice(0,3).join(' · ')}` : base;
-          })();
-        }
-      }
+      apply();
     };
 
-    if (!prefersReduced) start();
+    start();
+  })();
+  </script>
+
+
+  <script>
+  // v16: background video autoplay handling + fallback
+  (function() {
+    const v = document.getElementById('bgVideo');
+    if (!v) return;
+
+    let attempted = false;
+
+    function attemptAutoplay() {
+      if (attempted) return;
+      attempted = true;
+
+      try {
+        v.muted = true;
+        v.setAttribute('muted', '');
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+      } catch (e) {}
+
+      const playPromise = v.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {
+          const fallback = document.createElement('div');
+          fallback.className = 'bgFallback';
+          if (v.parentElement) v.parentElement.appendChild(fallback);
+          v.classList.add('fallback');
+        });
+      }
+    }
+
+    attemptAutoplay();
+    document.addEventListener('click', attemptAutoplay, { once: true });
+    document.addEventListener('touchstart', attemptAutoplay, { once: true });
   })();
   </script>
 
@@ -769,7 +763,17 @@
       applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
     }
 
-    if (toggleBtn) toggleBtn.addEventListener('click', () => {
+    // Campaign context: auto-theme per tab (Summary/Sessions = light; Media/Map/Feedback = dark),
+// but do not override a user-selected theme stored in localStorage.
+document.addEventListener('tabchange', (e) => {
+  const locked = (localStorage.getItem('theme') === 'light' || localStorage.getItem('theme') === 'dark');
+  if (locked) return;
+  const tab = e?.detail?.tab || '';
+  const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
+  applyTheme(t);
+});
+
+toggleBtn?.addEventListener('click', () => {
       const current = htmlEl.getAttribute('data-theme');
       applyTheme(current === 'light' ? 'dark' : 'light');
     });
@@ -789,6 +793,7 @@
     const KEY = 'filtersCollapsed';
 
     function fmtDate(iso) {
+      // iso expected: YYYY-MM-DD
       if (!iso || typeof iso !== 'string') return '';
       const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (!m) return iso;
@@ -805,8 +810,8 @@
         ? camp.selectedOptions[0].textContent.trim()
         : 'Campaign';
 
-      const fromText = (from && from.value) ? fmtDate(from.value) : '';
-      const toText = (to && to.value) ? fmtDate(to.value) : '';
+      const fromText = from?.value ? fmtDate(from.value) : '';
+      const toText = to?.value ? fmtDate(to.value) : '';
 
       const range = (fromText && toText) ? `${fromText} → ${toText}` : '';
       meta.textContent = range ? `${campText} • ${range}` : campText;
@@ -820,7 +825,7 @@
       updateMeta();
     }
 
-    // Initialize state
+    // Initialize state (localStorage wins; else auto-collapse on short viewports)
     const saved = localStorage.getItem(KEY);
     if (saved === '1' || saved === '0') {
       setCollapsed(saved === '1', false);
@@ -834,7 +839,7 @@
       setCollapsed(!isCollapsed, true);
     });
 
-    // Keep the summary in sync
+    // Keep the summary in sync as dashboard.js populates inputs
     const bind = (id, ev) => {
       const el = document.getElementById(id);
       if (el) el.addEventListener(ev, () => setTimeout(updateMeta, 0));
@@ -846,6 +851,7 @@
     bind('applyBtn', 'click');
     bind('resetBtn', 'click');
 
+    // First paint after dashboard initializes
     window.addEventListener('load', () => setTimeout(updateMeta, 50));
   })();
   </script>

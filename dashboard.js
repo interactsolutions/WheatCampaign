@@ -2,7 +2,7 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-06.mediafix14";
+  const WHEATCAMPAIGN_BUILD = "2026-01-05.1";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
   // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
@@ -156,45 +156,15 @@
     return x;
   }
 
-    // --- IMPROVED MEDIA LOGIC (low-noise candidates, gesture-safe video playback) ---
-  // Narrow down candidates to reduce 404 noise and speed up resolution.
   function candidatePaths(p) {
     const norm = normalizeMediaPath(p);
-    if (!norm) return [''];
+    if (!norm) return [];
     if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
 
-    const extMatch = norm.match(/\.([a-z0-9]+)$/i);
-    const ext = extMatch ? extMatch[1].toLowerCase() : '';
-    const base = norm.replace(/\.(jpeg|jpg|png|webp|mp4|webm)$/i, '');
-    const file = norm.split('/').pop() || norm;
-
-    const cands = [];
-    function add(x){ if (x) cands.push(x); }
-
-    // Original
-    add(norm);
-
-    // Root-level gallery fallback for common patterns
-    if (!/\/assets\/gallery\//i.test(norm)) {
-      add('assets/gallery/' + file);
-    }
-
-    // Simple suffix variants (common: a / _a / -a)
-    if (ext) {
-      add(base + 'a.' + ext);
-      add(base + '_a.' + ext);
-      add(base + '-a.' + ext);
-    }
-
-    // Minimal extension swaps (jpg<->jpeg, mp4<->webm)
-    if (ext === 'jpg') add(base + '.jpeg');
-    if (ext === 'jpeg') add(base + '.jpg');
-    if (ext === 'mp4') add(base + '.webm');
-    if (ext === 'webm') add(base + '.mp4');
-
-    // De-dup
-    return Array.from(new Set(cands));
-  };
+    const candidates = [];
+    const add = (v) => {
+      if (v && !candidates.includes(v)) candidates.push(v);
+    };
 
     // Always start with the normalized path.
     add(norm);
@@ -290,45 +260,38 @@
     );
   }
 
-    // Fast existence check with caching (HEAD). Keeps console noise low (no <img src> until confirmed).
-  const missingCache = new Map();  // url -> true
+  async function assetExists(relOrAbs) {
+    const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
+    if (existsCache.has(u)) return existsCache.get(u);
 
-  async function assetExists(p) {
-    const u = url(p);
-    if (!u) return false;
-    if (existsCache.get(u)) return true;
-    if (missingCache.get(u)) return false;
-
+    // HEAD often works on GitHub Pages; if blocked, fallback to Range GET.
     try {
-      const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
-      if (r && r.ok) {
-        existsCache.set(u, true);
-        return true;
+      const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
+      const ok = r.ok;
+      existsCache.set(u, ok);
+      return ok;
+    } catch (_e) {
+      try {
+        const r = await fetch(u, {
+          method: 'GET',
+          headers: { Range: 'bytes=0-0' },
+          cache: 'no-store'
+        });
+        const ok = r.ok;
+        existsCache.set(u, ok);
+        return ok;
+      } catch (_e2) {
+        existsCache.set(u, false);
+        return false;
       }
-    } catch (e) { /* silent */ }
-    missingCache.set(u, true);
-    return false;
+    }
   }
 
   async function resolveFirstExisting(p) {
     const cands = candidatePaths(p);
     for (const c of cands) {
-      if (!c) continue;
-      const u = url(c);
-      if (!u) continue;
-      if (existsCache.get(u)) return c;
-      if (missingCache.get(u)) continue;
-      try {
-        const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
-        if (r && r.ok) {
-          existsCache.set(u, true);
-          return c;
-        }
-      } catch (e) { /* silent */ }
-      missingCache.set(u, true);
+      if (await assetExists(c)) return c;
     }
-    return '';
-  }
     return '';
   }
 
@@ -350,56 +313,26 @@
     return () => { cancelled = true; };
   }
 
-    function attachSmartVideo(videoEl, path) {
+  function attachSmartVideo(videoEl, path) {
     const placeholder = 'assets/placeholder-video.mp4';
+    let tried = false;
 
-    // Pre-resolve source so it is ready before user gesture.
-    (async () => {
-      try {
-        const chosen = await resolveFirstExisting(path);
-        videoEl.src = chosen ? url(chosen) : url(placeholder);
-        // Warm up for faster start (metadata is usually enough)
-        try { videoEl.load(); } catch (e) {}
-      } catch (e) {
-        videoEl.src = url(placeholder);
-      }
-    })();
-
+    // lazy load on click
     videoEl.preload = 'metadata';
     videoEl.controls = true;
-    videoEl.playsInline = true;
-  }
 
-  // Muted looping thumbnail preview; click toggles play/pause without opening lightbox.
-  function attachSmartVideoThumb(videoEl, path) {
-    const placeholder = 'assets/placeholder-video.mp4';
-
-    videoEl.muted = true;
-    videoEl.loop = true;
-    videoEl.playsInline = true;
-    videoEl.preload = 'metadata';
-    videoEl.controls = false;
-
-    (async () => {
-      try {
-        const chosen = await resolveFirstExisting(path);
-        videoEl.src = chosen ? url(chosen) : url(placeholder);
-        try { videoEl.load(); } catch (e) {}
-      } catch (e) {
-        videoEl.src = url(placeholder);
-      }
-    })();
-
-    videoEl.addEventListener('click', (e) => {
-      // Option A: clicking the thumb toggles play/pause, card click still opens lightbox.
-      e.stopPropagation();
-      if (videoEl.paused) {
-        const p = videoEl.play();
-        if (p && p.catch) p.catch(() => {});
-      } else {
-        videoEl.pause();
-      }
+    videoEl.addEventListener('click', async () => {
+      if (tried) return;
+      tried = true;
+      const chosen = await resolveFirstExisting(path);
+      videoEl.src = chosen ? url(chosen) : url(placeholder);
+      videoEl.play().catch(() => { /* ignore */ });
     });
+
+    videoEl.onerror = () => {
+      videoEl.onerror = null;
+      videoEl.src = url(placeholder);
+    };
   }
 
   // ---------- Tab controller ----------
@@ -1363,7 +1296,7 @@
       let badge;
       if (vidPath) {
         // Show auto-playing muted preview
-        thumb = `<video data-media-thumb-video="1" data-video-path="${esc(videoSrc)}" muted playsinline></video>`;
+        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
         thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
@@ -1412,9 +1345,75 @@
     };
   }
 
+  // ---------- Donut auto-scroll ----------
+  function initDonutRows() {
+    if (window.__REDUCE_MOTION__) return;
+
+    const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
+    rows.forEach((row) => {
+      if (row.dataset._autoBound === '1') return;
+      row.dataset._autoBound = '1';
+
+      // Disable if not scrollable
+      if (row.scrollWidth <= row.clientWidth + 5) {
+        row.style.overflowX = 'hidden';
+        return;
+      }
+
+      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
+      let paused = false;
+      let wheelTimer = null;
+      let scrollDirection = 1;
+
+      const step = () => {
+        if (paused || document.hidden || speed <= 0) {
+          requestAnimationFrame(step);
+          return;
+        }
+
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (maxScroll <= 0) {
+          row.style.overflowX = 'hidden';
+          return;
+        }
+
+        row.scrollLeft += speed * scrollDirection;
+
+        if (row.scrollLeft >= maxScroll - 2) {
+          scrollDirection = -1;
+          paused = true;
+          setTimeout(() => { paused = false; }, 800);
+        } else if (row.scrollLeft <= 2) {
+          scrollDirection = 1;
+          paused = true;
+          setTimeout(() => { paused = false; }, 800);
+        }
+
+        requestAnimationFrame(step);
+      };
+
+      const pauseEvents = ['mouseenter', 'touchstart', 'pointerdown', 'focusin'];
+      const resumeEvents = ['mouseleave', 'touchend', 'pointerup', 'focusout'];
+
+      pauseEvents.forEach((evt) => row.addEventListener(evt, () => { paused = true; }, { passive: true }));
+      resumeEvents.forEach((evt) => row.addEventListener(evt, () => {
+        setTimeout(() => { paused = false; }, 100);
+      }, { passive: true }));
+
+      row.addEventListener('wheel', () => {
+        paused = true;
+        if (wheelTimer) clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => { paused = false; }, 2000);
+      }, { passive: true });
+
+      requestAnimationFrame(step);
+    });
+  }
+
   function renderAll() {
     renderSummary();
-    renderSessionsTable();
+    initDonutRows();
+renderSessionsTable();
     renderMedia();
     updateMapData(); // markers reflect filter
   }
@@ -1638,137 +1637,202 @@
       if (ev.target && ev.target.id === 'lightbox') closeLightbox();
     });
   }
-
-  async function openLightbox(sessionId) {
+  function openLightbox(sessionId) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
+
     const lb = $$('#lightbox');
     const body = $$('#lbBody');
     if (!lb || !body) return;
 
-    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+    const titleEl = $$('#lbTitle');
+    if (titleEl) titleEl.textContent = 'Session ' + String(s.id) + ' • ' + String(s.sheetRef || '');
 
     lb.classList.add('open');
     body.innerHTML = '';
 
     const items = allMediaItems(s);
-    if (!items.length) {
+    if (!items || !items.length) {
       body.innerHTML = '<div class="muted">No media listed for this session.</div>';
       return;
     }
 
-    // Show first item large; rest as thumbnails
-    const main = items[0];
-    if (main.type === 'image') {
-      const img = document.createElement('img');
-      img.className = 'lightboxMedia';
-      img.alt = 'image';
-      body.appendChild(img);
-      attachSmartImage(img, main.path);
-    } else {
-      const v = document.createElement('video');
-      v.className = 'lightboxMedia';
-      v.controls = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline','');
-      body.appendChild(v);
-      const chosen = await resolveFirstExisting(main.path);
-      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
+    let active = 0;
+
+    const main = document.createElement('div');
+    main.className = 'lbMain';
+
+    const nav = document.createElement('div');
+    nav.className = 'lbNav';
+    nav.innerHTML = `
+      <button class="lbNavBtn" data-direction="prev" aria-label="Previous">‹</button>
+      <button class="lbNavBtn" data-direction="next" aria-label="Next">›</button>
+    `;
+
+    const strip = document.createElement('div');
+    strip.className = 'drawerMedia';
+
+    body.appendChild(main);
+    body.appendChild(nav);
+    body.appendChild(strip);
+
+    function updateActive(newIndex) {
+      active = (newIndex + items.length) % items.length;
+      renderMain();
+      renderStrip();
     }
 
-    if (items.length > 1) {
-      const row = document.createElement('div');
-      row.className = 'mediaRow';
-      for (const it of items.slice(1, 12)) {
-        if (it.type === 'image') {
-          const t = document.createElement('img');
-          t.className = 'thumb';
-          t.alt = 'thumb';
-          t.loading = 'lazy';
-          row.appendChild(t);
-          attachSmartImage(t, it.path);
-          t.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId); // simplest refresh
-          };
-        } else {
-          const tv = document.createElement('video');
-          tv.className = 'thumb';
-          tv.muted = true;
-          tv.playsInline = true;
-          tv.setAttribute('playsinline','');
-          row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
-          tv.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId);
-          };
-        }
+    function renderMain() {
+      main.innerHTML = '';
+      const it = items[active];
+      if (!it) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'lbMediaWrapper';
+
+      if (it.type === 'video') {
+        const v = document.createElement('video');
+        v.className = 'lightboxMedia';
+        v.controls = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.setAttribute('preload', 'metadata');
+        attachSmartVideo(v, it.path);
+        wrap.appendChild(v);
+      } else {
+        const img = document.createElement('img');
+        img.className = 'lightboxMedia';
+        img.alt = 'Session ' + String(s.id) + ' media ' + String(active + 1);
+        img.loading = 'eager';
+        attachSmartImage(img, it.path);
+        wrap.appendChild(img);
       }
-      body.appendChild(row);
+
+      main.appendChild(wrap);
+
+      const counter = document.createElement('div');
+      counter.className = 'lbCounter';
+      counter.textContent = String(active + 1) + ' / ' + String(items.length);
+      main.appendChild(counter);
     }
+
+    function renderStrip() {
+      strip.innerHTML = '';
+      items.forEach((it, i) => {
+        const t = document.createElement(it.type === 'video' ? 'video' : 'img');
+        t.className = 'thumb' + (i === active ? ' thumb--active' : '');
+        t.dataset.index = String(i);
+
+        if (it.type === 'video') {
+          t.muted = true;
+          t.loop = true;
+          t.autoplay = true;
+          t.playsInline = true;
+          t.setAttribute('playsinline', '');
+          t.setAttribute('preload', 'metadata');
+          attachSmartVideo(t, it.path);
+        } else {
+          attachSmartImage(t, it.path);
+        }
+
+        t.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateActive(i);
+        });
+
+        strip.appendChild(t);
+      });
+    }
+
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('.lbNavBtn');
+      if (!btn) return;
+      const dir = btn.getAttribute('data-direction');
+      updateActive(dir === 'next' ? active + 1 : active - 1);
+    });
+
+    // Keyboard navigation bound per-open (removed on close by checking open state)
+    function lbKeyHandler(e) {
+      if (!lb.classList.contains('open')) {
+        document.removeEventListener('keydown', lbKeyHandler);
+        return;
+      }
+      if (e.key === 'ArrowLeft') { updateActive(active - 1); e.preventDefault(); }
+      else if (e.key === 'ArrowRight') { updateActive(active + 1); e.preventDefault(); }
+      else if (e.key === 'Escape') { closeLightbox(); document.removeEventListener('keydown', lbKeyHandler); }
+    }
+    document.addEventListener('keydown', lbKeyHandler);
+
+    renderMain();
+    renderStrip();
   }
 
-  // ---------- Map ----------
+
+  // ---------- Map ----------  // ---------- Map ----------
   async function ensureMapReady() {
     const el = $$('#leafletMap');
     if (!el) return;
 
-    // Lazily load Leaflet when the Map tab is opened.
     setMapStatus('Loading map…', false);
-    const ok = await ensureLeafletReady({ timeoutMs: 9000 });
-    if (!ok) {
-      setMapStatus('Map library blocked', false);
-      $$('#mapFallback')?.classList.remove('hidden');
-      return;
-    }
-
-    if (state.map) {
-      state.map.invalidateSize();
-      updateMapData();
-      return;
-    }
 
     try {
-      const map = window.L.map(el, { zoomControl: true });
+      // Prefer the robust loader from index.html if present
+      let ok = false;
+      if (typeof window.loadLeaflet === 'function') {
+        ok = await window.loadLeaflet();
+      } else {
+        ok = await ensureLeafletReady({ timeoutMs: 8000 });
+      }
+      if (!ok) throw new Error('Leaflet failed to load');
+
+      if (state.map) {
+        try { state.map.invalidateSize(true); } catch (e) {}
+        updateMapData();
+        setMapStatus('Ready', true);
+        return;
+      }
+
+      const map = window.L.map(el, {
+        zoomControl: true,
+        preferCanvas: true
+      });
       state.map = map;
       state.markerLayer = window.L.layerGroup().addTo(map);
 
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 18,
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
-      // Create an empty heatmap layer. The data points are populated in updateMapData().
-      try {
+      // Heat layer if plugin available
+      if (window.L.heatLayer) {
         state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
-      } catch (_e) {
-        // If the heatmap plugin is not loaded, leave the layer undefined.
-        state.heatLayer = null;
       }
 
       updateMapData();
       setMapStatus('Ready', true);
-      setTimeout(() => map.invalidateSize(), 250);
 
-      // Close any open Leaflet popups when clicking on the map background. This
-      // prevents popup windows from remaining open when users click outside
-      // markers. Without this, popups would remain visible and obstruct the
-      // interface. Use a try/catch in case Leaflet has no popups open.
-      map.on('click', () => {
-        try {
-          map.closePopup();
-        } catch (_e) {
-          /* no-op */
-        }
-      });
+      setTimeout(() => { try { map.invalidateSize(true); } catch (e) {} }, 100);
+      setTimeout(() => { try { map.invalidateSize(true); } catch (e) {} }, 500);
     } catch (e) {
-      setMapStatus('Failed', false);
-      $$('#mapFallback')?.classList.remove('hidden');
+      console.error('Map failed:', e);
+      setMapStatus('Map unavailable - check network', false);
+
+      const mf = $$('#mapFallback');
+      if (mf) {
+        mf.classList.remove('hidden');
+        mf.innerHTML = `
+          <div style="padding: 20px; text-align: center;">
+            <div style="color: var(--warn); margin-bottom: 10px;">⚠️ Map cannot load</div>
+            <div class="smallMuted">
+              Use the Sessions table below for navigation.<br>
+              <button class="btn btnSmall" onclick="location.reload()">Retry</button>
+            </div>
+          </div>`;
+      }
     }
   }
+
 
   function updateMapData() {
     if (!state.map || !state.markerLayer || !window.L) return;
@@ -2188,6 +2252,40 @@
       setStatus(e.message || 'Failed to load.', 'bad');
     }
   }
+
+
+  // ---------- Diagnostics / Performance ----------
+  window.addEventListener('load', () => {
+    try {
+      if ('performance' in window && performance.getEntriesByType) {
+        const nav = performance.getEntriesByType('navigation')[0];
+        if (nav) console.info('[WheatCampaign] Load:', Math.round(nav.loadEventEnd) + 'ms');
+      }
+    } catch (e) {}
+
+    // Animation capability probe
+    try {
+      const test = document.createElement('div');
+      document.body.appendChild(test);
+      const animName = window.getComputedStyle(test).animationName;
+      document.body.removeChild(test);
+      if (animName === 'none') {
+        console.warn('[WheatCampaign] CSS animations not fully supported');
+        document.documentElement.classList.add('no-animations');
+      }
+    } catch (e) {}
+  });
+
+  // Passive event support check
+  let supportsPassive = false;
+  try {
+    const opts = Object.defineProperty({}, 'passive', {
+      get: function () { supportsPassive = true; }
+    });
+    window.addEventListener('test-passive', null, opts);
+    window.removeEventListener('test-passive', null, opts);
+  } catch (e) {}
+
 
   boot();
 })();

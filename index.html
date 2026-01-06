@@ -13,95 +13,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260105-7" />
+  <link rel="stylesheet" href="style.css?v=20260105" />
 
   <!-- Leaflet CSS with fallback chain -->
   <link id="leafletCss" rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
-  <script>
-    window.__REDUCE_MOTION__ = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  </script>
 </head>
 
 <body>
-  <!-- Inline SVG icon sprite (no external icon dependencies) -->
-  <svg id="svgSprite" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0;overflow:hidden">
-    <symbol id="i-calendar" viewBox="0 0 24 24">
-      <path d="M7 2v2M17 2v2M4 7h16M6 10h4M6 14h4M14 10h4M14 14h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <rect x="4" y="5" width="16" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
-    </symbol>
-    <symbol id="i-users" viewBox="0 0 24 24">
-      <path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0Z" fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </symbol>
-    <symbol id="i-leaf" viewBox="0 0 24 24">
-      <path d="M20 4c-8 0-14 6-14 14 8 0 14-6 14-14Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-      <path d="M6 18c4-4 7-6 12-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </symbol>
-    <symbol id="i-target" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-      <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
-      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-    </symbol>
-    <symbol id="i-bulb" viewBox="0 0 24 24">
-      <path d="M9 18h6M10 22h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <path d="M12 2a7 7 0 0 0-4 12c1 1 1 2 1 3h6c0-1 0-2 1-3A7 7 0 0 0 12 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    </symbol>
-    <symbol id="i-shield" viewBox="0 0 24 24">
-      <path d="M12 2 20 6v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-      <path d="m9 12 2 2 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </symbol>
-    <symbol id="i-clock" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M12 7v6l4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </symbol>
-    <symbol id="i-star" viewBox="0 0 24 24">
-      <path d="m12 3 2.6 5.6 6.1.9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.5l6.1-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    </symbol>
-  </svg>
-
   <!-- Background video -->
   <div class="bg">
-    <video class="bgVideo" id="bgVideo"
-           src="assets/bg.mp4"
+    <video id="bgVideo" class="bgVideo" src="assets/hero-1.mp4"
            autoplay muted loop playsinline
-           preload="metadata">
+           preload="metadata"
+           onerror="this.onerror=null; this.src='assets/interact.mp4'">
     </video>
     <div class="bgShade"></div>
   </div>
-
-  <script>
-  // Background video: fall back across multiple filenames (GitHub Pages is case-sensitive).
-  (function () {
-    const v = document.getElementById('bgVideo');
-    if (!v) return;
-
-    const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4'];
-    let i = 0;
-
-    function setSrc(idx) {
-      v.src = candidates[idx];
-      v.load();
-      v.play().catch(() => { /* ignore autoplay block */ });
-    }
-
-    v.addEventListener('error', () => {
-      i += 1;
-      if (i < candidates.length) setSrc(i);
-    });
-
-    // Ensure play is attempted even if the browser delays autoplay.
-    v.addEventListener('canplay', () => {
-      v.play().catch(() => { /* ignore */ });
-    });
-
-    setSrc(0);
-  })();
-  </script>
 
   <header class="topbar">
     <div class="headerRow">
@@ -149,19 +78,13 @@
     </div>
 
     <!-- Filters -->
-    <div class="filtersHeader" id="filtersHeader">
-      <div class="filtersMeta" id="filtersMeta">Filters</div>
-      <button class="btn btnGhost btnSmall" id="filtersToggle" type="button"
-              aria-expanded="true" aria-controls="filtersPanel">Filters ▾</button>
-    </div>
-
-    <div class="controls" id="filtersPanel">
-      <div class="control control--campaign">
+    <div class="controls">
+      <div class="control">
         <label for="campaignSelect">Campaign</label>
         <select id="campaignSelect"></select>
       </div>
 
-      <div class="control control--dates">
+      <div class="control">
         <label>Date range</label>
         <div class="rangeRow">
           <input id="dateFrom" type="date" />
@@ -174,17 +97,17 @@
         <div id="rangeHint" class="smallMuted"></div>
       </div>
 
-      <div class="control control--search">
+      <div class="control">
         <label for="nameFilter">Farmer name</label>
         <input id="nameFilter" type="text" placeholder="Search by host name" />
       </div>
 
-      <div class="control control--search">
+      <div class="control">
         <label for="cityFilter">Territory</label>
         <input id="cityFilter" type="text" placeholder="Search by territory" />
       </div>
 
-      <div class="control control--search">
+      <div class="control">
         <label for="regionFilter">Region (REG)</label>
         <input id="regionFilter" type="text" placeholder="Search by region" list="regionOptions" />
         <datalist id="regionOptions">
@@ -196,12 +119,12 @@
         </datalist>
       </div>
 
-      <div class="control control--search">
+      <div class="control">
         <label for="districtFilter">District</label>
         <input id="districtFilter" type="text" placeholder="Search by district" />
       </div>
 
-      <div class="control control--score">
+      <div class="control">
         <label>Score range</label>
         <div class="scoreRangeRow">
           <input id="scoreMin" type="number" placeholder="Min score" min="0" max="100" step="0.1" />
@@ -219,19 +142,18 @@
         <div class="muted">Reach, conversion, and impact indicators computed from session rows only. Use the date filter to segment performance.</div>
 
         <div class="kpis">
-          <div class="kpi kpi--sessions"><div class="kpiLabel"><span data-tooltip="Total number of INTERACT field sessions executed."><svg class="ico" aria-hidden="true"><use href="#i-calendar" xlink:href="#i-calendar"></use></svg>Sessions</span></div><div class="kpiVal" id="kpiSessions">—</div></div>
-          <div class="kpi kpi--farmers"><div class="kpiLabel"><span data-tooltip="Total farmers reached (refined where attendance index is available)."><svg class="ico" aria-hidden="true"><use href="#i-users" xlink:href="#i-users"></use></svg>Farmers reached</span></div><div class="kpiVal" id="kpiFarmers">—</div></div>
-          <div class="kpi kpi--acres"><div class="kpiLabel"><span data-tooltip="Sum of reported wheat acres engaged during sessions."><svg class="ico" aria-hidden="true"><use href="#i-leaf" xlink:href="#i-leaf"></use></svg>Acres engaged</span></div><div class="kpiVal" id="kpiAcres">—</div></div>
-          <div class="kpi kpi--estacres"><div class="kpiLabel"><span data-tooltip="Estimated Buctril acres influenced (refined where available)."><svg class="ico" aria-hidden="true"><use href="#i-target" xlink:href="#i-target"></use></svg>Estimated Buctril acres</span></div><div class="kpiVal" id="kpiEstAcres">—</div></div>
-          <div class="kpi kpi--awareness"><div class="kpiLabel"><span data-tooltip="Average awareness after INTERACT education (higher is better)."><svg class="ico" aria-hidden="true"><use href="#i-bulb" xlink:href="#i-bulb"></use></svg>Awareness (avg)</span></div><div class="kpiVal" id="kpiAwareness">—</div></div>
-          <div class="kpi kpi--definite"><div class="kpiLabel"><span data-tooltip="Average definite intent to use after education."><svg class="ico" aria-hidden="true"><use href="#i-shield" xlink:href="#i-shield"></use></svg>Definite intent (avg)</span></div><div class="kpiVal" id="kpiDefinite">—</div></div>
-          <div class="kpi kpi--used"><div class="kpiLabel"><span data-tooltip="Average % who used last year (baseline familiarity)."><svg class="ico" aria-hidden="true"><use href="#i-clock" xlink:href="#i-clock"></use></svg>Used last year (avg)</span></div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
-          <div class="kpi kpi--score"><div class="kpiLabel"><span data-tooltip="Overall session score (composite indicator)."><svg class="ico" aria-hidden="true"><use href="#i-star" xlink:href="#i-star"></use></svg>Avg session score</span></div><div class="kpiVal" id="kpiScore">—</div></div>
+          <div class="kpi kpi--sessions"><div class="kpiLabel">Sessions</div><div class="kpiVal" id="kpiSessions">—</div></div>
+          <div class="kpi kpi--farmers"><div class="kpiLabel">Farmers reached</div><div class="kpiVal" id="kpiFarmers">—</div></div>
+          <div class="kpi kpi--acres"><div class="kpiLabel">Acres engaged</div><div class="kpiVal" id="kpiAcres">—</div></div>
+          <div class="kpi kpi--estacres"><div class="kpiLabel">Est. Buctril acres</div><div class="kpiVal" id="kpiEstAcres">—</div></div>
+          <div class="kpi kpi--awareness"><div class="kpiLabel">Awareness (avg)</div><div class="kpiVal" id="kpiAwareness">—</div></div>
+          <div class="kpi kpi--definite"><div class="kpiLabel">Definite intent (avg)</div><div class="kpiVal" id="kpiDefinite">—</div></div>
+          <div class="kpi kpi--used"><div class="kpiLabel">Used last year (avg)</div><div class="kpiVal" id="kpiUsedLastYear">—</div></div>
+          <div class="kpi kpi--score"><div class="kpiLabel">Avg session score</div><div class="kpiVal" id="kpiScore">—</div></div>
         </div>
 
         <div id="lastUpdated" class="smallMuted"></div>
         <div id="summaryTakeaways" class="summaryTakeaways"></div>
-        <div id="summaryProgress"></div>
 
         <div class="divider"></div>
 
@@ -251,29 +173,23 @@
 
         <div class="divider"></div>
 
-        
-<h3>Donut insights</h3>
-<div class="donutRow" id="coreDonutsRow" data-autoscroll="1" data-speed="0.22">
-  <div class="chartTile">
-    <h4>Sessions by farmers attendance</h4>
-    <div class="chartWrap attendanceWrap">
-      <canvas id="attendanceDonut"></canvas>
-    </div>
-  </div>
+        <h3>Sessions by farmers attendance</h3>
+        <!-- Use chartWrap so CSS can constrain size consistently -->
+        <div class="chartWrap attendanceWrap">
+          <canvas id="attendanceDonut"></canvas>
+        </div>
 
-  <div class="chartTile">
-    <h4>Decision breakdown</h4>
-    <div class="chartWrap decisionWrap">
-      <canvas id="decisionPie"></canvas>
-    </div>
-  </div>
-</div>
+        <div class="divider"></div>
 
-<div class="divider"></div>
+        <h3>Decision breakdown</h3>
+        <div class="chartWrap decisionWrap">
+          <canvas id="decisionPie"></canvas>
+        </div>
 
+        <div class="divider"></div>
         <h3>Additional breakdowns</h3>
 
-        <div class="chartGrid donutRow" id="breakdownsRow" data-autoscroll="1" data-speed="0.25">
+        <div class="chartGrid">
           <div class="chartTile">
             <h4>Farmers by region</h4>
             <div class="chartWrap">
@@ -329,28 +245,18 @@
         </details>
 
         <div class="divider"></div>
-        
-<h3>Drivers &amp; barriers (donut)</h3>
-<div class="donutRow" id="driversBarriersRow" data-autoscroll="1" data-speed="0.22">
-  <div class="chartTile donutTileWide">
-    <h4>Top adoption drivers</h4>
-    <div class="chartWrap">
-      <canvas id="driversDonut"></canvas>
-    </div>
-    <div id="driversLegend" class="donutLegend"><div class="muted">Loading…</div></div>
-  </div>
+        <div class="grid2">
+          <div class="card card--flat">
+            <h3>Top adoption drivers</h3>
+            <div id="driversChart" class="barChart"><div class="muted">Loading…</div></div>
+          </div>
+          <div class="card card--flat">
+            <h3>Top barriers</h3>
+            <div id="barriersChart" class="barChart"><div class="muted">Loading…</div></div>
+          </div>
+        </div>
 
-  <div class="chartTile donutTileWide">
-    <h4>Top barriers</h4>
-    <div class="chartWrap">
-      <canvas id="barriersDonut"></canvas>
-    </div>
-    <div id="barriersLegend" class="donutLegend"><div class="muted">Loading…</div></div>
-  </div>
-</div>
-
-<div class="divider"></div>
-
+        <div class="divider"></div>
         <h3>Data readiness</h3>
         <div id="statusBox" class="status">Loading…</div>
         <div class="smallMuted">Verify assets and JSON loading using the <a class="link" href="healthcheck.html">Healthcheck</a>.</div>
@@ -532,7 +438,7 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260105-7"></script>
+  <script src="dashboard.js?v=20260105-1"></script>
 
 
   <!-- Hero slider (auto-advance) -->
@@ -541,15 +447,14 @@
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const videos = [
-      { file: 'assets/atlantis.mp4', title: 'Field Activation', caption: 'Wheat weed-control activations across districts.' },
-      { file: 'assets/bayer.mp4', title: 'Trust & Safety', caption: 'Bayer Crop Science—trusted crop protection.' },
-      { file: 'assets/buctril.mp4', title: 'Buctril Super Protection', caption: 'Safeguarding wheat fields under protection.' },
-      { file: 'assets/interact.mp4', title: 'INTERACT in Action', caption: 'Educating farmers on effective weed-control strategies.' }
+      { file: 'assets/atlantis.mp4', title: 'Atlantis', caption: 'Atlantis field application' },
+      { file: 'assets/bayer.mp4', title: 'Bayer', caption: 'Bayer promotional clip' },
+      { file: 'assets/buctril.mp4', title: 'Buctril', caption: 'Buctril product demo' },
+      { file: 'assets/interact.mp4', title: 'Interact', caption: 'Interact Solutions overview' }
     ];
 
     let current = 0;
     let timer = null;
-    let heroStats = null;
 
     const heroVideo = document.getElementById('heroVideo');
     const heroTitle = document.getElementById('heroTitle');
@@ -583,16 +488,7 @@
       heroVideo.play().catch(() => { /* ignore */ });
 
       if (heroTitle) heroTitle.textContent = v.title;
-      if (heroSub) heroSub.textContent = (function(){
-        const base = v.caption || '';
-        if (!heroStats) return base;
-        const parts = [];
-        if (heroStats.farmers) parts.push(`${heroStats.farmers.toLocaleString()} farmers reached`);
-        if (Number.isFinite(heroStats.awareness)) parts.push(`Awareness ${heroStats.awareness}%`);
-        if (Number.isFinite(heroStats.definite)) parts.push(`Definite ${heroStats.definite}%`);
-        if (Number.isFinite(heroStats.score)) parts.push(`Score ${heroStats.score}`);
-        return parts.length ? `${base} • ${parts.slice(0,3).join(' · ')}` : base;
-      })();
+      if (heroSub) heroSub.textContent = v.caption;
 
       Array.from(thumbs.children).forEach((el, idx) => {
         el.classList.toggle('active', idx === current);
@@ -625,13 +521,6 @@
     });
 
     setHero(0);
-    // Allow dashboard.js to push computed KPI stats into hero captions.
-    window.WHEAT_HERO = window.WHEAT_HERO || {};
-    window.WHEAT_HERO.updateStats = function(stats){
-      heroStats = stats || null;
-      apply();
-    };
-
     start();
   })();
   </script>
@@ -656,98 +545,38 @@
       applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
     }
 
-    // Campaign context: auto-theme per tab (Summary/Sessions = light; Media/Map/Feedback = dark),
-// but do not override a user-selected theme stored in localStorage.
-document.addEventListener('tabchange', (e) => {
-  const locked = (localStorage.getItem('theme') === 'light' || localStorage.getItem('theme') === 'dark');
-  if (locked) return;
-  const tab = e?.detail?.tab || '';
-  const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
-  applyTheme(t);
-});
-
-toggleBtn?.addEventListener('click', () => {
+    toggleBtn?.addEventListener('click', () => {
       const current = htmlEl.getAttribute('data-theme');
       applyTheme(current === 'light' ? 'dark' : 'light');
     });
   })();
   </script>
+<script>
+  // Robust Background Video Fallback (muted autoplay)
+  (function() {
+    const v = document.getElementById('bgVideo');
+    if (!v) return;
 
-  <!-- Filters collapse -->
-  <script>
-  (function () {
-    const body = document.body;
-    const btn = document.getElementById('filtersToggle');
-    const panel = document.getElementById('filtersPanel');
-    const meta = document.getElementById('filtersMeta');
+    const candidates = ['assets/hero-bg.mp4', 'assets/wheat-bg.mp4', 'assets/gallery/hero.mp4', 'assets/bg.mp4'];
+    let idx = 0;
 
-    if (!btn || !panel) return;
-
-    const KEY = 'filtersCollapsed';
-
-    function fmtDate(iso) {
-      // iso expected: YYYY-MM-DD
-      if (!iso || typeof iso !== 'string') return '';
-      const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!m) return iso;
-      return `${m[3]}/${m[2]}/${m[1]}`;
+    function tryNext() {
+      if (idx >= candidates.length) return;
+      v.src = candidates[idx++];
+      v.muted = true; // required for reliable autoplay
+      v.setAttribute('muted', '');
+      v.play().catch(() => {
+        // Try the next candidate if autoplay was blocked or resource failed.
+        tryNext();
+      });
     }
 
-    function updateMeta() {
-      if (!meta) return;
-      const camp = document.getElementById('campaignSelect');
-      const from = document.getElementById('dateFrom');
-      const to = document.getElementById('dateTo');
-
-      const campText = camp && camp.selectedOptions && camp.selectedOptions[0]
-        ? camp.selectedOptions[0].textContent.trim()
-        : 'Campaign';
-
-      const fromText = from?.value ? fmtDate(from.value) : '';
-      const toText = to?.value ? fmtDate(to.value) : '';
-
-      const range = (fromText && toText) ? `${fromText} → ${toText}` : '';
-      meta.textContent = range ? `${campText} • ${range}` : campText;
-    }
-
-    function setCollapsed(collapsed, persist) {
-      body.classList.toggle('filters-collapsed', !!collapsed);
-      btn.setAttribute('aria-expanded', (!collapsed).toString());
-      btn.textContent = collapsed ? 'Filters ▸' : 'Filters ▾';
-      if (persist) localStorage.setItem(KEY, collapsed ? '1' : '0');
-      updateMeta();
-    }
-
-    // Initialize state (localStorage wins; else auto-collapse on short viewports)
-    const saved = localStorage.getItem(KEY);
-    if (saved === '1' || saved === '0') {
-      setCollapsed(saved === '1', false);
-    } else {
-      const auto = (window.innerHeight < 760) || (window.innerWidth < 980);
-      setCollapsed(auto, false);
-    }
-
-    btn.addEventListener('click', () => {
-      const isCollapsed = body.classList.contains('filters-collapsed');
-      setCollapsed(!isCollapsed, true);
-    });
-
-    // Keep the summary in sync as dashboard.js populates inputs
-    const bind = (id, ev) => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener(ev, () => setTimeout(updateMeta, 0));
-    };
-
-    bind('campaignSelect', 'change');
-    bind('dateFrom', 'change');
-    bind('dateTo', 'change');
-    bind('applyBtn', 'click');
-    bind('resetBtn', 'click');
-
-    // First paint after dashboard initializes
-    window.addEventListener('load', () => setTimeout(updateMeta, 50));
+    v.addEventListener('error', tryNext);
+    // If the first source fails to load or autoplay is blocked, try candidates.
+    // Also attempt once on load to satisfy Safari's stricter autoplay behavior.
+    tryNext();
   })();
-  </script>
+</script>
 
 </body>
 </html>

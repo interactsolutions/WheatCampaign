@@ -140,6 +140,7 @@
 
   // ---------- Media path resolution ----------
   const existsCache = new Map(); // url -> boolean
+  const resolveCache = new Map(); // normalized path -> resolved candidate (or '')
 
   function normalizeMediaPath(p) {
     const raw = String(p ?? '').trim();
@@ -161,144 +162,125 @@
     return x;
   }
 
-  function candidatePaths(p) {
-    const norm = normalizeMediaPath(p);
-    if (!norm) return [];
-    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
+  // --- IMPROVED MEDIA LOGIC ---
+// Generate only the most likely paths to avoid console 404 noise and to keep resolution fast.
+function candidatePaths(p) {
+  const norm = normalizeMediaPath(p);
+  if (!norm || /^(https?:|data:|blob:)/i.test(norm)) return [norm];
 
-    const candidates = [];
-    const add = (v) => {
-      if (v && !candidates.includes(v)) candidates.push(v);
-    };
+  const cands = [];
+  const add = (x) => { if (x && cands.indexOf(x) === -1) cands.push(x); };
 
-    // Always start with the normalized path.
-    add(norm);
+  const isImg = /\.(?:jpeg|jpg|png|webp)$/i.test(norm);
+  const isVid = /\.(?:mp4|webm)$/i.test(norm);
 
-    // If request is wrong folder (root) try under assets/gallery
-    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
-      const fname = norm.split('/').pop();
-      add('assets/gallery/' + fname);
-    }
+  // Always try the referenced path first.
+  add(norm);
 
-    // Extension swaps
-    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
-    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
-    const isVid = /\.(mp4|webm)$/i.test(norm);
-
-    function addVariantBases(base) {
-      // Support common variant naming:
-      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
-      //   17_a.jpg <-> 17a.jpg
-      // (applies for a-f, but will also include single-letter suffixes generally)
-      const m1 = base.match(/^(.*?)([a-z])$/i);
-      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
-      if (m1) {
-        const root = m1[1];
-        const suf = m1[2];
-        add(base);
-        add(root + '_' + suf);
-        add(root + '-' + suf);
-        // also try without suffix (helps when data references 17a but file is 17)
-        add(root);
-        return;
-      }
-      if (m2) {
-        const root = m2[1];
-        const suf = m2[2];
-        add(base);
-        add(root + suf);
-        add(root);
-        return;
-      }
-      add(base);
-      // Also try the simplest "a" variant both joined and separated
-      add(base + 'a');
-      add(base + '_a');
-      add(base + '-a');
-    }
-
-    if (isImg) {
-      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      // Collect base variants first, then add extensions.
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-
-      // Ensure original base is also present.
-      addBase(base);
-
-      for (const b of bases) {
-        for (const e of imgExts) add(b + e);
-      }
-    }
-
-    if (isVid) {
-      const base = norm.replace(/\.(mp4|webm)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-      addBase(base);
-
-      for (const b of bases) {
-        add(b + '.mp4');
-        add(b + '.webm');
-      }
-    }
-
-    // Only keep candidates that look like concrete asset files (avoid hammering the network
-    // with extension-less paths).
-    return candidates.filter(c =>
-      /^(https?:|data:|blob:)/i.test(c)
-      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
-    );
+  // If not already in the gallery folder, also try gallery root.
+  const filename = norm.split('/').pop();
+  if (filename && norm.indexOf('assets/gallery/') === -1) {
+    add('assets/gallery/' + filename);
   }
 
-  async function assetExists(relOrAbs) {
-    const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
-    if (existsCache.has(u)) return existsCache.get(u);
+  // If we can derive base/ext, try only a few common variants.
+  const m = norm.match(/^(.*)\.([a-z0-9]+)$/i);
+  if (m) {
+    const base = m[1];
+    const ext = (m[2] || '').toLowerCase();
 
-    // HEAD often works on GitHub Pages; if blocked, fallback to Range GET.
+    // Common extension swaps (jpeg <-> jpg, mp4 <-> webm)
+    if (isImg) {
+      if (ext === 'jpeg') add(base + '.jpg');
+      if (ext === 'jpg') add(base + '.jpeg');
+    }
+    if (isVid) {
+      if (ext === 'mp4') add(base + '.webm');
+      if (ext === 'webm') add(base + '.mp4');
+    }
+
+    // Simple 'a' suffix variants (very common in field assets).
+    add(base + 'a.' + ext);
+    add(base + '_a.' + ext);
+    add(base + '-a.' + ext);
+
+    // Also try the same set under gallery root when applicable.
+    if (filename && norm.indexOf('assets/gallery/') === -1) {
+      const gbase = 'assets/gallery/' + filename.replace(/\.[^.]+$/,'');
+      add(gbase + '.' + ext);
+
+      if (isImg) {
+        if (ext === 'jpeg') add(gbase + '.jpg');
+        if (ext === 'jpg') add(gbase + '.jpeg');
+      }
+      if (isVid) {
+        if (ext === 'mp4') add(gbase + '.webm');
+        if (ext === 'webm') add(gbase + '.mp4');
+      }
+
+      add(gbase + 'a.' + ext);
+      add(gbase + '_a.' + ext);
+      add(gbase + '-a.' + ext);
+    }
+  }
+
+  return cands;
+}
+
+  async function assetExists(relOrAbs) {
+  const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
+  if (existsCache.has(u)) return !!existsCache.get(u);
+
+  // Prefer a fast HEAD (works on GitHub Pages). Use force-cache to reduce repeated network work.
+  try {
+    const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
+    const ok = r.ok;
+    existsCache.set(u, ok);
+    return ok;
+  } catch (_e) {
+    // Fallback: minimal GET range (some CDNs block HEAD).
     try {
-      const r = await fetch(u, { method: 'HEAD', cache: 'no-store' });
+      const r = await fetch(u, {
+        method: 'GET',
+        headers: { Range: 'bytes=0-0' },
+        cache: 'force-cache'
+      });
       const ok = r.ok;
       existsCache.set(u, ok);
       return ok;
-    } catch (_e) {
-      try {
-        const r = await fetch(u, {
-          method: 'GET',
-          headers: { Range: 'bytes=0-0' },
-          cache: 'no-store'
-        });
-        const ok = r.ok;
-        existsCache.set(u, ok);
-        return ok;
-      } catch (_e2) {
-        existsCache.set(u, false);
-        return false;
-      }
+    } catch (_e2) {
+      existsCache.set(u, false);
+      return false;
+    }
+  }
+}
+
+
+  async function resolveFirstExisting(p) {
+  const norm = normalizeMediaPath(p);
+  if (!norm) return '';
+
+  if (resolveCache.has(norm)) return String(resolveCache.get(norm) || '');
+
+  const cands = candidatePaths(norm);
+  for (const c of cands) {
+    // If we've already validated this exact URL, short-circuit.
+    const u = /^(https?:|data:|blob:)/i.test(c) ? c : url(c);
+    if (existsCache.get(u) === true) {
+      resolveCache.set(norm, c);
+      return c;
+    }
+    const ok = await assetExists(c);
+    if (ok) {
+      resolveCache.set(norm, c);
+      return c;
     }
   }
 
-  async function resolveFirstExisting(p) {
-    const cands = candidatePaths(p);
-    for (const c of cands) {
-      if (await assetExists(c)) return c;
-    }
-    return '';
-  }
+  resolveCache.set(norm, '');
+  return '';
+}
+
 
   function attachSmartImage(imgEl, path) {
     let cancelled = false;
@@ -318,27 +300,63 @@
     return () => { cancelled = true; };
   }
 
-  function attachSmartVideo(videoEl, path) {
-    const placeholder = 'assets/placeholder-video.mp4';
-    let tried = false;
+  function attachSmartVideo(videoEl, path, opts) {
+  const o = opts || {};
+  const placeholder = 'assets/bg.mp4';
+  let cancelled = false;
 
-    // lazy load on click
-    videoEl.preload = 'metadata';
-    videoEl.controls = true;
+  // Reasonable defaults
+  videoEl.preload = o.preload || 'metadata';
+  videoEl.controls = (o.controls !== false);
+  videoEl.loop = !!o.loop;
+  videoEl.muted = !!o.muted;
+  videoEl.autoplay = !!o.autoplay;
+  videoEl.playsInline = true;
+  videoEl.setAttribute('playsinline', '');
 
-    videoEl.addEventListener('click', async () => {
-      if (tried) return;
-      tried = true;
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = chosen ? url(chosen) : url(placeholder);
-      videoEl.play().catch(() => { /* ignore */ });
-    });
+  // Set a safe placeholder immediately to avoid <video src="missing"> 404 spam.
+  try {
+    if (!videoEl.getAttribute('src')) videoEl.src = url(placeholder);
+  } catch (_e) { /* noop */ }
 
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
-  }
+  // PRE-RESOLVE: find the best asset as soon as the element exists.
+  (async () => {
+    const chosen = await resolveFirstExisting(path);
+    if (cancelled) return;
+
+    const src = chosen ? url(chosen) : url(placeholder);
+    if (videoEl.src !== src) {
+      videoEl.src = src;
+      try { videoEl.load(); } catch (_e) { /* noop */ }
+    }
+
+    // If configured for autoplay (usually muted previews), attempt playback.
+    if (videoEl.autoplay) {
+      const pp = videoEl.play();
+      if (pp && pp.catch) pp.catch(() => { /* ignore */ });
+    }
+  })();
+
+  // Sync play() in the user gesture (no awaits here).
+  videoEl.addEventListener('click', () => {
+    if (videoEl.paused) {
+      const pp = videoEl.play();
+      if (pp && pp.catch) pp.catch(() => { /* ignore */ });
+    } else if (!videoEl.controls) {
+      // Allow pausing previews when controls are hidden
+      videoEl.pause();
+    }
+  });
+
+  videoEl.onerror = () => {
+    if (cancelled) return;
+    videoEl.onerror = null;
+    videoEl.src = url(placeholder);
+  };
+
+  return () => { cancelled = true; };
+}
+
 
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
@@ -1635,8 +1653,8 @@
       let thumb;
       let badge;
       if (vidPath) {
-        // Show auto-playing muted preview
-        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+        // Show auto-playing muted preview (source resolved eagerly to avoid 404 spam)
+        thumb = `<video class="mediaVid" data-media-video="1" data-src-path="${esc(vidPath)}" autoplay loop muted playsinline preload="metadata"></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
         thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
@@ -1670,9 +1688,20 @@
     // attach thumbs
     $$$('[data-media-thumb="1"]', grid).forEach(img => {
       const card = img.closest('.mediaCard');
-      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
+      const cardEl = card;
+      let p = '';
+      if (cardEl) {
+        const n = cardEl.querySelector('[data-thumb-path]');
+        if (n) p = n.getAttribute('data-thumb-path') || '';
+      }
       attachSmartImage(img, p || 'assets/placeholder.svg');
     });
+
+// attach video previews (eager source resolution; keeps user-gesture intact for playback later)
+$$$('video[data-media-video="1"]', grid).forEach(v => {
+  const p = v.getAttribute('data-src-path') || '';
+  attachSmartVideo(v, p, { autoplay: true, loop: true, muted: true, controls: false, clickToPlay: false, preload: 'metadata' });
+});
 
     grid.onclick = (ev) => {
       const card = ev.target.closest('.mediaCard[data-session-id]');
@@ -1862,7 +1891,7 @@
           v.setAttribute('playsinline','');
           wrap.appendChild(v);
           mediaEl.appendChild(wrap);
-          attachSmartVideo(v, it.path);
+          attachSmartVideo(v, it.path, { controls: false, autoplay: true, loop: true, muted: true, preload: 'metadata', clickToPlay: false });
           wrap.onclick = () => openLightbox(Number(s.id));
         }
       }
@@ -1912,77 +1941,91 @@
     });
   }
 
-  async function openLightbox(sessionId) {
-    const s = state.sessionsById.get(Number(sessionId));
-    if (!s) return;
-    const lb = $$('#lightbox');
-    const body = $$('#lbBody');
-    if (!lb || !body) return;
+  function openLightbox(sessionId, startIndex) {
+  const s = state.sessionsById.get(Number(sessionId));
+  if (!s) return;
 
-    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+  const lb = $$('#lightbox');
+  const body = $$('#lbBody');
+  if (!lb || !body) return;
 
+  const items = allMediaItems(s);
+  if (!items.length) {
     lb.classList.add('open');
-    body.innerHTML = '';
-
-    const items = allMediaItems(s);
-    if (!items.length) {
-      body.innerHTML = '<div class="muted">No media listed for this session.</div>';
-      return;
-    }
-
-    // Show first item large; rest as thumbnails
-    const main = items[0];
-    if (main.type === 'image') {
-      const img = document.createElement('img');
-      img.className = 'lightboxMedia';
-      img.alt = 'image';
-      body.appendChild(img);
-      attachSmartImage(img, main.path);
-    } else {
-      const v = document.createElement('video');
-      v.className = 'lightboxMedia';
-      v.controls = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline','');
-      body.appendChild(v);
-      const chosen = await resolveFirstExisting(main.path);
-      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
-    }
-
-    if (items.length > 1) {
-      const row = document.createElement('div');
-      row.className = 'mediaRow';
-      for (const it of items.slice(1, 12)) {
-        if (it.type === 'image') {
-          const t = document.createElement('img');
-          t.className = 'thumb';
-          t.alt = 'thumb';
-          t.loading = 'lazy';
-          row.appendChild(t);
-          attachSmartImage(t, it.path);
-          t.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId); // simplest refresh
-          };
-        } else {
-          const tv = document.createElement('video');
-          tv.className = 'thumb';
-          tv.muted = true;
-          tv.playsInline = true;
-          tv.setAttribute('playsinline','');
-          row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
-          tv.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId);
-          };
-        }
-      }
-      body.appendChild(row);
-    }
+    body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+    return;
   }
+
+  const idx = (typeof startIndex === 'number' && isFinite(startIndex)) ? Math.max(0, Math.min(items.length - 1, startIndex)) : 0;
+  const main = items[idx];
+
+  $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''} (${idx + 1}/${items.length})`;
+
+  lb.classList.add('open');
+  body.innerHTML = '';
+
+  // Main media (large)
+  if (main.type === 'image') {
+    const img = document.createElement('img');
+    img.className = 'lightboxMedia';
+    img.alt = 'image';
+    body.appendChild(img);
+    attachSmartImage(img, main.path);
+  } else {
+    const v = document.createElement('video');
+    v.className = 'lightboxMedia';
+    v.controls = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline','');
+    body.appendChild(v);
+    attachSmartVideo(v, main.path, { controls: true, autoplay: false, loop: false, muted: false, preload: 'metadata', clickToPlay: true });
+  }
+
+  // Thumbnails row
+  if (items.length > 1) {
+    const row = document.createElement('div');
+    row.className = 'mediaRow';
+
+    const maxThumbs = Math.min(items.length, 12);
+    for (let i = 0; i < maxThumbs; i++) {
+      const it = items[i];
+      if (it.type === 'image') {
+        const t = document.createElement('img');
+        t.className = 'thumb';
+        t.alt = 'thumb';
+        t.loading = 'lazy';
+        if (i === idx) t.classList.add('active');
+        row.appendChild(t);
+        attachSmartImage(t, it.path);
+        t.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openLightbox(sessionId, i);
+        });
+      } else {
+        const tv = document.createElement('video');
+        tv.className = 'thumb';
+        tv.muted = true;
+        tv.loop = true;
+        tv.autoplay = true;
+        tv.playsInline = true;
+        tv.setAttribute('playsinline','');
+        if (i === idx) tv.classList.add('active');
+        row.appendChild(tv);
+        attachSmartVideo(tv, it.path, { controls: false, autoplay: true, loop: true, muted: true, preload: 'metadata', clickToPlay: false });
+        tv.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openLightbox(sessionId, i);
+        });
+      }
+    }
+
+    body.appendChild(row);
+  }
+}
+
 
   // ---------- Map ----------
   async function ensureMapReady() {

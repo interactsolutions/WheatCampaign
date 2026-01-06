@@ -15,83 +15,25 @@
   <!-- Main CSS -->
   <link rel="stylesheet" href="style.css?v=20260106-16" />
 
-  <!-- Leaflet CSS with fallback chain -->
-  <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" data-leaflet-css="1"/>
+  <!-- Leaflet CSS (local-first; CDN fallbacks if blocked) -->
+  <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" />
   <script>
-    // Leaflet (local-first, CDN fallback). Exposes window.loadLeaflet() used by dashboard.js.
     (function () {
-      // CSS fallback for browsers / environments where local assets are missing.
-      const cssLink = document.getElementById('leafletCss');
-      if (cssLink && !cssLink.dataset.fallbackBound) {
-        cssLink.dataset.fallbackBound = '1';
-        const cssHrefs = [
-          'assets/leaflets/dist/leaflet.css',
-          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
-          'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
-        ];
-        let i = 0;
-        cssLink.addEventListener('error', () => {
-          i += 1;
-          if (i < cssHrefs.length) cssLink.href = cssHrefs[i];
-        });
-      }
-
-      function loadScript(src) {
-        return new Promise((resolve, reject) => {
-          // Avoid duplicates
-          const existing = document.querySelector(`script[data-leaflet-src="${src}"]`);
-          if (existing) {
-            if (existing.dataset.loaded === '1') return resolve(true);
-            existing.addEventListener('load', () => resolve(true), { once: true });
-            existing.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
-            return;
-          }
-
-          const s = document.createElement('script');
-          s.src = src;
-          s.async = true;
-          s.dataset.leafletSrc = src;
-          s.addEventListener('load', () => { s.dataset.loaded = '1'; resolve(true); }, { once: true });
-          s.addEventListener('error', () => reject(new Error('Leaflet script failed: ' + src)), { once: true });
-          document.head.appendChild(s);
-        });
-      }
-
-      // Do not overwrite if another page already defines it.
-      if (typeof window.loadLeaflet === 'function') return;
-
-      let leafletPromise = null;
-      window.loadLeaflet = async function ({ timeoutMs = 12000 } = {}) {
-        if (window.L && window.L.map) return true;
-        if (leafletPromise) return leafletPromise;
-
-        const srcs = [
-          'assets/leaflets/dist/leaflet.js',
-          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-          'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
-        ];
-
-        leafletPromise = (async () => {
-          const start = Date.now();
-          for (const src of srcs) {
-            try {
-              await loadScript(src);
-              break;
-            } catch (e) {
-              // try next
-            }
-            if (Date.now() - start > timeoutMs) break;
-          }
-          return !!(window.L && window.L.map);
-        })();
-
-        return leafletPromise;
-      };
+      const link = document.getElementById('leafletCss');
+      if (!link) return;
+      const fallbacks = [
+        'assets/leaflets/dist/leaflet.css',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
+      ];
+      let i = 0;
+      link.addEventListener('error', () => {
+        i += 1;
+        if (i < fallbacks.length) link.href = fallbacks[i];
+      });
     })();
   </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">

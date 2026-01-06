@@ -2,7 +2,7 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-06.1";
+  const WHEATCAMPAIGN_BUILD = "2026-01-06.2";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
   const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
@@ -183,6 +183,16 @@
       cands.push(base + 'a.' + ext);
       cands.push(base + '_a.' + ext);
       cands.push(base + '-a.' + ext);
+
+      // Extension swaps (common on static sites): .jpg ↔ .jpeg
+      if (ext === 'jpg') cands.push(base + '.jpeg');
+      if (ext === 'jpeg') cands.push(base + '.jpg');
+
+      // Optional: a few safe variants (kept small to avoid noisy 404s)
+      if (ext === 'png') cands.push(base + '.webp');
+      if (ext === 'webp') cands.push(base + '.png');
+      if (ext === 'mp4') cands.push(base + '.webm');
+      if (ext === 'webm') cands.push(base + '.mp4');
     }
 
     // de-dup
@@ -1576,7 +1586,7 @@
       let badge;
       if (vidPath) {
         // Show auto-playing muted preview
-        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+        thumb = `<video data-media-vid="1" autoplay loop muted playsinline></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
         thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
@@ -1596,6 +1606,7 @@
           </div>
         </div>
         <div class="hidden" data-thumb-path="${esc(img)}"></div>
+        <div class="hidden" data-vid-path="${esc(vidPath || '')}"></div>
       </div>`;
     });
 
@@ -1612,6 +1623,15 @@
       const card = img.closest('.mediaCard');
       const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
       attachSmartImage(img, p || 'assets/placeholder.svg');
+    });
+
+    // attach video thumbs (resolve .mp4/.webm + other fallbacks)
+    $$$('[data-media-vid="1"]', grid).forEach(v => {
+      const card = v.closest('.mediaCard');
+      const p = card?.querySelector('[data-vid-path]')?.getAttribute('data-vid-path') || '';
+      attachSmartVideo(v, p || 'assets/placeholder-video.mp4');
+      // thumbnails should not show full controls
+      try { v.controls = false; } catch (_e) {}
     });
 
     grid.onclick = (ev) => {

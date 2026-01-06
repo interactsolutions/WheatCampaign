@@ -1493,38 +1493,3 @@ h2, h3{
   outline: 2px solid var(--wheat);
   outline-offset: 2px;
 }
-/* =======================================================================
-   Leaflet theming (local Leaflet in /assets/leaflets/dist)
-   - Keeps controls readable on dark background
-   - Avoids bright default UI "islands" on the map
-   ======================================================================= */
-.leaflet-container{
-  font: inherit;
-  background: rgba(0,0,0,.10);
-}
-
-.leaflet-control-attribution,
-.leaflet-control-scale{
-  font-size: 11px;
-}
-
-.leaflet-bar a,
-.leaflet-control-layers{
-  background: rgba(10,14,22,.85);
-  color: var(--text);
-  border-color: rgba(255,255,255,.14);
-}
-
-.leaflet-bar a:hover{
-  background: rgba(255,255,255,.10);
-}
-
-[data-theme="light"] .leaflet-bar a,
-[data-theme="light"] .leaflet-control-layers{
-  background: rgba(255,255,255,.85);
-  border-color: rgba(16,56,79,.16);
-}
-
-[data-theme="light"] .leaflet-bar a:hover{
-  background: rgba(16,56,79,.06);
-}

@@ -36,7 +36,7 @@
   const $$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const esc = (s) => {
     const d = document.createElement('div');
-    d.textContent = String(s ?? '');
+    d.textContent = String((s === null || s === undefined) ? '' : s);
     return d.innerHTML;
   };
 
@@ -140,147 +140,125 @@
 
   // ---------- Media path resolution ----------
   const existsCache = new Map(); // url -> boolean
-  const resolveCache = new Map(); // normalized path -> resolved candidate (or '')
+
+
+function coalesce() {
+  for (let i = 0; i < arguments.length; i++) {
+    const v = arguments[i];
+    if (v !== null && v !== undefined) return v;
+  }
+  return undefined;
+}
 
   function normalizeMediaPath(p) {
-    const raw = String(p ?? '').trim();
-    if (!raw) return '';
-    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  const raw = String((p === null || p === undefined) ? '' : p).trim();
+  if (!raw) return '';
+  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
 
-    let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
+  let x = raw.replace(/^\.?\//, '').replace(/^\//, '');
 
-    // Already rooted correctly
-    if (x.startsWith('assets/')) return x;
+  // Already rooted correctly
+  if (x.startsWith('assets/')) return x;
 
-    // Common patterns from sessions.json
-    if (x.startsWith('gallery/')) return 'assets/' + x;
+  // Common patterns from sessions.json
+  if (x.startsWith('gallery/')) return 'assets/' + x;
 
-    // Sometimes data stores just the filename
-    if (!x.includes('/')) return 'assets/gallery/' + x;
+  // Sometimes data stores just the filename
+  if (!x.includes('/')) return 'assets/gallery/' + x;
 
-    // Default: relative as-is
-    return x;
-  }
+  // Default: relative as-is
+  return x;
+}
 
-  // --- IMPROVED MEDIA LOGIC ---
-// Generate only the most likely paths to avoid console 404 noise and to keep resolution fast.
+  // --- IMPROVED MEDIA LOGIC (low-noise candidate generation) ---
 function candidatePaths(p) {
   const norm = normalizeMediaPath(p);
-  if (!norm || /^(https?:|data:|blob:)/i.test(norm)) return [norm];
+  if (!norm || /^(https?:|data:|blob:)/i.test(norm)) return norm ? [norm] : [];
 
   const cands = [];
-  const add = (x) => { if (x && cands.indexOf(x) === -1) cands.push(x); };
+  const add = (v) => {
+    if (v && cands.indexOf(v) === -1) cands.push(v);
+  };
 
-  const isImg = /\.(?:jpeg|jpg|png|webp)$/i.test(norm);
-  const isVid = /\.(?:mp4|webm)$/i.test(norm);
-
-  // Always try the referenced path first.
+  // Original
   add(norm);
 
-  // If not already in the gallery folder, also try gallery root.
-  const filename = norm.split('/').pop();
-  if (filename && norm.indexOf('assets/gallery/') === -1) {
-    add('assets/gallery/' + filename);
+  // Root-level gallery fallback (common GitHub Pages layout)
+  if (!norm.includes('assets/gallery/')) {
+    const fname = norm.split('/').pop();
+    add('assets/gallery/' + fname);
   }
 
-  // If we can derive base/ext, try only a few common variants.
-  const m = norm.match(/^(.*)\.([a-z0-9]+)$/i);
-  if (m) {
-    const base = m[1];
-    const ext = (m[2] || '').toLowerCase();
+  // Extension swap (jpeg<->jpg, mp4<->webm)
+  const mExt = norm.match(/\.(jpeg|jpg|png|webp|mp4|webm)$/i);
+  const ext = mExt ? mExt[1].toLowerCase() : '';
+  const base = mExt ? norm.slice(0, -1 * (ext.length + 1)) : norm;
 
-    // Common extension swaps (jpeg <-> jpg, mp4 <-> webm)
-    if (isImg) {
-      if (ext === 'jpeg') add(base + '.jpg');
-      if (ext === 'jpg') add(base + '.jpeg');
-    }
-    if (isVid) {
-      if (ext === 'mp4') add(base + '.webm');
-      if (ext === 'webm') add(base + '.mp4');
-    }
+  if (ext === 'jpeg') add(base + '.jpg');
+  if (ext === 'jpg') add(base + '.jpeg');
+  if (ext === 'mp4') add(base + '.webm');
+  if (ext === 'webm') add(base + '.mp4');
 
-    // Simple 'a' suffix variants (very common in field assets).
+  // Simple 'a' suffix variants (common convention)
+  if (ext) {
     add(base + 'a.' + ext);
     add(base + '_a.' + ext);
     add(base + '-a.' + ext);
 
-    // Also try the same set under gallery root when applicable.
-    if (filename && norm.indexOf('assets/gallery/') === -1) {
-      const gbase = 'assets/gallery/' + filename.replace(/\.[^.]+$/,'');
-      add(gbase + '.' + ext);
-
-      if (isImg) {
-        if (ext === 'jpeg') add(gbase + '.jpg');
-        if (ext === 'jpg') add(gbase + '.jpeg');
-      }
-      if (isVid) {
-        if (ext === 'mp4') add(gbase + '.webm');
-        if (ext === 'webm') add(gbase + '.mp4');
-      }
-
-      add(gbase + 'a.' + ext);
-      add(gbase + '_a.' + ext);
-      add(gbase + '-a.' + ext);
+    // Also try suffix variants with swapped jpeg/jpg and mp4/webm
+    if (ext === 'jpeg') {
+      add(base + 'a.jpg'); add(base + '_a.jpg'); add(base + '-a.jpg');
+    }
+    if (ext === 'jpg') {
+      add(base + 'a.jpeg'); add(base + '_a.jpeg'); add(base + '-a.jpeg');
+    }
+    if (ext === 'mp4') {
+      add(base + 'a.webm'); add(base + '_a.webm'); add(base + '-a.webm');
+    }
+    if (ext === 'webm') {
+      add(base + 'a.mp4'); add(base + '_a.mp4'); add(base + '-a.mp4');
     }
   }
 
   return cands;
 }
 
-  async function assetExists(relOrAbs) {
+  // Fast existence check. We intentionally avoid generating <img>/<video src> until we have a valid candidate,
+// which dramatically reduces console 404 noise and improves responsiveness.
+async function assetExists(relOrAbs) {
   const u = /^(https?:|data:|blob:)/i.test(relOrAbs) ? relOrAbs : url(relOrAbs);
-  if (existsCache.has(u)) return !!existsCache.get(u);
+  if (existsCache.has(u)) return existsCache.get(u);
 
-  // Prefer a fast HEAD (works on GitHub Pages). Use force-cache to reduce repeated network work.
   try {
     const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
-    const ok = r.ok;
+    const ok = !!r && r.ok;
     existsCache.set(u, ok);
     return ok;
   } catch (_e) {
-    // Fallback: minimal GET range (some CDNs block HEAD).
-    try {
-      const r = await fetch(u, {
-        method: 'GET',
-        headers: { Range: 'bytes=0-0' },
-        cache: 'force-cache'
-      });
-      const ok = r.ok;
-      existsCache.set(u, ok);
-      return ok;
-    } catch (_e2) {
-      existsCache.set(u, false);
-      return false;
-    }
+    existsCache.set(u, false);
+    return false;
   }
 }
-
 
   async function resolveFirstExisting(p) {
-  const norm = normalizeMediaPath(p);
-  if (!norm) return '';
-
-  if (resolveCache.has(norm)) return String(resolveCache.get(norm) || '');
-
-  const cands = candidatePaths(norm);
-  for (const c of cands) {
-    // If we've already validated this exact URL, short-circuit.
+  const cands = candidatePaths(p);
+  for (let i = 0; i < cands.length; i++) {
+    const c = cands[i];
+    // Prefer cached ok results without any network call.
     const u = /^(https?:|data:|blob:)/i.test(c) ? c : url(c);
-    if (existsCache.get(u) === true) {
-      resolveCache.set(norm, c);
-      return c;
-    }
-    const ok = await assetExists(c);
-    if (ok) {
-      resolveCache.set(norm, c);
-      return c;
+    if (existsCache.has(u) && existsCache.get(u)) return c;
+
+    try {
+      const r = await fetch(u, { method: 'HEAD', cache: 'force-cache' });
+      const ok = !!r && r.ok;
+      existsCache.set(u, ok);
+      if (ok) return c;
+    } catch (_e) {
+      // ignore
     }
   }
-
-  resolveCache.set(norm, '');
   return '';
 }
-
 
   function attachSmartImage(imgEl, path) {
     let cancelled = false;
@@ -300,63 +278,74 @@ function candidatePaths(p) {
     return () => { cancelled = true; };
   }
 
-  function attachSmartVideo(videoEl, path, opts) {
-  const o = opts || {};
-  const placeholder = 'assets/bg.mp4';
-  let cancelled = false;
+  // Pre-resolve video sources so user-gesture clicks can call play() synchronously without an async gap.
+const resolvedSrcCache = new Map(); // normPath -> absolute URL
 
-  // Reasonable defaults
-  videoEl.preload = o.preload || 'metadata';
-  videoEl.controls = (o.controls !== false);
-  videoEl.loop = !!o.loop;
-  videoEl.muted = !!o.muted;
-  videoEl.autoplay = !!o.autoplay;
+function attachSmartVideo(videoEl, path, opts) {
+  opts = opts || {};
+  const placeholder = 'assets/placeholder-video.mp4';
+
+  const norm = normalizeMediaPath(path);
+  const cacheKey = norm || String(path || '');
+  const wantsMuted = !!opts.muted;
+  const wantsLoop = !!opts.loop;
+
+  videoEl.preload = opts.preload || 'metadata';
+  videoEl.controls = !!opts.controls;
   videoEl.playsInline = true;
   videoEl.setAttribute('playsinline', '');
 
-  // Set a safe placeholder immediately to avoid <video src="missing"> 404 spam.
-  try {
-    if (!videoEl.getAttribute('src')) videoEl.src = url(placeholder);
-  } catch (_e) { /* noop */ }
+  if (wantsLoop) videoEl.loop = true;
+  if (wantsMuted) {
+    videoEl.muted = true;
+    videoEl.setAttribute('muted', '');
+  }
 
-  // PRE-RESOLVE: find the best asset as soon as the element exists.
+  // Start resolving immediately (no user gesture required).
   (async () => {
-    const chosen = await resolveFirstExisting(path);
-    if (cancelled) return;
-
-    const src = chosen ? url(chosen) : url(placeholder);
-    if (videoEl.src !== src) {
-      videoEl.src = src;
-      try { videoEl.load(); } catch (_e) { /* noop */ }
+    if (!norm) {
+      videoEl.src = url(placeholder);
+      try { videoEl.load(); } catch (_e) {}
+      return;
     }
 
-    // If configured for autoplay (usually muted previews), attempt playback.
-    if (videoEl.autoplay) {
-      const pp = videoEl.play();
-      if (pp && pp.catch) pp.catch(() => { /* ignore */ });
+    const cached = resolvedSrcCache.get(cacheKey);
+    if (cached) {
+      videoEl.src = cached;
+      try { videoEl.load(); } catch (_e) {}
+      return;
+    }
+
+    const chosen = await resolveFirstExisting(norm);
+    const finalSrc = chosen ? url(chosen) : url(placeholder);
+    resolvedSrcCache.set(cacheKey, finalSrc);
+
+    // Only set if element is still connected.
+    if (videoEl && videoEl.isConnected) {
+      videoEl.src = finalSrc;
+      try { videoEl.load(); } catch (_e) {}
     }
   })();
 
-  // Sync play() in the user gesture (no awaits here).
-  videoEl.addEventListener('click', () => {
-    if (videoEl.paused) {
-      const pp = videoEl.play();
-      if (pp && pp.catch) pp.catch(() => { /* ignore */ });
-    } else if (!videoEl.controls) {
-      // Allow pausing previews when controls are hidden
-      videoEl.pause();
-    }
+  // Optional click-to-toggle (must be synchronous to preserve user gesture)
+  if (opts.togglePlayOnClick) {
+    videoEl.addEventListener('click', (e) => {
+      if (opts.stopPropagation) e.stopPropagation();
+      if (videoEl.paused) {
+        const pp = videoEl.play();
+        if (pp && pp.catch) pp.catch(() => { /* ignore */ });
+      } else {
+        videoEl.pause();
+      }
+    });
+  }
+
+  videoEl.addEventListener('error', () => {
+    try {
+      videoEl.src = url(placeholder);
+    } catch (_e) { /* ignore */ }
   });
-
-  videoEl.onerror = () => {
-    if (cancelled) return;
-    videoEl.onerror = null;
-    videoEl.src = url(placeholder);
-  };
-
-  return () => { cancelled = true; };
 }
-
 
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
@@ -530,8 +519,8 @@ function candidatePaths(p) {
     const fromEl = $$('#dateFrom');
     const toEl = $$('#dateTo');
 
-    const from = parseDateSafe(fromEl?.value);
-    const to = parseDateSafe(toEl?.value);
+    const from = parseDateSafe(fromEl ? fromEl.value : '');
+    const to = parseDateSafe(toEl ? toEl.value : '');
 
     if (!from || !to) {
       state.dateFrom = state.dateMin;
@@ -621,7 +610,7 @@ function candidatePaths(p) {
       }
       // Host (farmer) name filter: match host.name substring if provided
       if (state.nameFilter) {
-        const name = String(s.host?.name || '').toLowerCase();
+        const name = String((s.host && s.host.name) ? s.host.name : '').toLowerCase();
         if (!name.includes(state.nameFilter.toLowerCase())) return false;
       }
       // City filter
@@ -677,7 +666,7 @@ function candidatePaths(p) {
         lastEl.textContent = '';
       }
     })();
-    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
     const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     // ---------- Totals ----------
@@ -702,10 +691,10 @@ function candidatePaths(p) {
     let vidRefs = 0;
 
     for (const s of fs) {
-      const si = idx?.get(s.sheetRef);
+      const si = idx ? idx.get(s.sheetRef) : null;
 
-      const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
-      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+      const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
+      const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
 
       if (Number.isFinite(farmers) && farmers > 0) totalFarmers += farmers;
       if (Number.isFinite(acres) && acres > 0) totalAcres += acres;
@@ -871,7 +860,7 @@ function candidatePaths(p) {
       // Collect farmers per session and sort descending.
       const sessionsByFarmers = fs
         .map(s => {
-          const count = Number(s.metrics?.farmers || 0);
+          const count = Number((s.metrics && s.metrics.farmers) || 0);
           // Compose a human-friendly label for the donut legend. Prefer the
           // district name; fall back to village/spot or a generic label if
           // unavailable. Include the session id for uniqueness.
@@ -951,8 +940,8 @@ function candidatePaths(p) {
       let sumDef = 0, sumMaybe = 0, sumNot = 0;
       for (const s of fs) {
         // Farmers present for weighting; prefer sheet index when available.
-        const si = idx?.get(s.sheetRef);
-        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const si = idx ? idx.get(s.sheetRef) : null;
+        const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
         const m = s.metrics || {};
         const def = num(m.definitePct);
         const mb = num(m.maybePct);
@@ -1000,19 +989,19 @@ function candidatePaths(p) {
     const palette = ['#44b8ff','#6be675','#ffce56','#ff6384','#9966ff','#ff9f40','#4bc0c0','#c9cbcf','#36a2eb','#8dd1ff'];
 
     const farmersFor = (s) => {
-      const si = idx?.get(s.sheetRef);
-      const f = Number(si?.farmers_present ?? s?.metrics?.farmers ?? s?.farmers ?? 0);
+      const si = idx ? idx.get(s.sheetRef) : null;
+      const f = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), s.farmers, 0));
       return (Number.isFinite(f) && f > 0) ? f : 0;
     };
 
     const normKey = (v, fallback = 'Unknown') => {
-      const x = String(v ?? '').trim();
+      const x = String((v === null || v === undefined) ? '' : v).trim();
       if (!x) return fallback;
       return x.toUpperCase();
     };
 
     const setPlaceholder = (canvas, msg, show) => {
-      const wrap = canvas?.parentElement;
+      const wrap = canvas ? canvas.parentElement : null;
       if (!wrap) return;
       let ph = wrap.querySelector('.chartPlaceholder');
       if (!ph) {
@@ -1130,8 +1119,8 @@ function candidatePaths(p) {
                   const val = ctx.dataset.data[i];
                   const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
                   const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
-                  const sessions = metaSessions[i] ?? 0;
-                  const farmers = metaFarmers[i] ?? 0;
+                  const sessions = ((metaSessions[i] === null || metaSessions[i] === undefined) ? 0 : metaSessions[i]);
+                  const farmers = ((metaFarmers[i] === null || metaFarmers[i] === undefined) ? 0 : metaFarmers[i]);
 
                   if (anyFarmers) {
                     return `${lab}: ${Math.round(val)} farmers (${pct}%) • ${sessions} session${sessions === 1 ? '' : 's'}`;
@@ -1241,9 +1230,9 @@ function candidatePaths(p) {
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
         const scoreNum = Number(s.score||0);
         const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
-        const si = idx?.get(s.sheetRef);
-        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number(s?.metrics?.farmers)) ? fmtInt(s.metrics.farmers) : '—');
-        const a = si ? fmt1(si.acres) : (Number.isFinite(Number(s?.metrics?.wheatAcres)) ? fmt1(s.metrics.wheatAcres) : '—');
+        const si = idx ? idx.get(s.sheetRef) : null;
+        const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number((s.metrics && s.metrics.farmers))) ? fmtInt(s.metrics.farmers) : '—');
+        const a = si ? fmt1(si.acres) : (Number.isFinite(Number((s.metrics && s.metrics.wheatAcres))) ? fmt1(s.metrics.wheatAcres) : '—');
         const href = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
         return `<tr data-session-id="${sid}">
           <td>${date}</td>
@@ -1265,9 +1254,9 @@ function candidatePaths(p) {
 
       for (const s of fs) {
         const d = (s.district || '—').trim() || '—';
-        const si = idx?.get(s.sheetRef);
-        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
-        const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+        const si = idx ? idx.get(s.sheetRef) : null;
+        const farmers = Number(coalesce(si && si.farmers_present, (s.metrics && s.metrics.farmers), 0));
+        const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
         const wt = (Number.isFinite(farmers) && farmers > 0) ? farmers : 1;
 
         const m = s.metrics || {};
@@ -1461,7 +1450,7 @@ function candidatePaths(p) {
     renderReasonsDonut(barriers, '#barriersDonut', '#barriersLegend', 'barriersDonutChart', 'No barrier entries yet.', 12);
     // ---------- Data readiness / status ----------
     setStatus(
-      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
+      `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(((state.sheetsIndex && state.sheetsIndex.sheets) ? state.sheetsIndex.sheets.length : 0) || 0)} sheet summaries.\n` +
       `Reach: ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers • ${totalAcres ? fmt1(totalAcres) : '—'} acres • Est. Buctril acres: ${totalEstAcres ? fmt1(totalEstAcres) : '—'}.\n` +
       `Referenced media: ${fmtInt(imgRefs)} images • ${fmtInt(vidRefs)} videos.\n` +
       `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
@@ -1473,7 +1462,7 @@ function candidatePaths(p) {
     const tbody = $$('#sessionsTable tbody');
     if (!tbody) return;
 
-    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
     const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     const rows = state.filteredSessions.map(s => {
@@ -1483,7 +1472,7 @@ function candidatePaths(p) {
       const district = esc(s.district || '');
       const village = esc(s.village || s.spot || '');
       const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
-      const si = idx?.get(s.sheetRef);
+      const si = idx ? idx.get(s.sheetRef) : null;
       const f = si ? fmtInt(si.farmers_present) : '—';
       const a = si ? fmt1(si.acres) : '—';
 
@@ -1556,163 +1545,204 @@ function candidatePaths(p) {
   }
 
   function renderMedia() {
-    const grid = $$('#mediaGrid');
-    if (!grid) return;
+  const grid = $$('#mediaGrid');
+  if (!grid) return;
 
-    // Bind media toolbar events once
-    if (!state._mediaBound) {
-      state._mediaBound = true;
+  // Bind media toolbar events once
+  if (!state._mediaBound) {
+    state._mediaBound = true;
 
-      const seg = $$('.mediaSeg');
-      seg?.addEventListener('click', (e) => {
+    const seg = $$('.mediaSeg');
+    if (seg) {
+      seg.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-media-type]');
         if (!btn) return;
         const t = btn.getAttribute('data-media-type') || 'all';
         state.mediaType = t;
+
         // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
+
+        // Reset limit when changing type for better UX
         state.mediaLimit = 24;
         renderMedia();
       });
-
-      const search = $$('#mediaSearch');
-      if (search) {
-        search.addEventListener('input', () => {
-          state.mediaSearch = String(search.value || '').trim().toLowerCase();
-          state.mediaLimit = 24;
-          renderMedia();
-        });
-      }
-
-      const sort = $$('#mediaSort');
-      if (sort) {
-        sort.addEventListener('change', () => {
-          state.mediaSort = String(sort.value || 'newest');
-          renderMedia();
-        });
-      }
-
-      const more = $$('#mediaLoadMore');
-      if (more) {
-        more.addEventListener('click', () => {
-          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
-          renderMedia();
-        });
-      }
     }
 
-    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
-    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
-
-    const q = String(state.mediaSearch || '').trim().toLowerCase();
-    const type = String(state.mediaType || 'all');
-    const sortMode = String(state.mediaSort || 'newest');
-
-    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
-
-    // Filter to sessions that actually have media
-    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
-
-    // Type filter
-    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
-    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
-
-    // Text filter
-    if (q) {
-      list = list.filter(s => {
-        const sheet = String(s.sheetRef || '');
-        const district = String(s.district || '');
-        const village = String(s.village || s.spot || '');
-        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+    const search = $$('#mediaSearch');
+    if (search) {
+      search.addEventListener('input', () => {
+        state.mediaSearch = String(search.value || '');
+        state.mediaLimit = 24;
+        renderMedia();
       });
     }
 
-    // Sort by date (fallback to original order)
-    list.sort((a, b) => {
-      const da = parseDateSafe(a.date)?.getTime() || 0;
-      const db = parseDateSafe(b.date)?.getTime() || 0;
-      return sortMode === 'oldest' ? (da - db) : (db - da);
-    });
+    const sort = $$('#mediaSort');
+    if (sort) {
+      sort.addEventListener('change', () => {
+        state.mediaSort = String(sort.value || 'newest');
+        renderMedia();
+      });
+    }
 
-    const total = list.length;
-    const limit = Math.max(0, Number(state.mediaLimit || 24));
-    const shown = list.slice(0, limit);
-
-    const cards = shown.map(s => {
-      const sid = esc(s.id);
-      const sheet = esc(s.sheetRef || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
-      // Determine thumbnail: prefer first video if available; otherwise first image
-      const vidPath = firstMediaVideo(s);
-      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
-      const img = firstMediaImage(s);
-      const title = `${sheet} • ${district} • ${village}`;
-      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
-      // Build thumb markup
-      let thumb;
-      let badge;
-      if (vidPath) {
-        // Show auto-playing muted preview (source resolved eagerly to avoid 404 spam)
-        thumb = `<video class="mediaVid" data-media-video="1" data-src-path="${esc(vidPath)}" autoplay loop muted playsinline preload="metadata"></video>`;
-        badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
-      } else {
-        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
-        badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
-      }
-      return `<div class="mediaCard" data-session-id="${sid}">
-        <div class="mediaThumb">
-          ${badge}
-          ${thumb}
-        </div>
-        <div class="mediaMeta">
-          <div class="mediaTitle">${esc(title)}</div>
-          <div class="mediaActions">
-            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
-            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
-            <button class="btn btnSmall btnGhost" data-action="open">Open</button>
-          </div>
-        </div>
-        <div class="hidden" data-thumb-path="${esc(img)}"></div>
-      </div>`;
-    });
-
-    grid.innerHTML = cards.join('');
-
-    // Update count + load more button
-    const countEl = $$('#mediaCount');
-    if (countEl) countEl.textContent = total ? `Showing ${Math.min(limit, total)} of ${total}` : 'No media for current filters';
-    const moreBtn = $$('#mediaLoadMore');
-    if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
-
-    // attach thumbs
-    $$$('[data-media-thumb="1"]', grid).forEach(img => {
-      const card = img.closest('.mediaCard');
-      const cardEl = card;
-      let p = '';
-      if (cardEl) {
-        const n = cardEl.querySelector('[data-thumb-path]');
-        if (n) p = n.getAttribute('data-thumb-path') || '';
-      }
-      attachSmartImage(img, p || 'assets/placeholder.svg');
-    });
-
-// attach video previews (eager source resolution; keeps user-gesture intact for playback later)
-$$$('video[data-media-video="1"]', grid).forEach(v => {
-  const p = v.getAttribute('data-src-path') || '';
-  attachSmartVideo(v, p, { autoplay: true, loop: true, muted: true, controls: false, clickToPlay: false, preload: 'metadata' });
-});
-
-    grid.onclick = (ev) => {
-      const card = ev.target.closest('.mediaCard[data-session-id]');
-      if (!card) return;
-      const sid = Number(card.dataset.sessionId);
-      if (ev.target.closest('a')) return;
-
-      // Open lightbox with all items
-      openLightbox(sid);
-    };
+    const more = $$('#mediaLoadMore');
+    if (more) {
+      more.addEventListener('click', () => {
+        state.mediaLimit = Number(state.mediaLimit || 24) + 24;
+        renderMedia();
+      });
+    }
   }
+
+  const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
+  const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 19H3V5h4l2-2h6l2 2h4v14Z" stroke="currentColor" stroke-width="1.5"/><path d="M8 14l2.5-3 2 2 3.5-4 4 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+
+  const q = String(state.mediaSearch || '').trim().toLowerCase();
+  const type = String(state.mediaType || 'all');
+  const sortMode = String(state.mediaSort || 'newest');
+
+  let list = Array.isArray(state.filteredSessions) ? state.filteredSessions.slice() : [];
+
+  // Only sessions with media
+  list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+
+  // Type filter
+  if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
+  if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+
+  // Text filter
+  if (q) {
+    list = list.filter(s => {
+      const sheet = String(s.sheetRef || '');
+      const district = String(s.district || '');
+      const village = String(s.village || s.spot || '');
+      return (sheet + ' ' + district + ' ' + village).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+
+  // Sort by date
+  list.sort((a, b) => {
+    const daObj = parseDateSafe(a.date);
+    const dbObj = parseDateSafe(b.date);
+    const da = daObj ? daObj.getTime() : 0;
+    const db = dbObj ? dbObj.getTime() : 0;
+    return sortMode === 'oldest' ? (da - db) : (db - da);
+  });
+
+  const limit = Number(state.mediaLimit || 24);
+  const shown = list.slice(0, limit);
+
+  // Clear + render DOM nodes (avoid embedding src before resolving to reduce 404 spam)
+  grid.innerHTML = '';
+
+  for (let i = 0; i < shown.length; i++) {
+    const s = shown[i];
+    const sid = String(s.id);
+    const sheet = String(s.sheetRef || '');
+    const district = String(s.district || '');
+    const village = String(s.village || s.spot || '');
+
+    const vidPath = firstMediaVideo(s);
+    const imgPath = firstMediaImage(s);
+    const title = sheet + ' • ' + district + ' • ' + village;
+    const hrefDetails = 'details.html?campaign=' + encodeURIComponent(String(state.campaignId)) + '&session=' + encodeURIComponent(String(s.id));
+
+    const card = document.createElement('div');
+    card.className = 'mediaCard';
+    card.setAttribute('data-session-id', sid);
+
+    const thumbWrap = document.createElement('div');
+    thumbWrap.className = 'mediaThumb';
+
+    const badge = document.createElement('div');
+    badge.className = 'mediaBadge';
+    if (vidPath) {
+      badge.title = 'Video';
+      badge.innerHTML = playIcon + '<span>Video</span>';
+    } else {
+      badge.title = 'Image';
+      badge.innerHTML = photoIcon + '<span>Image</span>';
+    }
+
+    thumbWrap.appendChild(badge);
+
+    if (vidPath) {
+      const v = document.createElement('video');
+      v.autoplay = true;
+      v.loop = true;
+      v.muted = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      v.className = 'mediaThumbVideo';
+
+      // Option A: clicking the video toggles play/pause (and does NOT open lightbox)
+      attachSmartVideo(v, vidPath, { muted: true, loop: true, controls: false, togglePlayOnClick: true, stopPropagation: true });
+
+      thumbWrap.appendChild(v);
+    } else {
+      const img = document.createElement('img');
+      img.setAttribute('data-media-thumb', '1');
+      img.alt = title;
+      attachSmartImage(img, imgPath || 'assets/placeholder.svg');
+      thumbWrap.appendChild(img);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'mediaMeta';
+
+    const t = document.createElement('div');
+    t.className = 'mediaTitle';
+    t.textContent = title;
+
+    const actions = document.createElement('div');
+    actions.className = 'mediaActions';
+
+    const aSheet = document.createElement('a');
+    aSheet.className = 'btn btnSmall';
+    aSheet.href = 'sheets.html?campaign=' + encodeURIComponent(String(state.campaignId)) + '&sheet=' + encodeURIComponent(String(s.sheetRef || ''));
+    aSheet.textContent = 'Sheet';
+
+    const aDetails = document.createElement('a');
+    aDetails.className = 'btn btnSmall btnGhost';
+    aDetails.href = hrefDetails;
+    aDetails.textContent = 'Details';
+
+    const btnOpen = document.createElement('button');
+    btnOpen.className = 'btn btnSmall btnGhost';
+    btnOpen.setAttribute('data-action', 'open');
+    btnOpen.textContent = 'Open';
+
+    actions.appendChild(aSheet);
+    actions.appendChild(aDetails);
+    actions.appendChild(btnOpen);
+
+    meta.appendChild(t);
+    meta.appendChild(actions);
+
+    card.appendChild(thumbWrap);
+    card.appendChild(meta);
+
+    grid.appendChild(card);
+  }
+
+  const countEl = $$('#mediaCount');
+  if (countEl) countEl.textContent = shown.length + ' shown of ' + list.length;
+
+  const moreBtn = $$('#mediaLoadMore');
+  if (moreBtn) moreBtn.style.display = (limit < list.length) ? '' : 'none';
+
+  // Card click opens lightbox (Option A). Video click is stopped by attachSmartVideo.
+  grid.onclick = (ev) => {
+    const card = ev.target.closest('.mediaCard[data-session-id]');
+    if (!card) return;
+    if (ev.target.closest('a')) return;
+
+    // Open lightbox for the session
+    const sidNum = Number(card.getAttribute('data-session-id'));
+    openLightbox(sidNum);
+  };
+}
 
   function renderAll() {
     renderSummary();
@@ -1763,7 +1793,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
     $$('#drawerSub').textContent = `${s.date || ''} • ${s.district || ''} • ${s.village || s.spot || ''}`;
 
     // KPIs from sheets index if possible
-    const si = state.sheetsIndex?.sheets?.find(x => x.sheet === s.sheetRef);
+    const si = (state.sheetsIndex && state.sheetsIndex.sheets) ? state.sheetsIndex.sheets.find(x => x.sheet === s.sheetRef) : null;
     $$('#dFarmers').textContent = si ? fmtInt(si.farmers_present) : '—';
     $$('#dAcres').textContent = si ? fmt1(si.acres) : '—';
     $$('#dScore').textContent = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
@@ -1772,9 +1802,9 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       s.city ? `City: ${esc(s.city)}` : '',
       s.district ? `District: ${esc(s.district)}` : '',
       s.spot ? `Spot: ${esc(s.spot)}` : '',
-      s.dealer?.name ? `Dealer: ${esc(s.dealer.name)}` : '',
-      s.salesRep?.name ? `Sales: ${esc(s.salesRep.name)}` : '',
-      s.host?.name ? `Host: ${esc(s.host.name)}` : '',
+      (s.dealer && s.dealer.name) ? `Dealer: ${esc(s.dealer.name)}` : '',
+      (s.salesRep && s.salesRep.name) ? `Sales: ${esc(s.salesRep.name)}` : '',
+      (s.host && s.host.name) ? `Host: ${esc(s.host.name)}` : '',
     ].filter(Boolean).join(' • ');
     $$('#dMeta').innerHTML = meta || '<span class="muted">—</span>';
 
@@ -1805,7 +1835,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
 
     // Recommended actions (lightweight heuristic rules)
     const acts = [];
-    const farmersNow = Number(si?.farmers_present ?? m.farmers ?? 0);
+    const farmersNow = Number(coalesce(si && si.farmers_present, m.farmers, 0));
     const uPct = Number.isFinite(un) ? (un / 3 * 100) : NaN;
 
     if (Number.isFinite(aw) && aw < 60) acts.push('Increase awareness: start with weed-pressure framing + product positioning; add a pre-activation dealer touchpoint and 1–2 local influencer farmers.');
@@ -1832,8 +1862,8 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
     $$('#dOpenDetails').setAttribute('href', detailsUrl);
 
     // Google Maps
-    const lat = Number(s.geo?.lat);
-    const lng = Number(s.geo?.lng);
+    const lat = Number((s.geo && s.geo.lat));
+    const lng = Number((s.geo && s.geo.lng));
     const g = (Number.isFinite(lat) && Number.isFinite(lng)) ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
     $$('#dOpenMaps').setAttribute('href', g);
 
@@ -1847,7 +1877,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       const top = [...farmers].sort((a,b) => Number(b.acres||0)-Number(a.acres||0)).slice(0,5);
 
       const topHtml = top.length
-        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(x.acres ?? ''))} acres</li>`).join('')}</ul>`
+        ? `<ul>${top.map(x => `<li>${esc(x.name || '')} — ${esc(String(((x.acres === null || x.acres === undefined) ? '' : x.acres)))} acres</li>`).join('')}</ul>`
         : '<div class="muted">No farmer rows found in sheet.</div>';
 
       const hostComment = fb.host_comment ? `<div><b>Host comment:</b> ${esc(fb.host_comment)}</div>` : '';
@@ -1855,7 +1885,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       const sales = fb.sales_feedback ? `<div><b>Sales feedback:</b> ${esc(fb.sales_feedback)}</div>` : '';
 
       sumEl.innerHTML = `
-        <div class="muted">Sheet: <b>${esc(sheet.meta?.sheet || s.sheetRef)}</b> • Date: <b>${esc(sheet.meta?.date || s.date || '')}</b></div>
+        <div class="muted">Sheet: <b>${esc((sheet.meta && sheet.meta.sheet) || s.sheetRef)}</b> • Date: <b>${esc((sheet.meta && sheet.meta.date) || s.date || '')}</b></div>
         ${hostComment}
         ${mgr}
         ${sales}
@@ -1891,7 +1921,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
           v.setAttribute('playsinline','');
           wrap.appendChild(v);
           mediaEl.appendChild(wrap);
-          attachSmartVideo(v, it.path, { controls: false, autoplay: true, loop: true, muted: true, preload: 'metadata', clickToPlay: false });
+          attachSmartVideo(v, it.path);
           wrap.onclick = () => openLightbox(Number(s.id));
         }
       }
@@ -1904,8 +1934,8 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
   function bindDrawer() {
     const closeBtn = $$('#drawerClose');
     const ov = $$('#drawerOverlay');
-    closeBtn?.addEventListener('click', closeDrawer);
-    ov?.addEventListener('click', closeDrawer);
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (ov) ov.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         closeDrawer();
@@ -1935,13 +1965,18 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
   }
 
   function bindLightbox() {
-    $$('#lbClose')?.addEventListener('click', closeLightbox);
-    $$('#lightbox')?.addEventListener('click', (ev) => {
+  const c = $$('#lbClose');
+  if (c) c.addEventListener('click', closeLightbox);
+
+  const lb = $$('#lightbox');
+  if (lb) {
+    lb.addEventListener('click', (ev) => {
       if (ev.target && ev.target.id === 'lightbox') closeLightbox();
     });
   }
+}
 
-  function openLightbox(sessionId, startIndex) {
+  function openLightbox(sessionId) {
   const s = state.sessionsById.get(Number(sessionId));
   if (!s) return;
 
@@ -1949,83 +1984,85 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
   const body = $$('#lbBody');
   if (!lb || !body) return;
 
-  const items = allMediaItems(s);
-  if (!items.length) {
-    lb.classList.add('open');
-    body.innerHTML = '<div class="muted">No media listed for this session.</div>';
-    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
-    return;
-  }
-
-  const idx = (typeof startIndex === 'number' && isFinite(startIndex)) ? Math.max(0, Math.min(items.length - 1, startIndex)) : 0;
-  const main = items[idx];
-
-  $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''} (${idx + 1}/${items.length})`;
+  const titleEl = $$('#lbTitle');
+  if (titleEl) titleEl.textContent = 'Session ' + String(s.id) + ' • ' + String(s.sheetRef || '');
 
   lb.classList.add('open');
   body.innerHTML = '';
 
-  // Main media (large)
-  if (main.type === 'image') {
-    const img = document.createElement('img');
-    img.className = 'lightboxMedia';
-    img.alt = 'image';
-    body.appendChild(img);
-    attachSmartImage(img, main.path);
-  } else {
-    const v = document.createElement('video');
-    v.className = 'lightboxMedia';
-    v.controls = true;
-    v.playsInline = true;
-    v.setAttribute('playsinline','');
-    body.appendChild(v);
-    attachSmartVideo(v, main.path, { controls: true, autoplay: false, loop: false, muted: false, preload: 'metadata', clickToPlay: true });
+  const items = allMediaItems(s);
+  if (!items || !items.length) {
+    body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+    return;
   }
 
-  // Thumbnails row
-  if (items.length > 1) {
-    const row = document.createElement('div');
-    row.className = 'mediaRow';
+  let active = 0;
 
-    const maxThumbs = Math.min(items.length, 12);
-    for (let i = 0; i < maxThumbs; i++) {
-      const it = items[i];
-      if (it.type === 'image') {
-        const t = document.createElement('img');
-        t.className = 'thumb';
-        t.alt = 'thumb';
-        t.loading = 'lazy';
-        if (i === idx) t.classList.add('active');
-        row.appendChild(t);
-        attachSmartImage(t, it.path);
-        t.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          openLightbox(sessionId, i);
-        });
-      } else {
-        const tv = document.createElement('video');
-        tv.className = 'thumb';
-        tv.muted = true;
-        tv.loop = true;
-        tv.autoplay = true;
-        tv.playsInline = true;
-        tv.setAttribute('playsinline','');
-        if (i === idx) tv.classList.add('active');
-        row.appendChild(tv);
-        attachSmartVideo(tv, it.path, { controls: false, autoplay: true, loop: true, muted: true, preload: 'metadata', clickToPlay: false });
-        tv.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          openLightbox(sessionId, i);
-        });
-      }
+  const main = document.createElement('div');
+  main.className = 'lbMain';
+  const strip = document.createElement('div');
+  strip.className = 'drawerMedia';
+
+  body.appendChild(main);
+  body.appendChild(strip);
+
+  function renderMain() {
+    main.innerHTML = '';
+    const it = items[active];
+    if (!it) return;
+
+    if (it.type === 'video') {
+      const v = document.createElement('video');
+      v.className = 'lightboxMedia';
+      v.controls = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline','');
+
+      // Resolve src eagerly, but do NOT await inside a click path.
+      // User will press play using native controls (gesture-safe).
+      attachSmartVideo(v, it.path, { controls: true, muted: false, loop: false, togglePlayOnClick: false });
+
+      main.appendChild(v);
+    } else {
+      const img = document.createElement('img');
+      img.className = 'lightboxMedia';
+      attachSmartImage(img, it.path);
+      main.appendChild(img);
     }
-
-    body.appendChild(row);
   }
-}
 
+  function renderStrip() {
+    strip.innerHTML = '';
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const t = document.createElement(it.type === 'video' ? 'video' : 'img');
+      t.className = 'thumb' + (i === active ? ' thumb--active' : '');
+
+      if (it.type === 'video') {
+        t.muted = true;
+        t.loop = true;
+        t.autoplay = true;
+        t.playsInline = true;
+        t.setAttribute('playsinline','');
+        attachSmartVideo(t, it.path, { muted: true, loop: true, controls: false, togglePlayOnClick: false });
+      } else {
+        attachSmartImage(t, it.path);
+      }
+
+      t.addEventListener('click', (e) => {
+        e.stopPropagation();
+        active = i;
+        renderMain();
+        renderStrip();
+      });
+
+      strip.appendChild(t);
+    }
+  }
+
+  renderMain();
+  renderStrip();
+}
 
   // ---------- Map ----------
   async function ensureMapReady() {
@@ -2037,7 +2074,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
     const ok = await ensureLeafletReady({ timeoutMs: 9000 });
     if (!ok) {
       setMapStatus('Map library blocked', false);
-      $$('#mapFallback')?.classList.remove('hidden');
+      var mf = $$('#mapFallback'); if (mf) mf.classList.remove('hidden');
       return;
     }
 
@@ -2082,7 +2119,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       });
     } catch (e) {
       setMapStatus('Failed', false);
-      $$('#mapFallback')?.classList.remove('hidden');
+      var mf = $$('#mapFallback'); if (mf) mf.classList.remove('hidden');
     }
   }
 
@@ -2093,22 +2130,22 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
     state.markersBySessionId.clear();
 
     // Build a quick lookup of sheet metadata to obtain farmers and acreage.
-    const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const idx = (state.sheetsIndex && state.sheetsIndex.sheets) ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
     const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     const pts = [];
     const heatPoints = [];
     for (const s of state.filteredSessions) {
-      const lat = Number(s.geo?.lat);
-      const lng = Number(s.geo?.lng);
+      const lat = Number((s.geo && s.geo.lat));
+      const lng = Number((s.geo && s.geo.lng));
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
       pts.push([lat, lng]);
       // Compute heatmap intensity based on acres engaged. Use sheet index if available,
       // falling back to session metrics. Default to 1 when no acreage is recorded.
       let weight = 1;
-      const si = idx?.get(s.sheetRef);
-      const acres = Number(si?.acres ?? s?.metrics?.wheatAcres ?? 0);
+      const si = idx ? idx.get(s.sheetRef) : null;
+      const acres = Number(coalesce(si && si.acres, (s.metrics && s.metrics.wheatAcres), 0));
       if (Number.isFinite(acres) && acres > 0) weight = acres;
       heatPoints.push([lat, lng, weight]);
 
@@ -2193,9 +2230,9 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       statusLabel.textContent = t;
       statusLabel.style.color = ok ? '' : 'var(--danger)';
     }
-    waBtn?.addEventListener('click', () => {
-      const phoneRaw = phoneInput?.value?.trim() || '';
-      const msg = msgInput?.value?.trim() || '';
+    if (waBtn) waBtn.addEventListener('click', () => {
+      const phoneRaw = ((phoneInput && phoneInput.value) ? String(phoneInput.value).trim() : '');
+      const msg = ((msgInput && msgInput.value) ? String(msgInput.value).trim() : '');
       // Remove non-digit characters; WhatsApp expects international numbers
       const phone = phoneRaw.replace(/[^0-9]/g, '');
       if (!phone) {
@@ -2208,9 +2245,9 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       window.open(waUrl, '_blank');
       displayStatus('Opening WhatsApp…');
     });
-    mailBtn?.addEventListener('click', () => {
-      const email = emailInput?.value?.trim() || '';
-      const msg = msgInput?.value?.trim() || '';
+    if (mailBtn) mailBtn.addEventListener('click', () => {
+      const email = ((emailInput && emailInput.value) ? String(emailInput.value).trim() : '');
+      const msg = ((msgInput && msgInput.value) ? String(msgInput.value).trim() : '');
       if (!email) {
         displayStatus('Please enter a valid email address.', false);
         return;
@@ -2235,7 +2272,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       return `<option value="${id}">${name}</option>`;
     }).join('');
 
-    sel.value = state.campaignId || (state.campaigns[0]?.id ?? '');
+    sel.value = state.campaignId || ((state.campaigns[0] && state.campaigns[0].id) ? state.campaigns[0].id : '');
     sel.onchange = () => {
       const id = sel.value;
       window.location.href = `index.html?campaign=${encodeURIComponent(id)}#summary`;
@@ -2363,30 +2400,30 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
 
   // ---------- Events ----------
   function bindTopControls() {
-    $$('#applyBtn')?.addEventListener('click', applyDateInputs);
-    $$('#resetBtn')?.addEventListener('click', resetDateInputs);
-    $$('#exportBtn')?.addEventListener('click', exportCsv);
+    var el_applyBtn = $$('#applyBtn'); if (el_applyBtn) el_applyBtn.addEventListener('click', applyDateInputs);
+    var el_resetBtn = $$('#resetBtn'); if (el_resetBtn) el_resetBtn.addEventListener('click', resetDateInputs);
+    var el_exportBtn = $$('#exportBtn'); if (el_exportBtn) el_exportBtn.addEventListener('click', exportCsv);
 
     // Apply on Enter in date inputs
-    $$('#dateFrom')?.addEventListener('change', applyDateInputs);
-    $$('#dateTo')?.addEventListener('change', applyDateInputs);
+    var el_dateFrom = $$('#dateFrom'); if (el_dateFrom) el_dateFrom.addEventListener('change', applyDateInputs);
+    var el_dateTo = $$('#dateTo'); if (el_dateTo) el_dateTo.addEventListener('change', applyDateInputs);
 
     // Apply automatically when name or city filters change
-    $$('#nameFilter')?.addEventListener('input', applyDateInputs);
-    $$('#cityFilter')?.addEventListener('input', applyDateInputs);
+    var el_nameFilter = $$('#nameFilter'); if (el_nameFilter) el_nameFilter.addEventListener('input', applyDateInputs);
+    var el_cityFilter = $$('#cityFilter'); if (el_cityFilter) el_cityFilter.addEventListener('input', applyDateInputs);
 
     // Apply automatically when region filter changes. This allows users to
     // filter sessions by region code (REG) such as SKR, RYK, DGK. See
     // index.html for the #regionFilter input.
-    $$('#regionFilter')?.addEventListener('input', applyDateInputs);
+    var el_regionFilter = $$('#regionFilter'); if (el_regionFilter) el_regionFilter.addEventListener('input', applyDateInputs);
 
     // Apply automatically when district or score filters change
-    $$('#districtFilter')?.addEventListener('input', applyDateInputs);
-    $$('#scoreMin')?.addEventListener('input', applyDateInputs);
-    $$('#scoreMax')?.addEventListener('input', applyDateInputs);
+    var el_districtFilter = $$('#districtFilter'); if (el_districtFilter) el_districtFilter.addEventListener('input', applyDateInputs);
+    var el_scoreMin = $$('#scoreMin'); if (el_scoreMin) el_scoreMin.addEventListener('input', applyDateInputs);
+    var el_scoreMax = $$('#scoreMax'); if (el_scoreMax) el_scoreMax.addEventListener('input', applyDateInputs);
 
     // Export button for priority table
-    $$('#priorityExportBtn')?.addEventListener('click', exportPriorityCsv);
+    var el_priorityExportBtn = $$('#priorityExportBtn'); if (el_priorityExportBtn) el_priorityExportBtn.addEventListener('click', exportPriorityCsv);
   }
 
   function exportCsv() {
@@ -2397,11 +2434,11 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
         s.id,
         s.sheetRef,
         s.date,
-        (s.district || '').replaceAll(',', ' '),
-        (s.village || s.spot || '').replaceAll(',', ' '),
-        s.score ?? ''
+        (s.district || '').split(',').join(' '),
+        (s.village || s.spot || '').split(',').join(' '),
+        ((s.score === null || s.score === undefined) ? '' : s.score)
       ];
-      rows.push(row.map(x => String(x ?? '').replaceAll('\n',' ').replaceAll('\r',' ')).join(','));
+      rows.push(row.map(x => String((x === null || x === undefined) ? '' : x).split('\n').join(' ').split('\r').join(' ')).join(','));
     }
     const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
@@ -2436,11 +2473,11 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
   function bindTabEvents() {
     window.addEventListener('hashchange', syncTabFromHash);
     document.addEventListener('tabchange', (e) => {
-      const tab = e.detail?.tab;
+      const tab = (e.detail && e.detail.tab) ? e.detail.tab : '';
       if (tab === 'map') {
         // Give Leaflet time to render after display
         setTimeout(ensureMapReady, 50);
-        setTimeout(() => state.map?.invalidateSize(), 200);
+        setTimeout(() => (state.map && state.map.invalidateSize ? state.map.invalidateSize() : void 0), 200);
       }
     });
   }
@@ -2508,7 +2545,7 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       await loadCampaignRegistry();
 
       const req = qs();
-      const id = req.get('campaign') || state.campaigns[0]?.id;
+      const id = req.get('campaign') || ((state.campaigns[0] && state.campaigns[0].id) ? state.campaigns[0].id : '');
       renderCampaignSelect();
 
       await loadCampaign(id);
@@ -2525,11 +2562,11 @@ $$$('video[data-media-video="1"]', grid).forEach(v => {
       closeDrawer();
 
       // Wire drawer overlay state
-      $$('#drawerOverlay')?.classList.add('hidden');
-      $$('#sessionDrawer')?.classList.add('hidden');
+      var dO = $$('#drawerOverlay'); if (dO) dO.classList.add('hidden');
+      var sD = $$('#sessionDrawer'); if (sD) sD.classList.add('hidden');
 
       // Close buttons for lightbox
-      $$('#lbClose')?.addEventListener('click', closeLightbox);
+      var el_lbClose = $$('#lbClose'); if (el_lbClose) el_lbClose.addEventListener('click', closeLightbox);
 
       // Bind heatmap toggle button. When clicked, add or remove the heat
       // layer from the map and update the button text accordingly. The map

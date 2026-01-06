@@ -1,5 +1,31 @@
 (() => {
   'use strict';
+
+  // Build marker (for cache-busting verification)
+  const WHEATCAMPAIGN_BUILD = "2026-01-05.6";
+  console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
+
+  const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
+  function chartAnimation(){
+    return REDUCE_MOTION ? false : { duration: 1500, easing: "easeOutBounce" };
+  }
+
+  // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
+  window.addEventListener("error", (e) => {
+    try {
+      const box = document.getElementById("statusBox");
+      if (box) box.textContent = `Runtime error: ${e.message || e.error || "Unknown error"}`;
+    } catch (_) {}
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    try {
+      const box = document.getElementById("statusBox");
+      const reason = (e && e.reason) ? (e.reason.message || String(e.reason)) : "Unknown rejection";
+      if (box) box.textContent = `Promise rejection: ${reason}`;
+    } catch (_) {}
+  });
+
   // Helper to fetch JSON files with retry and timeout support.
   // This version improves resilience to network issues by retrying failed requests
   // a limited number of times and aborting long-running requests. If all attempts
@@ -313,188 +339,6 @@
       videoEl.src = url(placeholder);
     };
   }
-
-  // Autoplaying video attachment for small thumbnail contexts (hero/drawer/lightbox).
-  // This loads the first resolvable video immediately and keeps it muted/looping.
-  async function attachAutoplayVideo(videoEl, path) {
-    const placeholder = 'assets/placeholder-video.mp4';
-    videoEl.preload = 'metadata';
-    videoEl.muted = true;
-    videoEl.loop = true;
-    videoEl.playsInline = true;
-    videoEl.setAttribute('playsinline', '');
-    videoEl.controls = false;
-    try {
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = url(chosen || placeholder);
-      videoEl.play().catch(() => { /* ignore autoplay blocks */ });
-    } catch (_e) {
-      videoEl.src = url(placeholder);
-    }
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
-  }
-
-  // ---------- Header hero sequence (auto-playing, one after another) ----------
-  // Uses media.json -> headerSequence to drive the hero player in the sticky header.
-  // Requirements:
-  // - autoplay muted videos
-  // - advance automatically (on ended, with a safety timeout)
-  // - show larger, clearer thumbnails
-  // - credit INTERACT as agency via local assets
-  function initHeroSequence() {
-    const cfg = state.mediaCfg;
-    const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
-    const heroVideo = document.getElementById('heroVideo');
-    const heroTitle = document.getElementById('heroTitle');
-    const heroSub = document.getElementById('heroSub');
-    const thumbs = document.getElementById('heroThumbs');
-    const prevBtn = document.getElementById('heroPrev');
-    const nextBtn = document.getElementById('heroNext');
-    if (!heroVideo || !thumbs || !items.length) return;
-
-    state._hero = state._hero || { idx: 0, timer: null, safety: null };
-    heroVideo.muted = true;
-    heroVideo.playsInline = true;
-    heroVideo.setAttribute('playsinline', '');
-    heroVideo.loop = false; // crucial for sequential playback
-
-    // Build thumbnail buttons
-    thumbs.innerHTML = '';
-    items.forEach((it, i) => {
-      const b = document.createElement('button');
-      b.className = 'heroThumb';
-      b.type = 'button';
-      b.setAttribute('aria-label', it.label ? `Show ${it.label}` : `Show item ${i+1}`);
-      b.dataset.idx = String(i);
-
-      const img = document.createElement('img');
-      img.alt = it.label || 'thumb';
-      img.loading = 'lazy';
-      b.appendChild(img);
-      attachSmartImage(img, it.poster || cfg?.placeholder || 'assets/placeholder.svg');
-
-      const badge = document.createElement('div');
-      badge.className = 'heroBadge';
-      badge.textContent = it.label || '';
-      b.appendChild(badge);
-
-      b.addEventListener('click', () => {
-        selectHero(i, true);
-      });
-      thumbs.appendChild(b);
-    });
-
-    function clearTimers() {
-      if (state._hero.timer) { clearTimeout(state._hero.timer); state._hero.timer = null; }
-      if (state._hero.safety) { clearTimeout(state._hero.safety); state._hero.safety = null; }
-    }
-
-    async function selectHero(i, userAction) {
-      if (!Number.isFinite(i)) return;
-      state._hero.idx = (i + items.length) % items.length;
-      clearTimers();
-
-      // active thumb state
-      Array.from(thumbs.children).forEach((el, idx) => {
-        if (idx === state._hero.idx) el.classList.add('is-active'); else el.classList.remove('is-active');
-      });
-
-      const it = items[state._hero.idx];
-      if (heroTitle) heroTitle.textContent = it.label || '';
-      if (heroSub) heroSub.textContent = '';
-
-      // Load video (with existence check). If not found, keep current and advance.
-      const chosen = await resolveFirstExisting(it.video || '');
-      if (!chosen) {
-        // No playable source; advance quickly
-        state._hero.timer = setTimeout(() => selectHero(state._hero.idx + 1, false), 2500);
-        return;
-      }
-
-      heroVideo.src = url(chosen);
-      try {
-        await heroVideo.play();
-      } catch (_e) {
-        // Autoplay blocked; still progress
-      }
-
-      // Advance on end + safety timeout (in case of very long videos or failure to emit ended)
-      heroVideo.onended = () => selectHero(state._hero.idx + 1, false);
-      state._hero.safety = setTimeout(() => {
-        try { heroVideo.pause(); } catch (_e) {}
-        selectHero(state._hero.idx + 1, false);
-      }, 18000);
-
-      // If user manually selected, restart the scrolling strip animation (optional)
-      if (userAction) {
-        // no-op for now
-      }
-    }
-
-    prevBtn?.addEventListener('click', () => selectHero(state._hero.idx - 1, true));
-    nextBtn?.addEventListener('click', () => selectHero(state._hero.idx + 1, true));
-
-    // Start from 0
-    selectHero(0, false);
-  }
-
-  function initHighlightsStrip() {
-    const cfg = state.mediaCfg;
-    const track = document.getElementById('highlightsTrack');
-    if (!track) return;
-    const items = Array.isArray(cfg?.headerSequence) ? cfg.headerSequence : [];
-    // Use posters for a lightweight, always-available strip.
-    const posters = items.map(x => x.poster).filter(Boolean);
-    if (!posters.length) return;
-    track.innerHTML = '';
-    const seq = posters.concat(posters); // duplicate for seamless scroll
-    seq.forEach(p => {
-      const wrap = document.createElement('div');
-      wrap.className = 'highlightItem';
-      const img = document.createElement('img');
-      img.alt = 'highlight';
-      img.loading = 'lazy';
-      wrap.appendChild(img);
-      track.appendChild(wrap);
-      attachSmartImage(img, p);
-    });
-  }
-
-  function initChartCarouselAutoScroll() {
-    const el = document.getElementById('chartCarousel');
-    if (!el) return;
-    if (state._chartCarouselTimer) clearInterval(state._chartCarouselTimer);
-    let idx = 0;
-    const slides = Array.from(el.querySelectorAll('.chartSlide'));
-    if (slides.length < 2) return;
-
-    const scrollToIdx = (i) => {
-      const target = slides[i];
-      if (!target) return;
-      const left = target.offsetLeft;
-      el.scrollTo({ left, behavior: 'smooth' });
-    };
-
-    const tick = () => {
-      idx = (idx + 1) % slides.length;
-      scrollToIdx(idx);
-    };
-
-    // Pause on interaction
-    const pause = () => { if (state._chartCarouselTimer) { clearInterval(state._chartCarouselTimer); state._chartCarouselTimer = null; } };
-    const resume = () => { if (!state._chartCarouselTimer) state._chartCarouselTimer = setInterval(tick, 7000); };
-    el.addEventListener('mouseenter', pause);
-    el.addEventListener('mouseleave', resume);
-    el.addEventListener('touchstart', pause, { passive: true });
-    el.addEventListener('touchend', resume, { passive: true });
-
-    state._chartCarouselTimer = setInterval(tick, 7000);
-  }
-
-  // (deduplicated) use initHighlightsStrip() and initChartCarouselAutoScroll()
 
   // ---------- Tab controller ----------
   function setActiveTab(tab) {
@@ -816,6 +660,7 @@
       }
     })();
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     // ---------- Totals ----------
     let totalFarmers = 0;
@@ -917,7 +762,36 @@
     const elKpiUsed = $$('#kpiUsedLastYear'); if (elKpiUsed) elKpiUsed.textContent = pct(usedLastYearAvg);
     const elKpiScore = $$('#kpiScore'); if (elKpiScore) elKpiScore.textContent = Number.isFinite(scoreAvg) ? fmt1(scoreAvg) : '—';
 
-    // ---------- Funnel (donut charts) ----------
+    
+    // Summary progress: treat awareness as the primary "education progress" proxy.
+    const progEl = $$('#summaryProgress');
+    if (progEl) {
+      const pctVal = Number.isFinite(awarenessAvg) ? Math.max(0, Math.min(100, Math.round(awarenessAvg))) : null;
+      if (pctVal == null) {
+        progEl.innerHTML = '';
+      } else {
+        progEl.innerHTML = `
+          <div class="progressContainer">
+            <div class="progressTrack"><div class="progressBar" style="width:${pctVal}%"></div></div>
+            <div class="smallMuted progressNote">${pctVal}% of target farmers educated—INTERACT on track.</div>
+          </div>`;
+      }
+    }
+
+    // Push headline KPIs into the hero captions (optional, if hero slider is present).
+    try {
+      if (window.WHEAT_HERO && typeof window.WHEAT_HERO.updateStats === 'function') {
+        window.WHEAT_HERO.updateStats({
+          sessions: fs.length,
+          farmers: Number.isFinite(totalFarmers) ? totalFarmers : null,
+          awareness: Number.isFinite(awarenessAvg) ? Math.round(awarenessAvg) : null,
+          definite: Number.isFinite(definiteAvg) ? Math.round(definiteAvg) : null,
+          score: Number.isFinite(scoreAvg) ? Number(scoreAvg.toFixed(1)) : null
+        });
+      }
+    } catch (e) { /* ignore */ }
+
+// ---------- Funnel (donut charts) ----------
     const funnelEl = $$('#funnel');
     if (funnelEl) {
       const items = [
@@ -1023,6 +897,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation(),
           plugins: {
             legend: {
               position: 'right',
@@ -1082,7 +957,7 @@
           plugins: {
             legend: {
               position: 'right',
-              labels: { usePointStyle: true, padding: 12, boxWidth: 10 }
+              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
             },
             tooltip: {
               callbacks: {
@@ -1100,7 +975,242 @@
       });
     }
 
-    // ---------- Top sessions table (by score) ----------
+    
+    // ---------- Additional breakdowns (Region / Territory / Score distribution) ----------
+    // These charts were intentionally kept lightweight: computed from the current filtered set,
+    // weighted by refined (sheet-index) farmers when available.
+    const palette = ['#44b8ff','#6be675','#ffce56','#ff6384','#9966ff','#ff9f40','#4bc0c0','#c9cbcf','#36a2eb','#8dd1ff'];
+
+    const farmersFor = (s) => {
+      const si = idx?.get(s.sheetRef);
+      const f = Number(si?.farmers_present ?? s?.metrics?.farmers ?? s?.farmers ?? 0);
+      return (Number.isFinite(f) && f > 0) ? f : 0;
+    };
+
+    const normKey = (v, fallback = 'Unknown') => {
+      const x = String(v ?? '').trim();
+      if (!x) return fallback;
+      return x.toUpperCase();
+    };
+
+    const setPlaceholder = (canvas, msg, show) => {
+      const wrap = canvas?.parentElement;
+      if (!wrap) return;
+      let ph = wrap.querySelector('.chartPlaceholder');
+      if (!ph) {
+        ph = document.createElement('div');
+        ph.className = 'muted chartPlaceholder';
+        ph.style.padding = '12px';
+        ph.style.display = 'none';
+        wrap.appendChild(ph);
+      }
+      if (show) {
+        canvas.style.display = 'none';
+        ph.textContent = msg || 'No data.';
+        ph.style.display = 'block';
+      } else {
+        canvas.style.display = '';
+        ph.style.display = 'none';
+      }
+    };
+
+    const renderGroupDonut = (canvasSel, winKey, keyGetter, emptyMsg) => {
+      const canvas = $$(canvasSel);
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      // Destroy prior chart instance (re-render safe)
+      const prior = window[winKey];
+      if (prior && typeof prior.destroy === 'function') prior.destroy();
+
+      const mp = new Map(); // key -> {farmers, sessions}
+      let anyFarmers = false;
+
+      for (const s of fs) {
+        const key = normKey(keyGetter(s));
+        const f = farmersFor(s);
+        if (f > 0) anyFarmers = true;
+        const rec = mp.get(key) || { farmers: 0, sessions: 0 };
+        rec.farmers += f;
+        rec.sessions += 1;
+        mp.set(key, rec);
+      }
+
+      const arr = [...mp.entries()].map(([k, v]) => ({
+        key: k,
+        farmers: Number(v.farmers) || 0,
+        sessions: Number(v.sessions) || 0
+      }));
+
+      // Nothing to show
+      const hasAny = arr.some(x => (x.sessions > 0));
+      if (!hasAny) { setPlaceholder(canvas, emptyMsg || 'No data.', true); return; }
+      setPlaceholder(canvas, '', false);
+
+      const metric = anyFarmers ? 'farmers' : 'sessions';
+      arr.sort((a, b) => (Number(b[metric]) - Number(a[metric])));
+
+      const topN = 6;
+      const labels = [];
+      const data = [];
+      const metaFarmers = [];
+      const metaSessions = [];
+
+      let otherMetric = 0;
+      let otherFarmers = 0;
+      let otherSessions = 0;
+
+      arr.forEach((it, i) => {
+        const mval = Number(it[metric]) || 0;
+        if (i < topN) {
+          labels.push(it.key);
+          data.push(mval);
+          metaFarmers.push(it.farmers);
+          metaSessions.push(it.sessions);
+        } else {
+          otherMetric += mval;
+          otherFarmers += it.farmers;
+          otherSessions += it.sessions;
+        }
+      });
+
+      if (otherMetric > 0) {
+        labels.push('Other');
+        data.push(otherMetric);
+        metaFarmers.push(otherFarmers);
+        metaSessions.push(otherSessions);
+      }
+
+      const ctx = canvas.getContext('2d');
+      const bgColors = data.map((_, i) => palette[i % palette.length]);
+
+      window[winKey] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: bgColors,
+            borderColor: '#ffffff10',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation(),
+          cutout: '55%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[i];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
+                  const sessions = metaSessions[i] ?? 0;
+                  const farmers = metaFarmers[i] ?? 0;
+
+                  if (anyFarmers) {
+                    return `${lab}: ${Math.round(val)} farmers (${pct}%) • ${sessions} session${sessions === 1 ? '' : 's'}`;
+                  }
+                  return `${lab}: ${Math.round(val)} session${Math.round(val) === 1 ? '' : 's'} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    };
+
+    // Farmers by region (REG)
+    renderGroupDonut('#regionPie', 'regionChart', (s) => s.region, 'No region entries yet.');
+
+    // Farmers by territory (uses s.city in this dataset)
+    renderGroupDonut('#territoryPie', 'territoryChart', (s) => s.city, 'No territory entries yet.');
+
+    // Session score distribution (banded)
+    (function renderScoreBands(){
+      const canvas = $$('#scoreBandsDonut');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      if (window.scoreBandsChart && typeof window.scoreBandsChart.destroy === 'function') {
+        window.scoreBandsChart.destroy();
+      }
+
+      const bands = [
+        { label: '<60', min: -Infinity, max: 59.9999 },
+        { label: '60–69', min: 60, max: 69.9999 },
+        { label: '70–79', min: 70, max: 79.9999 },
+        { label: '80–89', min: 80, max: 89.9999 },
+        { label: '90+', min: 90, max: Infinity },
+      ];
+
+      const counts = new Array(bands.length).fill(0);
+      const farmersByBand = new Array(bands.length).fill(0);
+
+      for (const s of fs) {
+        const sc = Number(s.score);
+        if (!Number.isFinite(sc)) continue;
+        const f = farmersFor(s);
+        let bi = bands.findIndex(b => sc >= b.min && sc <= b.max);
+        if (bi < 0) bi = 0;
+        counts[bi] += 1;
+        farmersByBand[bi] += f;
+      }
+
+      const total = counts.reduce((a, v) => a + v, 0);
+      if (!total) { setPlaceholder(canvas, 'No scored sessions in the current filter.', true); return; }
+      setPlaceholder(canvas, '', false);
+
+      const labels = bands.map(b => b.label);
+      const ctx = canvas.getContext('2d');
+      const bgColors = counts.map((_, i) => palette[i % palette.length]);
+
+      window.scoreBandsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: counts,
+            backgroundColor: bgColors,
+            borderColor: '#ffffff10',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation(),
+          cutout: '55%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: legendColor, usePointStyle: true, padding: 12, boxWidth: 10 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = ctx.dataset.data[i];
+                  const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
+                  const f = farmersByBand[i] || 0;
+                  return `${lab}: ${val} session${val === 1 ? '' : 's'} (${pct}%)${f ? ` • ${Math.round(f)} farmers` : ''}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    })();
+
+// ---------- Top sessions table (by score) ----------
     const topBody = $$('#topSessionsTable tbody');
     if (topBody) {
       const top = [...fs].sort((a,b) => Number(b.score||0) - Number(a.score||0)).slice(0, 8);
@@ -1111,13 +1221,15 @@
         const district = esc(s.district || '');
         const village = esc(s.village || s.spot || '');
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
+        const scoreNum = Number(s.score||0);
+        const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
         const si = idx?.get(s.sheetRef);
         const f = si ? fmtInt(si.farmers_present) : (Number.isFinite(Number(s?.metrics?.farmers)) ? fmtInt(s.metrics.farmers) : '—');
         const a = si ? fmt1(si.acres) : (Number.isFinite(Number(s?.metrics?.wheatAcres)) ? fmt1(s.metrics.wheatAcres) : '—');
         const href = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
         return `<tr data-session-id="${sid}">
           <td>${date}</td>
-          <td><span class="badge">${sheet}</span></td>
+          <td><span class="${badgeClass}">${sheet}</span></td>
           <td>${district}</td>
           <td>${village}</td>
           <td>${f}</td>
@@ -1230,39 +1342,105 @@
         return `<li><b>${esc(k)}</b>: ${fmtInt(n)}${esc(share)}</li>`;
       }).join('');
     };
+    // Render the top drivers and barriers as donut charts (with a compact legend).
+    // Note: reason counts are multi-select; percentages shown are "share of farmers", not "share of reasons".
+    const renderReasonsDonut = (mp, canvasSel, legendSel, winKey, emptyMsg, hueBase) => {
+      const canvas = $$(canvasSel);
+      const legend = $$(legendSel);
 
-    // Render the top drivers and barriers as horizontal bar charts instead of plain lists.
-    // Each bar's length reflects the share of farmers citing that reason. When no data is
-    // available, a muted placeholder is shown instead. The charts are drawn into
-    // #driversChart and #barriersChart containers.
-    const renderBarChart = (mp, containerId) => {
-      const container = document.querySelector(containerId);
-      if (!container) return;
-      const total = totalFarmers || 0;
-      // Sort entries descending by count and take up to 6 entries.
-      const arr = [...mp.entries()].sort((a, b) => (Number(b[1] || 0) - Number(a[1] || 0))).slice(0, 6);
-      if (!arr.length) {
-        container.innerHTML = '<div class="muted">No entries captured.</div>';
+      if (!canvas) return;
+
+      // If Chart.js isn't available, fall back to a readable legend/list.
+      if (typeof Chart === 'undefined') {
+        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'Chart library not loaded.')}</div>`;
         return;
       }
-      container.innerHTML = arr.map(([k, v]) => {
-        const n = Number(v) || 0;
-        // Compute share of total farmers; clamp between 0 and 100.
-        const pct = (total > 0) ? Math.min(Math.max(n / total * 100, 0), 100) : 0;
-        // Construct a bar row using existing barRow/barTrack/barFill styles. Use
-        // the CSS variable --brand (blue) for drivers and --danger (red) for barriers.
-        const colorVar = (containerId === '#driversChart') ? 'var(--brand)' : 'var(--danger)';
-        return `<div class="barRow">
-          <div class="barLabel">${esc(k)}</div>
-          <div class="barTrack"><div class="barFill" style="width:${pct.toFixed(1)}%; background:${colorVar};"></div></div>
-          <div class="barVal">${fmtInt(n)}${total > 0 ? ` (${fmt1(pct)}%)` : ''}</div>
-        </div>`;
-      }).join('');
+
+      // Destroy prior chart instance (re-render safe)
+      const prior = window[winKey];
+      if (prior && typeof prior.destroy === 'function') prior.destroy();
+
+      const total = totalFarmers || 0;
+
+      const entries = [...mp.entries()]
+        .map(([k, v]) => [String(k || '').trim(), Number(v) || 0])
+        .filter(([k, v]) => k && v > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (!entries.length) {
+        if (legend) legend.innerHTML = `<div class="muted">${esc(emptyMsg || 'No entries captured.')}</div>`;
+        try {
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } catch (_) {}
+        return;
+      }
+
+      // Top reasons + aggregate remainder
+      const top = entries.slice(0, 6);
+      const rest = entries.slice(6);
+      if (rest.length) {
+        const other = rest.reduce((acc, [, v]) => acc + (Number(v) || 0), 0);
+        if (other > 0) top.push(['Other', other]);
+      }
+
+      const labels = top.map(([k]) => k);
+      const values = top.map(([, v]) => Number(v) || 0);
+
+      const n = Math.max(values.length, 1);
+      const colors = values.map((_, i) => `hsl(${(hueBase + (i * 360) / n) % 360} 65% 55%)`);
+
+      // Render compact legend (keeps row alignment stable)
+      if (legend) {
+        legend.innerHTML = top.map(([k, v], i) => {
+          const cnt = Number(v) || 0;
+          const pctFarmers = total ? (cnt / total) * 100 : null;
+          return `<div class="legendItem">
+            <span class="legendDot" style="background:${colors[i]};"></span>
+            <span class="legendText">${esc(k)}</span>
+            <span class="legendVal">${fmtInt(cnt)}${pctFarmers != null ? ` (${fmt1(pctFarmers)}%)` : ''}</span>
+          </div>`;
+        }).join('');
+      }
+
+      // Build chart
+      window[winKey] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation(),
+          cutout: '60%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const i = ctx.dataIndex;
+                  const lab = ctx.label || '';
+                  const val = Number(ctx.parsed) || 0;
+                  const sum = (ctx.dataset.data || []).reduce((acc, v) => acc + (Number(v) || 0), 0);
+                  const pctReasons = sum ? ((val / sum) * 100).toFixed(1) : '0.0';
+                  const pctFarmers = total ? ((val / total) * 100).toFixed(1) : null;
+                  return `${lab}: ${fmtInt(val)}${pctFarmers != null ? ` (${pctFarmers}% of farmers)` : ''} • ${pctReasons}% of reasons`;
+                }
+              }
+            }
+          }
+        }
+      });
     };
 
-    renderBarChart(drivers, '#driversChart');
-    renderBarChart(barriers, '#barriersChart');
-
+    renderReasonsDonut(drivers, '#driversDonut', '#driversLegend', 'driversDonutChart', 'No driver entries yet.', 200);
+    renderReasonsDonut(barriers, '#barriersDonut', '#barriersLegend', 'barriersDonutChart', 'No barrier entries yet.', 12);
     // ---------- Data readiness / status ----------
     setStatus(
       `Loaded ${fmtInt(fs.length)} sessions and ${fmtInt(state.sheetsIndex?.sheets?.length || 0)} sheet summaries.\n` +
@@ -1278,6 +1456,7 @@
     if (!tbody) return;
 
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     const rows = state.filteredSessions.map(s => {
       const sid = esc(s.id);
@@ -1683,7 +1862,7 @@
           v.setAttribute('playsinline','');
           wrap.appendChild(v);
           mediaEl.appendChild(wrap);
-          attachAutoplayVideo(v, it.path);
+          attachSmartVideo(v, it.path);
           wrap.onclick = () => openLightbox(Number(s.id));
         }
       }
@@ -1793,7 +1972,7 @@
           tv.playsInline = true;
           tv.setAttribute('playsinline','');
           row.appendChild(tv);
-          attachAutoplayVideo(tv, it.path);
+          attachSmartVideo(tv, it.path);
           tv.onclick = () => {
             body.innerHTML = '';
             lb.classList.add('open');
@@ -1872,6 +2051,7 @@
 
     // Build a quick lookup of sheet metadata to obtain farmers and acreage.
     const idx = state.sheetsIndex?.sheets ? new Map(state.sheetsIndex.sheets.map(x => [x.sheet, x])) : null;
+    const legendColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e9eef7').trim();
 
     const pts = [];
     const heatPoints = [];
@@ -2222,13 +2402,64 @@
     });
   }
 
-  // ---------- Boot ----------
+  
+  // ---------- Donut row auto-scroll ----------
+  // Creates a subtle horizontal auto-scroll for donut rows, and pauses on mouse-over / interaction.
+  function initDonutRows() {
+    const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
+    rows.forEach((row) => {
+      if (row.dataset._autoBound === '1') return;
+      row.dataset._autoBound = '1';
+
+      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
+      let paused = false;
+      let wheelTimer = null;
+
+      const step = () => {
+        if (!paused && !document.hidden && speed > 0) {
+          const max = row.scrollWidth - row.clientWidth;
+          if (max > 4) {
+            row.scrollLeft += speed;
+            if (row.scrollLeft >= max - 1) row.scrollLeft = 0;
+          }
+        }
+        requestAnimationFrame(step);
+      };
+
+      row.addEventListener('mouseenter', () => { paused = true; });
+      row.addEventListener('mouseleave', () => { paused = false; });
+
+      // Pause auto-scroll on pointer interactions (mouse/touch/pen)
+      row.addEventListener('pointerdown', () => { paused = true; });
+      row.addEventListener('pointerup', () => { paused = false; });
+      row.addEventListener('pointercancel', () => { paused = false; });
+
+      row.addEventListener('focusin', () => { paused = true; });
+      row.addEventListener('focusout', () => { paused = false; });
+
+      row.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+      row.addEventListener('touchend', () => { paused = false; }, { passive: true });
+      row.addEventListener('touchcancel', () => { paused = false; }, { passive: true });
+
+      row.addEventListener('wheel', () => {
+        paused = true;
+        if (wheelTimer) clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => { paused = false; }, 800);
+      }, { passive: true });
+
+      // Start loop
+      requestAnimationFrame(step);
+    });
+  }
+
+// ---------- Boot ----------
   async function boot() {
     try {
       bindDrawer();
       bindLightbox();
       bindFeedback();
       bindTopControls();
+      initDonutRows();
       bindTabEvents();
 
       await loadCampaignRegistry();
@@ -2238,11 +2469,6 @@
       renderCampaignSelect();
 
       await loadCampaign(id);
-
-      // Header sequence + highlights + compact chart carousel
-      initHeroSequence();
-      initHighlightsStrip();
-      initChartCarouselAutoScroll();
 
       // Initial tab
       syncTabFromHash();

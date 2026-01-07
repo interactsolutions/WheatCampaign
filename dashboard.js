@@ -379,25 +379,31 @@
   let leafletPromise = null;
 
   function ensureLeafletCss() {
-    if (document.querySelector('link[data-leaflet-css="1"], link#leafletCss')) return;
+    // If the page already has a Leaflet CSS link (often id="leafletCss"),
+    // prefer switching it to local-first instead of silently keeping a CDN-only href.
+    if (document.querySelector('link[data-leaflet-css="1"]')) return;
     const hrefs = [
       'assets/leaflets/dist/leaflet.css',
       'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
       'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
     ];
-    const link = document.createElement('link');
+    const existing = document.getElementById('leafletCss');
+    const link = existing || document.createElement('link');
     link.rel = 'stylesheet';
     link.dataset.leafletCss = '1';
     link.href = hrefs[0];
-    document.head.appendChild(link);
+    if (!existing) document.head.appendChild(link);
 
-    // Best-effort fallbacks if a CDN is blocked.
-    let i = 0;
-    link.onerror = () => {
-      i += 1;
-      if (i < hrefs.length) link.href = hrefs[i];
-    };
+    // Best-effort fallbacks if local assets or a CDN is blocked.
+    if (!link.dataset.fallbackBound) {
+      link.dataset.fallbackBound = '1';
+      let i = 0;
+      link.onerror = () => {
+        i += 1;
+        if (i < hrefs.length) link.href = hrefs[i];
+      };
+    }
   }
 
   function loadScriptOnce(src) {
@@ -428,8 +434,13 @@
     leafletPromise = (async () => {
       ensureLeafletCss();
 
+      // NOTE: Your repo vendors Leaflet under assets/leaflets/.
+      // The file named `leaflet.js` in that bundle can be an ES module build
+      // (which throws "Unexpected keyword 'export'" when loaded as a classic script).
+      // `leaflet-global.js` is the UMD/global build that exposes window.L, so we
+      // load it first.
       const srcs = [
-        'assets/leaflets/dist/leaflet.js',
+        'assets/leaflets/dist/leaflet-global.js',
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
         'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
         'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'

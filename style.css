@@ -989,14 +989,18 @@ a{ color: inherit; }
 /* Donut rows: align donut tiles in horizontal, scrollable rows (pauses auto-scroll on hover via JS) */
 .donutRow{
   display:flex;
+  flex-wrap:nowrap;
   gap:12px;
   overflow-x:auto;
   overflow-y:hidden;
-  padding: 6px 2px 10px;
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
+  padding:6px 2px 10px;
+  scroll-snap-type:x proximity;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
 }
+.donutRow[data-autoscroll="1"]{scroll-snap-type:none;}
+
 .donutRow > *{ scroll-snap-align: start; }
 
 .donutRow::-webkit-scrollbar{ height: 10px; }
@@ -1015,9 +1019,16 @@ a{ color: inherit; }
 
 /* Tile sizing inside donut rows */
 .donutRow .chartTile{
-  flex: 0 0 clamp(280px, 34vw, 360px);
-  max-width: 420px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:14px;
+  border-radius:16px;
+  background: var(--cardSolid);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
 }
+
 .donutRow .chartTile.donutTileWide{
   flex-basis: clamp(320px, 42vw, 460px);
   max-width: 520px;
@@ -1540,6 +1551,14 @@ h2, h3{
   color: var(--text);
   font-family: inherit;
 }
+
+[data-theme="dark"] .leaflet-tile{
+  filter: saturate(1.05) hue-rotate(195deg) brightness(1.08) contrast(1.05);
+}
+[data-theme="dark"] .leaflet-tile-pane{
+  opacity:.94;
+}
+
 .leaflet-control,
 .leaflet-bar,
 .leaflet-control-layers,
@@ -1582,3 +1601,6 @@ h2, h3{
   color: var(--text);
   border: 1px solid var(--stroke);
 }
+
+
+[data-theme="dark"] .chartTile{background: rgba(255,255,255,.045);}

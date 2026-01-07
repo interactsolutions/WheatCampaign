@@ -274,26 +274,82 @@
   function tooltipBgForTheme(t) {
     return (t === 'light') ? 'rgba(255,255,255,0.96)' : 'rgba(12,18,35,0.92)';
   }
+  function registerChart(chart) {
+    try {
+      if (!chart) return chart;
+      if (!state._charts) state._charts = new Set();
+      state._charts.add(chart);
+    } catch (_e) { /* ignore */ }
+    return chart;
+  }
+
+  function unregisterChart(chart) {
+    try {
+      if (state._charts && chart) state._charts.delete(chart);
+    } catch (_e) { /* ignore */ }
+  }
+
   function applyChartTheme(chart) {
     try {
-      if (!chart || !chart.options) return;
+      if (!chart) return;
+
       const t = getTheme();
       const text = cssVar('--text', '#f0f4ff');
       const stroke = cssVar('--stroke', 'rgba(255,255,255,.12)');
-      chart.options.plugins = chart.options.plugins || {};
-      chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
-      Object.assign(chart.options.plugins.tooltip, {
-        backgroundColor: tooltipBgForTheme(t),
-        titleColor: text,
-        bodyColor: text,
-        borderColor: stroke,
-        borderWidth: 1
-      });
-      if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+      const chartBorder = cssVar('--chartBorder', 'rgba(255,255,255,.10)');
+
+      // Chart.js: chart.options exists. MiniChart fallback also has options.
+      if (chart.options) {
+        chart.options.color = text;
+
+        chart.options.plugins = chart.options.plugins || {};
+
+        // Tooltip
+        chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+        Object.assign(chart.options.plugins.tooltip, {
+          backgroundColor: tooltipBgForTheme(t),
+          titleColor: text,
+          bodyColor: text,
+          borderColor: stroke,
+          borderWidth: 1
+        });
+
+        // Legend
+        chart.options.plugins.legend = chart.options.plugins.legend || {};
+        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
         chart.options.plugins.legend.labels.color = text;
+
+        // Title (if used)
+        if (chart.options.plugins.title) {
+          chart.options.plugins.title.color = text;
+        }
       }
-      // MiniChart fallback supports update(); Chart.js supports update()
-      if (typeof chart.update === 'function') chart.update();
+
+      // Dataset borders (doughnut/pie readability on both themes)
+      if (chart.data && Array.isArray(chart.data.datasets)) {
+        chart.data.datasets.forEach((ds) => {
+          if (ds && typeof ds === 'object') {
+            // Only apply if border props exist or if the dataset is a doughnut-like chart.
+            if (ds.borderWidth == null) ds.borderWidth = 1;
+            if (ds.borderColor == null) ds.borderColor = chartBorder;
+          }
+        });
+      }
+
+      // MiniChart fallback supports update(); Chart.js supports update('none')
+      if (typeof chart.update === 'function') {
+        try { chart.update('none'); } catch (_e) { chart.update(); }
+      }
+    } catch (_e) { /* ignore */ }
+  }
+
+  function applyAllChartThemes() {
+    try {
+      if (state._charts && typeof state._charts.forEach === 'function') {
+        state._charts.forEach(applyChartTheme);
+      }
+      // Backward compatibility in case a chart wasn't registered.
+      applyAllChartThemes();
     } catch (_e) { /* ignore */ }
   }
 // ---------- Data / state ----------
@@ -1052,6 +1108,7 @@
       // Destroy any existing attendance chart to avoid duplicating charts on
       // re-render (e.g. after changing filters).
       if (window.attendanceChart && typeof window.attendanceChart.destroy === 'function') {
+        unregisterChart(window.attendanceChart);
         window.attendanceChart.destroy();
       }
       // Collect farmers per session and sort descending.
@@ -1126,12 +1183,14 @@
           cutout: '50%'
         }
       });
+      registerChart(window.attendanceChart);
     }
 
     // ---------- Decision breakdown pie chart ----------
     const decisionCanvas = $$('#decisionPie');
     if (decisionCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
       if (window.decisionChart && typeof window.decisionChart.destroy === 'function') {
+        unregisterChart(window.decisionChart);
         window.decisionChart.destroy();
       }
       let sumDef = 0, sumMaybe = 0, sumNot = 0;
@@ -1177,6 +1236,7 @@
           }
         }
       });
+      registerChart(window.decisionChart);
     }
 
     
@@ -1224,7 +1284,7 @@
 
       // Destroy prior chart instance (re-render safe)
       const prior = window[winKey];
-      if (prior && typeof prior.destroy === 'function') prior.destroy();
+      if (prior && typeof prior.destroy === 'function') { unregisterChart(prior); prior.destroy(); }
 
       const mp = new Map(); // key -> {farmers, sessions}
       let anyFarmers = false;
@@ -1329,6 +1389,7 @@
           }
         }
       });
+      registerChart(window[winKey]);
     };
 
     // Farmers by region (REG)
@@ -1343,6 +1404,7 @@
       if (!canvas || typeof Chart === 'undefined') return;
 
       if (window.scoreBandsChart && typeof window.scoreBandsChart.destroy === 'function') {
+        unregisterChart(window.scoreBandsChart);
         window.scoreBandsChart.destroy();
       }
 
@@ -1412,6 +1474,7 @@
           }
         }
       });
+      registerChart(window.scoreBandsChart);
     })();
 
 // ---------- Top sessions table (by score) ----------
@@ -1562,7 +1625,7 @@
 
       // Destroy prior chart instance (re-render safe)
       const prior = window[winKey];
-      if (prior && typeof prior.destroy === 'function') prior.destroy();
+      if (prior && typeof prior.destroy === 'function') { unregisterChart(prior); prior.destroy(); }
 
       const total = totalFarmers || 0;
 
@@ -1641,6 +1704,7 @@
           }
         }
       });
+      registerChart(window[winKey]);
     };
 
     renderReasonsDonut(drivers, '#driversDonut', '#driversLegend', 'driversDonutChart', 'No driver entries yet.', 200);
@@ -1656,7 +1720,7 @@
 
     // Keep chart UI (tooltips/labels) aligned with the active theme.
     try {
-      [window.attendanceChart, window.decisionChart, window.scoreBandsChart].forEach(applyChartTheme);
+      applyAllChartThemes();
     } catch (_e) {}
   }
 
@@ -1762,95 +1826,110 @@
         state.mediaType = t;
         // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
+        // Reset paging
         state.mediaLimit = 24;
         renderMedia();
       });
 
       const search = $$('#mediaSearch');
-      if (search) {
-        search.addEventListener('input', () => {
-          state.mediaSearch = String(search.value || '').trim().toLowerCase();
-          state.mediaLimit = 24;
-          renderMedia();
-        });
-      }
+      search?.addEventListener('input', () => {
+        state.mediaSearch = String(search.value || '');
+        state.mediaLimit = 24;
+        renderMedia();
+      });
 
       const sort = $$('#mediaSort');
-      if (sort) {
-        sort.addEventListener('change', () => {
-          state.mediaSort = String(sort.value || 'newest');
-          renderMedia();
-        });
-      }
+      sort?.addEventListener('change', () => {
+        state.mediaSort = String(sort.value || 'newest');
+        state.mediaLimit = 24;
+        renderMedia();
+      });
 
-      const more = $$('#mediaLoadMore');
-      if (more) {
-        more.addEventListener('click', () => {
-          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
-          renderMedia();
-        });
-      }
+      const moreBtn = $$('#mediaLoadMore');
+      moreBtn?.addEventListener('click', () => {
+        state.mediaLimit = Math.max(0, Number(state.mediaLimit || 24)) + 24;
+        renderMedia();
+      });
     }
 
-    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
-    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7.5v9l8-4.5-8-4.5Z" fill="currentColor"/><path d="M12 2.75c5.11 0 9.25 4.14 9.25 9.25S17.11 21.25 12 21.25 2.75 17.11 2.75 12 6.89 2.75 12 2.75Z" stroke="currentColor" opacity=".35"/></svg>';
+    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H17.5A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19H6.5A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor"/><path d="M8 11.5 10.5 14l2-2 3.5 4H6l2-4.5Z" fill="currentColor" opacity=".35"/><path d="M16.5 9a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor"/></svg>';
 
     const q = String(state.mediaSearch || '').trim().toLowerCase();
     const type = String(state.mediaType || 'all');
     const sortMode = String(state.mediaSort || 'newest');
 
-    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
+    const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
 
-    // Filter to sessions that actually have media
-    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+    // Build an item-level list (not session-level) so "Images" truly shows only images.
+    let items = [];
+    fs.forEach((s) => {
+      const media = allMediaItems(s);
+      if (!media || !media.length) return;
 
-    // Type filter
-    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
-    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+      const district = prettyPlaceName(s.district) || '';
+      const village = prettyPlaceName(s.village || s.spot) || '';
+
+      media.forEach((it, idx) => {
+        if (!it || !it.path) return;
+        items.push({
+          sessionId: Number(s.id),
+          sheetRef: String(s.sheetRef || ''),
+          date: String(s.date || ''),
+          district,
+          village,
+          type: it.type,
+          path: String(it.path),
+          order: Number(idx) || 0,
+          poster: (it.type === 'video') ? String(firstMediaImage(s) || '') : ''
+        });
+      });
+    });
+
+    // Type filter (item-level)
+    if (type === 'videos') items = items.filter(it => it.type === 'video');
+    if (type === 'images') items = items.filter(it => it.type === 'image');
 
     // Text filter
     if (q) {
-      list = list.filter(s => {
-        const sheet = String(s.sheetRef || '');
-        const district = String(s.district || '');
-        const village = String(s.village || s.spot || '');
-        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+      items = items.filter(it => {
+        const hay = `${it.sheetRef} ${it.district} ${it.village} ${it.path}`.toLowerCase();
+        return hay.includes(q);
       });
     }
 
-    // Sort by date (fallback to original order)
-    list.sort((a, b) => {
+    // Sort by date (stable tie-breaks)
+    items.sort((a, b) => {
       const da = parseDateSafe(a.date)?.getTime() || 0;
       const db = parseDateSafe(b.date)?.getTime() || 0;
-      return sortMode === 'oldest' ? (da - db) : (db - da);
+      let cmp = (sortMode === 'oldest') ? (da - db) : (db - da);
+      if (cmp) return cmp;
+      cmp = String(a.sheetRef || '').localeCompare(String(b.sheetRef || ''));
+      if (cmp) return cmp;
+      cmp = Number(a.sessionId) - Number(b.sessionId);
+      if (cmp) return cmp;
+      return Number(a.order || 0) - Number(b.order || 0);
     });
 
-    const total = list.length;
+    const total = items.length;
     const limit = Math.max(0, Number(state.mediaLimit || 24));
-    const shown = list.slice(0, limit);
+    const shown = items.slice(0, limit);
 
-    const cards = shown.map(s => {
-      const sid = esc(s.id);
-      const sheet = esc(s.sheetRef || '');
-      const district = esc(prettyPlaceName(s.district) || '');
-      const village = esc(prettyPlaceName(s.village || s.spot) || '');
-      // Determine thumbnail: prefer first video if available; otherwise first image
-      const vidPath = firstMediaVideo(s);
-      const img = firstMediaImage(s);
-
-      // In the Media tab, the thumbnail must respect the active type filter.
-      // If a session has both image and video, selecting "Images" should not show a video card (and vice versa).
-      const want = (type === 'videos') ? 'video' : (type === 'images') ? 'image' : (vidPath ? 'video' : 'image');
-      const primaryType = want;
-
+    const cards = shown.map(it => {
+      const sid = esc(it.sessionId);
+      const sheet = esc(it.sheetRef || '');
+      const district = esc(it.district || '');
+      const village = esc(it.village || '');
       const title = `${sheet} • ${district} • ${village}`;
-      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId || '')}&session=${encodeURIComponent(String(s.id))}`;
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(String(state.campaignId || ''))}&session=${encodeURIComponent(String(it.sessionId))}`;
 
-      // Build thumb markup
+      const primaryType = it.type;
+      const path = esc(it.path);
+      const poster = esc(it.poster || '');
+
       let thumb;
       let badge;
-      if (primaryType === 'video' && vidPath) {
-        // Lightweight preview (no autoplay)
+      if (primaryType === 'video') {
         thumb = `<video data-media-vid="1" preload="metadata" muted playsinline></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
@@ -1858,21 +1937,20 @@
         badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
       }
 
-      return `<div class="mediaCard" data-session-id="${sid}" data-primary-type="${primaryType}">
+      return `<div class="mediaCard" data-session-id="${sid}" data-primary-type="${primaryType}" data-media-path="${path}" data-poster-path="${poster}">
         <div class="mediaThumb">
           ${badge}
           ${thumb}
         </div>
         <div class="mediaMeta">
           <div class="mediaTitle">${esc(title)}</div>
+          <div class="mediaSub smallMuted">${esc(it.date || '')}</div>
           <div class="mediaActions">
-            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet ${esc(s.sheetRef)}</a>
-            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details ${esc(s.sheetRef)}</a>
-            <button class="btn btnSmall btnGhost" data-action="open">Open</button>
+            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(String(state.campaignId || ''))}&sheet=${encodeURIComponent(String(it.sheetRef || ''))}">Sheet ${sheet}</a>
+            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details ${sheet}</a>
+            <button class="btn btnSmall btnGhost" data-action="open" type="button">Open</button>
           </div>
         </div>
-        <div class="hidden" data-thumb-path="${esc(img)}"></div>
-        <div class="hidden" data-vid-path="${esc(vidPath || '')}"></div>
       </div>`;
     });
 
@@ -1884,32 +1962,42 @@
     const moreBtn = $$('#mediaLoadMore');
     if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
 
-    // attach thumbs
+    // Attach image thumbs
     $$$('[data-media-thumb="1"]', grid).forEach(img => {
       const card = img.closest('.mediaCard');
-      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
+      const p = card?.dataset.mediaPath || '';
       attachSmartImage(img, p || 'assets/placeholder.svg');
     });
 
-    // attach video thumbs (resolve .mp4/.webm + other fallbacks)
+    // Attach video thumbs
     $$$('[data-media-vid="1"]', grid).forEach(v => {
       const card = v.closest('.mediaCard');
-      const p = card?.querySelector('[data-vid-path]')?.getAttribute('data-vid-path') || '';
+      const p = card?.dataset.mediaPath || '';
       attachSmartVideo(v, p || 'assets/placeholder-video.mp4');
       // thumbnails should not show full controls
       try { v.controls = false; } catch (_e) {}
+      // Prefer a poster (first session image) to avoid a black rectangle while metadata loads.
+      const poster = card?.dataset.posterPath || '';
+      if (poster) {
+        resolveFirstExisting(poster).then((chosen) => {
+          if (chosen) {
+            try { v.poster = url(chosen); } catch (_e) {}
+          }
+        }).catch(() => {});
+      }
     });
 
     grid.onclick = (ev) => {
       const card = ev.target.closest('.mediaCard[data-session-id]');
       if (!card) return;
-      const sid = Number(card.dataset.sessionId);
       if (ev.target.closest('a')) return;
 
+      const sid = Number(card.dataset.sessionId);
       // Open lightbox, respecting the active media filter (Images/Videos/All)
       const mode = String(state.mediaType || 'all');
       const startType = card.dataset.primaryType || null;
-      openLightbox(sid, mode, startType);
+      const startPath = card.dataset.mediaPath || null;
+      openLightbox(sid, mode, startType, startPath);
     };
   }
 
@@ -2113,7 +2201,7 @@
     });
   }
 
-  async function openLightbox(sessionId, mode = 'all', startType = null) {
+  async function openLightbox(sessionId, mode = 'all', startType = null, startPath = null) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
 
@@ -2141,10 +2229,17 @@
 
 let active = 0;
 
-    // If we opened from a thumbnail, start at the matching media type.
-    if (m === 'all' && (startType === 'image' || startType === 'video')) {
-      const idx = items.findIndex(it => it.type === startType);
-      if (idx >= 0) active = idx;
+    // If we opened from a specific media item (e.g., in the Media grid), start there.
+    const sp = (startPath ? String(startPath) : '').trim();
+    if (sp) {
+      const idxPath = items.findIndex(it => String(it.path || '') === sp);
+      if (idxPath >= 0) active = idxPath;
+    } else {
+      // Fallback: start at matching media type (only meaningful in "all" mode).
+      if (m === 'all' && (startType === 'image' || startType === 'video')) {
+        const idxType = items.findIndex(it => it.type === startType);
+        if (idxType >= 0) active = idxType;
+      }
     }
 
     const main = document.createElement('div');
@@ -2207,8 +2302,8 @@ let active = 0;
 
         if (it.type === 'video') {
           t.muted = true;
-          t.loop = true;
-          t.autoplay = true;
+          t.loop = false;
+          t.autoplay = false;
           t.playsInline = true;
           t.setAttribute('playsinline', '');
           attachSmartVideo(t, it.path);
@@ -2684,39 +2779,36 @@ let active = 0;
       if (row.dataset._autoBound === '1') return;
       row.dataset._autoBound = '1';
 
-      // Disable if not scrollable
-      if (row.scrollWidth <= row.clientWidth + 5) {
-        row.style.overflowX = 'hidden';
-        return;
+      // Ensure single-line layout and avoid snap fighting the animation
+      try {
+        row.style.flexWrap = 'nowrap';
+        row.style.scrollSnapType = 'none';
+      } catch (_e) {}
+
+      // If not scrollable, nothing to animate.
+      const initialWidth = row.scrollWidth;
+      if (initialWidth <= row.clientWidth + 8) return;
+
+      // Duplicate the row content once to create a seamless loop.
+      if (row.dataset._cloned !== '1') {
+        const children = Array.from(row.children);
+        children.forEach((ch) => {
+          const clone = ch.cloneNode(true);
+          clone.dataset._clone = '1';
+          clone.setAttribute('aria-hidden', 'true');
+          row.appendChild(clone);
+        });
+        row.dataset._cloned = '1';
       }
 
-      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
+      const loopPoint = initialWidth; // scrollLeft wraps at the original width
+      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22')); // px per frame (≈60fps)
+
       let paused = false;
-      let wheelTimer = null;
-      let dir = 1;
+      let last = performance.now();
 
-      const step = () => {
-        if (!paused && !document.hidden && speed > 0) {
-          const maxScroll = row.scrollWidth - row.clientWidth;
-          if (maxScroll > 0) {
-            row.scrollLeft += speed * dir;
-
-            if (row.scrollLeft >= maxScroll - 2) {
-              dir = -1;
-              paused = true;
-              setTimeout(() => { paused = false; }, 800);
-            } else if (row.scrollLeft <= 2) {
-              dir = 1;
-              paused = true;
-              setTimeout(() => { paused = false; }, 800);
-            }
-          }
-        }
-        requestAnimationFrame(step);
-      };
-
-      // Pause auto-scroll only when the user interacts or hovers a donut tile.
-      const pauseEvents = ['touchstart', 'pointerdown', 'focusin'];
+      // Pause only when user interacts or hovers an actual tile.
+      const pauseEvents = ['touchstart', 'pointerdown', 'focusin', 'wheel'];
       const resumeEvents = ['touchend', 'pointerup', 'focusout'];
 
       pauseEvents.forEach(evt => row.addEventListener(evt, () => { paused = true; }, { passive: true }));
@@ -2724,20 +2816,36 @@ let active = 0;
         setTimeout(() => { paused = false; }, 120);
       }, { passive: true }));
 
-      // Hovering an actual tile pauses; moving within row padding does not.
-      const tiles = row.querySelectorAll('.chartTile');
-      tiles.forEach((tile) => {
-        tile.addEventListener('mouseenter', () => { paused = true; }, { passive: true });
-        tile.addEventListener('pointerenter', () => { paused = true; }, { passive: true });
-        tile.addEventListener('mouseleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
-        tile.addEventListener('pointerleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
-      });
+      const bindTileHover = () => {
+        const tiles = row.querySelectorAll('.chartTile');
+        tiles.forEach((tile) => {
+          if (tile.dataset._hoverBound === '1') return;
+          tile.dataset._hoverBound = '1';
+          tile.addEventListener('mouseenter', () => { paused = true; }, { passive: true });
+          tile.addEventListener('pointerenter', () => { paused = true; }, { passive: true });
+          tile.addEventListener('mouseleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
+          tile.addEventListener('pointerleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
+        });
+      };
+      bindTileHover();
 
-row.addEventListener('wheel', () => {
-        paused = true;
-        if (wheelTimer) clearTimeout(wheelTimer);
-        wheelTimer = setTimeout(() => { paused = false; }, 2000);
-      }, { passive: true });
+      const step = (now) => {
+        const dt = Math.max(0, now - last);
+        last = now;
+
+        if (!paused) {
+          // Convert "px per frame" to "px per ms"
+          const delta = speed * (dt / 16.6667);
+          row.scrollLeft += delta;
+
+          // Seamless wrap
+          if (row.scrollLeft >= loopPoint) {
+            row.scrollLeft -= loopPoint;
+          }
+        }
+
+        requestAnimationFrame(step);
+      };
 
       requestAnimationFrame(step);
     });
@@ -2757,7 +2865,7 @@ row.addEventListener('wheel', () => {
         const t = ev?.detail?.theme || getTheme();
         applyMapTheme(t);
         try {
-          [window.attendanceChart, window.decisionChart, window.scoreBandsChart].forEach(applyChartTheme);
+          applyAllChartThemes();
         } catch (_e) {}
       });
 

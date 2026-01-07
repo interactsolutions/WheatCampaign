@@ -7,8 +7,8 @@
       "day": 1,
       "city": "Ubaro",
       "district": "Ubaro",
-      "spot": "Ameen khan Chacharr",
-      "village": "Ameen khan Chacharr",
+      "spot": "Ameen Khan Chacharr",
+      "village": "Ameen Khan Chacharr",
       "salesRep": {
         "name": "Sadiq Hussain",
         "phone": "0301-2124357"
@@ -1143,8 +1143,8 @@
       "day": 9,
       "city": "Muzaffar Ghar",
       "district": "Muzaffar Ghar",
-      "spot": "Bassti Seerein",
-      "village": "Bassti Seerein",
+      "spot": "Basti Seerein",
+      "village": "Basti Seerein",
       "salesRep": {
         "name": "Táriq Husain",
         "phone": "0301-4590967"
@@ -1214,8 +1214,8 @@
       "day": 9,
       "city": "",
       "district": "Muzaffar Ghar",
-      "spot": "Topi Maanay wali",
-      "village": "Topi Maanay wali",
+      "spot": "Topi Maanay Wali",
+      "village": "Topi Maanay Wali",
       "salesRep": {
         "name": "Takes Bbbas",
         "phone": "0300-3738100"
@@ -1285,8 +1285,8 @@
       "day": 9,
       "city": "",
       "district": "Muzaffar Ghar",
-      "spot": "Phaty wala",
-      "village": "Phaty wala",
+      "spot": "Phaty Wala",
+      "village": "Phaty Wala",
       "salesRep": {
         "name": "Ghukem Murtaxa",
         "phone": "0313-7879 858"
@@ -1427,8 +1427,8 @@
       "day": 10,
       "city": "",
       "district": "Kot Adu",
-      "spot": "Hanjrai Bangla Chaah Phaati wala",
-      "village": "Hanjrai Bangla Chaah Phaati wala",
+      "spot": "Hanjrai Bangla Chaah Phaati Wala",
+      "village": "Hanjrai Bangla Chaah Phaati Wala",
       "salesRep": {
         "name": "Gulam Yasin",
         "phone": "0341-8606797"
@@ -1496,10 +1496,10 @@
       "sheetRef": "D11S1",
       "date": "2025-12-05",
       "day": 11,
-      "city": "Karor Lal esan",
-      "district": "Karor Lal esan",
-      "spot": "Basti joya",
-      "village": "Basti joya",
+      "city": "Karor Lal Esan",
+      "district": "Karor Lal Esan",
+      "spot": "Basti Joya",
+      "village": "Basti Joya",
       "salesRep": {
         "name": "M. Aslam",
         "phone": "0300-9875514"
@@ -1568,7 +1568,7 @@
       "date": "2025-12-05",
       "day": 11,
       "city": "",
-      "district": "Karor Lal esan",
+      "district": "Karor Lal Esan",
       "spot": "Chak 106 TDA",
       "village": "Chak 106 TDA",
       "salesRep": {
@@ -1639,9 +1639,9 @@
       "date": "2025-12-05",
       "day": 11,
       "city": "",
-      "district": "Karor Lal esan",
-      "spot": "Bassti Maachi Buchi wala",
-      "village": "Bassti Maachi Buchi wala",
+      "district": "Karor Lal Esan",
+      "spot": "Basti Maachi Buchi Wala",
+      "village": "Basti Maachi Buchi Wala",
       "salesRep": {
         "name": "Irfan Hussain",
         "phone": "0304-9365914"
@@ -2066,8 +2066,8 @@
       "day": 13,
       "city": "",
       "district": "Mianwali",
-      "spot": "Daud KhaiL kacha",
-      "village": "Daud KhaiL kacha",
+      "spot": "Daud Khail Kacha",
+      "village": "Daud Khail Kacha",
       "salesRep": {
         "name": "Murtaza",
         "phone": "0304-6747523"
@@ -2208,8 +2208,8 @@
       "day": 14,
       "city": "",
       "district": "Sargodha",
-      "spot": "Habib pur Kangrra",
-      "village": "Habib pur Kangrra",
+      "spot": "Habib Pur Kangrra",
+      "village": "Habib Pur Kangrra",
       "salesRep": {
         "name": "Syed Asim Murtaza",
         "phone": "0342-5128639"
@@ -2279,8 +2279,8 @@
       "day": 14,
       "city": "",
       "district": "Sargodha",
-      "spot": "ChakrraLa",
-      "village": "ChakrraLa",
+      "spot": "Chakrrala",
+      "village": "Chakrrala",
       "salesRep": {
         "name": "Mubashir Siddiqui",
         "phone": "0345-1718611"
@@ -2634,8 +2634,8 @@
       "day": 16,
       "city": "",
       "district": "Chakwal",
-      "spot": "DawaalmiaaL",
-      "village": "DawaalmiaaL",
+      "spot": "Dawaalmiaal",
+      "village": "Dawaalmiaal",
       "salesRep": {
         "name": "-",
         "phone": "-"
@@ -2701,9 +2701,9 @@
     {
       "id": 39,
       "sheetRef": "D17S1",
-      "date": "Toba take singh",
+      "date": "2025-12-11",
       "day": 17,
-      "city": "Toba take singh",
+      "city": "Toba Tek Singh",
       "district": "Phalia",
       "spot": "Chak 262-GB",
       "village": "Chak 262-GB",
@@ -2772,9 +2772,9 @@
     {
       "id": 40,
       "sheetRef": "D17S2",
-      "date": "Toba take singh",
+      "date": "2025-12-11",
       "day": 17,
-      "city": "",
+      "city": "Toba Tek Singh",
       "district": "Phalia",
       "spot": "Chak 338 GB",
       "village": "Chak 338 GB",

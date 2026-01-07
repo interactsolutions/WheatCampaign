@@ -713,6 +713,10 @@
     function applyTheme(t) {
       htmlEl.setAttribute('data-theme', t);
       localStorage.setItem('theme', t);
+      try {
+        window.__THEME__ = t;
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t } }));
+      } catch (_e) {}
       if (toggleBtn) {
         const sym = (t === 'light') ? 'i-moon' : 'i-sun';
         toggleBtn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg><span class="srOnly">Toggle theme</span>`;

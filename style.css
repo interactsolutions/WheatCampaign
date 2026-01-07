@@ -21,6 +21,9 @@
   --text: #f0f4ff;
   --muted: #b0c4e6;
   --muted2:#8a9cc2;
+  --chartBorder: rgba(255,255,255,.10);
+  --donutHole: var(--bg);
+  --mapBg: var(--cardSolid);
 
   --brand: #00bcff;     /* Bayer blue */
   --brand2:#89d329;     /* Bayer green */
@@ -46,6 +49,9 @@
   --text:#10384f;
   --muted:#64748b;
   --muted2:#475569;
+  --chartBorder: rgba(16,56,79,.14);
+  --donutHole: var(--cardSolid);
+  --mapBg: var(--cardSolid);
 
   --brand:#00bcff;
   --brand2:#89d329;
@@ -458,9 +464,9 @@ a{ color: inherit; }
 .donutCard{
   width:140px;
   max-width:140px;
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid var(--stroke);
   border-radius:16px;
-  background: rgba(255,255,255,.03);
+  background: var(--card);
   padding:12px;
   display:flex;
   flex-direction:column;
@@ -468,8 +474,8 @@ a{ color: inherit; }
   box-shadow: none;
 }
 [data-theme="light"] .donutCard{
-  background: rgba(255,255,255,.75);
-  border-color: rgba(16,56,79,.14);
+  background: var(--card);
+  border-color: var(--stroke);
 }
 .donutTitle{
   margin: 0 0 8px;
@@ -503,7 +509,7 @@ a{ color: inherit; }
   width:70%;
   height:70%;
   border-radius:50%;
-  background: rgba(7,11,20,1);
+  background: var(--donutHole);
 }
 [data-theme="light"] .donut::before{ background: var(--cardSolid); }
 .donutValue{
@@ -512,7 +518,7 @@ a{ color: inherit; }
   transform:translate(-50%,-50%);
   font-size:14px;
   font-weight:800;
-  color:#e9f0ff;
+  color: var(--text);
 }
 [data-theme="light"] .donutValue{ color: var(--text); }
 .donutMeta{ margin-top:8px; font-size:12px; color: var(--muted); text-align:center; }
@@ -526,9 +532,9 @@ a{ color: inherit; }
 }
 @media (max-width: 980px){ .insightsRow{ grid-template-columns: 1fr; } }
 .insight{
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid var(--stroke);
   border-radius:16px;
-  background: rgba(255,255,255,.03);
+  background: var(--card);
   padding:12px;
 }
 [data-theme="light"] .insight{
@@ -553,10 +559,12 @@ a{ color: inherit; }
   height:380px;
   border-radius:16px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid var(--stroke);
+  background: var(--mapBg);
 }
+
 [data-theme="light"] .map{
-  border-color: rgba(16,56,79,.14);
+  border-color: var(--stroke);
 }
 .mapFallback{
   height:380px;
@@ -1036,12 +1044,12 @@ a{ color: inherit; }
   border-radius: 999px;
 }
 .donutLegend .legendText{
-  color: rgba(255,255,255,.90);
+  color: var(--text);
   font-size: 14px;
   line-height: 1.25;
 }
 .donutLegend .legendVal{
-  color: rgba(255,255,255,.86);
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -1510,3 +1518,67 @@ h2, h3{
 
 /* Patch 2026-01-07: ensure drawer overlay covers the full viewport */
 .drawerOverlay{position:fixed;inset:0;width:100vw;height:100vh;z-index:60;background:rgba(15,21,34,.72);backdrop-filter:blur(6px);cursor:pointer;}
+
+
+
+/* --------------------------- Donut row (carousel) --------------------------- */
+.donutRow{
+  scroll-behavior: smooth;
+}
+.donutRow .chartTile{
+  flex: 0 0 320px;
+  scroll-snap-align: start;
+}
+@media (max-width: 720px){
+  .donutRow .chartTile{ flex-basis: 280px; }
+}
+.donutRow:active{ cursor: grabbing; }
+
+/* ------------------------------ Leaflet theming ----------------------------- */
+.leaflet-container{
+  background: var(--mapBg);
+  color: var(--text);
+  font-family: inherit;
+}
+.leaflet-control,
+.leaflet-bar,
+.leaflet-control-layers,
+.leaflet-control-zoom{
+  background: var(--cardSolid);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadowSoft);
+}
+.leaflet-bar a,
+.leaflet-control-zoom a{
+  background: transparent;
+  color: var(--text);
+  border-bottom: 1px solid var(--stroke);
+}
+.leaflet-bar a:last-child,
+.leaflet-control-zoom a:last-child{
+  border-bottom: none;
+}
+.leaflet-bar a:hover,
+.leaflet-control-zoom a:hover{
+  background: rgba(255,255,255,.06);
+}
+[data-theme="light"] .leaflet-bar a:hover,
+[data-theme="light"] .leaflet-control-zoom a:hover{
+  background: rgba(16,56,79,.06);
+}
+
+.leaflet-control-attribution,
+.leaflet-control-attribution a{
+  color: var(--muted2) !important;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip{
+  background: var(--cardSolid);
+  color: var(--text);
+  border: 1px solid var(--stroke);
+}
+.leaflet-tooltip{
+  background: var(--cardSolid);
+  color: var(--text);
+  border: 1px solid var(--stroke);
+}

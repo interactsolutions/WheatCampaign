@@ -32,6 +32,17 @@
       return 0.0;
     }
 
+
+    function mutedColor(fallback = '#9aa4b2') {
+      try {
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--muted2');
+        const s = (v || '').trim();
+        return s || fallback;
+      } catch (_e) {
+        return fallback;
+      }
+    }
+
     function getCanvasAndCtx(target) {
       if (!target) return { canvas: null, ctx: null };
       if (target.getContext) {
@@ -103,7 +114,7 @@
           const total = values.reduce((a,b) => a + (Number(b) || 0), 0);
           if (!total) {
             ctx.font = '13px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
-            ctx.fillStyle = '#9aa4b2';
+            ctx.fillStyle = mutedColor();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('No data', w / 2, h / 2);
@@ -144,7 +155,7 @@
 
         // Unsupported chart type: show a small message so sections aren't blank
         ctx.font = '13px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
-        ctx.fillStyle = '#9aa4b2';
+        ctx.fillStyle = mutedColor();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('Chart', w / 2, h / 2);
@@ -246,7 +257,46 @@
     return 'summary';
   }
 
-  // ---------- Data / state ----------
+  
+  // ---------- Theme helpers ----------
+  function getTheme() {
+    return (document.documentElement.getAttribute('data-theme') || 'dark').trim();
+  }
+  function cssVar(name, fallback = '') {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+      const s = (v || '').trim();
+      return s || fallback;
+    } catch (_e) {
+      return fallback;
+    }
+  }
+  function tooltipBgForTheme(t) {
+    return (t === 'light') ? 'rgba(255,255,255,0.96)' : 'rgba(12,18,35,0.92)';
+  }
+  function applyChartTheme(chart) {
+    try {
+      if (!chart || !chart.options) return;
+      const t = getTheme();
+      const text = cssVar('--text', '#f0f4ff');
+      const stroke = cssVar('--stroke', 'rgba(255,255,255,.12)');
+      chart.options.plugins = chart.options.plugins || {};
+      chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+      Object.assign(chart.options.plugins.tooltip, {
+        backgroundColor: tooltipBgForTheme(t),
+        titleColor: text,
+        bodyColor: text,
+        borderColor: stroke,
+        borderWidth: 1
+      });
+      if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+        chart.options.plugins.legend.labels.color = text;
+      }
+      // MiniChart fallback supports update(); Chart.js supports update()
+      if (typeof chart.update === 'function') chart.update();
+    } catch (_e) { /* ignore */ }
+  }
+// ---------- Data / state ----------
   const state = {
     campaigns: [],
     campaignId: null,
@@ -264,6 +314,7 @@
 
     map: null,
     markerLayer: null,
+    baseLayer: null,
     markersBySessionId: new Map(),
     // Filters for host (farmer) name and city
     nameFilter: '',
@@ -1045,7 +1096,7 @@
         type: 'doughnut',
         data: {
           labels: labels,
-          datasets: [{ data: data, backgroundColor: bgColors, borderColor: '#ffffff10', borderWidth: 1 }]
+          datasets: [{ data: data, backgroundColor: bgColors, borderColor: cssVar('--chartBorder', '#ffffff10'), borderWidth: 1 }]
         },
         options: {
           responsive: true,
@@ -1243,7 +1294,7 @@
           datasets: [{
             data,
             backgroundColor: bgColors,
-            borderColor: '#ffffff10',
+            borderColor: cssVar('--chartBorder', '#ffffff10'),
             borderWidth: 1
           }]
         },
@@ -1331,7 +1382,7 @@
           datasets: [{
             data: counts,
             backgroundColor: bgColors,
-            borderColor: '#ffffff10',
+            borderColor: cssVar('--chartBorder', '#ffffff10'),
             borderWidth: 1
           }]
         },
@@ -1602,6 +1653,11 @@
       `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
       'ok'
     );
+
+    // Keep chart UI (tooltips/labels) aligned with the active theme.
+    try {
+      [window.attendanceChart, window.decisionChart, window.scoreBandsChart].forEach(applyChartTheme);
+    } catch (_e) {}
   }
 
   function renderSessionsTable() {
@@ -1780,22 +1836,29 @@
       const village = esc(prettyPlaceName(s.village || s.spot) || '');
       // Determine thumbnail: prefer first video if available; otherwise first image
       const vidPath = firstMediaVideo(s);
-      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
       const img = firstMediaImage(s);
+
+      // In the Media tab, the thumbnail must respect the active type filter.
+      // If a session has both image and video, selecting "Images" should not show a video card (and vice versa).
+      const want = (type === 'videos') ? 'video' : (type === 'images') ? 'image' : (vidPath ? 'video' : 'image');
+      const primaryType = want;
+
       const title = `${sheet} • ${district} • ${village}`;
-      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId || '')}&session=${encodeURIComponent(String(s.id))}`;
+
       // Build thumb markup
       let thumb;
       let badge;
-      if (vidPath) {
-        // Show auto-playing muted preview
-        thumb = `<video data-media-vid="1" autoplay loop muted playsinline></video>`;
+      if (primaryType === 'video' && vidPath) {
+        // Lightweight preview (no autoplay)
+        thumb = `<video data-media-vid="1" preload="metadata" muted playsinline></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
-        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
+        thumb = `<img data-media-thumb="1" alt="${esc(title)}" loading="lazy" decoding="async" />`;
         badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
       }
-      return `<div class="mediaCard" data-session-id="${sid}">
+
+      return `<div class="mediaCard" data-session-id="${sid}" data-primary-type="${primaryType}">
         <div class="mediaThumb">
           ${badge}
           ${thumb}
@@ -1843,8 +1906,10 @@
       const sid = Number(card.dataset.sessionId);
       if (ev.target.closest('a')) return;
 
-      // Open lightbox with all items
-      openLightbox(sid);
+      // Open lightbox, respecting the active media filter (Images/Videos/All)
+      const mode = String(state.mediaType || 'all');
+      const startType = card.dataset.primaryType || null;
+      openLightbox(sid, mode, startType);
     };
   }
 
@@ -2048,7 +2113,7 @@
     });
   }
 
-  async function openLightbox(sessionId) {
+  async function openLightbox(sessionId, mode = 'all', startType = null) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
 
@@ -2062,13 +2127,25 @@
     lb.classList.add('open');
     body.innerHTML = '';
 
-    const items = allMediaItems(s);
+    let items = allMediaItems(s);
+
+    // Respect active filter from the Media tab.
+    const m = String(mode || 'all');
+    if (m === 'images') items = items.filter(it => it.type === 'image');
+    if (m === 'videos') items = items.filter(it => it.type === 'video');
+
     if (!items || !items.length) {
-      body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+      body.innerHTML = '<div class="muted">No media for the selected filter.</div>';
       return;
     }
 
-    let active = 0;
+let active = 0;
+
+    // If we opened from a thumbnail, start at the matching media type.
+    if (m === 'all' && (startType === 'image' || startType === 'video')) {
+      const idx = items.findIndex(it => it.type === startType);
+      if (idx >= 0) active = idx;
+    }
 
     const main = document.createElement('div');
     main.className = 'lbMain';
@@ -2155,6 +2232,29 @@
   }
 
   // ---------- Map ----------
+  function makeBasemapLayer(theme) {
+    const t = (theme === 'light') ? 'light' : 'dark';
+    const url = (t === 'light')
+      ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const attribution = (t === 'light')
+      ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+    return window.L.tileLayer(url, { maxZoom: 18, attribution });
+  }
+
+  function applyMapTheme(theme) {
+    try {
+      if (!state.map || !window.L) return;
+      const t = (theme === 'light') ? 'light' : 'dark';
+      if (state.baseLayer) {
+        try { state.map.removeLayer(state.baseLayer); } catch (_e) {}
+        state.baseLayer = null;
+      }
+      state.baseLayer = makeBasemapLayer(t).addTo(state.map);
+    } catch (_e) { /* ignore */ }
+  }
+
   async function ensureMapReady() {
     const el = $$('#leafletMap');
     if (!el) return;
@@ -2185,10 +2285,7 @@
       state.map = map;
       state.markerLayer = window.L.layerGroup().addTo(map);
 
-      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
+      state.baseLayer = makeBasemapLayer(getTheme()).addTo(map);
 
       if (window.L.heatLayer) {
         state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
@@ -2618,15 +2715,25 @@
         requestAnimationFrame(step);
       };
 
-      const pauseEvents = ['mouseenter', 'touchstart', 'pointerdown', 'focusin'];
-      const resumeEvents = ['mouseleave', 'touchend', 'pointerup', 'focusout'];
+      // Pause auto-scroll only when the user interacts or hovers a donut tile.
+      const pauseEvents = ['touchstart', 'pointerdown', 'focusin'];
+      const resumeEvents = ['touchend', 'pointerup', 'focusout'];
 
       pauseEvents.forEach(evt => row.addEventListener(evt, () => { paused = true; }, { passive: true }));
       resumeEvents.forEach(evt => row.addEventListener(evt, () => {
-        setTimeout(() => { paused = false; }, 100);
+        setTimeout(() => { paused = false; }, 120);
       }, { passive: true }));
 
-      row.addEventListener('wheel', () => {
+      // Hovering an actual tile pauses; moving within row padding does not.
+      const tiles = row.querySelectorAll('.chartTile');
+      tiles.forEach((tile) => {
+        tile.addEventListener('mouseenter', () => { paused = true; }, { passive: true });
+        tile.addEventListener('pointerenter', () => { paused = true; }, { passive: true });
+        tile.addEventListener('mouseleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
+        tile.addEventListener('pointerleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
+      });
+
+row.addEventListener('wheel', () => {
         paused = true;
         if (wheelTimer) clearTimeout(wheelTimer);
         wheelTimer = setTimeout(() => { paused = false; }, 2000);
@@ -2644,6 +2751,16 @@
       bindFeedback();
       bindTopControls();
       initDonutRows();
+
+      // React to theme changes (light/dark) without a full reload.
+      document.addEventListener('themechange', (ev) => {
+        const t = ev?.detail?.theme || getTheme();
+        applyMapTheme(t);
+        try {
+          [window.attendanceChart, window.decisionChart, window.scoreBandsChart].forEach(applyChartTheme);
+        } catch (_e) {}
+      });
+
       bindTabEvents();
 
       await loadCampaignRegistry();

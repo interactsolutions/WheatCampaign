@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <title>Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</title>
+  <title>Wheat Campaign Dashboard</title>
   <meta name="description" content="Buctril Super – Wheat Activations 2025 dashboard: reach, conversion, sessions, media, and map insights for farmer education." />
 
   <link rel="icon" type="image/png" href="assets/Interact.png" />
@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260106-16" />
+  <link rel="stylesheet" href="style.css?v=20260107-16" />
 
   <!-- Leaflet CSS (local-first; CDN fallbacks if blocked) -->
   <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" />
@@ -77,6 +77,25 @@
     <symbol id="i-star" viewBox="0 0 24 24">
       <path d="m12 3 2.6 5.6 6.1.9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.5l6.1-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
     </symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24">
+      <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24">
+      <path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24">
+      <path d="M21 12.8A8.5 8.5 0 0 1 11.2 3 7 7 0 1 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
   </svg>
 
   <!-- Background video -->
@@ -125,10 +144,10 @@
                alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" />
         </a>
         <div>
-          <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
+          <div class="brandTitle">Wheat Campaign – Farmer Education Dashboard</div>
           <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
-        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
+        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme"><svg class="icon" aria-hidden="true"><use href="#i-sun" xlink:href="#i-sun"></use></svg><span class="srOnly">Toggle theme</span></button>
       </div>
 
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
@@ -152,8 +171,8 @@
         </div>
 
         <div class="heroControls">
-          <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
-          <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
+          <button class="iconBtn" id="heroPrev" aria-label="Previous"><svg class="icon" aria-hidden="true"><use href="#i-chevron-left" xlink:href="#i-chevron-left"></use></svg><span class="srOnly">Previous</span></button>
+          <button class="iconBtn" id="heroNext" aria-label="Next"><svg class="icon" aria-hidden="true"><use href="#i-chevron-right" xlink:href="#i-chevron-right"></use></svg><span class="srOnly">Next</span></button>
         </div>
 
         <div class="heroThumbs" id="heroThumbs" aria-label="Hero thumbnails"></div>
@@ -164,7 +183,7 @@
     <div class="filtersHeader" id="filtersHeader">
       <div class="filtersMeta" id="filtersMeta">Filters</div>
       <button class="btn btnGhost btnSmall" id="filtersToggle" type="button"
-              aria-expanded="true" aria-controls="filtersPanel">Filters ▾</button>
+              aria-expanded="true" aria-controls="filtersPanel"><span>Filters</span> <svg class="icon" aria-hidden="true"><use href="#i-chevron-down" xlink:href="#i-chevron-down"></use></svg></button>
     </div>
 
     <div class="controls" id="filtersPanel">
@@ -287,7 +306,7 @@
 
         <div class="chartGrid donutRow" id="breakdownsRow" data-autoscroll="1" data-speed="0.25">
           <div class="chartTile">
-            <h4>Farmers by region</h4>
+            <h4>Farmers by district</h4>
             <div class="chartWrap">
               <canvas id="regionPie"></canvas>
             </div>
@@ -494,7 +513,7 @@
         <div class="drawerTitle" id="drawerTitle">Session</div>
         <div class="drawerSub" id="drawerSub">—</div>
       </div>
-      <button class="iconBtn" id="drawerClose" aria-label="Close">✕</button>
+      <button class="iconBtn" id="drawerClose" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x" xlink:href="#i-x"></use></svg><span class="srOnly">Close</span></button>
     </div>
 
     <div class="drawerBody">
@@ -536,7 +555,7 @@
     <div class="lightboxInner">
       <div class="lightboxTop">
         <div id="lbTitle" class="muted">Media</div>
-        <button class="iconBtn" id="lbClose" aria-label="Close">✕</button>
+        <button class="iconBtn" id="lbClose" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x" xlink:href="#i-x"></use></svg><span class="srOnly">Close</span></button>
       </div>
       <div class="lightboxBody" id="lbBody"></div>
     </div>
@@ -544,7 +563,7 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260106-16"></script>
+  <script defer src="dashboard.js?v=20260107-16"></script>
 
 
   <!-- Hero slider (auto-advance) -->
@@ -694,7 +713,10 @@
     function applyTheme(t) {
       htmlEl.setAttribute('data-theme', t);
       localStorage.setItem('theme', t);
-      if (toggleBtn) toggleBtn.textContent = (t === 'light') ? '🌙' : '☀';
+      if (toggleBtn) {
+        const sym = (t === 'light') ? 'i-moon' : 'i-sun';
+        toggleBtn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg><span class="srOnly">Toggle theme</span>`;
+      }
     }
 
     const saved = localStorage.getItem('theme');
@@ -762,7 +784,10 @@ toggleBtn?.addEventListener('click', () => {
     function setCollapsed(collapsed, persist) {
       body.classList.toggle('filters-collapsed', !!collapsed);
       btn.setAttribute('aria-expanded', (!collapsed).toString());
-      btn.textContent = collapsed ? 'Filters ▸' : 'Filters ▾';
+      {
+        const sym = collapsed ? 'i-chevron-right' : 'i-chevron-down';
+        btn.innerHTML = `<span>Filters</span> <svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg>`;
+      }
       if (persist) localStorage.setItem(KEY, collapsed ? '1' : '0');
       updateMeta();
     }

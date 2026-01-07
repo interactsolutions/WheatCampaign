@@ -2,7 +2,7 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-06.2";
+  const WHEATCAMPAIGN_BUILD = "2026-01-07.2";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
   const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
@@ -10,7 +10,162 @@
     return REDUCE_MOTION ? false : { duration: 1500, easing: "easeOutBounce" };
   }
 
-  // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
+
+  // ---------------------------------------------------------------------------
+  // Minimal Chart.js fallback
+  // Many static deployments fail to load CDN dependencies. The dashboard mainly
+  // needs doughnut/pie charts; this lightweight renderer keeps those sections
+  // functional without external scripts.
+  (function ensureMiniChart(){
+    if (typeof window.Chart !== 'undefined') return;
+
+    function parseCutout(v) {
+      if (v == null) return 0.0;
+      if (typeof v === 'string' && v.trim().endsWith('%')) {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? Math.max(0, Math.min(0.95, n / 100)) : 0.0;
+      }
+      const n = Number(v);
+      if (!Number.isFinite(n)) return 0.0;
+      // Chart.js treats numeric as pixels; we interpret as ratio when 0..1
+      if (n > 0 && n < 1) return Math.max(0, Math.min(0.95, n));
+      return 0.0;
+    }
+
+    function getCanvasAndCtx(target) {
+      if (!target) return { canvas: null, ctx: null };
+      if (target.getContext) {
+        const ctx = target.getContext('2d');
+        return { canvas: target, ctx };
+      }
+      if (target.canvas && target.clearRect) {
+        return { canvas: target.canvas, ctx: target };
+      }
+      return { canvas: null, ctx: null };
+    }
+
+    class MiniChart {
+      constructor(target, config) {
+        const { canvas, ctx } = getCanvasAndCtx(target);
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.config = config || {};
+        this._ro = null;
+        this._render();
+        const responsive = this.config?.options?.responsive;
+        if (responsive !== false && this.canvas) this._bindResize();
+      }
+
+      _bindResize() {
+        try {
+          const parent = this.canvas.parentElement;
+          if (!parent || typeof ResizeObserver === 'undefined') return;
+          this._ro = new ResizeObserver(() => this._render());
+          this._ro.observe(parent);
+        } catch (_e) {}
+      }
+
+      _size() {
+        const c = this.canvas;
+        const ctx = this.ctx;
+        if (!c || !ctx) return null;
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const w = Math.max(1, c.clientWidth || c.width || 300);
+        const h = Math.max(1, c.clientHeight || c.height || 150);
+        if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+          c.width = Math.round(w * dpr);
+          c.height = Math.round(h * dpr);
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { w, h };
+      }
+
+      _clear(w, h) {
+        if (!this.ctx) return;
+        this.ctx.clearRect(0, 0, w, h);
+      }
+
+      _render() {
+        const { canvas, ctx } = this;
+        if (!canvas || !ctx) return;
+        const size = this._size();
+        if (!size) return;
+        const { w, h } = size;
+        this._clear(w, h);
+
+        const type = String(this.config?.type || '').toLowerCase();
+        const data = this.config?.data || {};
+        const ds0 = (data.datasets && data.datasets[0]) ? data.datasets[0] : {};
+        const values = (ds0.data || []).map(v => Number(v) || 0);
+        const colors = Array.isArray(ds0.backgroundColor) ? ds0.backgroundColor : [];
+
+        if (type === 'doughnut' || type === 'pie') {
+          const total = values.reduce((a,b) => a + (Number(b) || 0), 0);
+          if (!total) {
+            ctx.font = '13px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
+            ctx.fillStyle = '#9aa4b2';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('No data', w / 2, h / 2);
+            return;
+          }
+
+          const cx = w / 2;
+          const cy = h / 2;
+          const r = Math.min(w, h) * 0.42;
+          const cut = type === 'doughnut' ? parseCutout(this.config?.options?.cutout) : 0;
+          const rInner = r * cut;
+
+          let start = -Math.PI / 2;
+          for (let i = 0; i < values.length; i++) {
+            const v = values[i];
+            const ang = (v / total) * Math.PI * 2;
+            if (!ang) continue;
+            const end = start + ang;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, start, end);
+            ctx.closePath();
+            ctx.fillStyle = colors[i] || `hsl(${(i * 360) / Math.max(1, values.length)} 70% 55%)`;
+            ctx.fill();
+            start = end;
+          }
+
+          if (rInner > 0) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(cx, cy, rInner, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+          }
+
+          return;
+        }
+
+        // Unsupported chart type: show a small message so sections aren't blank
+        ctx.font = '13px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
+        ctx.fillStyle = '#9aa4b2';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Chart', w / 2, h / 2);
+      }
+
+      update() { this._render(); }
+
+      destroy() {
+        try { this._ro?.disconnect(); } catch (_e) {}
+        this._ro = null;
+        if (this.canvas && this.ctx) {
+          const w = this.canvas.clientWidth || this.canvas.width;
+          const h = this.canvas.clientHeight || this.canvas.height;
+          try { this._clear(w, h); } catch (_e) {}
+        }
+      }
+    }
+
+    window.Chart = MiniChart;
+  })();
+// Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
   window.addEventListener("error", (e) => {
     try {
       const box = document.getElementById("statusBox");
@@ -38,6 +193,40 @@
     const d = document.createElement('div');
     d.textContent = String(s ?? '');
     return d.innerHTML;
+  };
+
+
+  // Normalize place names for consistent display (capitalization + common typos)
+  const prettyPlaceName = (v) => {
+    const raw = String(v ?? '').trim();
+    if (!raw) return '';
+    let s = raw.replace(/\s+/g, ' ');
+
+    const map = {
+      'karor lal esan': 'Karor Lal Esan',
+      'bassti maachi buchi wala': 'Basti Maachi Buchi Wala',
+      'daud khail kacha': 'Daud Khail Kacha',
+      'toba take singh': 'Toba Tek Singh',
+    };
+
+    const low = s.toLowerCase();
+    if (map[low]) s = map[low];
+
+    // Token-level corrections
+    s = s.replace(/\bbassti\b/ig, "Basti").replace(/\bkhai[lL]\b/ig, "Khail");
+
+    // Smart title-case: preserve ALL-CAPS and tokens with digits (e.g., 262-GB)
+    s = s
+      .split(' ')
+      .map((w) => {
+        if (!w) return w;
+        if (/[0-9]/.test(w)) return w.toUpperCase();
+        if (w === w.toUpperCase() && /[A-Z]/.test(w)) return w;
+        return w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      })
+      .join(' ');
+
+    return s;
   };
 
   // ---------- URL helpers ----------
@@ -313,6 +502,9 @@
   }
 
   function syncTabFromHash() {
+    // Close transient overlays when navigating between tabs.
+    closeDrawer();
+    closeLightbox();
     setActiveTab(activeTabFromHash());
   }
 
@@ -734,7 +926,7 @@
         progEl.innerHTML = `
           <div class="progressContainer">
             <div class="progressTrack"><div class="progressBar" style="width:${pctVal}%"></div></div>
-            <div class="smallMuted progressNote">${pctVal}% of target farmers educated—INTERACT on track.</div>
+            <div class="smallMuted progressNote">${pctVal}% average awareness (proxy for farmer education) across ${fmtInt(denAw)} farmer-weighted responses.</div>
           </div>`;
       }
     }
@@ -1089,7 +1281,7 @@
     };
 
     // Farmers by region (REG)
-    renderGroupDonut('#regionPie', 'regionChart', (s) => s.region, 'No region entries yet.');
+    renderGroupDonut('#regionPie', 'districtChart', (s) => s.district, 'No district entries yet.');
 
     // Farmers by territory (uses s.city in this dataset)
     renderGroupDonut('#territoryPie', 'territoryChart', (s) => s.city, 'No territory entries yet.');
@@ -1179,8 +1371,8 @@
         const sid = esc(s.id);
         const date = esc(s.date || '');
         const sheet = esc(s.sheetRef || '');
-        const district = esc(s.district || '');
-        const village = esc(s.village || s.spot || '');
+        const district = esc(prettyPlaceName(s.district) || '');
+        const village = esc(prettyPlaceName(s.village || s.spot) || '');
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
         const scoreNum = Number(s.score||0);
         const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
@@ -1423,8 +1615,8 @@
       const sid = esc(s.id);
       const date = esc(s.date || '');
       const sheet = esc(s.sheetRef || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
+      const district = esc(prettyPlaceName(s.district) || '');
+      const village = esc(prettyPlaceName(s.village || s.spot) || '');
       const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
       const si = idx?.get(s.sheetRef);
       const f = si ? fmtInt(si.farmers_present) : '—';
@@ -1442,8 +1634,8 @@
         <td>${a}</td>
         <td>${score}</td>
         <td style="white-space:nowrap">
-          <a class="btn btnSmall" href="${hrefSheet}">Sheet</a>
-          <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+          <a class="btn btnSmall" href="${hrefSheet}">Sheet ${esc(s.sheetRef)}</a>
+          <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details ${esc(s.sheetRef)}</a>
           <button class="btn btnSmall btnGhost" data-action="preview">Preview</button>
         </td>
       </tr>`;
@@ -1584,8 +1776,8 @@
     const cards = shown.map(s => {
       const sid = esc(s.id);
       const sheet = esc(s.sheetRef || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
+      const district = esc(prettyPlaceName(s.district) || '');
+      const village = esc(prettyPlaceName(s.village || s.spot) || '');
       // Determine thumbnail: prefer first video if available; otherwise first image
       const vidPath = firstMediaVideo(s);
       const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
@@ -1611,8 +1803,8 @@
         <div class="mediaMeta">
           <div class="mediaTitle">${esc(title)}</div>
           <div class="mediaActions">
-            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
-            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet ${esc(s.sheetRef)}</a>
+            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details ${esc(s.sheetRef)}</a>
             <button class="btn btnSmall btnGhost" data-action="open">Open</button>
           </div>
         </div>
@@ -1671,23 +1863,6 @@
     if (dr) dr.classList.add('hidden');
     if (ov) ov.setAttribute('aria-hidden', 'true');
     if (dr) dr.setAttribute('aria-hidden', 'true');
-    // Navigate back to the base page when a drawer is closed. When the user clicks
-    // outside the session preview (or hits Esc), return to the default summary
-    // tab by stripping any hash from the URL. Preserve existing query string
-    // parameters (e.g. campaign, date filters). Use location.pathname+search to
-    // avoid repeatedly appending hashes during navigation. If an exception
-    // occurs, silently ignore.
-    try {
-      const base = location.pathname + location.search;
-      // If already on index.html this will simply remove the hash and reload
-      // the summary tab. If executed from another tab (e.g. sessions hash)
-      // the anchor will be cleared.
-      if (location.hash) {
-        location.href = base;
-      }
-    } catch (_e) {
-      /* noop */
-    }
   }
 
   async function openDrawer(sessionId) {
@@ -1859,21 +2034,11 @@
   // ---------- Lightbox ----------
   function closeLightbox() {
     const lb = $$('#lightbox');
-    if (lb) lb.classList.remove('open');
-    const body = $$('#lbBody');
-    if (body) body.innerHTML = '';
-    // When the lightbox is closed, return to the base page so the user is not
-    // left on an orphaned hash state. This mirrors the behaviour implemented in
-    // closeDrawer(). Preserving pathname and query parameters ensures date
-    // filters and campaign selection remain intact.
-    try {
-      const base = location.pathname + location.search;
-      if (location.hash) {
-        location.href = base;
-      }
-    } catch (_e) {
-      /* ignore navigation errors */
-    }
+    if (lb) lb.classList.add('hidden');
+    if (lb) lb.setAttribute('aria-hidden', 'true');
+
+    const frame = $$('#lightboxFrame');
+    if (frame) frame.src = '';
   }
 
   function bindLightbox() {
@@ -2089,7 +2254,7 @@
           <div class="smallMuted">${esc(s.village || s.spot || '')}</div>
           <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
             <a class="btn btnSmall" href="${sheetUrl}">Open sheet</a>
-            <a class="btn btnSmall btnGhost" href="${detailsUrl}">Details</a>
+            <a class="btn btnSmall btnGhost" href="${detailsUrl}">Details ${esc(s.sheetRef)}</a>
             <a class="btn btnSmall btnGhost" href="${g}" target="_blank" rel="noopener">Maps</a>
           </div>
           <div style="margin-top:8px">

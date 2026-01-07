@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" >
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -148,6 +148,7 @@
           <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
         <button class="iconBtn" id="themeToggle" aria-label="Toggle theme"><svg class="icon" aria-hidden="true"><use href="#i-sun" xlink:href="#i-sun"></use></svg><span class="srOnly">Toggle theme</span></button>
+        <button class="iconBtn" id="styleToggle" aria-label="Toggle style"><svg class="icon" aria-hidden="true"><use href="#i-star"></use></svg><span class="srOnly">Toggle style</span></button>
       </div>
 
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
@@ -156,6 +157,7 @@
       <a class="tabBtn" data-tab="map" role="tab" href="#map">Map</a>
       <a class="tabBtn" data-tab="sessions" role="tab" href="#sessions">Sessions</a>
       <a class="tabBtn" data-tab="feedback" role="tab" href="#feedback">Feedback</a>
+      <a class="tabBtn" data-tab="reports" role="tab" href="#reports">Reports</a>
     </nav>
     </div>
 
@@ -225,11 +227,23 @@
           <option value="FSD">FSD</option>
           <option value="GUJ">GUJ</option>
         </datalist>
+        <div class="smallMuted" style="margin-top:6px;">Multi-select (faceted):</div>
+        <select id="regionMulti" multiple aria-label="Regions multi-select" style="margin-top:8px; width:100%;">
+          <option value="SKR">SKR</option>
+          <option value="RYK">RYK</option>
+          <option value="DGK">DGK</option>
+          <option value="BWP">BWP</option>
+          <option value="MTN">MTN</option>
+        </select>
       </div>
 
       <div class="control control--search">
         <label for="districtFilter">District</label>
         <input id="districtFilter" type="text" placeholder="Search by district" />
+      </div>
+      <div class="control control--search">
+        <label for="semanticSearch">Smart Search</label>
+        <input id="semanticSearch" type="text" placeholder="e.g., high impact in SKR, low turnout, price too high" />
       </div>
 
       <div class="control control--score">
@@ -507,7 +521,19 @@
   </footer>
 
   <div class="drawerOverlay hidden" id="drawerOverlay" aria-hidden="true"></div>
-  <aside class="drawer hidden" id="sessionDrawer" aria-hidden="true" aria-label="Session details">
+  
+    <section class="tabPanel card" data-tab="reports" id="reports" role="tabpanel">
+      <div class="panelHead">
+        <h2>Modern Reports</h2>
+        <div class="panelActions">
+          <button class="btn" id="generatePdfBtn" type="button">Generate PDF Report</button>
+        </div>
+      </div>
+      <p class="muted">Generate a campaign snapshot suitable for sharing with stakeholders. The PDF export uses your current filters.</p>
+      <div id="reportPreview" class="report-preview muted">Preview will appear here after generation.</div>
+    </section>
+
+<aside class="drawer hidden" id="sessionDrawer" aria-hidden="true" aria-label="Session details">
     <div class="drawerTop">
       <div>
         <div class="drawerTitle" id="drawerTitle">Session</div>
@@ -563,6 +589,8 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script defer src="dashboard.js?v=20260107-16"></script>
 
 
@@ -704,46 +732,100 @@
   })();
   </script>
 
-  <!-- Theme toggle -->
+  <!-- Theme + Style toggle -->
   <script>
   (function() {
     const htmlEl = document.documentElement;
-    const toggleBtn = document.getElementById('themeToggle');
+    const themeBtn = document.getElementById('themeToggle');
+    const styleBtn = document.getElementById('styleToggle');
 
-    function applyTheme(t) {
+    function setBtnIcon(btn, sym, label) {
+      if (!btn) return;
+      btn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${sym}"></use></svg><span class="srOnly">${label}</span>`;
+    }
+
+    function applyTheme(t, persist = true) {
       htmlEl.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
+      if (persist) localStorage.setItem('theme', t);
       try {
         window.__THEME__ = t;
         document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t } }));
       } catch (_e) {}
-      if (toggleBtn) {
-        const sym = (t === 'light') ? 'i-moon' : 'i-sun';
-        toggleBtn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg><span class="srOnly">Toggle theme</span>`;
-      }
+      setBtnIcon(themeBtn, (t === 'light') ? 'i-moon' : 'i-sun', 'Toggle theme');
     }
 
-    const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark') {
-      applyTheme(saved);
+    function applyStyle(s, persist = true) {
+      if (s === 'corporate') htmlEl.setAttribute('data-style', 'corporate');
+      else htmlEl.removeAttribute('data-style');
+      if (persist) localStorage.setItem('style', (s === 'corporate') ? 'corporate' : 'default');
+      // keep charts in sync
+      try { document.dispatchEvent(new CustomEvent('stylechange', { detail: { style: s } })); } catch (_e) {}
+    }
+
+    function currentMode() {
+      const t = htmlEl.getAttribute('data-theme') || 'dark';
+      const s = htmlEl.getAttribute('data-style') || 'default';
+      if (t === 'light' && s !== 'corporate') return 'light';
+      if (s === 'corporate') return 'corporate';
+      return 'default';
+    }
+
+    function applyMode(mode) {
+      if (mode === 'corporate') { applyTheme('dark'); applyStyle('corporate'); }
+      else if (mode === 'light') { applyStyle('default'); applyTheme('light'); }
+      else { applyStyle('default'); applyTheme('dark'); }
+      localStorage.setItem('mode', mode);
+      const sym = (mode === 'corporate') ? 'i-star' : (mode === 'light') ? 'i-moon' : 'i-leaf';
+      setBtnIcon(styleBtn, sym, 'Toggle mode');
+    }
+
+    // Restore: mode > (style + theme) > time-of-day default
+    const savedMode = localStorage.getItem('mode');
+    if (savedMode === 'default' || savedMode === 'corporate' || savedMode === 'light') {
+      applyMode(savedMode);
     } else {
-      const hr = new Date().getHours();
-      applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
+      const savedTheme = localStorage.getItem('theme');
+      const savedStyle = localStorage.getItem('style');
+      if (savedStyle === 'corporate') applyStyle('corporate', true);
+      else applyStyle('default', true);
+
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        applyTheme(savedTheme, true);
+      } else {
+        const hr = new Date().getHours();
+        applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark', false);
+      }
+      // initialize mode button icon without forcing a mode
+      const mode = currentMode();
+      const sym = (mode === 'corporate') ? 'i-star' : (mode === 'light') ? 'i-moon' : 'i-leaf';
+      setBtnIcon(styleBtn, sym, 'Toggle mode');
     }
 
     // Campaign context: auto-theme per tab (Summary/Sessions = light; Media/Map/Feedback = dark),
-// but do not override a user-selected theme stored in localStorage.
-document.addEventListener('tabchange', (e) => {
-  const locked = (localStorage.getItem('theme') === 'light' || localStorage.getItem('theme') === 'dark');
-  if (locked) return;
-  const tab = e?.detail?.tab || '';
-  const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
-  applyTheme(t);
-});
+    // but do not override a user-selected theme stored in localStorage.
+    document.addEventListener('tabchange', (e) => {
+      const locked = (localStorage.getItem('theme') === 'light' || localStorage.getItem('theme') === 'dark');
+      if (locked) return;
+      const tab = e?.detail?.tab || '';
+      const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
+      applyTheme(t, false);
+    });
 
-toggleBtn?.addEventListener('click', () => {
-      const current = htmlEl.getAttribute('data-theme');
-      applyTheme(current === 'light' ? 'dark' : 'light');
+    themeBtn?.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme') || 'dark';
+      const next = (current === 'light') ? 'dark' : 'light';
+      applyTheme(next, true);
+      // update mode icon + stored mode if it matches a known preset
+      const mode = currentMode();
+      if (mode === 'default' || mode === 'corporate' || mode === 'light') localStorage.setItem('mode', mode);
+      const sym = (mode === 'corporate') ? 'i-star' : (mode === 'light') ? 'i-moon' : 'i-leaf';
+      setBtnIcon(styleBtn, sym, 'Toggle mode');
+    });
+
+    styleBtn?.addEventListener('click', () => {
+      const mode = currentMode();
+      const next = (mode === 'default') ? 'corporate' : (mode === 'corporate') ? 'light' : 'default';
+      applyMode(next);
     });
   })();
   </script>

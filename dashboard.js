@@ -262,6 +262,9 @@
   function getTheme() {
     return (document.documentElement.getAttribute('data-theme') || 'dark').trim();
   }
+  function getStyleVariant() {
+    return (document.documentElement.dataset && document.documentElement.dataset.style) ? String(document.documentElement.dataset.style).trim() : '';
+  }
   function cssVar(name, fallback = '') {
     try {
       const v = getComputedStyle(document.documentElement).getPropertyValue(name);
@@ -272,7 +275,9 @@
     }
   }
   function tooltipBgForTheme(t) {
-    return (t === 'light') ? 'rgba(255,255,255,0.96)' : 'rgba(12,18,35,0.92)';
+    const corporate = getStyleVariant() === 'corporate';
+    if (t === 'light') return corporate ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.96)';
+    return corporate ? 'rgba(20,30,50,0.92)' : 'rgba(12,18,35,0.92)';
   }
   function registerChart(chart) {
     try {
@@ -804,6 +809,14 @@
     // dashboards will define a region filter. See index.html for the #regionFilter input.
     const regionEl = $$('#regionFilter');
     state.regionFilter = regionEl ? String(regionEl.value || '').trim() : '';
+
+    // Faceted region filter (multi-select). Takes precedence over the free-text region input.
+    const regionMultiEl = $$('#regionMulti');
+    state.regionMulti = regionMultiEl ? Array.from(regionMultiEl.selectedOptions || []).map(o => String(o.value || '').trim()).filter(Boolean) : [];
+
+    // Smart (semantic-ish) search: simple heuristic matching over key fields.
+    const smartEl = $$('#semanticSearch');
+    state.smartQuery = smartEl ? String(smartEl.value || '').trim().toLowerCase() : '';
     const minEl = $$('#scoreMin');
     const maxEl = $$('#scoreMax');
     const minVal = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
@@ -872,10 +885,37 @@
         if (!city.includes(state.cityFilter.toLowerCase())) return false;
       }
 
-      // Region filter
-      if (state.regionFilter) {
+      // Region filter (faceted multi-select takes precedence)
+      const regionsMulti = Array.isArray(state.regionMulti) ? state.regionMulti : [];
+      if (regionsMulti.length) {
+        const reg = String(s.region || '').toUpperCase();
+        if (!regionsMulti.includes(reg)) return false;
+      } else if (state.regionFilter) {
         const reg = String(s.region || '').toLowerCase();
         if (!reg.includes(state.regionFilter.toLowerCase())) return false;
+      }
+
+      // Smart search (heuristics)
+      if (state.smartQuery) {
+        const q = state.smartQuery;
+        const score = Number(s.score);
+        const si = state.sheetIndex ? state.sheetIndex.get(s.sheetRef) : null;
+        const farmers = Number(si?.farmers_present ?? s?.metrics?.farmers ?? 0);
+        const rn = (s.reasonsNotUse && typeof s.reasonsNotUse === 'object') ? s.reasonsNotUse : {};
+        const price = Number(rn['Price Too High'] || 0);
+        const avail = Number(rn['Not Available'] || 0);
+        const burn = Number(rn['Fear of Burn'] || 0);
+
+        const hay = `${s.city || ''} ${s.region || ''} ${s.district || ''} ${s.territory || ''} ${s.sheetRef || ''}`.toLowerCase();
+        let ok = hay.includes(q);
+
+        if (!ok && (q.includes('high') || q.includes('impact'))) ok = Number.isFinite(score) && score >= 80;
+        if (!ok && (q.includes('low turnout') || q.includes('turnout'))) ok = Number.isFinite(farmers) && farmers > 0 && farmers < 20;
+        if (!ok && q.includes('price')) ok = Number.isFinite(price) && price > 0;
+        if (!ok && (q.includes('not available') || q.includes('availability'))) ok = Number.isFinite(avail) && avail > 0;
+        if (!ok && (q.includes('burn') || q.includes('fear'))) ok = Number.isFinite(burn) && burn > 0;
+
+        if (!ok) return false;
       }
 
       // District filter
@@ -2248,6 +2288,21 @@ let active = 0;
     strip.className = 'drawerMedia';
 
     body.appendChild(main);
+
+    const share = document.createElement('div');
+    share.className = 'shareOptions';
+    share.innerHTML = `
+      <div class="shareLeft">
+        <button type="button" id="shareTwitter">Share on X</button>
+        <button type="button" id="shareLinkedIn">Share on LinkedIn</button>
+        <button type="button" id="copyLink">Copy link</button>
+        <button type="button" id="generateQr">QR</button>
+      </div>
+      <div class="shareRight">
+        <div id="qrContainer" aria-label="QR code"></div>
+      </div>`;
+
+    body.appendChild(share);
     body.appendChild(strip);
 
     function renderMain() {
@@ -2291,9 +2346,50 @@ let active = 0;
       cap.className = 'lbCaption';
       cap.innerHTML = `<div class="smallMuted">${active + 1} / ${items.length}</div>`;
       main.appendChild(cap);
+      renderShare();
     }
 
-    function renderStrip() {
+    
+    function renderShare() {
+      const it = items[active];
+      const raw = it ? resolveAssetUrl(it.path) : '';
+      const url = raw || window.location.href;
+
+      const txt = encodeURIComponent('Bayer Wheat Campaign Media');
+      const enc = encodeURIComponent(url);
+
+      const bX = document.getElementById('shareTwitter');
+      const bLi = document.getElementById('shareLinkedIn');
+      const bCopy = document.getElementById('copyLink');
+      const bQr = document.getElementById('generateQr');
+      const qrDiv = document.getElementById('qrContainer');
+
+      if (bX) bX.onclick = () => window.open(`https://twitter.com/intent/tweet?url=${enc}&text=${txt}`, '_blank', 'noopener');
+      if (bLi) bLi.onclick = () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${enc}`, '_blank', 'noopener');
+      if (bCopy) bCopy.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          bCopy.textContent = 'Copied';
+          setTimeout(() => { bCopy.textContent = 'Copy link'; }, 1200);
+        } catch (_e) {
+          prompt('Copy this link:', url);
+        }
+      };
+
+      if (bQr) bQr.onclick = () => {
+        try {
+          if (!qrDiv) return;
+          qrDiv.innerHTML = '';
+          if (window.QRCode) {
+            new window.QRCode(qrDiv, { text: url, width: 128, height: 128, colorDark: cssVar('--brand', '#00bcff'), colorLight: 'transparent', correctLevel: window.QRCode.CorrectLevel.M });
+          } else {
+            qrDiv.textContent = 'QR unavailable';
+          }
+        } catch (_e) { /* ignore */ }
+      };
+    }
+
+function renderStrip() {
       strip.innerHTML = '';
       items.forEach((it, i) => {
         const t = document.createElement(it.type === 'video' ? 'video' : 'img');
@@ -2324,6 +2420,7 @@ let active = 0;
 
     renderMain();
     renderStrip();
+    renderShare();
   }
 
   // ---------- Map ----------
@@ -2689,6 +2786,7 @@ let active = 0;
     $$('#applyBtn')?.addEventListener('click', applyDateInputs);
     $$('#resetBtn')?.addEventListener('click', resetDateInputs);
     $$('#exportBtn')?.addEventListener('click', exportCsv);
+    $$('#generatePdfBtn')?.addEventListener('click', generatePdfReport);
 
     // Apply on Enter in date inputs
     $$('#dateFrom')?.addEventListener('change', applyDateInputs);
@@ -2733,6 +2831,77 @@ let active = 0;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
+
+  // ---------- Reports ----------
+  async function generatePdfReport() {
+    try {
+      const jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : null;
+      if (!jsPDF) {
+        alert('PDF library not loaded. Please check your internet connection and refresh the page.');
+        return;
+      }
+
+      const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
+      const kpis = computeKpis && typeof computeKpis === 'function' ? computeKpis() : null;
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+
+      // Header
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text('Wheat Campaign Report', 40, 52);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      const campaignName = state.campaign && state.campaign.name ? String(state.campaign.name) : String(state.campaignId || '');
+      doc.text(`Campaign: ${campaignName}`, 40, 74);
+      doc.text(`Sessions (filtered): ${fs.length}`, 40, 90);
+
+      // KPIs (best-effort)
+      let y = 116;
+      if (kpis) {
+        const lines = [
+          `Farmers reached: ${kpis.farmers != null ? fmtInt(kpis.farmers) : '—'}`,
+          `Acres engaged: ${kpis.acres != null ? fmt1(kpis.acres) : '—'}`,
+          `Avg engagement score: ${kpis.avgScore != null ? fmt1(kpis.avgScore) : '—'}`
+        ];
+        lines.forEach((ln) => { doc.text(ln, 40, y); y += 16; });
+        y += 8;
+      }
+
+      // Embed charts (first available canvas instances)
+      const canvases = [
+        document.getElementById('trendChart'),
+        document.querySelector('.donutWrap canvas'),
+        document.querySelector('.chartWrap canvas')
+      ].filter(Boolean);
+
+      let imgY = y;
+      for (const c of canvases) {
+        try {
+          const dataUrl = c.toDataURL('image/png', 1.0);
+          doc.addImage(dataUrl, 'PNG', 40, imgY, Math.min(pageW - 80, 520), 220);
+          imgY += 240;
+          if (imgY > 720) { doc.addPage(); imgY = 52; }
+        } catch (_e) { /* ignore canvas export failures */ }
+      }
+
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(80);
+      doc.text(`Generated: ${new Date().toISOString().slice(0, 10)}`, 40, 812);
+
+      doc.save(`${String(state.campaignId || 'campaign')}_report.pdf`);
+
+      const prev = document.getElementById('reportPreview');
+      if (prev) prev.textContent = 'PDF generated and downloaded.';
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate PDF. See console for details.');
+    }
+  }
+
 
   // Export the priority districts table as CSV. Collects the district rows
   // currently rendered in the table, including the recommended action,
@@ -2863,7 +3032,9 @@ let active = 0;
       // React to theme changes (light/dark) without a full reload.
       document.addEventListener('themechange', (ev) => {
         const t = ev?.detail?.theme || getTheme();
-        applyMapTheme(t);
+        
+document.addEventListener('stylechange', () => { try { applyAllChartThemes?.(); } catch(_e){} });
+applyMapTheme(t);
         try {
           applyAllChartThemes();
         } catch (_e) {}

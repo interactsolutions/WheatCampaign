@@ -2,7 +2,7 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-07.3";
+  const WHEATCAMPAIGN_BUILD = "2026-01-07.5";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
   const REDUCE_MOTION = !!window.__REDUCE_MOTION__;

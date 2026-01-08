@@ -2,15 +2,192 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-05.6";
+  const WHEATCAMPAIGN_BUILD = "2026-01-08.1";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
+
+  // Defensive: remove any previously-registered service workers (old builds) that may
+  // continue to request stale assets (e.g., faviconV2 / main.js) and cause confusing 404s.
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => {});
+    }
+  } catch (_e) {}
+
 
   const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
   function chartAnimation(){
     return REDUCE_MOTION ? false : { duration: 1500, easing: "easeOutBounce" };
   }
 
-  // Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
+
+  // ---------------------------------------------------------------------------
+  // Minimal Chart.js fallback
+  // Many static deployments fail to load CDN dependencies. The dashboard mainly
+  // needs doughnut/pie charts; this lightweight renderer keeps those sections
+  // functional without external scripts.
+  (function ensureMiniChart(){
+    if (typeof window.Chart !== 'undefined') return;
+
+    function parseCutout(v) {
+      if (v == null) return 0.0;
+      if (typeof v === 'string' && v.trim().endsWith('%')) {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? Math.max(0, Math.min(0.95, n / 100)) : 0.0;
+      }
+      const n = Number(v);
+      if (!Number.isFinite(n)) return 0.0;
+      // Chart.js treats numeric as pixels; we interpret as ratio when 0..1
+      if (n > 0 && n < 1) return Math.max(0, Math.min(0.95, n));
+      return 0.0;
+    }
+
+
+    function mutedColor(fallback = '#9aa4b2') {
+      try {
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--muted2');
+        const s = (v || '').trim();
+        return s || fallback;
+      } catch (_e) {
+        return fallback;
+      }
+    }
+
+    function getCanvasAndCtx(target) {
+      if (!target) return { canvas: null, ctx: null };
+      if (target.getContext) {
+        const ctx = target.getContext('2d');
+        return { canvas: target, ctx };
+      }
+      if (target.canvas && target.clearRect) {
+        return { canvas: target.canvas, ctx: target };
+      }
+      return { canvas: null, ctx: null };
+    }
+
+    class MiniChart {
+      constructor(target, config) {
+        const { canvas, ctx } = getCanvasAndCtx(target);
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.config = config || {};
+        this._ro = null;
+        this._render();
+        const responsive = this.config?.options?.responsive;
+        if (responsive !== false && this.canvas) this._bindResize();
+      }
+
+      _bindResize() {
+        try {
+          const parent = this.canvas.parentElement;
+          if (!parent || typeof ResizeObserver === 'undefined') return;
+          this._ro = new ResizeObserver(() => this._render());
+          this._ro.observe(parent);
+        } catch (_e) {}
+      }
+
+      _size() {
+        const c = this.canvas;
+        const ctx = this.ctx;
+        if (!c || !ctx) return null;
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const w = Math.max(1, c.clientWidth || c.width || 300);
+        const h = Math.max(1, c.clientHeight || c.height || 150);
+        if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+          c.width = Math.round(w * dpr);
+          c.height = Math.round(h * dpr);
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { w, h };
+      }
+
+      _clear(w, h) {
+        if (!this.ctx) return;
+        this.ctx.clearRect(0, 0, w, h);
+      }
+
+      _render() {
+        const { canvas, ctx } = this;
+        if (!canvas || !ctx) return;
+        const size = this._size();
+        if (!size) return;
+        const { w, h } = size;
+        this._clear(w, h);
+
+        const type = String(this.config?.type || '').toLowerCase();
+        const data = this.config?.data || {};
+        const ds0 = (data.datasets && data.datasets[0]) ? data.datasets[0] : {};
+        const values = (ds0.data || []).map(v => Number(v) || 0);
+        const colors = Array.isArray(ds0.backgroundColor) ? ds0.backgroundColor : [];
+
+        if (type === 'doughnut' || type === 'pie') {
+          const total = values.reduce((a,b) => a + (Number(b) || 0), 0);
+          if (!total) {
+            ctx.font = '13px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
+            ctx.fillStyle = mutedColor();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('No data', w / 2, h / 2);
+            return;
+          }
+
+          const cx = w / 2;
+          const cy = h / 2;
+          const r = Math.min(w, h) * 0.42;
+          const cut = type === 'doughnut' ? parseCutout(this.config?.options?.cutout) : 0;
+          const rInner = r * cut;
+
+          let start = -Math.PI / 2;
+          for (let i = 0; i < values.length; i++) {
+            const v = values[i];
+            const ang = (v / total) * Math.PI * 2;
+            if (!ang) continue;
+            const end = start + ang;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, start, end);
+            ctx.closePath();
+            ctx.fillStyle = colors[i] || `hsl(${(i * 360) / Math.max(1, values.length)} 70% 55%)`;
+            ctx.fill();
+            start = end;
+          }
+
+          if (rInner > 0) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(cx, cy, rInner, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+          }
+
+          return;
+        }
+
+        // Unsupported chart type: show a small message so sections aren't blank
+        ctx.font = '13px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
+        ctx.fillStyle = mutedColor();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Chart', w / 2, h / 2);
+      }
+
+      update() { this._render(); }
+
+      destroy() {
+        try { this._ro?.disconnect(); } catch (_e) {}
+        this._ro = null;
+        if (this.canvas && this.ctx) {
+          const w = this.canvas.clientWidth || this.canvas.width;
+          const h = this.canvas.clientHeight || this.canvas.height;
+          try { this._clear(w, h); } catch (_e) {}
+        }
+      }
+    }
+
+    window.Chart = MiniChart;
+  })();
+// Surface runtime errors in the UI (helps diagnose GitHub Pages issues)
   window.addEventListener("error", (e) => {
     try {
       const box = document.getElementById("statusBox");
@@ -40,6 +217,40 @@
     return d.innerHTML;
   };
 
+
+  // Normalize place names for consistent display (capitalization + common typos)
+  const prettyPlaceName = (v) => {
+    const raw = String(v ?? '').trim();
+    if (!raw) return '';
+    let s = raw.replace(/\s+/g, ' ');
+
+    const map = {
+      'karor lal esan': 'Karor Lal Esan',
+      'bassti maachi buchi wala': 'Basti Maachi Buchi Wala',
+      'daud khail kacha': 'Daud Khail Kacha',
+      'toba take singh': 'Toba Tek Singh',
+    };
+
+    const low = s.toLowerCase();
+    if (map[low]) s = map[low];
+
+    // Token-level corrections
+    s = s.replace(/\bbassti\b/ig, "Basti").replace(/\bkhai[lL]\b/ig, "Khail");
+
+    // Smart title-case: preserve ALL-CAPS and tokens with digits (e.g., 262-GB)
+    s = s
+      .split(' ')
+      .map((w) => {
+        if (!w) return w;
+        if (/[0-9]/.test(w)) return w.toUpperCase();
+        if (w === w.toUpperCase() && /[A-Z]/.test(w)) return w;
+        return w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      })
+      .join(' ');
+
+    return s;
+  };
+
   // ---------- URL helpers ----------
   const BASE = new URL('.', window.location.href);
   const url = (p) => new URL(p, BASE).toString();
@@ -57,7 +268,102 @@
     return 'summary';
   }
 
-  // ---------- Data / state ----------
+  
+  // ---------- Theme helpers ----------
+  // Keep a registry of all charts so theme changes can update every instance.
+  // Using a standalone registry (instead of attaching to `state`) avoids any
+  // temporal-dead-zone issues in older browsers.
+  const chartRegistry = new Set();
+
+  function getTheme() {
+    return (document.documentElement.getAttribute('data-theme') || 'dark').trim();
+  }
+  function cssVar(name, fallback = '') {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+      const s = (v || '').trim();
+      return s || fallback;
+    } catch (_e) {
+      return fallback;
+    }
+  }
+  function tooltipBgForTheme(t) {
+    return (t === 'light') ? 'rgba(255,255,255,0.96)' : 'rgba(12,18,35,0.92)';
+  }
+  function registerChart(chart) {
+    try {
+      if (!chart) return chart;
+      chartRegistry.add(chart);
+    } catch (_e) { /* ignore */ }
+    return chart;
+  }
+
+  function unregisterChart(chart) {
+    try {
+      if (chart) chartRegistry.delete(chart);
+    } catch (_e) { /* ignore */ }
+  }
+
+  function applyChartTheme(chart) {
+    try {
+      if (!chart) return;
+
+      const t = getTheme();
+      const text = cssVar('--text', '#f0f4ff');
+      const stroke = cssVar('--stroke', 'rgba(255,255,255,.12)');
+      const chartBorder = cssVar('--chartBorder', 'rgba(255,255,255,.10)');
+
+      // Chart.js: chart.options exists. MiniChart fallback also has options.
+      if (chart.options) {
+        chart.options.color = text;
+
+        chart.options.plugins = chart.options.plugins || {};
+
+        // Tooltip
+        chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
+        Object.assign(chart.options.plugins.tooltip, {
+          backgroundColor: tooltipBgForTheme(t),
+          titleColor: text,
+          bodyColor: text,
+          borderColor: stroke,
+          borderWidth: 1
+        });
+
+        // Legend
+        chart.options.plugins.legend = chart.options.plugins.legend || {};
+        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+        chart.options.plugins.legend.labels.color = text;
+
+        // Title (if used)
+        if (chart.options.plugins.title) {
+          chart.options.plugins.title.color = text;
+        }
+      }
+
+      // Dataset borders (doughnut/pie readability on both themes)
+      if (chart.data && Array.isArray(chart.data.datasets)) {
+        chart.data.datasets.forEach((ds) => {
+          if (ds && typeof ds === 'object') {
+            // Only apply if border props exist or if the dataset is a doughnut-like chart.
+            if (ds.borderWidth == null) ds.borderWidth = 1;
+            if (ds.borderColor == null) ds.borderColor = chartBorder;
+          }
+        });
+      }
+
+      // MiniChart fallback supports update(); Chart.js supports update('none')
+      if (typeof chart.update === 'function') {
+        try { chart.update('none'); } catch (_e) { chart.update(); }
+      }
+    } catch (_e) { /* ignore */ }
+  }
+
+  function applyAllChartThemes() {
+    try {
+      chartRegistry.forEach(applyChartTheme);
+    } catch (_e) { /* ignore */ }
+  }
+// ---------- Data / state ----------
   const state = {
     campaigns: [],
     campaignId: null,
@@ -75,6 +381,7 @@
 
     map: null,
     markerLayer: null,
+    baseLayer: null,
     markersBySessionId: new Map(),
     // Filters for host (farmer) name and city
     nameFilter: '',
@@ -163,106 +470,40 @@
 
   function candidatePaths(p) {
     const norm = normalizeMediaPath(p);
-    if (!norm) return [];
-    if (/^(https?:|data:|blob:)/i.test(norm)) return [norm];
+    if (!norm || /^(https?:|data:|blob:)/i.test(norm)) return norm ? [norm] : [];
 
-    const candidates = [];
-    const add = (v) => {
-      if (v && !candidates.includes(v)) candidates.push(v);
-    };
+    const base = norm.replace(/\.(jpeg|jpg|png|webp|mp4|webm)$/i, '');
+    const ext = (norm.split('.').pop() || '').toLowerCase();
 
-    // Always start with the normalized path.
-    add(norm);
+    // Only try the most likely variants to reduce 404 noise:
+    // 1) original
+    // 2) gallery root fallback
+    // 3) common "a" suffix variants (e.g., 17a, 17_a, 17-a)
+    const cands = [norm];
 
-    // If request is wrong folder (root) try under assets/gallery
-    if (!norm.startsWith('assets/gallery/') && !norm.includes('/gallery/')) {
-      const fname = norm.split('/').pop();
-      add('assets/gallery/' + fname);
+    const file = norm.split('/').pop();
+    if (file && !/assets\/gallery\//i.test(norm)) {
+      cands.push('assets/gallery/' + file);
     }
 
-    // Extension swaps
-    const imgExts = ['.jpeg', '.jpg', '.png', '.webp'];
-    const isImg = /\.(jpeg|jpg|png|webp)$/i.test(norm);
-    const isVid = /\.(mp4|webm)$/i.test(norm);
+    if (ext) {
+      cands.push(base + 'a.' + ext);
+      cands.push(base + '_a.' + ext);
+      cands.push(base + '-a.' + ext);
 
-    function addVariantBases(base) {
-      // Support common variant naming:
-      //   17a.jpg  <-> 17_a.jpg <-> 17-a.jpg
-      //   17_a.jpg <-> 17a.jpg
-      // (applies for a-f, but will also include single-letter suffixes generally)
-      const m1 = base.match(/^(.*?)([a-z])$/i);
-      const m2 = base.match(/^(.*?)[_-]([a-z])$/i);
-      if (m1) {
-        const root = m1[1];
-        const suf = m1[2];
-        add(base);
-        add(root + '_' + suf);
-        add(root + '-' + suf);
-        // also try without suffix (helps when data references 17a but file is 17)
-        add(root);
-        return;
-      }
-      if (m2) {
-        const root = m2[1];
-        const suf = m2[2];
-        add(base);
-        add(root + suf);
-        add(root);
-        return;
-      }
-      add(base);
-      // Also try the simplest "a" variant both joined and separated
-      add(base + 'a');
-      add(base + '_a');
-      add(base + '-a');
+      // Extension swaps (common on static sites): .jpg ↔ .jpeg
+      if (ext === 'jpg') cands.push(base + '.jpeg');
+      if (ext === 'jpeg') cands.push(base + '.jpg');
+
+      // Optional: a few safe variants (kept small to avoid noisy 404s)
+      if (ext === 'png') cands.push(base + '.webp');
+      if (ext === 'webp') cands.push(base + '.png');
+      if (ext === 'mp4') cands.push(base + '.webm');
+      if (ext === 'webm') cands.push(base + '.mp4');
     }
 
-    if (isImg) {
-      const base = norm.replace(/\.(jpeg|jpg|png|webp)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      // Collect base variants first, then add extensions.
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-
-      // Ensure original base is also present.
-      addBase(base);
-
-      for (const b of bases) {
-        for (const e of imgExts) add(b + e);
-      }
-    }
-
-    if (isVid) {
-      const base = norm.replace(/\.(mp4|webm)$/i, '');
-      const bases = [];
-      const addBase = (b) => { if (b && !bases.includes(b)) bases.push(b); };
-
-      const before = candidates.length;
-      addVariantBases(base);
-      for (let i = before; i < candidates.length; i++) {
-        const c = candidates[i];
-        if (!/\.(jpeg|jpg|png|webp|mp4|webm)$/i.test(c)) addBase(c);
-      }
-      addBase(base);
-
-      for (const b of bases) {
-        add(b + '.mp4');
-        add(b + '.webm');
-      }
-    }
-
-    // Only keep candidates that look like concrete asset files (avoid hammering the network
-    // with extension-less paths).
-    return candidates.filter(c =>
-      /^(https?:|data:|blob:)/i.test(c)
-      || /\.(?:jpeg|jpg|png|webp|mp4|webm)$/i.test(c)
-    );
+    // de-dup
+    return [...new Set(cands)];
   }
 
   async function assetExists(relOrAbs) {
@@ -320,18 +561,35 @@
 
   function attachSmartVideo(videoEl, path) {
     const placeholder = 'assets/placeholder-video.mp4';
-    let tried = false;
+    let resolved = false;
 
-    // lazy load on click
+    // Always keep gesture-safe playback: resolve src eagerly (async),
+    // but call play() synchronously in click handlers.
     videoEl.preload = 'metadata';
     videoEl.controls = true;
+    videoEl.playsInline = true;
+    videoEl.setAttribute('playsinline', '');
 
-    videoEl.addEventListener('click', async () => {
-      if (tried) return;
-      tried = true;
-      const chosen = await resolveFirstExisting(path);
-      videoEl.src = chosen ? url(chosen) : url(placeholder);
-      videoEl.play().catch(() => { /* ignore */ });
+    (async () => {
+      try {
+        const chosen = await resolveFirstExisting(path);
+        videoEl.src = chosen ? url(chosen) : url(placeholder);
+      } catch (_e) {
+        videoEl.src = url(placeholder);
+      } finally {
+        resolved = true;
+        try { videoEl.load(); } catch (_e) {}
+      }
+    })();
+
+    videoEl.addEventListener('click', () => {
+      // User gesture preserved: no await in this handler.
+      if (videoEl.paused) {
+        const p = videoEl.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
+        }
+      }
     });
 
     videoEl.onerror = () => {
@@ -362,6 +620,9 @@
   }
 
   function syncTabFromHash() {
+    // Close transient overlays when navigating between tabs.
+    closeDrawer();
+    closeLightbox();
     setActiveTab(activeTabFromHash());
   }
 
@@ -428,24 +689,31 @@
   let leafletPromise = null;
 
   function ensureLeafletCss() {
-    if (document.querySelector('link[data-leaflet-css="1"], link#leafletCss')) return;
+    // If the page already has a Leaflet CSS link (often id="leafletCss"),
+    // prefer switching it to local-first instead of silently keeping a CDN-only href.
+    if (document.querySelector('link[data-leaflet-css="1"]')) return;
     const hrefs = [
+      'assets/leaflets/dist/leaflet.css',
       'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
       'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
     ];
-    const link = document.createElement('link');
+    const existing = document.getElementById('leafletCss');
+    const link = existing || document.createElement('link');
     link.rel = 'stylesheet';
     link.dataset.leafletCss = '1';
     link.href = hrefs[0];
-    document.head.appendChild(link);
+    if (!existing) document.head.appendChild(link);
 
-    // Best-effort fallbacks if a CDN is blocked.
-    let i = 0;
-    link.onerror = () => {
-      i += 1;
-      if (i < hrefs.length) link.href = hrefs[i];
-    };
+    // Best-effort fallbacks if local assets or a CDN is blocked.
+    if (!link.dataset.fallbackBound) {
+      link.dataset.fallbackBound = '1';
+      let i = 0;
+      link.onerror = () => {
+        i += 1;
+        if (i < hrefs.length) link.href = hrefs[i];
+      };
+    }
   }
 
   function loadScriptOnce(src) {
@@ -476,7 +744,13 @@
     leafletPromise = (async () => {
       ensureLeafletCss();
 
+      // NOTE: Your repo vendors Leaflet under assets/leaflets/.
+      // The file named `leaflet.js` in that bundle can be an ES module build
+      // (which throws "Unexpected keyword 'export'" when loaded as a classic script).
+      // `leaflet-global.js` is the UMD/global build that exposes window.L, so we
+      // load it first.
       const srcs = [
+        'assets/leaflets/dist/leaflet-global.js',
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
         'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
         'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
@@ -486,14 +760,11 @@
       for (const src of srcs) {
         try {
           await loadScriptOnce(src);
-
-          // Wait a tick for globals to attach.
           await new Promise(r => setTimeout(r, 0));
           if (window.L && window.L.map) return true;
         } catch (_e) {
           // try next
         }
-
         if (Date.now() - start > timeoutMs) break;
       }
       return !!(window.L && window.L.map);
@@ -773,7 +1044,7 @@
         progEl.innerHTML = `
           <div class="progressContainer">
             <div class="progressTrack"><div class="progressBar" style="width:${pctVal}%"></div></div>
-            <div class="smallMuted progressNote">${pctVal}% of target farmers educated—INTERACT on track.</div>
+            <div class="smallMuted progressNote">${pctVal}% average awareness (proxy for farmer education) across ${fmtInt(denAw)} farmer-weighted responses.</div>
           </div>`;
       }
     }
@@ -848,6 +1119,7 @@
       // Destroy any existing attendance chart to avoid duplicating charts on
       // re-render (e.g. after changing filters).
       if (window.attendanceChart && typeof window.attendanceChart.destroy === 'function') {
+        unregisterChart(window.attendanceChart);
         window.attendanceChart.destroy();
       }
       // Collect farmers per session and sort descending.
@@ -892,7 +1164,7 @@
         type: 'doughnut',
         data: {
           labels: labels,
-          datasets: [{ data: data, backgroundColor: bgColors, borderColor: '#ffffff10', borderWidth: 1 }]
+          datasets: [{ data: data, backgroundColor: bgColors, borderColor: cssVar('--chartBorder', '#ffffff10'), borderWidth: 1 }]
         },
         options: {
           responsive: true,
@@ -922,12 +1194,14 @@
           cutout: '50%'
         }
       });
+      registerChart(window.attendanceChart);
     }
 
     // ---------- Decision breakdown pie chart ----------
     const decisionCanvas = $$('#decisionPie');
     if (decisionCanvas && typeof Chart !== 'undefined' && Array.isArray(fs)) {
       if (window.decisionChart && typeof window.decisionChart.destroy === 'function') {
+        unregisterChart(window.decisionChart);
         window.decisionChart.destroy();
       }
       let sumDef = 0, sumMaybe = 0, sumNot = 0;
@@ -973,6 +1247,7 @@
           }
         }
       });
+      registerChart(window.decisionChart);
     }
 
     
@@ -1020,7 +1295,7 @@
 
       // Destroy prior chart instance (re-render safe)
       const prior = window[winKey];
-      if (prior && typeof prior.destroy === 'function') prior.destroy();
+      if (prior && typeof prior.destroy === 'function') { unregisterChart(prior); prior.destroy(); }
 
       const mp = new Map(); // key -> {farmers, sessions}
       let anyFarmers = false;
@@ -1090,7 +1365,7 @@
           datasets: [{
             data,
             backgroundColor: bgColors,
-            borderColor: '#ffffff10',
+            borderColor: cssVar('--chartBorder', '#ffffff10'),
             borderWidth: 1
           }]
         },
@@ -1125,10 +1400,11 @@
           }
         }
       });
+      registerChart(window[winKey]);
     };
 
     // Farmers by region (REG)
-    renderGroupDonut('#regionPie', 'regionChart', (s) => s.region, 'No region entries yet.');
+    renderGroupDonut('#regionPie', 'districtChart', (s) => s.district, 'No district entries yet.');
 
     // Farmers by territory (uses s.city in this dataset)
     renderGroupDonut('#territoryPie', 'territoryChart', (s) => s.city, 'No territory entries yet.');
@@ -1139,6 +1415,7 @@
       if (!canvas || typeof Chart === 'undefined') return;
 
       if (window.scoreBandsChart && typeof window.scoreBandsChart.destroy === 'function') {
+        unregisterChart(window.scoreBandsChart);
         window.scoreBandsChart.destroy();
       }
 
@@ -1178,7 +1455,7 @@
           datasets: [{
             data: counts,
             backgroundColor: bgColors,
-            borderColor: '#ffffff10',
+            borderColor: cssVar('--chartBorder', '#ffffff10'),
             borderWidth: 1
           }]
         },
@@ -1208,6 +1485,7 @@
           }
         }
       });
+      registerChart(window.scoreBandsChart);
     })();
 
 // ---------- Top sessions table (by score) ----------
@@ -1218,8 +1496,8 @@
         const sid = esc(s.id);
         const date = esc(s.date || '');
         const sheet = esc(s.sheetRef || '');
-        const district = esc(s.district || '');
-        const village = esc(s.village || s.spot || '');
+        const district = esc(prettyPlaceName(s.district) || '');
+        const village = esc(prettyPlaceName(s.village || s.spot) || '');
         const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
         const scoreNum = Number(s.score||0);
         const badgeClass = scoreNum >= 85 ? 'badge badge--gold' : 'badge';
@@ -1358,7 +1636,7 @@
 
       // Destroy prior chart instance (re-render safe)
       const prior = window[winKey];
-      if (prior && typeof prior.destroy === 'function') prior.destroy();
+      if (prior && typeof prior.destroy === 'function') { unregisterChart(prior); prior.destroy(); }
 
       const total = totalFarmers || 0;
 
@@ -1437,6 +1715,7 @@
           }
         }
       });
+      registerChart(window[winKey]);
     };
 
     renderReasonsDonut(drivers, '#driversDonut', '#driversLegend', 'driversDonutChart', 'No driver entries yet.', 200);
@@ -1449,6 +1728,11 @@
       `Conversion coverage: ${denAw ? fmtInt(denAw) : '—'} farmer-weighted records (of ${totalFarmers ? fmtInt(totalFarmers) : '—'} farmers).`,
       'ok'
     );
+
+    // Keep chart UI (tooltips/labels) aligned with the active theme.
+    try {
+      applyAllChartThemes();
+    } catch (_e) {}
   }
 
   function renderSessionsTable() {
@@ -1462,8 +1746,8 @@
       const sid = esc(s.id);
       const date = esc(s.date || '');
       const sheet = esc(s.sheetRef || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
+      const district = esc(prettyPlaceName(s.district) || '');
+      const village = esc(prettyPlaceName(s.village || s.spot) || '');
       const score = Number.isFinite(Number(s.score)) ? fmt1(s.score) : '—';
       const si = idx?.get(s.sheetRef);
       const f = si ? fmtInt(si.farmers_present) : '—';
@@ -1481,8 +1765,8 @@
         <td>${a}</td>
         <td>${score}</td>
         <td style="white-space:nowrap">
-          <a class="btn btnSmall" href="${hrefSheet}">Sheet</a>
-          <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
+          <a class="btn btnSmall" href="${hrefSheet}">Sheet ${esc(s.sheetRef)}</a>
+          <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details ${esc(s.sheetRef)}</a>
           <button class="btn btnSmall btnGhost" data-action="preview">Preview</button>
         </td>
       </tr>`;
@@ -1553,109 +1837,131 @@
         state.mediaType = t;
         // Update active styling
         $$$('button[data-media-type]', seg).forEach(b => b.classList.toggle('segBtn--active', b === btn));
+        // Reset paging
         state.mediaLimit = 24;
         renderMedia();
       });
 
       const search = $$('#mediaSearch');
-      if (search) {
-        search.addEventListener('input', () => {
-          state.mediaSearch = String(search.value || '').trim().toLowerCase();
-          state.mediaLimit = 24;
-          renderMedia();
-        });
-      }
+      search?.addEventListener('input', () => {
+        state.mediaSearch = String(search.value || '');
+        state.mediaLimit = 24;
+        renderMedia();
+      });
 
       const sort = $$('#mediaSort');
-      if (sort) {
-        sort.addEventListener('change', () => {
-          state.mediaSort = String(sort.value || 'newest');
-          renderMedia();
-        });
-      }
+      sort?.addEventListener('change', () => {
+        state.mediaSort = String(sort.value || 'newest');
+        state.mediaLimit = 24;
+        renderMedia();
+      });
 
-      const more = $$('#mediaLoadMore');
-      if (more) {
-        more.addEventListener('click', () => {
-          state.mediaLimit = Number(state.mediaLimit || 24) + 24;
-          renderMedia();
-        });
-      }
+      const moreBtn = $$('#mediaLoadMore');
+      moreBtn?.addEventListener('click', () => {
+        state.mediaLimit = Math.max(0, Number(state.mediaLimit || 24)) + 24;
+        renderMedia();
+      });
     }
 
-    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7v10l9-5-9-5Z" fill="currentColor"/></svg>';
-    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 2-2 3.5 5H6l2-6Z" fill="currentColor" opacity=".35"/></svg>';
+    const playIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 7.5v9l8-4.5-8-4.5Z" fill="currentColor"/><path d="M12 2.75c5.11 0 9.25 4.14 9.25 9.25S17.11 21.25 12 21.25 2.75 17.11 2.75 12 6.89 2.75 12 2.75Z" stroke="currentColor" opacity=".35"/></svg>';
+    const photoIcon = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H17.5A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19H6.5A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor"/><path d="M8 11.5 10.5 14l2-2 3.5 4H6l2-4.5Z" fill="currentColor" opacity=".35"/><path d="M16.5 9a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" fill="currentColor"/></svg>';
 
     const q = String(state.mediaSearch || '').trim().toLowerCase();
     const type = String(state.mediaType || 'all');
     const sortMode = String(state.mediaSort || 'newest');
 
-    let list = Array.isArray(state.filteredSessions) ? [...state.filteredSessions] : [];
+    const fs = Array.isArray(state.filteredSessions) ? state.filteredSessions : [];
 
-    // Filter to sessions that actually have media
-    list = list.filter(s => !!firstMediaVideo(s) || !!firstMediaImage(s));
+    // Build an item-level list (not session-level) so "Images" truly shows only images.
+    let items = [];
+    fs.forEach((s) => {
+      const media = allMediaItems(s);
+      if (!media || !media.length) return;
 
-    // Type filter
-    if (type === 'videos') list = list.filter(s => !!firstMediaVideo(s));
-    if (type === 'images') list = list.filter(s => !!firstMediaImage(s));
+      const district = prettyPlaceName(s.district) || '';
+      const village = prettyPlaceName(s.village || s.spot) || '';
+
+      media.forEach((it, idx) => {
+        if (!it || !it.path) return;
+        items.push({
+          sessionId: Number(s.id),
+          sheetRef: String(s.sheetRef || ''),
+          date: String(s.date || ''),
+          district,
+          village,
+          type: it.type,
+          path: String(it.path),
+          order: Number(idx) || 0,
+          poster: (it.type === 'video') ? String(firstMediaImage(s) || '') : ''
+        });
+      });
+    });
+
+    // Type filter (item-level)
+    if (type === 'videos') items = items.filter(it => it.type === 'video');
+    if (type === 'images') items = items.filter(it => it.type === 'image');
 
     // Text filter
     if (q) {
-      list = list.filter(s => {
-        const sheet = String(s.sheetRef || '');
-        const district = String(s.district || '');
-        const village = String(s.village || s.spot || '');
-        return `${sheet} ${district} ${village}`.toLowerCase().includes(q);
+      items = items.filter(it => {
+        const hay = `${it.sheetRef} ${it.district} ${it.village} ${it.path}`.toLowerCase();
+        return hay.includes(q);
       });
     }
 
-    // Sort by date (fallback to original order)
-    list.sort((a, b) => {
+    // Sort by date (stable tie-breaks)
+    items.sort((a, b) => {
       const da = parseDateSafe(a.date)?.getTime() || 0;
       const db = parseDateSafe(b.date)?.getTime() || 0;
-      return sortMode === 'oldest' ? (da - db) : (db - da);
+      let cmp = (sortMode === 'oldest') ? (da - db) : (db - da);
+      if (cmp) return cmp;
+      cmp = String(a.sheetRef || '').localeCompare(String(b.sheetRef || ''));
+      if (cmp) return cmp;
+      cmp = Number(a.sessionId) - Number(b.sessionId);
+      if (cmp) return cmp;
+      return Number(a.order || 0) - Number(b.order || 0);
     });
 
-    const total = list.length;
+    const total = items.length;
     const limit = Math.max(0, Number(state.mediaLimit || 24));
-    const shown = list.slice(0, limit);
+    const shown = items.slice(0, limit);
 
-    const cards = shown.map(s => {
-      const sid = esc(s.id);
-      const sheet = esc(s.sheetRef || '');
-      const district = esc(s.district || '');
-      const village = esc(s.village || s.spot || '');
-      // Determine thumbnail: prefer first video if available; otherwise first image
-      const vidPath = firstMediaVideo(s);
-      const videoSrc = vidPath ? normalizeMediaPath(vidPath) : '';
-      const img = firstMediaImage(s);
+    const cards = shown.map(it => {
+      const sid = esc(it.sessionId);
+      const sheet = esc(it.sheetRef || '');
+      const district = esc(it.district || '');
+      const village = esc(it.village || '');
       const title = `${sheet} • ${district} • ${village}`;
-      const hrefDetails = `details.html?campaign=${encodeURIComponent(state.campaignId)}&session=${encodeURIComponent(String(s.id))}`;
-      // Build thumb markup
+      const hrefDetails = `details.html?campaign=${encodeURIComponent(String(state.campaignId || ''))}&session=${encodeURIComponent(String(it.sessionId))}`;
+
+      const primaryType = it.type;
+      const path = esc(it.path);
+      const poster = esc(it.poster || '');
+
       let thumb;
       let badge;
-      if (vidPath) {
-        // Show auto-playing muted preview
-        thumb = `<video autoplay loop muted playsinline src="${esc(videoSrc)}"></video>`;
+      if (primaryType === 'video') {
+        thumb = `<video data-media-vid="1" preload="metadata" muted playsinline></video>`;
         badge = `<div class="mediaBadge" title="Video">${playIcon}<span>Video</span></div>`;
       } else {
-        thumb = `<img data-media-thumb="1" alt="${esc(title)}" />`;
+        thumb = `<img data-media-thumb="1" alt="${esc(title)}" loading="lazy" decoding="async" />`;
         badge = `<div class="mediaBadge" title="Image">${photoIcon}<span>Image</span></div>`;
       }
-      return `<div class="mediaCard" data-session-id="${sid}">
+
+      return `<div class="mediaCard" data-session-id="${sid}" data-primary-type="${primaryType}" data-media-path="${path}" data-poster-path="${poster}">
         <div class="mediaThumb">
           ${badge}
           ${thumb}
         </div>
         <div class="mediaMeta">
           <div class="mediaTitle">${esc(title)}</div>
+          <div class="mediaSub smallMuted">${esc(it.date || '')}</div>
           <div class="mediaActions">
-            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(state.campaignId)}&sheet=${encodeURIComponent(s.sheetRef)}">Sheet</a>
-            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details</a>
-            <button class="btn btnSmall btnGhost" data-action="open">Open</button>
+            <a class="btn btnSmall" href="sheets.html?campaign=${encodeURIComponent(String(state.campaignId || ''))}&sheet=${encodeURIComponent(String(it.sheetRef || ''))}">Sheet ${sheet}</a>
+            <a class="btn btnSmall btnGhost" href="${hrefDetails}">Details ${sheet}</a>
+            <button class="btn btnSmall btnGhost" data-action="open" type="button">Open</button>
           </div>
         </div>
-        <div class="hidden" data-thumb-path="${esc(img)}"></div>
       </div>`;
     });
 
@@ -1667,21 +1973,42 @@
     const moreBtn = $$('#mediaLoadMore');
     if (moreBtn) moreBtn.style.display = (limit < total) ? '' : 'none';
 
-    // attach thumbs
+    // Attach image thumbs
     $$$('[data-media-thumb="1"]', grid).forEach(img => {
       const card = img.closest('.mediaCard');
-      const p = card?.querySelector('[data-thumb-path]')?.getAttribute('data-thumb-path') || '';
+      const p = card?.dataset.mediaPath || '';
       attachSmartImage(img, p || 'assets/placeholder.svg');
+    });
+
+    // Attach video thumbs
+    $$$('[data-media-vid="1"]', grid).forEach(v => {
+      const card = v.closest('.mediaCard');
+      const p = card?.dataset.mediaPath || '';
+      attachSmartVideo(v, p || 'assets/placeholder-video.mp4');
+      // thumbnails should not show full controls
+      try { v.controls = false; } catch (_e) {}
+      // Prefer a poster (first session image) to avoid a black rectangle while metadata loads.
+      const poster = card?.dataset.posterPath || '';
+      if (poster) {
+        resolveFirstExisting(poster).then((chosen) => {
+          if (chosen) {
+            try { v.poster = url(chosen); } catch (_e) {}
+          }
+        }).catch(() => {});
+      }
     });
 
     grid.onclick = (ev) => {
       const card = ev.target.closest('.mediaCard[data-session-id]');
       if (!card) return;
-      const sid = Number(card.dataset.sessionId);
       if (ev.target.closest('a')) return;
 
-      // Open lightbox with all items
-      openLightbox(sid);
+      const sid = Number(card.dataset.sessionId);
+      // Open lightbox, respecting the active media filter (Images/Videos/All)
+      const mode = String(state.mediaType || 'all');
+      const startType = card.dataset.primaryType || null;
+      const startPath = card.dataset.mediaPath || null;
+      openLightbox(sid, mode, startType, startPath);
     };
   }
 
@@ -1700,23 +2027,6 @@
     if (dr) dr.classList.add('hidden');
     if (ov) ov.setAttribute('aria-hidden', 'true');
     if (dr) dr.setAttribute('aria-hidden', 'true');
-    // Navigate back to the base page when a drawer is closed. When the user clicks
-    // outside the session preview (or hits Esc), return to the default summary
-    // tab by stripping any hash from the URL. Preserve existing query string
-    // parameters (e.g. campaign, date filters). Use location.pathname+search to
-    // avoid repeatedly appending hashes during navigation. If an exception
-    // occurs, silently ignore.
-    try {
-      const base = location.pathname + location.search;
-      // If already on index.html this will simply remove the hash and reload
-      // the summary tab. If executed from another tab (e.g. sessions hash)
-      // the anchor will be cleared.
-      if (location.hash) {
-        location.href = base;
-      }
-    } catch (_e) {
-      /* noop */
-    }
   }
 
   async function openDrawer(sessionId) {
@@ -1888,21 +2198,11 @@
   // ---------- Lightbox ----------
   function closeLightbox() {
     const lb = $$('#lightbox');
-    if (lb) lb.classList.remove('open');
-    const body = $$('#lbBody');
-    if (body) body.innerHTML = '';
-    // When the lightbox is closed, return to the base page so the user is not
-    // left on an orphaned hash state. This mirrors the behaviour implemented in
-    // closeDrawer(). Preserving pathname and query parameters ensures date
-    // filters and campaign selection remain intact.
-    try {
-      const base = location.pathname + location.search;
-      if (location.hash) {
-        location.href = base;
-      }
-    } catch (_e) {
-      /* ignore navigation errors */
-    }
+    if (lb) lb.classList.add('hidden');
+    if (lb) lb.setAttribute('aria-hidden', 'true');
+
+    const frame = $$('#lightboxFrame');
+    if (frame) frame.src = '';
   }
 
   function bindLightbox() {
@@ -1912,134 +2212,211 @@
     });
   }
 
-  async function openLightbox(sessionId) {
+  async function openLightbox(sessionId, mode = 'all', startType = null, startPath = null) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
+
     const lb = $$('#lightbox');
     const body = $$('#lbBody');
     if (!lb || !body) return;
 
-    $$('#lbTitle').textContent = `Session ${s.id} • ${s.sheetRef || ''}`;
+    const titleEl = $$('#lbTitle');
+    if (titleEl) titleEl.textContent = 'Session ' + String(s.id) + (s.sheetRef ? (' • ' + String(s.sheetRef)) : '');
 
     lb.classList.add('open');
     body.innerHTML = '';
 
-    const items = allMediaItems(s);
-    if (!items.length) {
-      body.innerHTML = '<div class="muted">No media listed for this session.</div>';
+    let items = allMediaItems(s);
+
+    // Respect active filter from the Media tab.
+    const m = String(mode || 'all');
+    if (m === 'images') items = items.filter(it => it.type === 'image');
+    if (m === 'videos') items = items.filter(it => it.type === 'video');
+
+    if (!items || !items.length) {
+      body.innerHTML = '<div class="muted">No media for the selected filter.</div>';
       return;
     }
 
-    // Show first item large; rest as thumbnails
-    const main = items[0];
-    if (main.type === 'image') {
-      const img = document.createElement('img');
-      img.className = 'lightboxMedia';
-      img.alt = 'image';
-      body.appendChild(img);
-      attachSmartImage(img, main.path);
+let active = 0;
+
+    // If we opened from a specific media item (e.g., in the Media grid), start there.
+    const sp = (startPath ? String(startPath) : '').trim();
+    if (sp) {
+      const idxPath = items.findIndex(it => String(it.path || '') === sp);
+      if (idxPath >= 0) active = idxPath;
     } else {
-      const v = document.createElement('video');
-      v.className = 'lightboxMedia';
-      v.controls = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline','');
-      body.appendChild(v);
-      const chosen = await resolveFirstExisting(main.path);
-      v.src = chosen ? url(chosen) : url('assets/placeholder-video.mp4');
+      // Fallback: start at matching media type (only meaningful in "all" mode).
+      if (m === 'all' && (startType === 'image' || startType === 'video')) {
+        const idxType = items.findIndex(it => it.type === startType);
+        if (idxType >= 0) active = idxType;
+      }
     }
 
-    if (items.length > 1) {
-      const row = document.createElement('div');
-      row.className = 'mediaRow';
-      for (const it of items.slice(1, 12)) {
-        if (it.type === 'image') {
-          const t = document.createElement('img');
-          t.className = 'thumb';
-          t.alt = 'thumb';
-          t.loading = 'lazy';
-          row.appendChild(t);
-          attachSmartImage(t, it.path);
-          t.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId); // simplest refresh
-          };
-        } else {
-          const tv = document.createElement('video');
-          tv.className = 'thumb';
-          tv.muted = true;
-          tv.playsInline = true;
-          tv.setAttribute('playsinline','');
-          row.appendChild(tv);
-          attachSmartVideo(tv, it.path);
-          tv.onclick = () => {
-            body.innerHTML = '';
-            lb.classList.add('open');
-            openLightbox(sessionId);
-          };
-        }
+    const main = document.createElement('div');
+    main.className = 'lbMain';
+    const strip = document.createElement('div');
+    strip.className = 'drawerMedia';
+
+    body.appendChild(main);
+    body.appendChild(strip);
+
+    function renderMain() {
+      main.innerHTML = '';
+      const it = items[active];
+      if (!it) return;
+
+      if (it.type === 'video') {
+        const v = document.createElement('video');
+        v.className = 'lightboxMedia';
+        v.controls = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.preload = 'metadata';
+
+        // Resolve src eagerly, but keep playback gesture-safe (no await in click).
+        attachSmartVideo(v, it.path);
+
+        // Attempt autoplay (may be blocked; user can press play).
+        setTimeout(() => {
+          const p = v.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {
+              v.muted = true;
+              v.play().catch(() => {});
+            });
+          }
+        }, 0);
+
+        main.appendChild(v);
+      } else {
+        const img = document.createElement('img');
+        img.className = 'lightboxMedia';
+        img.alt = `Session ${s.id} media ${active + 1}`;
+        img.loading = 'eager';
+        attachSmartImage(img, it.path);
+        main.appendChild(img);
       }
-      body.appendChild(row);
+
+      const cap = document.createElement('div');
+      cap.className = 'lbCaption';
+      cap.innerHTML = `<div class="smallMuted">${active + 1} / ${items.length}</div>`;
+      main.appendChild(cap);
     }
+
+    function renderStrip() {
+      strip.innerHTML = '';
+      items.forEach((it, i) => {
+        const t = document.createElement(it.type === 'video' ? 'video' : 'img');
+        t.className = 'thumb' + (i === active ? ' thumb--active' : '');
+        t.dataset.index = String(i);
+
+        if (it.type === 'video') {
+          t.muted = true;
+          t.loop = false;
+          t.autoplay = false;
+          t.playsInline = true;
+          t.setAttribute('playsinline', '');
+          attachSmartVideo(t, it.path);
+        } else {
+          attachSmartImage(t, it.path);
+        }
+
+        t.addEventListener('click', (e) => {
+          e.stopPropagation();
+          active = i;
+          renderMain();
+          renderStrip();
+        });
+
+        strip.appendChild(t);
+      });
+    }
+
+    renderMain();
+    renderStrip();
   }
 
   // ---------- Map ----------
+  function makeBasemapLayer(theme) {
+    const t = (theme === 'light') ? 'light' : 'dark';
+    const url = (t === 'light')
+      ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const attribution = (t === 'light')
+      ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+    return window.L.tileLayer(url, { maxZoom: 18, attribution });
+  }
+
+  function applyMapTheme(theme) {
+    try {
+      if (!state.map || !window.L) return;
+      const t = (theme === 'light') ? 'light' : 'dark';
+      if (state.baseLayer) {
+        try { state.map.removeLayer(state.baseLayer); } catch (_e) {}
+        state.baseLayer = null;
+      }
+      state.baseLayer = makeBasemapLayer(t).addTo(state.map);
+    } catch (_e) { /* ignore */ }
+  }
+
   async function ensureMapReady() {
     const el = $$('#leafletMap');
     if (!el) return;
 
-    // Lazily load Leaflet when the Map tab is opened.
     setMapStatus('Loading map…', false);
-    const ok = await ensureLeafletReady({ timeoutMs: 9000 });
-    if (!ok) {
-      setMapStatus('Map library blocked', false);
-      $$('#mapFallback')?.classList.remove('hidden');
-      return;
-    }
-
-    if (state.map) {
-      state.map.invalidateSize();
-      updateMapData();
-      return;
-    }
 
     try {
-      const map = window.L.map(el, { zoomControl: true });
+      // Prefer the robust loader injected from index.html if present.
+      if (typeof window.loadLeaflet === 'function') {
+        const ok = await window.loadLeaflet();
+        if (!ok) throw new Error('Leaflet failed to load');
+      } else {
+        const ok = await ensureLeafletReady({ timeoutMs: 12000 });
+        if (!ok) throw new Error('Leaflet failed to load');
+      }
+
+      if (state.map) {
+        state.map.invalidateSize();
+        updateMapData();
+        setMapStatus('Ready', true);
+        return;
+      }
+
+      const map = window.L.map(el, {
+        zoomControl: true,
+        preferCanvas: true
+      });
       state.map = map;
       state.markerLayer = window.L.layerGroup().addTo(map);
 
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
+      state.baseLayer = makeBasemapLayer(getTheme()).addTo(map);
 
-      // Create an empty heatmap layer. The data points are populated in updateMapData().
-      try {
+      if (window.L.heatLayer) {
         state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });
-      } catch (_e) {
-        // If the heatmap plugin is not loaded, leave the layer undefined.
-        state.heatLayer = null;
       }
 
       updateMapData();
       setMapStatus('Ready', true);
-      setTimeout(() => map.invalidateSize(), 250);
 
-      // Close any open Leaflet popups when clicking on the map background. This
-      // prevents popup windows from remaining open when users click outside
-      // markers. Without this, popups would remain visible and obstruct the
-      // interface. Use a try/catch in case Leaflet has no popups open.
-      map.on('click', () => {
-        try {
-          map.closePopup();
-        } catch (_e) {
-          /* no-op */
-        }
-      });
+      setTimeout(() => map.invalidateSize(true), 100);
+      setTimeout(() => map.invalidateSize(true), 500);
     } catch (e) {
-      setMapStatus('Failed', false);
-      $$('#mapFallback')?.classList.remove('hidden');
+      console.error('Map failed:', e);
+      setMapStatus('Map unavailable - check network', false);
+      const mf = $$('#mapFallback');
+      if (mf) {
+        mf.classList.remove('hidden');
+        mf.innerHTML = `
+          <div style="padding: 20px; text-align: center;">
+            <div style="color: var(--warn); margin-bottom: 10px;">⚠️ Map cannot load</div>
+            <div class="smallMuted">
+              Use the Sessions table below for navigation.<br>
+              <button class="btn btnSmall" onclick="location.reload()">Retry</button>
+            </div>
+          </div>`;
+      }
     }
   }
 
@@ -2080,7 +2457,7 @@
           <div class="smallMuted">${esc(s.village || s.spot || '')}</div>
           <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
             <a class="btn btnSmall" href="${sheetUrl}">Open sheet</a>
-            <a class="btn btnSmall btnGhost" href="${detailsUrl}">Details</a>
+            <a class="btn btnSmall btnGhost" href="${detailsUrl}">Details ${esc(s.sheetRef)}</a>
             <a class="btn btnSmall btnGhost" href="${g}" target="_blank" rel="noopener">Maps</a>
           </div>
           <div style="margin-top:8px">
@@ -2406,48 +2783,81 @@
   // ---------- Donut row auto-scroll ----------
   // Creates a subtle horizontal auto-scroll for donut rows, and pauses on mouse-over / interaction.
   function initDonutRows() {
+    if (window.__REDUCE_MOTION__) return;
+
     const rows = document.querySelectorAll('.donutRow[data-autoscroll="1"]');
     rows.forEach((row) => {
       if (row.dataset._autoBound === '1') return;
       row.dataset._autoBound = '1';
 
-      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22'));
-      let paused = false;
-      let wheelTimer = null;
+      // Ensure single-line layout and avoid snap fighting the animation
+      try {
+        row.style.flexWrap = 'nowrap';
+        row.style.scrollSnapType = 'none';
+      } catch (_e) {}
 
-      const step = () => {
-        if (!paused && !document.hidden && speed > 0) {
-          const max = row.scrollWidth - row.clientWidth;
-          if (max > 4) {
-            row.scrollLeft += speed;
-            if (row.scrollLeft >= max - 1) row.scrollLeft = 0;
+      // If not scrollable, nothing to animate.
+      const initialWidth = row.scrollWidth;
+      if (initialWidth <= row.clientWidth + 8) return;
+
+      // Duplicate the row content once to create a seamless loop.
+      if (row.dataset._cloned !== '1') {
+        const children = Array.from(row.children);
+        children.forEach((ch) => {
+          const clone = ch.cloneNode(true);
+          clone.dataset._clone = '1';
+          clone.setAttribute('aria-hidden', 'true');
+          row.appendChild(clone);
+        });
+        row.dataset._cloned = '1';
+      }
+
+      const loopPoint = initialWidth; // scrollLeft wraps at the original width
+      const speed = Math.max(0, parseFloat(row.dataset.speed || '0.22')); // px per frame (≈60fps)
+
+      let paused = false;
+      let last = performance.now();
+
+      // Pause only when user interacts or hovers an actual tile.
+      const pauseEvents = ['touchstart', 'pointerdown', 'focusin', 'wheel'];
+      const resumeEvents = ['touchend', 'pointerup', 'focusout'];
+
+      pauseEvents.forEach(evt => row.addEventListener(evt, () => { paused = true; }, { passive: true }));
+      resumeEvents.forEach(evt => row.addEventListener(evt, () => {
+        setTimeout(() => { paused = false; }, 120);
+      }, { passive: true }));
+
+      const bindTileHover = () => {
+        const tiles = row.querySelectorAll('.chartTile');
+        tiles.forEach((tile) => {
+          if (tile.dataset._hoverBound === '1') return;
+          tile.dataset._hoverBound = '1';
+          tile.addEventListener('mouseenter', () => { paused = true; }, { passive: true });
+          tile.addEventListener('pointerenter', () => { paused = true; }, { passive: true });
+          tile.addEventListener('mouseleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
+          tile.addEventListener('pointerleave', () => { setTimeout(() => { paused = false; }, 120); }, { passive: true });
+        });
+      };
+      bindTileHover();
+
+      const step = (now) => {
+        const dt = Math.max(0, now - last);
+        last = now;
+
+        if (!paused) {
+          // Convert "px per frame" to "px per ms"
+          const delta = speed * (dt / 16.6667);
+          row.scrollLeft += delta;
+
+          // Seamless wrap
+          if (row.scrollLeft >= loopPoint) {
+            row.scrollLeft -= loopPoint;
           }
         }
+
         requestAnimationFrame(step);
       };
 
-      row.addEventListener('mouseenter', () => { paused = true; });
-      row.addEventListener('mouseleave', () => { paused = false; });
-
-      // Pause auto-scroll on pointer interactions (mouse/touch/pen)
-      row.addEventListener('pointerdown', () => { paused = true; });
-      row.addEventListener('pointerup', () => { paused = false; });
-      row.addEventListener('pointercancel', () => { paused = false; });
-
-      row.addEventListener('focusin', () => { paused = true; });
-      row.addEventListener('focusout', () => { paused = false; });
-
-      row.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-      row.addEventListener('touchend', () => { paused = false; }, { passive: true });
-      row.addEventListener('touchcancel', () => { paused = false; }, { passive: true });
-
-      row.addEventListener('wheel', () => {
-        paused = true;
-        if (wheelTimer) clearTimeout(wheelTimer);
-        wheelTimer = setTimeout(() => { paused = false; }, 800);
-      }, { passive: true });
-
-      // Start loop
       requestAnimationFrame(step);
     });
   }
@@ -2460,6 +2870,16 @@
       bindFeedback();
       bindTopControls();
       initDonutRows();
+
+      // React to theme changes (light/dark) without a full reload.
+      document.addEventListener('themechange', (ev) => {
+        const t = ev?.detail?.theme || getTheme();
+        applyMapTheme(t);
+        try {
+          applyAllChartThemes();
+        } catch (_e) {}
+      });
+
       bindTabEvents();
 
       await loadCampaignRegistry();

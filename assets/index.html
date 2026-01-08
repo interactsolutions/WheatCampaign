@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en" data-theme="dark">
 <head>
+  <link rel="icon" href="favicon.ico" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <title>Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</title>
+  <title>Wheat Campaign Dashboard</title>
   <meta name="description" content="Buctril Super – Wheat Activations 2025 dashboard: reach, conversion, sessions, media, and map insights for farmer education." />
 
   <link rel="icon" type="image/png" href="assets/Interact.png" />
@@ -13,12 +14,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260105-7" />
+  <link rel="stylesheet" href="style.css?v=20260108-01" />
 
-  <!-- Leaflet CSS with fallback chain -->
-  <link id="leafletCss" rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'"/>
+  <!-- Leaflet CSS (local-first; CDN fallbacks if blocked) -->
+  <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" />
+  <script>
+    (function () {
+      const link = document.getElementById('leafletCss');
+      if (!link) return;
+      const fallbacks = [
+        'assets/leaflets/dist/leaflet.css',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'
+      ];
+      let i = 0;
+      link.addEventListener('error', () => {
+        i += 1;
+        if (i < fallbacks.length) link.href = fallbacks[i];
+      });
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
@@ -62,14 +78,30 @@
     <symbol id="i-star" viewBox="0 0 24 24">
       <path d="m12 3 2.6 5.6 6.1.9-4.4 4.3 1 6.1-5.3-2.9-5.3 2.9 1-6.1L3.3 9.5l6.1-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
     </symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24">
+      <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24">
+      <path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24">
+      <path d="M21 12.8A8.5 8.5 0 0 1 11.2 3 7 7 0 1 0 21 12.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
   </svg>
 
   <!-- Background video -->
   <div class="bg">
-    <video class="bgVideo" id="bgVideo"
-           src="assets/bg.mp4"
-           autoplay muted loop playsinline
-           preload="metadata">
+    <video id="bgVideo" class="bgVideo" autoplay loop muted playsinline preload="auto" src="assets/bg.mp4">
     </video>
     <div class="bgShade"></div>
   </div>
@@ -108,24 +140,24 @@
       <div class="brand">
         <a href="index.html" class="brandLogoLink" aria-label="Home">
           <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png"
-               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.style.display='none'" />
+               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" />
           <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png"
-               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.style.display='none'" />
+               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" />
         </a>
         <div>
-          <div class="brandTitle">Bayer's Initiative - Wheat Campaign to Educate Pakistani Farmers for Crop Protection</div>
+          <div class="brandTitle">Wheat Campaign – Farmer Education Dashboard</div>
           <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
-        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme">☀</button>
+        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme"><svg class="icon" aria-hidden="true"><use href="#i-sun" xlink:href="#i-sun"></use></svg><span class="srOnly">Toggle theme</span></button>
       </div>
 
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
-        <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" aria-selected="true" href="#summary">Summary</a>
-        <a class="tabBtn" data-tab="media" role="tab" aria-selected="false" href="#media">Media</a>
-        <a class="tabBtn" data-tab="map" role="tab" aria-selected="false" href="#map">Map</a>
-        <a class="tabBtn" data-tab="sessions" role="tab" aria-selected="false" href="#sessions">Sessions</a>
-        <a class="tabBtn" data-tab="feedback" role="tab" aria-selected="false" href="#feedback">Feedback</a>
-      </nav>
+      <a class="tabBtn tabBtn--active" data-tab="summary" role="tab" href="#summary">Summary</a>
+      <a class="tabBtn" data-tab="media" role="tab" href="#media">Media</a>
+      <a class="tabBtn" data-tab="map" role="tab" href="#map">Map</a>
+      <a class="tabBtn" data-tab="sessions" role="tab" href="#sessions">Sessions</a>
+      <a class="tabBtn" data-tab="feedback" role="tab" href="#feedback">Feedback</a>
+    </nav>
     </div>
 
     <!-- Hero slider -->
@@ -140,8 +172,8 @@
         </div>
 
         <div class="heroControls">
-          <button class="iconBtn" id="heroPrev" aria-label="Previous">◀</button>
-          <button class="iconBtn" id="heroNext" aria-label="Next">▶</button>
+          <button class="iconBtn" id="heroPrev" aria-label="Previous"><svg class="icon" aria-hidden="true"><use href="#i-chevron-left" xlink:href="#i-chevron-left"></use></svg><span class="srOnly">Previous</span></button>
+          <button class="iconBtn" id="heroNext" aria-label="Next"><svg class="icon" aria-hidden="true"><use href="#i-chevron-right" xlink:href="#i-chevron-right"></use></svg><span class="srOnly">Next</span></button>
         </div>
 
         <div class="heroThumbs" id="heroThumbs" aria-label="Hero thumbnails"></div>
@@ -152,7 +184,7 @@
     <div class="filtersHeader" id="filtersHeader">
       <div class="filtersMeta" id="filtersMeta">Filters</div>
       <button class="btn btnGhost btnSmall" id="filtersToggle" type="button"
-              aria-expanded="true" aria-controls="filtersPanel">Filters ▾</button>
+              aria-expanded="true" aria-controls="filtersPanel"><span>Filters</span> <svg class="icon" aria-hidden="true"><use href="#i-chevron-down" xlink:href="#i-chevron-down"></use></svg></button>
     </div>
 
     <div class="controls" id="filtersPanel">
@@ -275,7 +307,7 @@
 
         <div class="chartGrid donutRow" id="breakdownsRow" data-autoscroll="1" data-speed="0.25">
           <div class="chartTile">
-            <h4>Farmers by region</h4>
+            <h4>Farmers by district</h4>
             <div class="chartWrap">
               <canvas id="regionPie"></canvas>
             </div>
@@ -464,11 +496,11 @@
   <footer class="footer" aria-label="Footer">
     <div class="footerBrands">
       <div class="brandPill">
-        <img src="assets/interact.gif" alt="INTERACT" onerror="this.style.display='none'"/>
+        <img src="assets/interact.gif" alt="INTERACT"/>
         <span>INTERACT Solutions</span>
       </div>
       <div class="brandPill">
-        <img src="assets/bayer.svg" alt="Bayer" onerror="this.style.display='none'"/>
+        <img src="assets/bayer.svg" alt="Bayer"/>
         <span>Bayer Crop Science</span>
       </div>
     </div>
@@ -482,7 +514,7 @@
         <div class="drawerTitle" id="drawerTitle">Session</div>
         <div class="drawerSub" id="drawerSub">—</div>
       </div>
-      <button class="iconBtn" id="drawerClose" aria-label="Close">✕</button>
+      <button class="iconBtn" id="drawerClose" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x" xlink:href="#i-x"></use></svg><span class="srOnly">Close</span></button>
     </div>
 
     <div class="drawerBody">
@@ -524,7 +556,7 @@
     <div class="lightboxInner">
       <div class="lightboxTop">
         <div id="lbTitle" class="muted">Media</div>
-        <button class="iconBtn" id="lbClose" aria-label="Close">✕</button>
+        <button class="iconBtn" id="lbClose" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x" xlink:href="#i-x"></use></svg><span class="srOnly">Close</span></button>
       </div>
       <div class="lightboxBody" id="lbBody"></div>
     </div>
@@ -532,7 +564,9 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260105-7"></script>
+  <script defer src="assets/leaflets/dist/leaflet.js"></script>
+<script defer src="assets/leaflets/plugins/leaflet.heat.js"></script>
+<script defer src="dashboard.js?v=20260108-01"></script>
 
 
   <!-- Hero slider (auto-advance) -->
@@ -636,6 +670,43 @@
   })();
   </script>
 
+
+  <script>
+  // v16: background video autoplay handling + fallback
+  (function() {
+    const v = document.getElementById('bgVideo');
+    if (!v) return;
+
+    let attempted = false;
+
+    function attemptAutoplay() {
+      if (attempted) return;
+      attempted = true;
+
+      try {
+        v.muted = true;
+        v.setAttribute('muted', '');
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+      } catch (e) {}
+
+      const playPromise = v.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {
+          const fallback = document.createElement('div');
+          fallback.className = 'bgFallback';
+          if (v.parentElement) v.parentElement.appendChild(fallback);
+          v.classList.add('fallback');
+        });
+      }
+    }
+
+    attemptAutoplay();
+    document.addEventListener('click', attemptAutoplay, { once: true });
+    document.addEventListener('touchstart', attemptAutoplay, { once: true });
+  })();
+  </script>
+
   <!-- Theme toggle -->
   <script>
   (function() {
@@ -645,7 +716,14 @@
     function applyTheme(t) {
       htmlEl.setAttribute('data-theme', t);
       localStorage.setItem('theme', t);
-      if (toggleBtn) toggleBtn.textContent = (t === 'light') ? '🌙' : '☀';
+      try {
+        window.__THEME__ = t;
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t } }));
+      } catch (_e) {}
+      if (toggleBtn) {
+        const sym = (t === 'light') ? 'i-moon' : 'i-sun';
+        toggleBtn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg><span class="srOnly">Toggle theme</span>`;
+      }
     }
 
     const saved = localStorage.getItem('theme');
@@ -713,7 +791,10 @@ toggleBtn?.addEventListener('click', () => {
     function setCollapsed(collapsed, persist) {
       body.classList.toggle('filters-collapsed', !!collapsed);
       btn.setAttribute('aria-expanded', (!collapsed).toString());
-      btn.textContent = collapsed ? 'Filters ▸' : 'Filters ▾';
+      {
+        const sym = collapsed ? 'i-chevron-right' : 'i-chevron-down';
+        btn.innerHTML = `<span>Filters</span> <svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg>`;
+      }
       if (persist) localStorage.setItem(KEY, collapsed ? '1' : '0');
       updateMeta();
     }

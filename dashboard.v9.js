@@ -1,8 +1,10 @@
 (() => {
   'use strict';
 
+  window.__WC_BUILD__ = "2026-01-08.10";
+
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-08.2";
+  const WHEATCAMPAIGN_BUILD = "2026-01-08.10";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
 

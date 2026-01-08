@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en" data-theme="dark">
 <head>
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="icon" href="favicon.ico" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
@@ -13,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=20260107-16" />
+  <link rel="stylesheet" href="style.v9.css?v=20260108-02" />
 
   <!-- Leaflet CSS (local-first; CDN fallbacks if blocked) -->
   <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" />
@@ -563,7 +567,11 @@
 
   <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="dashboard.js?v=20260107-16"></script>
+  <script defer src="assets/leaflets/dist/leaflet.js"></script>
+<script defer src="assets/leaflets/plugins/leaflet.heat.js"></script>
+
+  <script id="wc-media-config" type="application/json">{"assetsBase": "assets/", "galleryBase": "assets/gallery/", "placeholder": "assets/placeholder.svg", "backgroundVideo": "assets/bg.mp4", "headerSequence": [{"key": "bayer", "label": "Bayer", "video": "assets/placeholder-video.mp4", "poster": "assets/bayer.svg"}, {"key": "interact", "label": "INTERACT", "video": "assets/placeholder-video.mp4", "poster": "assets/interact.gif"}, {"key": "buctril", "label": "Buctril", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}, {"key": "atlantis", "label": "Atlantis", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}], "brandImages": {"interactGif": "assets/interact.gif", "bayerLogo": "assets/bayer.svg", "buctril": "assets/placeholder.svg", "atlantis": "assets/placeholder.svg", "products": "assets/placeholder.svg"}}</script>
+  <script defer src="dashboard.v9.js?v=20260108-02"></script>
 
 
   <!-- Hero slider (auto-advance) -->

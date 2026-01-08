@@ -2,8 +2,19 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-07.6";
+  const WHEATCAMPAIGN_BUILD = "2026-01-07.7";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
+
+  // Defensive: remove any previously-registered service workers (old builds) that may
+  // continue to request stale assets (e.g., faviconV2 / main.js) and cause confusing 404s.
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => {});
+    }
+  } catch (_e) {}
+
 
   const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
   function chartAnimation(){
@@ -289,77 +300,40 @@
     } catch (_e) { /* ignore */ }
   }
 
-    function applyChartTheme(chart) {
+  function applyChartTheme(chart) {
     try {
       if (!chart) return;
 
       const t = getTheme();
-      const text = cssVar('--text', (t === 'light') ? '#0b1220' : '#f0f4ff');
-      const muted = cssVar('--muted', (t === 'light') ? '#334155' : '#b0c4e6');
-      const stroke = cssVar('--stroke', (t === 'light') ? 'rgba(2,6,23,.12)' : 'rgba(255,255,255,.12)');
-      const chartBorder = cssVar('--chartBorder', (t === 'light') ? 'rgba(2,6,23,.10)' : 'rgba(255,255,255,.10)');
+      const text = cssVar('--text', '#f0f4ff');
+      const stroke = cssVar('--stroke', 'rgba(255,255,255,.12)');
+      const chartBorder = cssVar('--chartBorder', 'rgba(255,255,255,.10)');
 
       // Chart.js: chart.options exists. MiniChart fallback also has options.
       if (chart.options) {
         chart.options.color = text;
+
         chart.options.plugins = chart.options.plugins || {};
 
         // Tooltip
         chart.options.plugins.tooltip = chart.options.plugins.tooltip || {};
-        chart.options.plugins.tooltip.backgroundColor = tooltipBgForTheme(t);
-        chart.options.plugins.tooltip.titleColor = text;
-        chart.options.plugins.tooltip.bodyColor = text;
-        chart.options.plugins.tooltip.footerColor = text;
-        chart.options.plugins.tooltip.borderColor = stroke;
-        chart.options.plugins.tooltip.borderWidth = 1;
-        if (chart.options.plugins.tooltip.callbacks == null) chart.options.plugins.tooltip.callbacks = {};
+        Object.assign(chart.options.plugins.tooltip, {
+          backgroundColor: tooltipBgForTheme(t),
+          titleColor: text,
+          bodyColor: text,
+          borderColor: stroke,
+          borderWidth: 1
+        });
 
         // Legend
         chart.options.plugins.legend = chart.options.plugins.legend || {};
         chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
         chart.options.plugins.legend.labels.color = text;
 
-        // Title plugin (if used)
+        // Title (if used)
         if (chart.options.plugins.title) {
           chart.options.plugins.title.color = text;
         }
-
-        // Scales (bar/line charts)
-        if (chart.options.scales && typeof chart.options.scales === 'object') {
-          Object.keys(chart.options.scales).forEach((k) => {
-            const sc = chart.options.scales[k];
-            if (!sc || typeof sc !== 'object') return;
-            sc.ticks = sc.ticks || {};
-            sc.ticks.color = text;
-            sc.grid = sc.grid || {};
-            sc.grid.color = stroke;
-            sc.border = sc.border || {};
-            sc.border.color = stroke;
-            if (sc.title) {
-              sc.title.color = text;
-            }
-          });
-        }
-
-        // Dataset borders for doughnut/pie (improves readability on both themes)
-        if (chart.data && Array.isArray(chart.data.datasets)) {
-          chart.data.datasets.forEach((ds) => {
-            if (ds && typeof ds === 'object') {
-              if (ds.borderWidth == null) ds.borderWidth = 1;
-              if (ds.borderColor == null) ds.borderColor = chartBorder;
-              // If a single backgroundColor is used, ensure it's not too faint in light mode.
-              if (t === 'light' && ds.hoverBorderColor == null) ds.hoverBorderColor = chartBorder;
-            }
-          });
-        }
-      }
-
-      // MiniChart fallback supports update(); Chart.js supports update('none')
-      if (typeof chart.update === 'function') {
-        try { chart.update('none'); } catch (_e) { chart.update(); }
-      }
-    } catch (_e) { /* ignore */ }
-  }
       }
 
       // Dataset borders (doughnut/pie readability on both themes)
@@ -382,54 +356,9 @@
 
   function applyAllChartThemes() {
     try {
-      const applied = new Set();
-
-      // Preferred: charts registered via registerChart()
       if (state._charts && typeof state._charts.forEach === 'function') {
-        state._charts.forEach((ch) => {
-          applyChartTheme(ch);
-          applied.add(ch);
-        });
+        state._charts.forEach(applyChartTheme);
       }
-
-      // Backward compatibility: known global chart handles
-      const globals = [
-        window.attendanceChart,
-        window.decisionChart,
-        window.scoreBandsChart,
-        window.driversDonutChart,
-        window.barriersDonutChart
-      ];
-      globals.forEach((ch) => {
-        if (ch && typeof ch === 'object' && !applied.has(ch)) {
-          applyChartTheme(ch);
-          applied.add(ch);
-        }
-      });
-
-      // Align Chart.js global defaults (helps charts created after a theme toggle)
-      if (window.Chart && window.Chart.defaults) {
-        const t = getTheme();
-        const text = cssVar('--text', (t === 'light') ? '#0b1220' : '#f0f4ff');
-        const stroke = cssVar('--stroke', (t === 'light') ? 'rgba(2,6,23,.12)' : 'rgba(255,255,255,.12)');
-        try {
-          window.Chart.defaults.color = text;
-
-          if (window.Chart.defaults.plugins?.legend?.labels) {
-            window.Chart.defaults.plugins.legend.labels.color = text;
-          }
-
-          if (window.Chart.defaults.plugins?.tooltip) {
-            window.Chart.defaults.plugins.tooltip.titleColor = text;
-            window.Chart.defaults.plugins.tooltip.bodyColor = text;
-            window.Chart.defaults.plugins.tooltip.backgroundColor = tooltipBgForTheme(t);
-            window.Chart.defaults.plugins.tooltip.borderColor = stroke;
-            window.Chart.defaults.plugins.tooltip.borderWidth = 1;
-          }
-        } catch (_e) { /* ignore */ }
-      }
-    } catch (_e) { /* ignore */ }
-  }
       // Backward compatibility in case a chart wasn't registered.
       applyAllChartThemes();
     } catch (_e) { /* ignore */ }
@@ -2420,28 +2349,14 @@ let active = 0;
     return window.L.tileLayer(url, { maxZoom: 18, attribution });
   }
 
-    function applyMapTheme(theme) {
+  function applyMapTheme(theme) {
     try {
-      const t = (theme === 'light') ? 'light' : 'dark';
-      state._pendingMapTheme = t;
-
-      // If map isn't ready yet, we'll apply on init.
       if (!state.map || !window.L) return;
-
-      // Swap base layer
-      if (state.baseLayer && typeof state.map.removeLayer === 'function') {
+      const t = (theme === 'light') ? 'light' : 'dark';
+      if (state.baseLayer) {
         try { state.map.removeLayer(state.baseLayer); } catch (_e) {}
+        state.baseLayer = null;
       }
-      state.baseLayer = makeBasemapLayer(t);
-      try { state.baseLayer.addTo(state.map); } catch (_e) {}
-
-      // Ensure container background tracks theme variables
-      const el = $$('#leafletMap');
-      if (el) {
-        try { el.style.background = cssVar('--mapBg', (t === 'light') ? '#ffffff' : '#121a2e'); } catch (_e) {}
-      }
-    } catch (_e) { /* ignore */ }
-  }
       state.baseLayer = makeBasemapLayer(t).addTo(state.map);
     } catch (_e) { /* ignore */ }
   }
@@ -2476,8 +2391,7 @@ let active = 0;
       state.map = map;
       state.markerLayer = window.L.layerGroup().addTo(map);
 
-      state.baseLayer = makeBasemapLayer(state._pendingMapTheme || getTheme()).addTo(map);
-      state._pendingMapTheme = null;
+      state.baseLayer = makeBasemapLayer(getTheme()).addTo(map);
 
       if (window.L.heatLayer) {
         state.heatLayer = window.L.heatLayer([], { radius: 25, blur: 15, maxZoom: 18 });

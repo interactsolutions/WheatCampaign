@@ -2,19 +2,8 @@
   'use strict';
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-07.7";
+  const WHEATCAMPAIGN_BUILD = "2026-01-07.2";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
-
-  // Defensive: remove any previously-registered service workers (old builds) that may
-  // continue to request stale assets (e.g., faviconV2 / main.js) and cause confusing 404s.
-  try {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((regs) => {
-        regs.forEach((r) => r.unregister());
-      }).catch(() => {});
-    }
-  } catch (_e) {}
-
 
   const REDUCE_MOTION = !!window.__REDUCE_MOTION__;
   function chartAnimation(){

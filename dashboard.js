@@ -1,10 +1,10 @@
 (() => {
   'use strict';
 
-  window.__WC_BUILD__ = "2026-01-08.10";
+  window.__WC_BUILD__ = "2026-01-10.01";
 
   // Build marker (for cache-busting verification)
-  const WHEATCAMPAIGN_BUILD = "2026-01-08.10";
+  const WHEATCAMPAIGN_BUILD = "2026-01-10.01";
   console.info("[WheatCampaign] dashboard.js loaded", WHEATCAMPAIGN_BUILD);
 
 
@@ -558,60 +558,89 @@
   }
 
   function attachSmartImage(imgEl, path) {
-    let cancelled = false;
     const placeholder = 'assets/placeholder.svg';
+    const cands = candidatePaths(path);
+    const list = (cands && cands.length) ? cands : [placeholder];
 
-    (async () => {
-      const chosen = await resolveFirstExisting(path);
-      if (cancelled) return;
-      imgEl.src = chosen ? url(chosen) : url(placeholder);
-    })();
+    let i = 0;
+    function setSrc(rel) {
+      imgEl.src = /^(https?:|data:|blob:)/i.test(rel) ? rel : url(rel);
+    }
+    function tryNext() {
+      if (i >= list.length) {
+        imgEl.onerror = null;
+        setSrc(placeholder);
+        return;
+      }
+      setSrc(list[i++]);
+    }
 
-    imgEl.onerror = () => {
-      imgEl.onerror = null;
-      imgEl.src = url(placeholder);
-    };
-
-    return () => { cancelled = true; };
+    imgEl.onerror = () => tryNext();
+    tryNext();
   }
 
   function attachSmartVideo(videoEl, path) {
     const placeholder = 'assets/placeholder-video.mp4';
-    let resolved = false;
+    const cands = candidatePaths(path);
+    const list = (cands && cands.length) ? cands : [placeholder];
 
-    // Always keep gesture-safe playback: resolve src eagerly (async),
-    // but call play() synchronously in click handlers.
-    videoEl.preload = 'metadata';
-    videoEl.controls = true;
+    // Respect existing controls preference: thumbnails usually set controls=false.
+    const wantsControls = videoEl.classList.contains('lightboxMedia') || videoEl.dataset.controls === '1';
+    if (wantsControls) videoEl.controls = true;
+
     videoEl.playsInline = true;
     videoEl.setAttribute('playsinline', '');
+    if (!videoEl.preload) videoEl.preload = 'metadata';
 
-    (async () => {
-      try {
-        const chosen = await resolveFirstExisting(path);
-        videoEl.src = chosen ? url(chosen) : url(placeholder);
-      } catch (_e) {
-        videoEl.src = url(placeholder);
-      } finally {
-        resolved = true;
-        try { videoEl.load(); } catch (_e) {}
-      }
-    })();
+    // Avoid binding twice
+    if (videoEl.dataset.wcBound !== '1') {
+      videoEl.dataset.wcBound = '1';
 
-    videoEl.addEventListener('click', () => {
-      // User gesture preserved: no await in this handler.
-      if (videoEl.paused) {
-        const p = videoEl.play();
-        if (p && typeof p.catch === 'function') {
-          p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
+      videoEl.addEventListener('click', () => {
+        if (videoEl.paused) {
+          const p = videoEl.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
+          }
         }
-      }
-    });
+      }, { passive: true });
+    }
 
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
+    let i = 0;
+    function setSrc(rel) {
+      videoEl.src = /^(https?:|data:|blob:)/i.test(rel) ? rel : url(rel);
+    }
+    function tryNext() {
+      if (i >= list.length) {
+        videoEl.onerror = null;
+        setSrc(placeholder);
+        return;
+      }
+      setSrc(list[i++]);
+    }
+
+    videoEl.onerror = () => tryNext();
+    tryNext();
+
+    // Autoplay hint: set data-autoplay="1" on elements that should start playing immediately.
+    if (videoEl.dataset.autoplay === '1') {
+      const attempt = () => {
+        try {
+          const p = videoEl.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {
+              // Retry muted autoplay (works across Safari/iOS policies).
+              videoEl.muted = true;
+              videoEl.play().catch(() => {});
+            });
+          }
+        } catch (_e) {}
+      };
+
+      // Try immediately and again once data is ready.
+      attempt();
+      videoEl.addEventListener('canplay', attempt, { once: true });
+    }
   }
 
   // ---------- Tab controller ----------
@@ -2214,11 +2243,17 @@
   // ---------- Lightbox ----------
   function closeLightbox() {
     const lb = $$('#lightbox');
-    if (lb) lb.classList.add('hidden');
-    if (lb) lb.setAttribute('aria-hidden', 'true');
+    if (!lb) return;
 
-    const frame = $$('#lightboxFrame');
-    if (frame) frame.src = '';
+    // Stop any playback so audio does not continue in the background.
+    $$$('video', lb).forEach(v => { try { v.pause(); } catch (_e) {} });
+
+    lb.classList.remove('open');
+    lb.classList.add('hidden');
+    lb.setAttribute('aria-hidden', 'true');
+
+    const body = $$('#lbBody');
+    if (body) body.innerHTML = '';
   }
 
   function bindLightbox() {
@@ -2239,7 +2274,9 @@
     const titleEl = $$('#lbTitle');
     if (titleEl) titleEl.textContent = 'Session ' + String(s.id) + (s.sheetRef ? (' • ' + String(s.sheetRef)) : '');
 
+    lb.classList.remove('hidden');
     lb.classList.add('open');
+    lb.setAttribute('aria-hidden','false');
     body.innerHTML = '';
 
     let items = allMediaItems(s);
@@ -2290,19 +2327,9 @@ let active = 0;
         v.setAttribute('playsinline', '');
         v.preload = 'metadata';
 
-        // Resolve src eagerly, but keep playback gesture-safe (no await in click).
+        // Resolve src synchronously (with onerror fallbacks). Autoplay is best-effort.
+        v.dataset.autoplay = '1';
         attachSmartVideo(v, it.path);
-
-        // Attempt autoplay (may be blocked; user can press play).
-        setTimeout(() => {
-          const p = v.play();
-          if (p && typeof p.catch === 'function') {
-            p.catch(() => {
-              v.muted = true;
-              v.play().catch(() => {});
-            });
-          }
-        }, 0);
 
         main.appendChild(v);
       } else {

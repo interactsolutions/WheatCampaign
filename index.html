@@ -8,7 +8,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <title>Wheat Campaign Dashboard — 2026-01-08.10</title>
+  <title>Wheat Campaign Dashboard — 2026-01-10.01</title>
   <meta name="description" content="Buctril Super – Wheat Activations 2025 dashboard: reach, conversion, sessions, media, and map insights for farmer education." />
 
   <link rel="icon" type="image/png" href="assets/Interact.png" />
@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main CSS -->
-  <link rel="stylesheet" href="style.css?v=2026-01-08.10" />
+  <link rel="stylesheet" href="style.css?v=2026-01-10.01" />
 
   <!-- Leaflet CSS (local-first; CDN fallbacks if blocked) -->
   <link id="leafletCss" rel="stylesheet" href="assets/leaflets/dist/leaflet.css" />
@@ -151,7 +151,10 @@
           <div class="brandTitle">Wheat Campaign – Farmer Education Dashboard</div>
           <div class="brandSub">Buctril Super – Wheat Activations 2025</div>
         </div>
-        <button class="iconBtn" id="themeToggle" aria-label="Toggle theme"><svg class="icon" aria-hidden="true"><use href="#i-sun" xlink:href="#i-sun"></use></svg><span class="srOnly">Toggle theme</span></button>
+        <button class="iconBtn modeBtn" id="themeToggle" aria-label="Theme mode">
+  <svg class="icon" aria-hidden="true"><use href="#i-sun" xlink:href="#i-sun"></use></svg>
+  <span id="modeLabel" class="modeLabel">Default</span>
+</button>
       </div>
 
       <nav class="tabBar" role="tablist" aria-label="Dashboard tabs">
@@ -555,7 +558,7 @@
     </div>
   </aside>
 
-  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
+  <div id="lightbox" class="lightbox hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Media viewer">
     <div class="lightboxInner">
       <div class="lightboxTop">
         <div id="lbTitle" class="muted">Media</div>
@@ -571,7 +574,7 @@
 <script defer src="assets/leaflets/plugins/leaflet.heat.js"></script>
 
   <script id="wc-media-config" type="application/json">{"assetsBase": "assets/", "galleryBase": "assets/gallery/", "placeholder": "assets/placeholder.svg", "backgroundVideo": "assets/bg.mp4", "headerSequence": [{"key": "bayer", "label": "Bayer", "video": "assets/placeholder-video.mp4", "poster": "assets/bayer.svg"}, {"key": "interact", "label": "INTERACT", "video": "assets/placeholder-video.mp4", "poster": "assets/interact.gif"}, {"key": "buctril", "label": "Buctril", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}, {"key": "atlantis", "label": "Atlantis", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}], "brandImages": {"interactGif": "assets/interact.gif", "bayerLogo": "assets/bayer.svg", "buctril": "assets/placeholder.svg", "atlantis": "assets/placeholder.svg", "products": "assets/placeholder.svg"}}</script>
-  <script defer src="dashboard.js?v=2026-01-08.10"></script>
+  <script defer src="dashboard.js?v=2026-01-10.01"></script>
 
 
   <!-- Hero slider (auto-advance) -->
@@ -717,41 +720,80 @@
   (function() {
     const htmlEl = document.documentElement;
     const toggleBtn = document.getElementById('themeToggle');
+    const labelEl = document.getElementById('modeLabel');
 
-    function applyTheme(t) {
-      htmlEl.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
-      try {
-        window.__THEME__ = t;
-        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t } }));
-      } catch (_e) {}
-      if (toggleBtn) {
-        const sym = (t === 'light') ? 'i-moon' : 'i-sun';
-        toggleBtn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${sym}" xlink:href="#${sym}"></use></svg><span class="srOnly">Toggle theme</span>`;
-      }
+    const KEY = 'wc_theme';
+    const ORDER = ['dark', 'corporate', 'light'];
+    const LABELS = { dark: 'Default', corporate: 'Corporate', light: 'Light' };
+
+    function isValid(t) {
+      return t === 'dark' || t === 'light' || t === 'corporate';
     }
 
-    const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark') {
-      applyTheme(saved);
+    function renderBtn(t) {
+      if (!toggleBtn) return;
+      const sym = (t === 'light') ? 'i-moon' : 'i-sun';
+      const useEl = toggleBtn.querySelector('use');
+      if (useEl) {
+        useEl.setAttribute('href', '#' + sym);
+        useEl.setAttribute('xlink:href', '#' + sym);
+      }
+      if (labelEl) labelEl.textContent = LABELS[t] || t;
+    }
+
+    function applyTheme(t, persist) {
+      const theme = isValid(t) ? t : 'dark';
+      htmlEl.setAttribute('data-theme', theme);
+      renderBtn(theme);
+
+      try {
+        window.__THEME__ = theme;
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+      } catch (_e) {}
+
+      try {
+        if (persist) {
+          localStorage.setItem(KEY, theme);
+          // Backward compat for older pages/scripts
+          localStorage.setItem('theme', theme === 'corporate' ? 'dark' : theme);
+        } else {
+          localStorage.removeItem(KEY);
+        }
+      } catch (_e) {}
+    }
+
+    // Initial theme: honor user selection; otherwise allow auto-per-tab behavior.
+    let saved = null;
+    try {
+      saved = localStorage.getItem(KEY) || localStorage.getItem('theme');
+    } catch (_e) {}
+
+    if (saved === 'corporate') {
+      applyTheme('corporate', true);
+    } else if (saved === 'light' || saved === 'dark') {
+      applyTheme(saved, true);
     } else {
       const hr = new Date().getHours();
-      applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark');
+      applyTheme((hr >= 6 && hr < 18) ? 'light' : 'dark', false);
     }
 
-    // Campaign context: auto-theme per tab (Summary/Sessions = light; Media/Map/Feedback = dark),
-// but do not override a user-selected theme stored in localStorage.
-document.addEventListener('tabchange', (e) => {
-  const locked = (localStorage.getItem('theme') === 'light' || localStorage.getItem('theme') === 'dark');
-  if (locked) return;
-  const tab = e?.detail?.tab || '';
-  const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
-  applyTheme(t);
-});
+    // Auto-theme per tab (Summary/Sessions = light; Media/Map/Feedback = dark),
+    // but do not override a user-selected theme stored in localStorage.
+    document.addEventListener('tabchange', (e) => {
+      let locked = false;
+      try { locked = !!localStorage.getItem(KEY); } catch (_e) {}
+      if (locked) return;
 
-toggleBtn?.addEventListener('click', () => {
-      const current = htmlEl.getAttribute('data-theme');
-      applyTheme(current === 'light' ? 'dark' : 'light');
+      const tab = e?.detail?.tab || '';
+      const t = (tab === 'summary' || tab === 'sessions') ? 'light' : 'dark';
+      applyTheme(t, false);
+    });
+
+    toggleBtn?.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme') || 'dark';
+      const i = ORDER.indexOf(current);
+      const next = ORDER[(i >= 0 ? i + 1 : 0) % ORDER.length];
+      applyTheme(next, true);
     });
   })();
   </script>

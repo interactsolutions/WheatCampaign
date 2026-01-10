@@ -1,4 +1,4 @@
-/* WheatCampaign build 2026-01-08.10 */
+/* WheatCampaign build 2026-01-10.01 */
 /* =======================================================================
    WheatCampaign – Consolidated Stylesheet (clean rewrite)
    File: style.css
@@ -40,6 +40,36 @@
   /* Layout */
   --container: 1200px;
   --headerOffset: 120px; /* sticky header scroll offset */
+}
+
+
+/* Corporate theme: restrained Bayer-like blue/green palette, lower contrast gradients */
+[data-theme="corporate"]{
+  --bg:#061422;
+  --card: rgba(255,255,255,.04);
+  --cardSolid:#0b1b2c;
+  --stroke: rgba(255,255,255,.14);
+  --text:#eaf2fb;
+  --muted:#a9b8c7;
+  --muted2:#86a0b8;
+  --chartBorder: rgba(255,255,255,.12);
+  --donutHole: rgba(0,0,0,.40);
+  --mapBg: #071829;
+
+  /* Primary brand accents */
+  --brand:#1d8fe1;
+  --brand2:#27b07d;
+
+  --warn:#f7b53f;
+  --danger:#ff6b6b;
+  --wheat:#ffcf4a;
+
+  --shadow: 0 10px 28px rgba(0,0,0,.34);
+  --shadowSoft: 0 4px 14px rgba(0,0,0,.24);
+}
+/* Corporate map toning */
+[data-theme="corporate"] .leaflet-tile{
+  filter: saturate(1.02) hue-rotate(190deg) brightness(1.06) contrast(1.04);
 }
 
 [data-theme="light"]{
@@ -277,6 +307,20 @@ a{ color: inherit; }
 
 .icon{ width:18px; height:18px; display:inline-block; flex:0 0 auto; }
 
+
+/* Mode button (Default / Corporate / Light) */
+.modeBtn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.modeLabel{
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.2px;
+  opacity:.92;
+}
 /* ------------------------------- Hero ---------------------------------- */
 .heroWrap{
   max-width:100%;

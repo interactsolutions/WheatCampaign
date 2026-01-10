@@ -38,3 +38,14 @@ Healthcheck should report `OK` for:
 - Add/update campaign data under `data/<campaignId>/`
 - Register/adjust in `data/campaigns.json`
 - Push to the Pages branch and re‑run Healthcheck
+
+
+## Common issue: 404 on dashboard.js
+
+If the browser console shows `Failed to load resource: 404 (dashboard.js)`:
+
+- Confirm `dashboard.js` exists **in the same directory as** `index.html` in your GitHub Pages publishing source.
+- GitHub Pages is **case-sensitive** (`dashboard.js` ≠ `Dashboard.js`).
+- If you publish from `/docs`, make sure the files are inside `/docs`, not only in the repo root.
+- You can verify quickly by opening: `https://<org>.github.io/<repo>/dashboard.js` in a new tab.
+

@@ -587,19 +587,25 @@
     function loadScript(i) {
       if (i >= candidates.length) {
         console.error("[WheatCampaign] Dashboard script not found.", candidates);
-        const el = document.getElementById("dataReadiness");
+        const el = document.getElementById("statusBox") || document.getElementById("dataReadiness");
         if (el) el.textContent = "Dashboard script missing (dashboard.js). Please re-deploy site files.";
         return;
       }
       const s = document.createElement("script");
       s.src = candidates[i];
+      s.async = false;
       s.defer = true;
       s.onload = () => console.info("[WheatCampaign] Loaded:", s.src);
       s.onerror = () => loadScript(i + 1);
       document.head.appendChild(s);
     }
 
-    loadScript(0);
+    function start() { loadScript(0); }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', start, { once: true });
+    } else {
+      start();
+    }
   })();
 </script>
 

@@ -268,8 +268,18 @@
   };
 
   // ---------- URL helpers ----------
-  const BASE = new URL('.', window.location.href);
-  const url = (p) => new URL(p, BASE).toString();
+  const BASE_URL = new URL(location.href);
+  BASE_URL.hash = '';
+  BASE_URL.search = '';
+  if (!BASE_URL.pathname.endsWith('/')) {
+    if (BASE_URL.pathname.endsWith('.html')) {
+      BASE_URL.pathname = BASE_URL.pathname.replace(/[^/]*$/, '');
+    } else {
+      BASE_URL.pathname = BASE_URL.pathname + '/';
+    }
+  }
+  const BASE = BASE_URL;
+const url = (p) => new URL(p, BASE).toString();
 
   function qs() {
     return new URLSearchParams(window.location.search);

@@ -557,7 +557,58 @@
     return '';
   }
 
-  function attachSmartImage(imgEl, path) {
+  
+  function gestureSafePlay(videoEl) {
+    if (!videoEl) return;
+
+    // Add a simple overlay for cases where Safari blocks play()
+    const ensureOverlay = () => {
+      let overlay = videoEl.parentElement?.querySelector?.('.tapToPlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'tapToPlay';
+        overlay.textContent = 'Tap to play';
+        overlay.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // user gesture guaranteed here
+          videoEl.muted = false;
+          videoEl.play().catch(() => {
+            videoEl.muted = true;
+            videoEl.play().catch(() => {});
+          });
+        });
+        videoEl.parentElement?.appendChild?.(overlay);
+      }
+      return overlay;
+    };
+
+    const attempt = (muted) => {
+      videoEl.muted = !!muted;
+      const p = videoEl.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          if (!muted) {
+            // retry muted (allowed for autoplay in Safari)
+            attempt(true);
+          } else {
+            ensureOverlay();
+          }
+        });
+      }
+    };
+
+    // First try with sound (because the user clicked). If Safari rejects, retry muted.
+    attempt(false);
+
+    // If media isn't ready yet, retry once it can play.
+    const onCanPlay = () => {
+      if (videoEl.paused) attempt(videoEl.muted);
+    };
+    videoEl.addEventListener('canplay', onCanPlay, { once: true });
+  }
+
+function attachSmartImage(imgEl, path) {
     let cancelled = false;
     const placeholder = 'assets/placeholder.svg';
 
@@ -577,20 +628,35 @@
 
   function attachSmartVideo(videoEl, path) {
     const placeholder = 'assets/placeholder-video.mp4';
-    let resolved = false;
 
-    // Always keep gesture-safe playback: resolve src eagerly (async),
-    // but call play() synchronously in click handlers.
+    // Safari / iOS playback hints
     videoEl.preload = 'metadata';
     videoEl.controls = true;
     videoEl.playsInline = true;
     videoEl.setAttribute('playsinline', '');
+    videoEl.setAttribute('webkit-playsinline', '');
 
-    (async () => {
-      try {
-        const chosen = await resolveFirstExisting(path);
-        videoEl.src = chosen ? url(chosen) : url(placeholder);
-      } catch (_e) {
+    // IMPORTANT: gesture-safe loading
+    // Do NOT await any network checks here (HEAD/Range GET), because that can
+    // move play() outside the click stack and Safari will treat it as non-gesture.
+    const cands = candidatePaths(path);
+    const queue = (cands && cands.length) ? [...cands] : [];
+    queue.push(placeholder);
+
+    let i = 0;
+    const tryNext = () => {
+      const rel = queue[i++] || placeholder;
+      videoEl.src = /^(https?:|data:|blob:)/i.test(rel) ? rel : url(rel);
+      try { videoEl.load(); } catch (_e) {}
+    };
+
+    // If a candidate 404s, fall through to the next one.
+    videoEl.onerror = () => {
+      if (i < queue.length) tryNext();
+    };
+
+    tryNext();
+  } catch (_e) {
         videoEl.src = url(placeholder);
       } finally {
         resolved = true;
@@ -2214,11 +2280,22 @@
   // ---------- Lightbox ----------
   function closeLightbox() {
     const lb = $$('#lightbox');
-    if (lb) lb.classList.add('hidden');
-    if (lb) lb.setAttribute('aria-hidden', 'true');
+    const body = $$('#lbBody');
 
-    const frame = $$('#lightboxFrame');
-    if (frame) frame.src = '';
+    // stop any playing videos
+    if (body) {
+      body.querySelectorAll('video').forEach(v => {
+        try { v.pause(); } catch (_e) {}
+        try { v.removeAttribute('src'); v.load(); } catch (_e) {}
+      });
+      body.innerHTML = '';
+    }
+
+    if (lb) {
+      lb.classList.remove('open');
+      lb.classList.add('hidden');
+      lb.setAttribute('aria-hidden', 'true');
+    }
   }
 
   function bindLightbox() {
@@ -2228,7 +2305,7 @@
     });
   }
 
-  async function openLightbox(sessionId, mode = 'all', startType = null, startPath = null) {
+  function openLightbox(sessionId, mode = 'all', startType = null, startPath = null) {
     const s = state.sessionsById.get(Number(sessionId));
     if (!s) return;
 
@@ -2239,7 +2316,9 @@
     const titleEl = $$('#lbTitle');
     if (titleEl) titleEl.textContent = 'Session ' + String(s.id) + (s.sheetRef ? (' • ' + String(s.sheetRef)) : '');
 
+    lb.classList.remove('hidden');
     lb.classList.add('open');
+    lb.setAttribute('aria-hidden','false');
     body.innerHTML = '';
 
     let items = allMediaItems(s);
@@ -2292,17 +2371,10 @@ let active = 0;
 
         // Resolve src eagerly, but keep playback gesture-safe (no await in click).
         attachSmartVideo(v, it.path);
+        // Gesture-safe play (handles Safari policy & fallbacks)
+        gestureSafePlay(v);
 
-        // Attempt autoplay (may be blocked; user can press play).
-        setTimeout(() => {
-          const p = v.play();
-          if (p && typeof p.catch === 'function') {
-            p.catch(() => {
-              v.muted = true;
-              v.play().catch(() => {});
-            });
-          }
-        }, 0);
+
 
         main.appendChild(v);
       } else {

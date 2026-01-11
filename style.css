@@ -1,4 +1,4 @@
-/* WheatCampaign build 2026-01-10.01 */
+/* WheatCampaign build 2026-01-11.02 */
 /* =======================================================================
    WheatCampaign – Consolidated Stylesheet (clean rewrite)
    File: style.css
@@ -13,7 +13,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 /* ----------------------------- Theme tokens ----------------------------- */
-:root{
+:root{--brand2Rgb:137,211,41;
+--brandRgb:0,188,255;
+
   /* Dark theme */
   --bg: #0a0f1c;
   --card: rgba(18,26,46,.65);
@@ -44,21 +46,23 @@
 
 
 /* Corporate theme: restrained Bayer-like blue/green palette, lower contrast gradients */
-[data-theme="corporate"]{
-  --bg:#061422;
-  --card: rgba(255,255,255,.04);
-  --cardSolid:#0b1b2c;
-  --stroke: rgba(255,255,255,.14);
-  --text:#eaf2fb;
-  --muted:#a9b8c7;
-  --muted2:#86a0b8;
+[data-theme="corporate"]{--brand2Rgb:42,168,74;
+--brandRgb:11,95,179;
+
+  --bg:#071a2a;
+  --card: rgba(255,255,255,.06);
+  --cardSolid:#0b2236;
+  --stroke: rgba(125,166,207,.28);
+  --text:#ecf4ff;
+  --muted:#b7c6d8;
+  --muted2:#93abc6;
   --chartBorder: rgba(255,255,255,.12);
   --donutHole: rgba(0,0,0,.40);
   --mapBg: #071829;
 
   /* Primary brand accents */
-  --brand:#1d8fe1;
-  --brand2:#27b07d;
+  --brand:#0b5fb3;
+  --brand2:#2aa84a;
 
   --warn:#f7b53f;
   --danger:#ff6b6b;
@@ -72,7 +76,9 @@
   filter: saturate(1.02) hue-rotate(190deg) brightness(1.06) contrast(1.04);
 }
 
-[data-theme="light"]{
+[data-theme="light"]{--brand2Rgb:42,168,74;
+--brandRgb:0,120,212;
+
   --bg:#f8fafc;
   --card: rgba(255,255,255,.78);
   --cardSolid:#ffffff;
@@ -201,8 +207,8 @@ a{ color: inherit; }
 }
 .tabBtn:hover{ background: rgba(255,255,255,.06); color: var(--text); }
 .tabBtn--active{
-  border-color: rgba(0,188,255,.55);
-  background: rgba(0,188,255,.14);
+  border-color: rgba(var(--brandRgb),.55);
+  background: rgba(var(--brandRgb),.14);
   color: var(--text);
 }
 
@@ -284,8 +290,8 @@ a{ color: inherit; }
 .btn:hover{ background: rgba(255,255,255,.08); }
 .btn:active{ transform: translateY(1px); }
 .btn.primary{
-  background: rgba(0,188,255,.16);
-  border-color: rgba(0,188,255,.40);
+  background: rgba(var(--brandRgb),.16);
+  border-color: rgba(var(--brandRgb),.40);
 }
 .btn.whatsapp{
   background: rgba(34,197,94,.16);
@@ -398,7 +404,7 @@ a{ color: inherit; }
   color:#dfe7ff;
 }
 .heroThumb.active{
-  outline: 2px solid rgba(0,188,255,.55);
+  outline: 2px solid rgba(var(--brandRgb),.55);
   outline-offset: 2px;
 }
 
@@ -450,8 +456,8 @@ a{ color: inherit; }
 }
 .chip.muted{ color: var(--muted); }
 .chip--active{
-  background: rgba(0,188,255,.14);
-  border-color: rgba(0,188,255,.35);
+  background: rgba(var(--brandRgb),.14);
+  border-color: rgba(var(--brandRgb),.35);
 }
 
 /* ------------------------------- KPI ----------------------------------- */
@@ -781,8 +787,8 @@ a{ color: inherit; }
 }
 .segBtn:hover{ background: rgba(255,255,255,.06); }
 .segBtn--active{
-  border-color: rgba(0,188,255,.55);
-  background: rgba(0,188,255,.14);
+  border-color: rgba(var(--brandRgb),.55);
+  background: rgba(var(--brandRgb),.14);
 }
 
 .mediaSearch input{ min-width:260px; }
@@ -1486,17 +1492,17 @@ h2, h3{
 .kpi--awareness,
 .kpi--definite{
   background: linear-gradient(90deg,
-    rgba(137,211,41,.18) 0%,
+    rgba(var(--brand2Rgb),.18) 0%,
     rgba(241,219,179,.22) 70%,
-    rgba(0,188,255,.10) 100%);
+    rgba(var(--brandRgb),.10) 100%);
   border-color: rgba(241,219,179,.35);
 }
 [data-theme="light"] .kpi--awareness,
 [data-theme="light"] .kpi--definite{
   background: linear-gradient(90deg,
-    rgba(137,211,41,.14) 0%,
+    rgba(var(--brand2Rgb),.14) 0%,
     rgba(241,219,179,.26) 75%,
-    rgba(0,188,255,.06) 100%);
+    rgba(var(--brandRgb),.06) 100%);
 }
 .kpi--awareness .kpiLabel::before,
 .kpi--definite .kpiLabel::before{
@@ -1649,3 +1655,23 @@ h2, h3{
 
 
 [data-theme="dark"] .chartTile{background: rgba(255,255,255,.045);}
+
+/* Tap-to-play overlay for Safari autoplay restrictions */
+.tapToPlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: .2px;
+  border-radius: 12px;
+  cursor:pointer;
+}
+.mediaWrap{ position: relative; }
+
+/* Lightbox main container used by dashboard.js */
+.lbMain{ position: relative; min-height: 240px; }
+.lbMain .lightboxMedia{ width:100%; max-height: 70vh; object-fit: contain; border-radius: 12px; }

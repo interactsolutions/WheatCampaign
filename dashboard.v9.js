@@ -268,24 +268,7 @@
   };
 
   // ---------- URL helpers ----------
-  function computeBase() {
-    const u = new URL(window.location.href);
-    u.hash = '';
-    u.search = '';
-    // GitHub Pages is sensitive to trailing slashes. Normalize /WheatCampaign to /WheatCampaign/
-    if (!u.pathname.endsWith('/')) {
-      const last = (u.pathname.split('/').pop() || '');
-      if (last.includes('.')) {
-        // If a filename is present (e.g., index.html), base is its directory
-        u.pathname = u.pathname.replace(/[^/]+$/, '');
-      } else {
-        u.pathname = u.pathname + '/';
-      }
-    }
-    return u;
-  }
-
-  const BASE = computeBase();
+  const BASE = new URL('.', window.location.href);
   const url = (p) => new URL(p, BASE).toString();
 
   function qs() {
@@ -658,7 +641,7 @@ function attachSmartImage(imgEl, path) {
     // move play() outside the click stack and Safari will treat it as non-gesture.
     const cands = candidatePaths(path);
     const queue = (cands && cands.length) ? [...cands] : [];
-    queue.push(placeholder);
+    if (!queue.includes(placeholder)) queue.push(placeholder);
 
     let i = 0;
     const tryNext = () => {
@@ -667,34 +650,28 @@ function attachSmartImage(imgEl, path) {
       try { videoEl.load(); } catch (_e) {}
     };
 
-    // If a candidate 404s, fall through to the next one.
+    // If a candidate fails to load, fall through to the next one.
     videoEl.onerror = () => {
-      if (i < queue.length) tryNext();
+      if (i < queue.length) {
+        tryNext();
+      } else {
+        // Final fallback (do not loop)
+        videoEl.onerror = null;
+        videoEl.src = url(placeholder);
+        try { videoEl.load(); } catch (_e) {}
+      }
     };
 
     tryNext();
-  } catch (_e) {
-        videoEl.src = url(placeholder);
-      } finally {
-        resolved = true;
-        try { videoEl.load(); } catch (_e) {}
-      }
-    })();
 
+    // Click to play (gesture-safe). If blocked, log a warning.
     videoEl.addEventListener('click', () => {
-      // User gesture preserved: no await in this handler.
-      if (videoEl.paused) {
-        const p = videoEl.play();
-        if (p && typeof p.catch === 'function') {
-          p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
-        }
+      if (!videoEl.paused) return;
+      const p = videoEl.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
       }
     });
-
-    videoEl.onerror = () => {
-      videoEl.onerror = null;
-      videoEl.src = url(placeholder);
-    };
   }
 
   // ---------- Tab controller ----------

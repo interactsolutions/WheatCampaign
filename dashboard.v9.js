@@ -268,18 +268,25 @@
   };
 
   // ---------- URL helpers ----------
-  const BASE_URL = new URL(location.href);
-  BASE_URL.hash = '';
-  BASE_URL.search = '';
-  if (!BASE_URL.pathname.endsWith('/')) {
-    if (BASE_URL.pathname.endsWith('.html')) {
-      BASE_URL.pathname = BASE_URL.pathname.replace(/[^/]*$/, '');
-    } else {
-      BASE_URL.pathname = BASE_URL.pathname + '/';
+  function computeBase() {
+    const u = new URL(window.location.href);
+    u.hash = '';
+    u.search = '';
+    // GitHub Pages is sensitive to trailing slashes. Normalize /WheatCampaign to /WheatCampaign/
+    if (!u.pathname.endsWith('/')) {
+      const last = (u.pathname.split('/').pop() || '');
+      if (last.includes('.')) {
+        // If a filename is present (e.g., index.html), base is its directory
+        u.pathname = u.pathname.replace(/[^/]+$/, '');
+      } else {
+        u.pathname = u.pathname + '/';
+      }
     }
+    return u;
   }
-  const BASE = BASE_URL;
-const url = (p) => new URL(p, BASE).toString();
+
+  const BASE = computeBase();
+  const url = (p) => new URL(p, BASE).toString();
 
   function qs() {
     return new URLSearchParams(window.location.search);

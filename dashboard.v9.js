@@ -629,52 +629,66 @@ function attachSmartImage(imgEl, path) {
   function attachSmartVideo(videoEl, path) {
     const placeholder = 'assets/placeholder-video.mp4';
 
-    // Safari / iOS playback hints
-    videoEl.preload = 'metadata';
-    videoEl.controls = true;
-    videoEl.playsInline = true;
-    videoEl.setAttribute('playsinline', '');
-    videoEl.setAttribute('webkit-playsinline', '');
+    try {
+      // Safari / iOS playback hints
+      videoEl.preload = 'metadata';
+      videoEl.controls = true;
+      videoEl.playsInline = true;
+      videoEl.setAttribute('playsinline', '');
+      videoEl.setAttribute('webkit-playsinline', '');
 
-    // IMPORTANT: gesture-safe loading
-    // Do NOT await any network checks here (HEAD/Range GET), because that can
-    // move play() outside the click stack and Safari will treat it as non-gesture.
-    const cands = candidatePaths(path);
-    const queue = (cands && cands.length) ? [...cands] : [];
-    if (!queue.includes(placeholder)) queue.push(placeholder);
+      // IMPORTANT: gesture-safe loading
+      // Do NOT await any network checks here (HEAD/Range GET), because that can
+      // move play() outside the click stack and Safari will treat it as non-gesture.
+      const cands = candidatePaths(path);
+      const queue = (cands && cands.length) ? [...cands] : [];
+      let i = 0;
 
-    let i = 0;
-    const tryNext = () => {
-      const rel = queue[i++] || placeholder;
-      videoEl.src = /^(https?:|data:|blob:)/i.test(rel) ? rel : url(rel);
-      try { videoEl.load(); } catch (_e) {}
-    };
+      function setSrc(p) {
+        try {
+          videoEl.src = url(p);
+          try { videoEl.load(); } catch (_e) {}
+        } catch (_e) {
+          videoEl.src = url(placeholder);
+          try { videoEl.load(); } catch (_e2) {}
+        }
+      }
 
-    // If a candidate fails to load, fall through to the next one.
-    videoEl.onerror = () => {
-      if (i < queue.length) {
+      function tryNext() {
+        if (i >= queue.length) {
+          setSrc(placeholder);
+          return;
+        }
+        const p = queue[i++];
+        setSrc(p);
+      }
+
+      // If a candidate 404s, fall through to the next one.
+      videoEl.onerror = () => {
         tryNext();
-      } else {
-        // Final fallback (do not loop)
-        videoEl.onerror = null;
+      };
+
+      // User gesture: allow click-to-play if autoplay is blocked.
+      videoEl.addEventListener('click', () => {
+        if (videoEl.paused) {
+          const p = videoEl.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
+          }
+        }
+      });
+
+      tryNext();
+    } catch (err) {
+      console.warn('[WheatCampaign] attachSmartVideo failed:', err);
+      try {
         videoEl.src = url(placeholder);
-        try { videoEl.load(); } catch (_e) {}
-      }
-    };
-
-    tryNext();
-
-    // Click to play (gesture-safe). If blocked, log a warning.
-    videoEl.addEventListener('click', () => {
-      if (!videoEl.paused) return;
-      const p = videoEl.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch((err) => console.warn('[WheatCampaign] Playback blocked:', err));
-      }
-    });
+        videoEl.onerror = null;
+        videoEl.load?.();
+      } catch (_e) {}
+    }
   }
 
-  // ---------- Tab controller ----------
   function setActiveTab(tab) {
     const tabs = $$$('.tabBtn[data-tab]');
     // IMPORTANT: only hide/show *panels*, not the tab buttons.
@@ -2590,88 +2604,71 @@ let active = 0;
 
   // ---------- Feedback ----------
   function bindFeedback() {
-  // Option 2: Submit feedback directly to a backend endpoint (no mailto/wa.me redirects).
-  // Works on static hosting (GitHub Pages) by POSTing to an endpoint you control.
-  //
-  // Recommended backend: Google Apps Script Web App (stores to Sheet + emails you).
-  // Configure the endpoint below (or define window.FEEDBACK_ENDPOINT in index.html before dashboard.js loads).
-  const endpoint = (window.FEEDBACK_ENDPOINT || '').trim() || 'REPLACE_WITH_YOUR_FEEDBACK_ENDPOINT';
+    // Option 2: submit feedback to a backend endpoint (Apps Script / API)
+    const phoneInput = $$('#fbPhone');
+    const emailInput = $$('#fbEmail');
+    const msgInput   = $$('#fbMessage');
+    const waBtn      = $$('#fbSendWhatsApp');
+    const mailBtn    = $$('#fbSendEmail');
+    const statusEl   = $$('#fbFeedbackMsg');
 
-  const phoneInput = $$('#fbPhone');
-  const emailInput = $$('#fbEmail');
-  const msgInput = $$('#fbMessage');
-  const waBtn = $$('#fbSendWhatsApp'); // re-used as "Submit (WhatsApp preferred)"
-  const mailBtn = $$('#fbSendEmail');  // re-used as "Submit (Email preferred)"
-  const statusLabel = $$('#fbFeedbackMsg');
+    function setMsg(text, ok) {
+      if (!statusEl) return;
+      statusEl.textContent = text || '';
+      statusEl.style.color = ok ? '' : 'var(--danger)';
+    }
 
-  function displayStatus(t, ok = true) {
-    if (!statusLabel) return;
-    statusLabel.textContent = t;
-    statusLabel.style.color = ok ? '' : 'var(--danger)';
+    async function submit(preferred) {
+      const endpoint = (window.FEEDBACK_ENDPOINT || '').toString().trim();
+      if (!endpoint || !/^https?:\/\//i.test(endpoint)) {
+        setMsg('Feedback endpoint is not configured. Please set window.FEEDBACK_ENDPOINT in index.html.', false);
+        return;
+      }
+
+      const phone = (phoneInput?.value || '').trim();
+      const email = (emailInput?.value || '').trim();
+      const message = (msgInput?.value || '').trim();
+
+      if (!message) {
+        setMsg('Please enter a message before sending.', false);
+        return;
+      }
+
+      // Include light context to help triage
+      const payload = {
+        preferred_channel: preferred,
+        phone,
+        email,
+        message,
+        page: location.href,
+        campaign_id: state.campaignId || '',
+        ua: navigator.userAgent || ''
+      };
+
+      setMsg('Sending…', true);
+
+      try {
+        // Apps Script Web Apps are often CORS-restricted; use no-cors + text/plain.
+        await fetch(endpoint, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        setMsg('Sent. Thank you for your feedback.', true);
+        try { msgInput.value = ''; } catch (_e) {}
+      } catch (err) {
+        console.error('[WheatCampaign] Feedback submit failed:', err);
+        setMsg('Could not send feedback (network error). Please try again.', false);
+      }
+    }
+
+    waBtn?.addEventListener('click', () => submit('whatsapp'));
+    mailBtn?.addEventListener('click', () => submit('email'));
   }
 
-  async function submit(preferredChannel) {
-    const message = msgInput?.value?.trim() || '';
-    const email = emailInput?.value?.trim() || '';
-    const phoneRaw = phoneInput?.value?.trim() || '';
-    const phone = phoneRaw.replace(/[^0-9]/g, ''); // normalize to digits
 
-    if (!message) {
-      displayStatus('Please enter a message.', false);
-      return;
-    }
-    if (!email && !phone) {
-      displayStatus('Please add an email or phone number so we can respond.', false);
-      return;
-    }
-    if (!endpoint || endpoint === 'REPLACE_WITH_YOUR_FEEDBACK_ENDPOINT') {
-      displayStatus('Feedback endpoint is not configured yet.', false);
-      return;
-    }
-
-    const payload = {
-      preferred_channel: preferredChannel,
-      email,
-      phone,
-      message,
-      page: location.href,
-      campaign_id: state?.campaignId || '',
-      session_id: state?.sessionId || '',
-      ts: new Date().toISOString(),
-      ua: navigator.userAgent
-    };
-
-    // UI state
-    waBtn && (waBtn.disabled = true);
-    mailBtn && (mailBtn.disabled = true);
-    displayStatus('Sending…');
-
-    try {
-      // Use text/plain + no-cors to avoid CORS/preflight friction on static hosting.
-      // The request is still delivered; you may not be able to read the response in-browser.
-      await fetch(endpoint, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-
-      displayStatus('Thank you — your feedback has been sent.');
-      if (msgInput) msgInput.value = '';
-    } catch (err) {
-      console.warn('Feedback submit failed:', err);
-      displayStatus('Could not send feedback. Please try again later.', false);
-    } finally {
-      waBtn && (waBtn.disabled = false);
-      mailBtn && (mailBtn.disabled = false);
-    }
-  }
-
-  waBtn?.addEventListener('click', () => submit('whatsapp'));
-  mailBtn?.addEventListener('click', () => submit('email'));
-}
-
-  // ---------- Campaign selection ----------
   function renderCampaignSelect() {
     const sel = $$('#campaignSelect');
     if (!sel) return;

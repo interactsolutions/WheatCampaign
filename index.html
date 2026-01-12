@@ -47,7 +47,7 @@
 
   <script>
     // Configure your feedback endpoint (Option 2). Replace with your Apps Script / API URL.
-    window.FEEDBACK_ENDPOINT = window.FEEDBACK_ENDPOINT || '';
+    window.FEEDBACK_ENDPOINT = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
   </script>
 </head>
 
@@ -580,8 +580,8 @@
 
   <script id="wc-media-config" type="application/json">{"assetsBase": "assets/", "galleryBase": "assets/gallery/", "placeholder": "assets/placeholder.svg", "backgroundVideo": "assets/bg.mp4", "headerSequence": [{"key": "bayer", "label": "Bayer", "video": "assets/placeholder-video.mp4", "poster": "assets/bayer.svg"}, {"key": "interact", "label": "INTERACT", "video": "assets/placeholder-video.mp4", "poster": "assets/interact.gif"}, {"key": "buctril", "label": "Buctril", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}, {"key": "atlantis", "label": "Atlantis", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}], "brandImages": {"interactGif": "assets/interact.gif", "bayerLogo": "assets/bayer.svg", "buctril": "assets/placeholder.svg", "atlantis": "assets/placeholder.svg", "products": "assets/placeholder.svg"}}</script>
   <script>
-  // Robust loader: try dashboard.js first; fall back to dashboard.v9.js.
-  // IMPORTANT: load AFTER deferred vendor scripts (Chart.js/Leaflet) to avoid races.
+  // Robust loader: GitHub Pages deployments sometimes miss/rename dashboard.js.
+  // Try dashboard.js first; fall back to dashboard.v9.js.
   (function () {
     const V = "2026-01-11.02";
     const candidates = [
@@ -592,23 +592,19 @@
     function loadScript(i) {
       if (i >= candidates.length) {
         console.error("[WheatCampaign] Dashboard script not found.", candidates);
-        const el = document.getElementById("dataReadiness");
+        const el = document.getElementById("statusBox");
         if (el) el.textContent = "Dashboard script missing (dashboard.js). Please re-deploy site files.";
         return;
       }
       const s = document.createElement("script");
       s.src = candidates[i];
-      // Dynamic scripts default to async=true in many browsers; force deterministic execution.
-      s.async = false;
-
+      s.defer = true;
       s.onload = () => console.info("[WheatCampaign] Loaded:", s.src);
       s.onerror = () => loadScript(i + 1);
-
       document.head.appendChild(s);
     }
 
-    // Defer loading until DOMContentLoaded so deferred vendor scripts have executed.
-    window.addEventListener("DOMContentLoaded", () => loadScript(0));
+    loadScript(0);
   })();
 </script>
 
@@ -707,7 +703,8 @@
     window.WHEAT_HERO = window.WHEAT_HERO || {};
     window.WHEAT_HERO.updateStats = function(stats){
       heroStats = stats || null;
-      apply();
+      // Re-render current slide caption with latest stats
+      setHero(current);
     };
 
     start();

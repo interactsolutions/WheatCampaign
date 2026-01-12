@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64" viewBox="0 0 220 64">
+  <rect x="2" y="2" width="216" height="60" rx="14" fill="none" stroke="#0a7f6f" stroke-width="4"/>
+  <g font-family="Inter, Arial, sans-serif" fill="#0a7f6f">
+    <text x="18" y="40" font-size="26" font-weight="700">INTERACT</text>
+    <text x="18" y="55" font-size="12" opacity="0.8">Solutions</text>
+  </g>
+</svg>

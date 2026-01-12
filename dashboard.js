@@ -2590,55 +2590,86 @@ let active = 0;
 
   // ---------- Feedback ----------
   function bindFeedback() {
-    // Bind feedback form actions. The user can provide a phone number (for WhatsApp)
-    // and/or an email address. A message is always required. When the WhatsApp
-    // button is clicked and a phone number is provided, the browser opens a
-    // wa.me link with the encoded message. When the Email button is clicked
-    // and an email address is provided, the browser opens a mailto link with
-    // subject and body prefilled. A small status label displays validation
-    // feedback to the user.
-    const phoneInput = $$('#fbPhone');
-    const emailInput = $$('#fbEmail');
-    const msgInput = $$('#fbMessage');
-    const waBtn = $$('#fbSendWhatsApp');
-    const mailBtn = $$('#fbSendEmail');
-    const statusLabel = $$('#fbFeedbackMsg');
+  // Option 2: Submit feedback directly to a backend endpoint (no mailto/wa.me redirects).
+  // Works on static hosting (GitHub Pages) by POSTing to an endpoint you control.
+  //
+  // Recommended backend: Google Apps Script Web App (stores to Sheet + emails you).
+  // Configure the endpoint below (or define window.FEEDBACK_ENDPOINT in index.html before dashboard.js loads).
+  const endpoint = (window.FEEDBACK_ENDPOINT || '').trim() || 'REPLACE_WITH_YOUR_FEEDBACK_ENDPOINT';
 
-    function displayStatus(t, ok = true) {
-      if (!statusLabel) return;
-      statusLabel.textContent = t;
-      statusLabel.style.color = ok ? '' : 'var(--danger)';
-    }
-    waBtn?.addEventListener('click', () => {
-      const phoneRaw = phoneInput?.value?.trim() || '';
-      const msg = msgInput?.value?.trim() || '';
-      // Remove non-digit characters; WhatsApp expects international numbers
-      const phone = phoneRaw.replace(/[^0-9]/g, '');
-      if (!phone) {
-        displayStatus('Please enter a valid phone number.', false);
-        return;
-      }
-      const encoded = encodeURIComponent(msg);
-      const waUrl = `https://wa.me/${phone}?text=${encoded}`;
-      // Open in a new tab to avoid leaving the dashboard entirely
-      window.open(waUrl, '_blank');
-      displayStatus('Opening WhatsApp…');
-    });
-    mailBtn?.addEventListener('click', () => {
-      const email = emailInput?.value?.trim() || '';
-      const msg = msgInput?.value?.trim() || '';
-      if (!email) {
-        displayStatus('Please enter a valid email address.', false);
-        return;
-      }
-      const subject = encodeURIComponent('Feedback on Harvest Horizons Dashboard');
-      const body = encodeURIComponent(msg);
-      const mailto = `mailto:${email}?subject=${subject}&body=${body}`;
-      // Navigate away; mailto links open in the default mail client
-      window.location.href = mailto;
-      displayStatus('Opening email draft…');
-    });
+  const phoneInput = $$('#fbPhone');
+  const emailInput = $$('#fbEmail');
+  const msgInput = $$('#fbMessage');
+  const waBtn = $$('#fbSendWhatsApp'); // re-used as "Submit (WhatsApp preferred)"
+  const mailBtn = $$('#fbSendEmail');  // re-used as "Submit (Email preferred)"
+  const statusLabel = $$('#fbFeedbackMsg');
+
+  function displayStatus(t, ok = true) {
+    if (!statusLabel) return;
+    statusLabel.textContent = t;
+    statusLabel.style.color = ok ? '' : 'var(--danger)';
   }
+
+  async function submit(preferredChannel) {
+    const message = msgInput?.value?.trim() || '';
+    const email = emailInput?.value?.trim() || '';
+    const phoneRaw = phoneInput?.value?.trim() || '';
+    const phone = phoneRaw.replace(/[^0-9]/g, ''); // normalize to digits
+
+    if (!message) {
+      displayStatus('Please enter a message.', false);
+      return;
+    }
+    if (!email && !phone) {
+      displayStatus('Please add an email or phone number so we can respond.', false);
+      return;
+    }
+    if (!endpoint || endpoint === 'REPLACE_WITH_YOUR_FEEDBACK_ENDPOINT') {
+      displayStatus('Feedback endpoint is not configured yet.', false);
+      return;
+    }
+
+    const payload = {
+      preferred_channel: preferredChannel,
+      email,
+      phone,
+      message,
+      page: location.href,
+      campaign_id: state?.campaignId || '',
+      session_id: state?.sessionId || '',
+      ts: new Date().toISOString(),
+      ua: navigator.userAgent
+    };
+
+    // UI state
+    waBtn && (waBtn.disabled = true);
+    mailBtn && (mailBtn.disabled = true);
+    displayStatus('Sending…');
+
+    try {
+      // Use text/plain + no-cors to avoid CORS/preflight friction on static hosting.
+      // The request is still delivered; you may not be able to read the response in-browser.
+      await fetch(endpoint, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      displayStatus('Thank you — your feedback has been sent.');
+      if (msgInput) msgInput.value = '';
+    } catch (err) {
+      console.warn('Feedback submit failed:', err);
+      displayStatus('Could not send feedback. Please try again later.', false);
+    } finally {
+      waBtn && (waBtn.disabled = false);
+      mailBtn && (mailBtn.disabled = false);
+    }
+  }
+
+  waBtn?.addEventListener('click', () => submit('whatsapp'));
+  mailBtn?.addEventListener('click', () => submit('email'));
+}
 
   // ---------- Campaign selection ----------
   function renderCampaignSelect() {

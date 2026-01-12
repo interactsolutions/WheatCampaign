@@ -45,9 +45,10 @@
     window.__REDUCE_MOTION__ = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   </script>
 
-<script>
-  window.FEEDBACK_ENDPOINT = "https://script.google.com/macros/s/AKfycbxaLeXpvPc1yH9uYXEB6KXm8yFPYUjddeH4CuA4D2X6ZQGibPI_e9tIPoMCogyNRE-ZVg/exec";
-</script>
+  <script>
+    // Configure your feedback endpoint (Option 2). Replace with your Apps Script / API URL.
+    window.FEEDBACK_ENDPOINT = "https://script.google.com/macros/s/AKfycbxaLeXpvPc1yH9uYXEB6KXm8yFPYUjddeH4CuA4D2X6ZQGibPI_e9tIPoMCogyNRE-ZVg/exec";
+  </script>
 </head>
 
 <body>
@@ -119,7 +120,7 @@
     const v = document.getElementById('bgVideo');
     if (!v) return;
 
-    const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4'];
+    const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4', 'assets/placeholder-video.mp4'];
     let i = 0;
 
     function setSrc(idx) {
@@ -146,10 +147,10 @@
     <div class="headerRow">
       <div class="brand">
         <a href="index.html" class="brandLogoLink" aria-label="Home">
-          <img src="https://www.vhv.rs/dpng/d/589-5891725_monsanto-bayer-crop-science-logo-png-transparent-png.png"
-               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" />
-          <img src="https://ezbuyag.icnd-cdn.com/images/products/lg_buctril-mc.png"
-               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" />
+          <img src="assets/bayer.svg"
+               alt="Bayer Crop Science logo" class="brandLogo" style="height:40px;" onerror="this.onerror=null;this.src='assets/placeholder.svg';">
+          <img src="assets/buctril-super.svg"
+               alt="Buctril Super logo" class="brandLogo" style="height:40px; margin-left:10px;" onerror="this.onerror=null;this.src='assets/placeholder.svg';">
         </a>
         <div>
           <div class="brandTitle">Wheat Campaign – Farmer Education Dashboard</div>
@@ -506,7 +507,7 @@
   <footer class="footer" aria-label="Footer">
     <div class="footerBrands">
       <div class="brandPill">
-        <img src="assets/interact.gif" alt="INTERACT"/>
+        <img src="assets/interact.svg" alt="INTERACT"/>
         <span>INTERACT Solutions</span>
       </div>
       <div class="brandPill">
@@ -571,42 +572,87 @@
       <div class="lightboxBody" id="lbBody"></div>
     </div>
   </div>
-
-  <!-- Scripts (defer for performance). Keep order: Chart.js then dashboard.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script defer src="assets/leaflets/dist/leaflet.js"></script>
-<script defer src="assets/leaflets/plugins/leaflet.heat.js"></script>
-
-  <script id="wc-media-config" type="application/json">{"assetsBase": "assets/", "galleryBase": "assets/gallery/", "placeholder": "assets/placeholder.svg", "backgroundVideo": "assets/bg.mp4", "headerSequence": [{"key": "bayer", "label": "Bayer", "video": "assets/placeholder-video.mp4", "poster": "assets/bayer.svg"}, {"key": "interact", "label": "INTERACT", "video": "assets/placeholder-video.mp4", "poster": "assets/interact.gif"}, {"key": "buctril", "label": "Buctril", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}, {"key": "atlantis", "label": "Atlantis", "video": "assets/placeholder-video.mp4", "poster": "assets/placeholder.svg"}], "brandImages": {"interactGif": "assets/interact.gif", "bayerLogo": "assets/bayer.svg", "buctril": "assets/placeholder.svg", "atlantis": "assets/placeholder.svg", "products": "assets/placeholder.svg"}}</script>
+  <!-- Vendor + dashboard loader (resilient: local-first with CDN fallbacks) -->
+  <script id="wc-media-config" type="application/json">{"assetsBase": "assets/","galleryBase": "assets/gallery/","placeholder": "assets/placeholder.svg","backgroundVideo": "assets/bg.mp4","headerSequence": [{"key": "bayer","label": "Bayer","video": "assets/placeholder-video.mp4","poster": "assets/bayer.svg"},{"key": "interact","label": "INTERACT","video": "assets/placeholder-video.mp4","poster": "assets/interact.svg"},{"key": "buctril","label": "Buctril","video": "assets/placeholder-video.mp4","poster": "assets/buctril-super.svg"},{"key": "atlantis","label": "Atlantis","video": "assets/placeholder-video.mp4","poster": "assets/placeholder.svg"}],"brandImages": {"interactGif": "assets/interact.svg","bayerLogo": "assets/bayer.svg","buctril": "assets/buctril-super.svg","atlantis": "assets/placeholder.svg","products": "assets/placeholder.svg"}}</script>
   <script>
-  // Robust loader: GitHub Pages deployments sometimes miss/rename dashboard.js.
-  // Try dashboard.js first; fall back to dashboard.v9.js.
   (function () {
     const V = "2026-01-11.02";
-    const candidates = [
-      `./dashboard.js?v=${V}`,
-      `./dashboard.v9.js?v=${V}`
-    ];
 
-    function loadScript(i) {
-      if (i >= candidates.length) {
-        console.error("[WheatCampaign] Dashboard script not found.", candidates);
-        const el = document.getElementById("statusBox");
-        if (el) el.textContent = "Dashboard script missing (dashboard.js). Please re-deploy site files.";
-        return;
-      }
-      const s = document.createElement("script");
-      s.src = candidates[i];
-      s.defer = true;
-      s.onload = () => console.info("[WheatCampaign] Loaded:", s.src);
-      s.onerror = () => loadScript(i + 1);
-      document.head.appendChild(s);
+    function injectScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        // Deterministic execution order
+        s.async = false;
+        s.onload = () => resolve(src);
+        s.onerror = () => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(s);
+      });
     }
 
-    loadScript(0);
-  })();
-</script>
+    async function loadWithFallbacks(name, candidates, testFn) {
+      if (typeof testFn === 'function') {
+        try { if (testFn()) return { name, src: '(already available)' }; } catch (_) {}
+      }
 
+      let lastErr = null;
+      for (const src of candidates) {
+        try {
+          await injectScript(src);
+          if (!testFn || testFn()) return { name, src };
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      console.warn('[WheatCampaign] Vendor failed:', name, lastErr);
+      return { name, src: null, error: lastErr };
+    }
+
+    async function boot() {
+      // 1) Chart.js (optional; dashboard.js includes a minimal fallback if missing)
+      await loadWithFallbacks('Chart.js', [
+        './assets/vendor/chart.min.js',
+        'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js',
+        'https://unpkg.com/chart.js@3.9.1/dist/chart.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js'
+      ], () => typeof window.Chart !== 'undefined');
+
+      // 2) Leaflet (preferred for Map tab)
+      await loadWithFallbacks('Leaflet', [
+        './assets/leaflets/dist/leaflet.js',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+      ], () => !!(window.L && typeof window.L.map === 'function'));
+
+      // 3) Leaflet heat plugin (optional)
+      await loadWithFallbacks('Leaflet.heat', [
+        './assets/leaflets/plugins/leaflet.heat.js',
+        'https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js',
+        'https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js'
+      ], () => !!(window.L && window.L.heatLayer));
+
+      // 4) Dashboard (required)
+      const dash = await loadWithFallbacks('Dashboard', [
+        `./dashboard.js?v=${V}`,
+        `./dashboard.v9.js?v=${V}`
+      ], null);
+
+      if (!dash.src) {
+        const el = document.getElementById('statusBox');
+        if (el) el.textContent = 'Dashboard script missing (dashboard.js). Please re-deploy site files.';
+      }
+    }
+
+    const start = () => boot();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', start);
+    } else {
+      start();
+    }
+  })();
+  </script>
 
   <!-- Hero slider (auto-advance) -->
   <script>
@@ -625,6 +671,15 @@
     let heroStats = null;
 
     const heroVideo = document.getElementById('heroVideo');
+
+    // If brand videos are missing in a deployment, fall back to a bundled placeholder.
+    heroVideo?.addEventListener('error', () => {
+      try {
+        heroVideo.src = 'assets/placeholder-video.mp4';
+        heroVideo.load();
+        heroVideo.play().catch(() => {});
+      } catch (_) {}
+    });
     const heroTitle = document.getElementById('heroTitle');
     const heroSub   = document.getElementById('heroSub');
     const thumbs    = document.getElementById('heroThumbs');

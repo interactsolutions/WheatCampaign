@@ -989,7 +989,8 @@ a{ color: inherit; }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
 /* ------------------------------ Responsive ----------------------------- */
-.grid2{ display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; margin-top:14px; }
+.grid2{ display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap:14px; margin-top:14px; }
+.grid2 > *{ min-width:0; }
 @media (max-width: 980px){
   .grid2{ grid-template-columns: 1fr; }
   .heroPlayer{ height:200px; }
@@ -1536,7 +1537,7 @@ h2, h3{
   }
 }
 
-.bgVideo.fallback{ opacity:0.02; }
+.bgVideo.fallback { display: none; }
 
 .bgFallback {
   position: absolute;
@@ -1676,48 +1677,30 @@ h2, h3{
 .lbMain{ position: relative; min-height: 240px; }
 .lbMain .lightboxMedia{ width:100%; max-height: 70vh; object-fit: contain; border-radius: 12px; }
 
-.bgVideo{ z-index:1; }
+/* --- Prevent wide tables from widening the whole page --- */
+.tableWrap{ max-width:100%; }
+.sessionTable{ width:100%; }
 
-.bgShade{ z-index:2; }
-
-
-/* =======================================================================
-   Patch v17 – Mobile topbar compact
-   - Prevent header from consuming the whole viewport on phones
-   - Make tabs horizontally scrollable
-   - Prevent date-range row overflow
-   ======================================================================= */
-
-@media (max-width: 740px){
-  /* Tabs: keep one line + horizontal scroll */
+/* --- Mobile header: keep tabs on one line and reduce header height --- */
+@media (max-width: 640px){
+  .topbar{ gap:10px; padding: max(10px, env(safe-area-inset-top)) 12px 10px; }
+  .brand{ flex-wrap:wrap; gap:10px; }
+  .brandLogo{ height:28px !important; }
+  .brandSub{ display:none; }
   .tabBar{
+    width:100%;
+    margin-left:0;
     flex-wrap:nowrap;
     overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling: touch;
+    white-space:nowrap;
     gap:8px;
-    margin-left:0;
-    width:100%;
     padding-bottom:4px;
   }
-  .tabBtn{ flex:0 0 auto; }
-
-  /* Brand row: wrap safely */
-  .brand{ flex-wrap:wrap; align-items:flex-start; }
-  .brandLogo{ max-height:34px; }
-  .brandTitle{ font-size:16px; }
-  .brandSub{ font-size:11px; }
-
-  /* Date range: allow wrap */
-  .rangeRow{ flex-wrap:wrap; }
-  .rangeRow input[type="date"]{ flex: 1 1 150px; min-width:150px; }
-  .rangeRow .btn{ flex: 1 1 110px; }
-}
-
-@media (max-width: 740px){
-  /* Compact mode while scrolling */
-  body.topbar-compact .heroWrap{ display:none !important; }
-  body.topbar-compact .topbar{
-    gap:10px;
-    padding-bottom:10px;
-  }
+  .tabBtn{ flex:0 0 auto; white-space:nowrap; }
+  /* Reduce hero footprint on small screens */
+  .heroThumbs{ display:none; }
+  /* Tighter cards so content feels 'mobile-native' */
+  .card{ padding:14px; margin:10px auto; }
 }

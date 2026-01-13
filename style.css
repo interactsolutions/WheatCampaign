@@ -1536,7 +1536,7 @@ h2, h3{
   }
 }
 
-.bgVideo.fallback { display: none; }
+.bgVideo.fallback{ opacity:0.02; }
 
 .bgFallback {
   position: absolute;
@@ -1675,3 +1675,49 @@ h2, h3{
 /* Lightbox main container used by dashboard.js */
 .lbMain{ position: relative; min-height: 240px; }
 .lbMain .lightboxMedia{ width:100%; max-height: 70vh; object-fit: contain; border-radius: 12px; }
+
+.bgVideo{ z-index:1; }
+
+.bgShade{ z-index:2; }
+
+
+/* =======================================================================
+   Patch v17 – Mobile topbar compact
+   - Prevent header from consuming the whole viewport on phones
+   - Make tabs horizontally scrollable
+   - Prevent date-range row overflow
+   ======================================================================= */
+
+@media (max-width: 740px){
+  /* Tabs: keep one line + horizontal scroll */
+  .tabBar{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:8px;
+    margin-left:0;
+    width:100%;
+    padding-bottom:4px;
+  }
+  .tabBtn{ flex:0 0 auto; }
+
+  /* Brand row: wrap safely */
+  .brand{ flex-wrap:wrap; align-items:flex-start; }
+  .brandLogo{ max-height:34px; }
+  .brandTitle{ font-size:16px; }
+  .brandSub{ font-size:11px; }
+
+  /* Date range: allow wrap */
+  .rangeRow{ flex-wrap:wrap; }
+  .rangeRow input[type="date"]{ flex: 1 1 150px; min-width:150px; }
+  .rangeRow .btn{ flex: 1 1 110px; }
+}
+
+@media (max-width: 740px){
+  /* Compact mode while scrolling */
+  body.topbar-compact .heroWrap{ display:none !important; }
+  body.topbar-compact .topbar{
+    gap:10px;
+    padding-bottom:10px;
+  }
+}

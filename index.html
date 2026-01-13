@@ -109,34 +109,95 @@
 
   <!-- Background video -->
   <div class="bg">
-    <video id="bgVideo" class="bgVideo" autoplay loop muted playsinline preload="auto" src="assets/bg.mp4">
-    </video>
+    <video id="bgVideo" class="bgVideo" autoplay loop muted playsinline preload="metadata" poster="assets/placeholder.svg" src="assets/bg.mp4"></video>
+    <div id="bgFallback" class="bgFallback hidden" aria-hidden="true"></div>
     <div class="bgShade"></div>
   </div>
 
   <script>
-  // Background video: fall back across multiple filenames (GitHub Pages is case-sensitive).
+  // v17: Background video reliability (iOS/Safari gesture retry + filename fallback)
   (function () {
     const v = document.getElementById('bgVideo');
     if (!v) return;
 
+    // GitHub Pages is case-sensitive; keep a shortlist of alternates.
     const candidates = ['assets/bg.mp4', 'assets/hero-1.mp4', 'assets/interact.mp4', 'assets/placeholder-video.mp4'];
-    let i = 0;
+    let idx = 0;
+    let boundGesture = false;
 
-    function setSrc(idx) {
-      v.src = candidates[idx];
-      v.load();
-      v.play().catch(() => { /* ignore autoplay block */ });
+    function ensureFallbackEl() {
+      let el = document.getElementById('bgFallback');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'bgFallback';
+        el.className = 'bgFallback hidden';
+        el.setAttribute('aria-hidden', 'true');
+        v.parentElement && v.parentElement.appendChild(el);
+      }
+      return el;
     }
 
+    function showFallback(reason) {
+      const el = ensureFallbackEl();
+      el.classList.remove('hidden');
+      if (reason) el.setAttribute('data-reason', reason);
+      v.classList.add('fallback');
+    }
+
+    function hideFallback() {
+      const el = ensureFallbackEl();
+      el.classList.add('hidden');
+      el.removeAttribute('data-reason');
+      v.classList.remove('fallback');
+    }
+
+    async function tryPlay(fromGesture) {
+      try {
+        // Defensive: some Safari builds need these re-applied.
+        v.muted = true;
+        v.setAttribute('muted', '');
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+
+        const p = v.play();
+        if (p && typeof p.then === 'function') await p;
+
+        hideFallback();
+      } catch (_e) {
+        // Autoplay blocked: do NOT give up. Bind a one-time gesture retry.
+        showFallback(fromGesture ? 'blocked' : 'autoplay');
+
+        if (!boundGesture) {
+          boundGesture = true;
+          const onGesture = () => { tryPlay(true); };
+          document.addEventListener('pointerdown', onGesture, { passive: true, once: true });
+          document.addEventListener('touchstart', onGesture, { passive: true, once: true });
+          document.addEventListener('click', onGesture, { passive: true, once: true });
+        }
+      }
+    }
+
+    function setSrc(i) {
+      idx = i;
+      v.src = candidates[idx];
+      v.load();
+      tryPlay(false);
+    }
+
+    v.addEventListener('playing', hideFallback);
+
     v.addEventListener('error', () => {
-      i += 1;
-      if (i < candidates.length) setSrc(i);
+      if (idx + 1 < candidates.length) {
+        setSrc(idx + 1);
+      } else {
+        // Video file missing/unplayable: keep the gradient fallback.
+        showFallback('missing');
+      }
     });
 
-    // Ensure play is attempted even if the browser delays autoplay.
+    // If Safari defers playback until it can buffer, attempt again at canplay.
     v.addEventListener('canplay', () => {
-      v.play().catch(() => { /* ignore */ });
+      if (v.paused) tryPlay(false);
     });
 
     setSrc(0);
@@ -766,42 +827,6 @@
   </script>
 
 
-  <script>
-  // v16: background video autoplay handling + fallback
-  (function() {
-    const v = document.getElementById('bgVideo');
-    if (!v) return;
-
-    let attempted = false;
-
-    function attemptAutoplay() {
-      if (attempted) return;
-      attempted = true;
-
-      try {
-        v.muted = true;
-        v.setAttribute('muted', '');
-        v.playsInline = true;
-        v.setAttribute('playsinline', '');
-      } catch (e) {}
-
-      const playPromise = v.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
-          const fallback = document.createElement('div');
-          fallback.className = 'bgFallback';
-          if (v.parentElement) v.parentElement.appendChild(fallback);
-          v.classList.add('fallback');
-        });
-      }
-    }
-
-    attemptAutoplay();
-    document.addEventListener('click', attemptAutoplay, { once: true });
-    document.addEventListener('touchstart', attemptAutoplay, { once: true });
-  })();
-  </script>
-
   <!-- Theme toggle -->
   <script>
   (function() {
@@ -961,6 +986,36 @@
 
     // First paint after dashboard initializes
     window.addEventListener('load', () => setTimeout(updateMeta, 50));
+  })();
+  </script>
+  <!-- v17: Compact sticky header on phones (frees vertical space while scrolling) -->
+  <script>
+  (function(){
+    const body = document.body;
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+
+    let ticking = false;
+
+    function update(){
+      ticking = false;
+      const isPhone = window.innerWidth <= 740;
+      if (!isPhone) {
+        body.classList.remove('topbar-compact');
+        return;
+      }
+      body.classList.toggle('topbar-compact', window.scrollY > 24);
+    }
+
+    function onScroll(){
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
   })();
   </script>
 
